@@ -1,0 +1,100 @@
+<html>
+<head>
+	<title>{% block title %}Welborn Productions{% endblock %}</title>
+  <!-- <link href="/favicon.ico" rel="shortcut icon" type="image/vnd.microsoft.icon" /> -->
+  <!--
+  <link rel="stylesheet" href="http://welbornproductions.net/plugins/system/yvbbcode/default.css" type="text/css" />
+  <link rel="stylesheet" href="http://welbornproductions.net/plugins/content/rokcomments/css/rokcomments.css" type="text/css" />
+  <link rel="stylesheet" href="/plugins/system/rokbox/themes/light/rokbox-style.css" type="text/css" />
+  <link rel="stylesheet" href="/media/com_finder/css/finder.css" type="text/css" /> -->
+  
+
+  <link rel="stylesheet" href="/static/css/grid-12.css" type="text/css" />
+  <link rel="stylesheet" href="/static/css/gantry.css" type="text/css" />
+  <link rel="stylesheet" href="/static/css/joomla.css" type="text/css" />
+
+  <link rel="stylesheet" href="/static/css/overlays.css" type="text/css" />
+  <link rel="stylesheet" href="/static/css/typography.css" type="text/css" />
+  <link rel="stylesheet" href="/static/css/extensions.css" type="text/css" />
+  <link rel="stylesheet" href="/static/css/extensions-overlays.css" type="text/css" />
+  <!--
+  <link rel="stylesheet" href="/static/css/demo-styles.css" type="text/css" /> -->
+  <link rel="stylesheet" href="/static/css/template.css" type="text/css" />
+  <link rel="stylesheet" href="/static/css/template-webkit.css" type="text/css" />
+  <link rel="stylesheet" href="/static/css/fusionmenu.css" type="text/css" />
+
+  <link rel="stylesheet" href="/static/css/mosaic.css" type="text/css" />
+ 
+  <link rel="stylesheet" href="/static/css/rt.css" type="text/css" />
+  <!-- [if IE 6]>
+  	<link rel="stylesheet" href="/static/css/template-ie6.css" type="text/css"/>
+	<link rel="stylesheet" href="/static/css/gantry-ie6.css" type="text/css"/>
+	<link rel="stylesheet" href="/static/css/joomla-ie6.css" type="text/css"/>
+	
+  <![endif]-->
+  <!-- [if IE 7]>
+  	<link rel="stylesheet" href="/static/css/template-ie7.css" type="text/css"/>
+	<link rel="stylesheet" href="/static/css/joomla-ie7.css" type="text/css"/>
+  <![endif]-->
+  <!-- [if IE 8]>
+  	<link rel="stylesheet" href="/static/css/template-ie8.css" type="text/css"/>
+  <![endif]-->
+  <!-- [if IE 9]>
+  	<link rel="stylesheet" href="/static/css/template-ie9.css" type="text/css"/>
+  <![endif]-->
+
+<!-- Custom Non-IE CSS File (Browser-Detection from Views...) -->
+{% block extrastylelink %}
+	{% if extra_style_link %}
+		<link rel="stylesheet" href="{{ extra_style_link }}" type="text/css"/>
+	{% endif %}
+{% endblock %}
+
+<!-- Custom Local CSS --> 
+{% block extrastyle %}
+	<style type="text/css">
+		{% if extra_style %}
+			{{ extra_style }}
+		{% endif %}
+	
+	</style>
+{% endblock %}
+</head>
+
+<!-- MAIN PAGE -->
+<body class='main-overlay-light page-overlay-light page-content-light showcaseblock-overlay-light primary-overlay-dark bottomblock-overlay-dark readonstyle-button font-family-momentum font-size-is-default logo-style-light menu-type-fusionmenu inputstyling-enabled-1 typography-style-light col12 option-com-content menu-homepage '>
+	<link href='http://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' />
+	<div id='rt-bg-surround'>
+	    <div id='rt-bg-pattern' class='main-pattern-carbonfiber'>
+	        <div class='pattern-gradient'></div>
+	    </div>
+	    <div class='rt-container'>
+	        <div id='rt-drawer'>
+	            <div class='rt-grid-12 rt-alpha rt-omega'>
+	                <div class='rt-block logo-block'>
+	                    <a href='/' id='rt-logo'></a>
+	                </div>
+	            </div>
+	        </div>
+	        <div id='rt-page-surround' class='page-overlay-light'>
+
+
+			
+    			<!-- this is where we want to inject code.... -->
+				{% block content %}
+					<div class='contentbox1'>
+						<span>{{ default_content }}</span>
+					</div>
+				
+				{% endblock %}
+
+	    	</div>
+	    </div>
+	</div>
+    			<!--# for clear gradient bottom, it hides the last few lines of highlited code-->
+				<div id='rt-bg-image'>
+					<div class='grad-bottom'></div>
+				</div>
+
+</body>
+</html>
