@@ -119,25 +119,30 @@ ul.menu {padding-left: 0;}
 	}
 /* Navigation */
 .topbar {
-	margin: 30px;
+	margin-top: 20px;
 }
 .menubar {
 	display: inline-block;
 	position: relative;
-	margin: 2px;
+	margin-top: 40px;
+	margin-bottom: 10px;
+	padding: 0;
+	width: 100%;
 	font-family: "Yanone Kaffeesatz";
 	text-transform: lowercase;
+	text-align: center;
 }
 .menu-block {
-	margin: 0;
 	padding: 0;
+	/* Old Menu Style. Now using Dock...
 	background-image: url(/static/images/overlays/patterns/carbonfiber.png);
 	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.45);
 	border-radius: 5px;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
+	*/
 }
-.fusionmenu {
+.fusionmenu { /* No Longer Needed */
 	background: url(/static/images/overlays/global/dark-70.png);
 	height: 50px;
 	display: block;
