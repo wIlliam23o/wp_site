@@ -14,6 +14,7 @@
   <link href='http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,200|Oswald|Source+Sans+Pro:200,400|Carrois+Gothic|Source+Code+Pro:100,200,400,600' rel='stylesheet' type='text/css'>
   <!-- Global CSS -->
   <link rel="stylesheet" href="/static/css/main.css" type="text/css" />
+  <link rel="stylesheet" href="/static/css/fusionmenu.css" type="text/css"/>
   
   <!-- [if IE 6]>
   	<link rel="stylesheet" href="/static/css/template-ie6.css" type="text/css"/>
@@ -75,12 +76,52 @@
 	    	<div class='pattern-gradient'></div>
 		</div>
 		<div class='wp-container'>
+			<!-- LOGO -->
 	    	<div class='wp-block'>
 	        	<a href='/' id='wp-logo'></a>
 	    	</div>
-
+	    	
+			<!-- Page Surround -->
 	        <div id='page-surround'>
-  			<!-- view content -->
+	        	<!-- Navigation -->
+	        	<div class="topbar">
+	        		<div class="navigation">
+	        			<div class="menu-block">
+	        				<div class="fusionmenu">
+	        					<div class="menubar">
+	        						<ul class="menutop">
+	        							<li class="root">
+	        								<a class="item">
+	        									<span>Home</span>
+	        								</a>
+	        							</li>
+	        							<li class="root">
+	        								<a class="item">
+	        									<span>About</span>
+	        								</a>
+	        							</li>
+	        							<li class="parent root">
+	        								<a class="item">
+	        									<span>Projects</span>
+	        								</a>
+	        							</li>
+	        							<li class="root">
+	        								<a class="item">
+	        									<span>Blog</span>
+	        								</a>
+	        							</li>
+	        							<li class="root">
+	        								<a class="item">
+	        									<span>Search</span>
+	        								</a>
+	        							</li>
+	        						</ul>
+	        					</div>
+	        				</div>
+	        			</div>
+	        		</div>
+	        	</div>
+  				<!-- view content -->
 				{% block content %}
 					<div class='contentbox'>
 						<span>{{ default_content }}</span>
@@ -95,12 +136,12 @@
 							how
 							the
 							bg
-							looks
-							with
+							looks                          ok
+							with                   is
 							longer
-							lines
+							lines                      this
 							and
-							more
+							more                              yes
 							text
 							because
 							i

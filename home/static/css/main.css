@@ -110,13 +110,67 @@ ul.menu {padding-left: 0;}
 	height: 80%;
 	}
 #page-surround {
-	background-color: #EEE;
+	background-color: #DBDBDB;
 	margin: 0 -50px 20px;
 	padding: 10px 50px 10px 50px;
 	position: relative;
 	overflow: hidden;
 	border-radius: 5px 5px 5px 5px;
 	}
+/* Navigation */
+.topbar {
+	margin: 30px;
+}
+.menubar {
+	display: inline-block;
+	position: relative;
+	margin: 2px;
+	font-family: "Yanone Kaffeesatz";
+	text-transform: lowercase;
+}
+.menu-block {
+	margin: 0;
+	padding: 0;
+	background-image: url(/static/images/overlays/patterns/carbonfiber.png);
+	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.45);
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+}
+.fusionmenu {
+	background: url(/static/images/overlays/global/dark-70.png);
+	height: 50px;
+	display: block;
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+}
+.menutop {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	position: relative;
+	display: inline-block;
+	z-index: 1;
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+}
+/* Menu forecolor */
+.menutop li a.item {
+	color: #DDDDDD;
+}
+/* Menu item BG */
+.menutop li.root {
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	background: transparent;
+}
+/* Menu item hover */
+.menutop li.root:hover {
+	background: #0066BF;
+}
 /* Backgrounds */
 .grad-bottom {
 	position: absolute;
