@@ -1,7 +1,8 @@
 /* hopefully fixes IE9's stupid little attitude */
 *:focus { outline: 0 !important; }
 /* Fonts */
-@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,200|Oswald|Source+Code+Pro);
+/*@import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,200|Oswald|Source+Sans+Pro:200,400|Carrois+Gothic|Source+Code+Pro:200,400,600);
+*/
 
 /* Reset */
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, caption {
@@ -27,6 +28,7 @@ body {
 	height: 100%;
 	margin-bottom: 1px;
 	font-family: Arial,Helvetica,sans-serif;
+	font-weight: 200;
 	}
 	
 body.component-body {
@@ -47,15 +49,25 @@ a:-webkite-any-link {
 	color: #2358A6;
 }
 
+h1 {
+	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Liberation Sans", sans-serif;
+}
 h1.title {
 	margin-top: 0;
 	}
 h1, h2, .module-title h2, h3, h4, h5 {
+	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Liberation Sans", sans-serif;
 	line-height: 1.1em;
 	letter-spacing: inherit;
 	}
-h4 {text-transform: lowercase;}
-h5 {text-transform: lowercase;font-size: 100%;}
+h4 {
+	text-transform: lowercase;
+	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Liberation Sans", sans-serif;
+}
+h5 {
+	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Liberation Sans", sans-serif;
+	text-transform: lowercase;font-size: 100%;
+}
 blockquote {  
 	background: none;  
 	margin: 1em 3em;   
@@ -92,6 +104,19 @@ ul.menu {padding-left: 0;}
 	background-color: #000000;
 	margin-top: -10px;
 	}
+#bg-surround {
+	overflow: hidden; position: relative;
+	background-color: #313131;
+	height: 80%;
+	}
+#page-surround {
+	background-color: #EEE;
+	margin: 0 -50px 20px;
+	padding: 10px 50px 10px 50px;
+	position: relative;
+	overflow: hidden;
+	border-radius: 5px 5px 5px 5px;
+	}
 /* Backgrounds */
 .grad-bottom {
 	position: absolute;
@@ -119,19 +144,7 @@ ul.menu {padding-left: 0;}
 
 .main-pattern {background: url(/static/images/overlays/patterns/carbonfiber.png) 50% 0;}
 
-#bg-surround {
-	overflow: hidden; position: relative;
-	background-color: #313131;
-	height: 80%;
-	}
-#page-surround {
-	background-color: #EEE;
-	margin: 0 -50px 20px;
-	padding: 0 50px 25px 50px;
-	position: relative;
-	overflow: hidden;
-	border-radius: 5px 5px 5px 5px;
-	}
+
 								
 /* Logo */
 #wp-logo {
@@ -153,11 +166,12 @@ ul.menu {padding-left: 0;}
 .copytext {
 	padding: 0;
 	margin: 0;
-	font-size: 11px;
-	line-height: 15px;
+	font-size: smaller;
+	font-weight: bold;
+	line-height: 20px;
 	display: block;
 	text-align: left;
-	color: #DDDDDD;
+	color: #757575;
 	}
 
 /* Donations */
@@ -180,11 +194,12 @@ ul.menu {padding-left: 0;}
 	text-align: center;
 	}
 #wp-totop {
-	font-size: 110%;
-	line-height: 110%;
+	font-size: 100%;
+	line-height: 100%;
 	font-weight: lighter;
-	padding: 4px 0 4px 30px;
+	padding: 0px 0 4px 30px;
 	background-image: url(/static/images/overlays/dark/to-top.png);
+	/* single-image animation */
 	background-position: 0 1px;
 	background-repeat: no-repeat;
 	}
@@ -194,7 +209,7 @@ ul.menu {padding-left: 0;}
 /* Cj's Tweaks */
 span.cjheader {
 	text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
-	font-family: "Century Gothic", "Liberation Sans", "YanoneKaffeesatzLight", "Arial Black";
+	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Liberations Sans", sans-serif;
 	font-size: 3em;
 	color: #26A1F4;
 	text-transform: lowercase;
@@ -289,12 +304,12 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
     border-radius: 3px;
     padding: 2px;
     color: #4D6375;
-    font-family: monospace
+    font-family: "Source Code Pro"
 }
 
 /* simple inline code highlite */
 code, samp {
-	font-family: monospace;
+	font-family: "Source Code Pro";
     color: #4D6375;
     border: 1px solid #7793A7;
     border-radius: 3px;
