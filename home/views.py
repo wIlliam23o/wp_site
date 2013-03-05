@@ -24,7 +24,7 @@ def index(request):
         
     
     # initialize main template
-    tmp_main = loader.get_template('home/main.html')
+    tmp_main = loader.get_template('home/index.html')
     default_content = browser_name
     # load variables into template
     c_main = Context({'extra_style_link': extra_style_link,

@@ -8,11 +8,11 @@
 .component-content .rt-headline, .component-content .rt-article-content, .component-content .rt-article, .component-content .rt-article-bg {zoom: 1;}
 
 /* Side Menus */
-#rt-main ul.menu li, #rt-main ul.menu li a {zoom: 1;}
+ul.menu li a {zoom: 1;}
 
 /* Typography */
-.rt-pagination .tab {display: inline;}
-.rt-pagination .page-block {display: inline;}
+.tab {display: inline;}
+.page-block {display: inline;}
 
 /* edit button */
-.component-content .edit img {filter: alpha(opacity = 0);}
+img {filter: alpha(opacity = 0);}
