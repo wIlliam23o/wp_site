@@ -96,29 +96,22 @@
 	    	</div>
 	    	
 	        <!-- Navigation -->
-	        <div class="topbar">
-	        		<div class="navigation">
-	        			<div class="menubar">
-							<div id="dock">
-								<div class="dock-container">
-											<a class="dock-item" href="index.html"><span>Example&nbsp;1</span><img src="/static/images/dock/home.png" alt="home" /></a> 
-											<a class="dock-item" href="example2.html"><span>Example&nbsp;2</span><img src="/static/images/dock/email.png" alt="contact" /></a> 
-											<a class="dock-item" href="example3.html"><span>Example&nbsp;3</span><img src="/static/images/dock/portfolio.png" alt="portfolio" /></a> 
-											<a class="dock-item" href="all-examples.html"><span>All&nbsp;Examples</span><img src="/static/images/dock/music.png" alt="music" /></a> 
-											<a class="dock-item" href="#"><span>Video</span><img src="/static/images/dock/video.png" alt="video" /></a> 
-											<a class="dock-item" href="#"><span>History</span><img src="/static/images/dock/history.png" alt="history" /></a> 
-											<a class="dock-item" href="#"><span>Calendar</span><img src="/static/images/dock/calendar.png" alt="calendar" /></a> 
-											<a class="dock-item" href="#"><span>Links</span><img src="/static/images/dock/link.png" alt="links" /></a> 
-											<a class="dock-item" href="#"><span>RSS</span><img src="/static/images/dock/rss.png" alt="rss" /></a> 
-											<a class="dock-item" href="#"><span>RSS2</span><img src="/static/images/dock/rss2.png" alt="rss" /></a> 
-								</div><!-- end div .dock-container -->
-							</div><!-- end div .dock #dock -->	        						
-	        			</div>
-	        		</div>
+	        <div class="wp-block navigation">
+	        	<div class="menubar">
+					<div id="dock">
+						<div class="dock-container">
+								<a class="dock-item" href="/"><span>Home</span><img src="/static/images/dock/wp-home.png" alt="home" /></a> 
+								<a class="dock-item" href="/"><span>Projects</span><img src="/static/images/dock/wp-projects.png" alt="projects" /></a>
+								<a class="dock-item" href="/"><span>Blog</span><img src="/static/images/dock/wp-blog.png" alt="blog" /></a> 
+								<a class="dock-item" href="/"><span>About</span><img src="/static/images/dock/wp-about.png" alt="about" /></a> 
+								<a class="dock-item" href="#"><span>Search</span><img src="/static/images/dock/wp-search.png" alt="search" /></a> 
+
+						</div><!-- end div .dock-container -->
+					</div><!-- end div .dock #dock -->	        						
+	        	</div>
 	        </div>
-	    	
 			<!-- Page Surround -->
-	        <div id='page-surround'>
+	        <div id='page-surround' class="wp-block">
   				<!-- view content -->
 				{% block content %}
 					<div class='contentbox'>
@@ -157,8 +150,9 @@
 
 	    	</div>
 	    </div>
+
 		<!-- Google Ads -->
-		<div class="googleads" style="display: block; text-align: center;">
+		<div class="wp-block google-ads">
 			<script type="text/javascript"><!--
 				google_ad_client = "ca-pub-0811371441457236";
 				/* Leaderboard - Grey */
@@ -169,7 +163,7 @@
 			</script>
 			<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>
 		</div>
-		<div class="donations">
+		<div class="wp-block donations">
 			<!-- Paypal donation form -->
 			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="blank">
 				<input type="hidden" name="cmd" value="_s-xclick">
@@ -187,7 +181,7 @@
 			</form>
 		</div>
 	</div>
-	<div class="bottom">
+	<div class="wp-block bottom">
 		<div id="copyright">
 			<span class="copytext">copyright 2013 welborn productions</span>
 		</div>
@@ -197,5 +191,6 @@
 			</a>
 		</div>
 	</div>
+
 </body>
 </html>

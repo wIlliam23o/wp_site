@@ -83,35 +83,45 @@ blockquote p {
 /* Containers */
 .wp-container {
 	position: relative; 
-	border-radius: 5px 5px 5px 5px; 
+	border-radius: 5px; 
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
 	background: transparent; 
 	margin: 0 auto; 
 	width: 960px;
 	}
+	
 .wp-block {
+	position: relative;
 	margin: 15px 0; 
-	border-radius: 5px 5px 5px 5px;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
 	}
-ul {list-style-image: none;}
-ul.menu {padding-left: 0;}
-.module-title .title a {font-weight: normal;}
+	
 .contentbox {
 	background-color: #F7F7F7;
 	border-radius: 5px 5px 5px 5px;
 	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4);
 	}
+	
+ul {list-style-image: none;}
+ul.menu {padding-left: 0;}
+.module-title .title a {font-weight: normal;}
+
 .bottom { 
 	background-color: #000000;
 	margin-top: -10px;
 	}
 #bg-surround {
-	overflow: hidden; position: relative;
+	overflow: hidden;
+	position: relative;
 	background-color: #313131;
-	height: 80%;
+	height: auto;
+	padding-bottom: 20px;
 	}
 #page-surround {
 	background-color: #DBDBDB;
-	margin: 0 -50px 20px;
 	padding: 10px 50px 10px 50px;
 	position: relative;
 	overflow: hidden;
@@ -119,18 +129,29 @@ ul.menu {padding-left: 0;}
 	}
 /* Navigation */
 .topbar {
-	margin-top: 20px;
+	margin-top: 0px;
 }
 .menubar {
 	display: inline-block;
 	position: relative;
-	margin-top: 40px;
-	margin-bottom: 10px;
+	margin-top: 60px;
 	padding: 0;
-	width: 100%;
+	left: -60px; /* fix for fisheye being slightly off (see dock.css #dock) */
+	width: auto; /* set to 100% for centered menu, see dock.css for padding-left: 20px  */
 	font-family: "Yanone Kaffeesatz";
 	text-transform: lowercase;
-	text-align: center;
+	text-align: left;
+}
+
+
+}
+.menu-spacer {
+	/* experimental */
+	width: 10px;
+	background: transparent;
+	display: inline-block;
+	position: relative;
+	
 }
 .menu-block {
 	padding: 0;
@@ -232,7 +253,11 @@ ul.menu {padding-left: 0;}
 	text-align: left;
 	color: #757575;
 	}
-
+/* Google Ads */
+.google-ads {
+	display: block;
+	text-align: center;
+}
 /* Donations */
 .donations {
 	position: relative;

@@ -6,11 +6,11 @@ $(function () {
 			items: 'a',
 			itemsText: 'span',
 			container: '.dock-container',
-			itemWidth: 50,
-			proximity: 60,
+			itemWidth: 60, /* 50 */
+			proximity: 60, /* 60 */
 			alignment : 'left',
-			valign: 'bottom',
-			halign : 'center'
+			valign: 'top',
+			halign : 'left'
 		}
 	);
 });
