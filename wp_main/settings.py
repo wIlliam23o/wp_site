@@ -142,6 +142,7 @@ INSTALLED_APPS = (
     'django_user_agents',
     # local apps
     'home',
+    'projects',
     
 )
 

@@ -1,0 +1,14 @@
+{% extends "home/main.html" %}
+
+{% block title %}Welborn Productions - Projects{% endblock %}
+
+{% block extrastylelink %}
+		<link rel="stylesheet" href="/static/css/projects.css" type="text/css"/>
+{% endblock %}
+
+<!-- Main Projects Page -->
+{% block content %}
+	<div class="contentbox">
+		{{ projects_content }}
+	</div>
+{% endblock %}

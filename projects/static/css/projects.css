@@ -1,0 +1,26 @@
+/* Styles for projects listing/pages */
+
+.project_container {
+	background-color: #DBDBDB;
+}
+
+.project_header {
+	text-align: center;
+}
+
+.project_name {
+	font-family: "Carrois Gothic";
+	font-weight: bold;
+	font-size: 2em;
+
+}
+
+.project_version {
+	font-size: .5em;
+}
+
+.project_desc {
+	font-family: "Source Sans Pro";
+	font-size: 1em;
+}
+

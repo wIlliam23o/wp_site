@@ -12,6 +12,11 @@ urlpatterns = patterns('',
     url(r'^$', include('home.urls')),
     )
 
+# Projects view (projects)
+urlpatterns += patterns('',
+    url(r'^projects/', include('projects.urls'))
+    )
+
 # Admin/Other
 urlpatterns += patterns('',
     # Examples:
@@ -23,6 +28,6 @@ urlpatterns += patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-)
+    )
 
 
