@@ -29,10 +29,10 @@ def index(request):
         projects_content = "<span>Sorry, no projects available yet.</span>"
     else:
         # list all projects...
-        projects_content = ""
-        for proj in wp_project.objects.all():
+        projects_content = "<div class='project_listing'>\n"
+        for proj in wp_project.objects.all().order_by('name'):
             projects_content += project_listing(request, proj)
-            
+        projects_content += "</div>\n"     
     # build context (mark content as safe so we can build our page using html)
     context_main = Context({'projects_content': mark_safe(projects_content),
                             'extra_style_link': extra_style_link
@@ -98,6 +98,7 @@ def project_page(request, project, requested_page, source=""):
     cont_project = Context({'projects_content': mark_safe(projects_content)})
     return HttpResponse(tmp_project.render(cont_project))
 
+
 def request_any(request, _identifier):
     """ returns project by name, alias, or id 
         returns list of possible matches on failure.
@@ -132,6 +133,7 @@ def request_name(request, _name):
 def get_byname(_name):
     """ safely retrieve project
         returns None on failure. """
+        
     try:
         proj = wp_project.objects.get(name=_name)
         return proj
@@ -140,9 +142,11 @@ def get_byname(_name):
     except:
         return None
     
+    
 def get_byalias(_alias):
     """ safely retrieve project
         returns None on failure. """
+        
     try:
         proj = wp_project.objects.get(alias=_alias)
         return proj
@@ -150,10 +154,12 @@ def get_byalias(_alias):
         return None
     except:
         return None
+    
         
 def get_byid(_id):
     """ safely retrieve project
         returns None on failure. """
+        
     try:
         proj = wp_project.objects.get(id=_id)
         return proj
@@ -166,6 +172,7 @@ def get_withmatches(_identifier):
         returns project on success,
         return list of possible close matches on failure 
     """
+    
     try:
         _id = int(_identifier)
         proj = get_byid(_id)
@@ -201,6 +208,18 @@ def get_withmatches(_identifier):
         # project was found
         return proj
     
+    
+def sorted_projects(sort_method = "date"):
+    """ return sorted list of projects.
+        sort methods: date, name, id
+    """
+    
+    if sort_method == "date":
+        sort_method = "publish_date"
+        
+    return wp_project.objects.all().order_by(sort_method)
+
+     
 def safe_arg(_url):
     """ basically just trims the / from the args right now """
     

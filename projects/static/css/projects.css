@@ -1,14 +1,21 @@
 /* Styles for projects listing/pages */
 
+.project_listing {
+	text-align: center;
+}
 .project_container {
+	margin: 15px;
 	padding: 10px;
 	background-color: #FAFAFA;
 	border-radius: 5px;
-	box-shadow: #BAC2C7 0px 0px 15px
+	box-shadow: #BAC2C7 0px 0px 15px;
+	width: 40%;
+	display: inline-table;
 }
 
 .project_header {
 	text-align: left;
+	width: 100%
 }
 
 .project_name {
