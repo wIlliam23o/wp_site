@@ -6,6 +6,12 @@ from django.utils.safestring import mark_safe # don't escape html with strings m
 from projects.models import wp_project
 # User-Agent helper...
 from django_user_agents.utils import get_user_agent #@UnresolvedImport
+# Global settings (for getting absolute path)
+from django.conf import settings
+
+
+
+import os.path
 
 
 def index(request):
@@ -67,35 +73,39 @@ def project_page(request, project, requested_page, source=""):
     # Get project page template
     tmp_project = loader.get_template("projects/index.html")
     
-    ######## TEST ##########
+    
     if isinstance(project, list):
         # no project found, build possible matches..
         if len(project) == 0:
-            s = "<span>Sorry, no matching projects found for: " + requested_page + "</span>"
-            for i in dir(request):
-                print i
-                
+            shtml = "<span>Sorry, no matching projects found for: " + requested_page + "</span>" 
         else:
             # build possible matches..
-            s = "<div><span>Sorry, I can't find a project at '" + requested_page + "'. Were you " + \
+            shtml = "<div class='surround_matches'>" + \
+                "<span>Sorry, I can't find a project at '" + requested_page + "'. Were you " + \
                 "looking for one of these?</span><br/>" + \
                 "<div class='project_matches'>"
             for proj in project:
-                s += "<div class='project_match'>"
+                shtml += "<div class='project_match'>"
                 p_name = "<span class='match_result'>" + \
                          proj.name + "</span>"
                 p_link = "/projects/" + proj.alias
-                s += wrap_link(p_name, p_link) + \
+                shtml += wrap_link(p_name, p_link) + \
                      "</div>"
-            s += "</div></div>"
+            shtml += "</div></div>"
     else:
         # Found Project, build page.
-        s = "<span>Found Project: " + str(project) + "</span>"
-    projects_content = s
-    #########################
+        salias = project.alias
+        shtmlfile = os.path.join(settings.BASE_DIR, "projects/static/html/" + salias + ".html")
+        print "HTML File: " + shtmlfile
+        
+        shtml = "<span>No information found for: " + salias + "</span>"
+        if os.path.isfile(shtmlfile):
+            with open(shtmlfile) as fhtml:
+                shtml = fhtml.read()
+                
     
     # Build Context for project...
-    cont_project = Context({'projects_content': mark_safe(projects_content)})
+    cont_project = Context({'projects_content': mark_safe(shtml)})
     return HttpResponse(tmp_project.render(cont_project))
 
 
@@ -172,36 +182,42 @@ def get_withmatches(_identifier):
         returns project on success,
         return list of possible close matches on failure 
     """
+    identifiers = str(_identifier).split(' ')
     
     try:
-        _id = int(_identifier)
+        _id = int(identifiers[0])
         proj = get_byid(_id)
     except:
         # not an id, try alias.
-        proj = get_byalias(_identifier)
+        proj = get_byalias(identifiers[0])
         if proj is None:
-            proj = get_byid(_identifier)
+            # Try name
+            proj = get_byname(' '.join(identifiers))
     
+    # Search for matches
     if proj is None:
         lst_matches = []
-        _search = str(_identifier).lower()
-        _strim = _search.replace(' ', '')
-        # still no project, look for close matches...
-        for project in wp_project.objects.all():
-            _name = project.name.lower()
-            _nametrim = _name.replace(' ', '')
-            _alias = project.alias.lower()
-            _desc = project.description.lower()
-            _desctrim = _desc.replace(' ', '')
-            _id = str(project.id)
-            # try matching in various ways
-            if ((_strim in _nametrim) or
-                (_nametrim in _strim) or
-                (_strim in _desctrim) or
-                (_strim in _alias) or
-                (_alias in _strim) or
-                (_strim in _id)):
-                lst_matches.append(project)
+        # Try all words in identifier seperately
+        for _word in identifiers:
+            _search = str(_word).lower()
+            _strim = _search.replace(' ', '')
+            # still no project, look for close matches...
+            for project in wp_project.objects.all():
+                _name = project.name.lower()
+                _nametrim = _name.replace(' ', '')
+                _alias = project.alias.lower()
+                _desc = project.description.lower()
+                _desctrim = _desc.replace(' ', '')
+                _id = str(project.id)
+                # try matching in various ways
+                if ((_strim in _nametrim) or
+                    (_nametrim in _strim) or
+                    (_strim in _desctrim) or
+                    (_strim in _alias) or
+                    (_alias in _strim) or
+                    (_strim in _id)):
+                    if not project in lst_matches:
+                        lst_matches.append(project)
         # return list of matching projects
         return lst_matches
     else:

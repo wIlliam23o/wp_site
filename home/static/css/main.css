@@ -80,6 +80,13 @@ blockquote p {
 	margin: 10; 
 	}
 
+strong {
+	font-size: .8em;
+}
+
+p {
+	margin-top: 5px;
+}
 /* Containers */
 .wp-container {
 	position: relative; 

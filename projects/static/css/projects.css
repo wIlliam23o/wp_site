@@ -9,8 +9,7 @@
 	background-color: #FAFAFA;
 	border-radius: 5px;
 	box-shadow: #BAC2C7 0px 0px 15px;
-	width: 40%;
-	display: inline-table;
+
 }
 
 .project_header {
@@ -43,5 +42,17 @@
 .desc {
 	font-family: "Source Sans Pro", Arial, sans-serif;
 	font-size: 1em;
+}
+
+.project_matches {
+	border-radius: 5px;
+}
+.project_match {
+	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Arial", "sans-serif";
+	padding: 5px;
+}
+
+.surround_matches {
+	padding-top: 10px;
 }
 
