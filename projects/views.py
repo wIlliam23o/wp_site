@@ -20,15 +20,16 @@ def index(request):
     user_agent = get_user_agent(request)
     browser_name = user_agent.browser.family.lower()
     
-    # get css to use (non-IE, it's handled in the template)...
-    if "opera" in browser_name:
-        extra_style_link = "/static/css/template-opera.css"
+    # get browser css to use...
+    if browser_name.startswith("ie"):
+        extra_style_link = "/static/css/main-ie.css"
     elif "firefox" in browser_name:
-        extra_style_link = "/static/css/template-gecko.css"
+        extra_style_link = "/static/css/main-gecko.css"
     elif "chrome" in browser_name:
-        extra_style_link = "/static/css/template-webkit.css"
+        extra_style_link = "/static/css/main-webkit.css"
     else:
-        extra_style_link = False    
+        extra_style_link = False
+         
     tmp_main = loader.get_template('projects/index.html')
     
     if wp_project.objects.count() == 0:
