@@ -1,4 +1,12 @@
 from django.db import models
+import django.utils
+import datetime
+
+# Module level functions...   
+def get_date_today():
+    """ returns today's date for setting default publish_date value """
+        
+    return datetime.date.today()
 
 # Create your models here.
 class wp_project(models.Model):
@@ -24,14 +32,25 @@ class wp_project(models.Model):
     source_file = models.CharField(blank=True, default="", max_length=512)
     # optional source dir (dir containing source files to view)
     source_dir = models.CharField(blank=True, default="", max_length=512)
+    # publish date (for sort-order mainly)
+    publish_date = models.DateField(blank=False, default=get_date_today())
+    
+    # count of views/downloads
+    view_count = models.IntegerField(default=0)
+    download_count = models.IntegerField(default=0)
     
     def __unicode__(self):
         """ returns string/unicode representation of project """
         s = self.name
         if self.version != "":
             s = s + " v. " + self.version
-        
         return s
+
+
+        
+
+        
+        
     
     
     

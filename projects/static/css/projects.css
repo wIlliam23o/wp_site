@@ -1,26 +1,40 @@
 /* Styles for projects listing/pages */
 
 .project_container {
-	background-color: #DBDBDB;
+	padding: 10px;
+	background-color: #FAFAFA;
+	border-radius: 5px;
+	box-shadow: #BAC2C7 0px 0px 15px
 }
 
 .project_header {
-	text-align: center;
+	text-align: left;
 }
 
 .project_name {
-	font-family: "Carrois Gothic";
-	font-weight: bold;
 	font-size: 2em;
-
 }
 
-.project_version {
-	font-size: .5em;
+.version {
+	font-size: .75em;
+	color: #535353;
+	font-weight: bold;
+	font-family: "Carrois Gothic", "Arial Black", "Liberation Sans", Arial, sans-serif;
+	text-align: right;
+	padding-left: 0%;
 }
 
 .project_desc {
-	font-family: "Source Sans Pro";
+	margin-top: 10px;
+	padding: 5px;
+	border-radius: 10px;
+	border-color: rgba(202, 217, 224, 0.5);
+	border-style: solid;
+	border-width: 2px;
+}
+
+.desc {
+	font-family: "Source Sans Pro", Arial, sans-serif;
 	font-size: 1em;
 }
 

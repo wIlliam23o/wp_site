@@ -103,7 +103,7 @@ blockquote p {
 	padding: 10px;
 	background-color: #F7F7F7;
 	border-radius: 5px 5px 5px 5px;
-	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4);
+	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.17);
 	}
 	
 ul {list-style-image: none;}
@@ -292,7 +292,7 @@ ul.menu {padding-left: 0;}
 
 	   
 /* Cj's Tweaks */
-span.cjheader {
+.header {
 	text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
 	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Liberations Sans", sans-serif;
 	font-size: 3em;
@@ -300,14 +300,14 @@ span.cjheader {
 	text-transform: lowercase;
     }
 
-.cjtitle {
+.title {
 	text-decoration: underline;
 	}
-p.cjdesc {
+p.desc {
 	padding-left: 40px;
 	padding-right: 40px;
     }
-a.cjhidden {
+.hidden {
 	display: none;
    }
 
