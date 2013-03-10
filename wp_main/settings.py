@@ -8,7 +8,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 # root for project
-BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
+BASE_DIR = "c:/workspace/welbornprod/wp_win"
 MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
 
