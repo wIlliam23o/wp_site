@@ -9,6 +9,9 @@ from django_user_agents.utils import get_user_agent #@UnresolvedImport
 # Global settings (for getting absolute path)
 from django.conf import settings
 
+# welborn productions utilities
+from wp_main import utilities
+
 
 
 import os.path
@@ -16,22 +19,13 @@ import os.path
 
 def index(request):
     """ Main Project Page (index/listing) """
-    # get user agent
-    user_agent = get_user_agent(request)
-    browser_name = user_agent.browser.family.lower()
+    # browser specific style
+    extra_style_link = get_browser_style(request)
     
-    # get browser css to use...
-    if browser_name.startswith("ie"):
-        extra_style_link = "/static/css/main-ie.css"
-    elif "firefox" in browser_name:
-        extra_style_link = "/static/css/main-gecko.css"
-    elif "chrome" in browser_name:
-        extra_style_link = "/static/css/main-webkit.css"
-    else:
-        extra_style_link = False
-         
+    # base template for project listing     
     tmp_main = loader.get_template('projects/index.html')
     
+    # get projects
     if wp_project.objects.count() == 0:
         projects_content = "<span>Sorry, no projects available yet.</span>"
     else:
@@ -70,15 +64,18 @@ def project_listing(request, project):
 
 def project_page(request, project, requested_page, source=""):
     """ Project Page (for individual project) """
+    # get browser specific css file
+    extra_style_link = get_browser_style(request)
     
     # Get project page template
-    tmp_project = loader.get_template("projects/index.html")
+    tmp_project = loader.get_template("projects/project.html")
     
     
     if isinstance(project, list):
         # no project found, build possible matches..
         if len(project) == 0:
-            shtml = "<span>Sorry, no matching projects found for: " + requested_page + "</span>" 
+            shtml = "<span>Sorry, no matching projects found for: " + requested_page + "</span>"
+            project_title = False
         else:
             # build possible matches..
             shtml = "<div class='surround_matches'>" + \
@@ -93,20 +90,53 @@ def project_page(request, project, requested_page, source=""):
                 shtml += wrap_link(p_name, p_link) + \
                      "</div>"
             shtml += "</div></div>"
+            project_title = False
     else:
         # Found Project, build page.
+        project_title = project.name
         salias = project.alias
         shtmlfile = os.path.join(settings.BASE_DIR, "projects/static/html/" + salias + ".html")
-        print "HTML File: " + shtmlfile
+
         
         shtml = "<span>No information found for: " + salias + "</span>"
         if os.path.isfile(shtmlfile):
             with open(shtmlfile) as fhtml:
-                shtml = fhtml.read()
+                # Build project page using html file for contents...
+                shtml = "<div class='project_container'>\n" + \
+                    "<div class='project_title'>\n" + \
+                    "<h1 class='header'>" + project_title + "</h1>\n" + \
+                    "</div>"
+                shtml += fhtml.read()
+                shtml += "</div>"
                 
+                # inject custom text replacements for ads and such.
+                shtml = utilities.inject_article_ad(shtml)
+                
+            # project has screenshots?
+            if project.screenshot_dir == "":
+                # try default location
+                images_dir = os.path.join(settings.BASE_DIR, "projects/static/images/" + salias)
+            else:
+                if os.path.isdir(project.screenshot_dir):
+                    # project path was absolute
+                    images_dir = project.screenshot_dir
+                else:
+                    # needs base dir added?
+                    images_dir = os.path.join(settings.BASE_DIR, project.screenshot_dir)
+                        
+            if os.path.isdir(images_dir):
+                use_screenshots = True
+                shtml = utilities.inject_screenshots(shtml, images_dir)
+            else:
+                use_screenshots = False   
+            print "IMAGES_DIR: " + images_dir
+            print "SCREENSHOTS: " + str(use_screenshots)        
     
     # Build Context for project...
-    cont_project = Context({'projects_content': mark_safe(shtml)})
+    cont_project = Context({'project_content': mark_safe(shtml),
+                            'project_title': project_title,
+                            'extra_style_link': extra_style_link,
+                            'use_screenshots': use_screenshots})
     return HttpResponse(tmp_project.render(cont_project))
 
 
@@ -261,5 +291,19 @@ def wrap_link(content_, link_url, alt_text = ""):
     
     return s + content_ + s_end
 
+def get_browser_style(request):
+    """ return browser-specific css file (or False if not needed) """
+    # get user agent
+    user_agent = get_user_agent(request)
+    browser_name = user_agent.browser.family.lower()
+    # get browser css to use...
+    if browser_name.startswith("ie"):
+        return "/static/css/main-ie.css"
+    elif "firefox" in browser_name:
+        return "/static/css/main-gecko.css"
+    elif "chrome" in browser_name:
+        return "/static/css/main-webkit.css"
+    else:
+        return False
     
         

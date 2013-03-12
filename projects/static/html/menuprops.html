@@ -1,366 +1,381 @@
 
 <!-- Basic Description -->
-<p class="desc" id='desc'>
-A freedesktop.org menu editor designed for <strong>Linux</strong> desktop
- environments such as <strong>Gnome, XFCE, LXDE, Cinnamon, & KDE</strong>.
- Created with <strong>Python 2.7, GTK 2, & Glade 3</strong>. <strong>Menu
- Props</strong> allows you to view, create, delete, and modify launcher files
- (<span style="font-style: italic;">.desktop</span>), directory files 
- (<span style="font-style: italic;">.directory</span>), and menu files 
- (<span style="font-style: italic;">.menu</span>).
-</p>
+<div class='wp-block feature-list'>
+	<p id='description'>
+	A freedesktop.org menu editor designed for <strong>Linux</strong> desktop
+	 environments such as <strong>Gnome, XFCE, LXDE, Cinnamon, & KDE</strong>.
+	 Created with <strong>Python 2.7, GTK 2, & Glade 3</strong>. <strong>Menu
+	 Props</strong> allows you to view, create, delete, and modify launcher files
+	 (<span style="font-style: italic;">.desktop</span>), directory files 
+	 (<span style="font-style: italic;">.directory</span>), and menu files 
+	 (<span style="font-style: italic;">.menu</span>).
+	</p>
+	
+	<!-- Menu Section -->
+	<p id='menusection'>
+	There are two main sections in <strong>Menu Props</strong>, the first is called
+	 the 'Menu' section. This is where you can view the 'menu tree' and modify it's
+	 structure and/or contents. This section is very similar to 'alacarte-style' menu
+	 editing, except has more features and options. <strong>Menu Props</strong> has a
+	 built-in properties editor for launchers and directories, and does not require
+	 an external command such as 'desktop-file-edit' to make basic changes. You can
+	 still choose to open items in an external editor using the context-menu 
+	 (<span style="font-style: italic;">right-click</span>) if you like. The default
+	 external editor can be changed in "Settings".
+	</p>
+	
+	<!-- Items section -->
+	<p id='itemssection'>
+	The 'Items' section lists all launcher/directory files that are found in the
+	 default XDG directories, and any other directory found in the XDG_DATA_DIRS
+	 environment variable. This allows you to make changes to items that may not be
+	 loaded in the menu tree. The 'Items' section is split into 'Entries', 'Dirs',
+	 and 'Search'. Here you can find all launchers or directories listed in order by
+	 name, and search both lists.
+	</p>
+	
+	<!-- Search section -->
+	<p id='searchsection'>
+	The 'Search' section lets you search all launchers/directories for text inside
+	 the file contents. All results can be viewed or modified the same way, as if you
+	 were looking at them from the 'Items' or 'Dirs' list.
+	</p>
+	
+	<!-- Note to previous users -->
+	<p>
+	<span style="text-decoration: underline;">Note to users:</span><br/>
+	Massive changes have been made since 2.5.4 due to errors stemming from gmenu and
+	 porting to other environments. I apologize to anyone who had trouble using
+	 <strong>Menu Props</strong> and I will continue to iron out any bugs that may
+	 still exist. If you have a menuprops.conf it would be better to remove it and
+	 any other <strong>Menu Props</strong> files, and start fresh. Please report any
+	 problems to cj@welbornproductions.net.
+	</p>
 
-<!-- Menu Section -->
-<p class="desc" id='menusection'>
-There are two main sections in <strong>Menu Props</strong>, the first is called
- the 'Menu' section. This is where you can view the 'menu tree' and modify it's
- structure and/or contents. This section is very similar to 'alacarte-style' menu
- editing, except has more features and options. <strong>Menu Props</strong> has a
- built-in properties editor for launchers and directories, and does not require
- an external command such as 'desktop-file-edit' to make basic changes. You can
- still choose to open items in an external editor using the context-menu 
- (<span style="font-style: italic;">right-click</span>) if you like. The default
- external editor can be changed in "Settings".
-</p>
-
-<!-- Items section -->
-<p class="desc" id='itemssection'>
-The 'Items' section lists all launcher/directory files that are found in the
- default XDG directories, and any other directory found in the XDG_DATA_DIRS
- environment variable. This allows you to make changes to items that may not be
- loaded in the menu tree. The 'Items' section is split into 'Entries', 'Dirs',
- and 'Search'. Here you can find all launchers or directories listed in order by
- name, and search both lists.
-</p>
-
-<!-- Search section -->
-<p class="desc" id='searchsection'>
-The 'Search' section lets you search all launchers/directories for text inside
- the file contents. All results can be viewed or modified the same way, as if you
- were looking at them from the 'Items' or 'Dirs' list.
-</p>
-
-<!-- Note to previous users -->
-<p class="desc">
-<span style="text-decoration: underline;">Note to users:</span><br/>
-Massive changes have been made since 2.5.4 due to errors stemming from gmenu and
- porting to other environments. I apologize to anyone who had trouble using
- <strong>Menu Props</strong> and I will continue to iron out any bugs that may
- still exist. If you have a menuprops.conf it would be better to remove it and
- any other <strong>Menu Props</strong> files, and start fresh. Please report any
- problems to cj@welbornproductions.net.
-</p>
-
-
-<!-- Navigation -->
-<p class="desc" style="text-align: center;"id='navigation'>
-Jump to:<br/>
-<strong>
-[<a href='#download'>download</a>] [<a href='#features'>features</a>]
-[<a href='#installation'>installation</a>] [<a href='#fixes'>fixes</a>]
-[<a href='#knownbugs'>bugs</a>] [<a href='#testedwith'>tested with</a>]
-[<a href='#screenshots'>screenshots</a>] [<a href='#future'>future</a>]
-</strong>
-</span>
-</p>
-
-<!--Article Ad -->
-<p>
-[module-126]
-</p>
-
-<!-- Menu Props Download -->
-<div class="contentbox" id='download'>
-<span>------[INSERT DOWNLOAD LINK HERE]------------</span>
+	<!-- Navigation -->
+	<div class="jumpto">
+		<span class='jumpto-title'>Jump to</span><br/>
+		<div class='jumpto-nav'>
+				<a href='#download' class='jumpto-nav'>download</a>
+				<a href='#features' class='jumpto-nav'>features</a>
+				<a href='#installation' class='jumpto-nav'>installation</a>
+				<a href='#fixes' class='jumpto-nav'>fixes</a>
+				<a href='#knownbugs' class='jumpto-nav'>bugs</a>
+				<a href='#testedwith' class='jumpto-nav'>tested with</a>
+				<a href='#screenshots' class='jumpto-nav'>screenshots</a>
+				<a href='#future' class='jumpto-nav'>future</a>
+		</div>
+	</div>
 </div>
 
-<!--Features -->
-<h3>
-    <span style="text-decoration: underline;" id='features'>Features:</span>
-</h3>
-<ul class="circle-small">
-<li>
-    Display menu tree
-</li>
-<li>
-    Move, Edit, Hide, Show, Delete, Create Menus
-</li>
-<li>
-    Move, Edit, Hide, Show, Delete, Create Launcher/Directories
-</li>
-<li>
-    Display launcher/directory information
-</li>
-<li>
-    Delete launcher/directory-file currently being used
-</li>
-<li>
-    Delete launcher/directory-file permanently from all XDG directories
-</li>
-<li>
-    Automatic Back-Up of Menu File on first run
-</li>
-<li>
-    Run As.. (Normal User or Root)
-</li>
-<li>
-    Change launcher execution (Always launch as Normal User/Root)
-</li>
-<li>
-    Export launcher/directory list to text file (Full Mode, all info found in
-    Description)
-</li>
-<li>
-    Export launcher/directory list to text file (Simple Mode, Names &amp; Filenames)
-</li>
-<li>
-    Edit launcher/directory using external editor (User has choice of external
-    editor in Settings)
-</li>
-<li>
-    Find all locations of launcher/directory file (Scans all XDG directories)
-</li>
-<li>
-    Validate launcher/directory file using desktop-file-validate (If
-    "desktop-file-validate" is installed)
-</li>
-<li>
-    Search launcher/directory content
-</li>
-<li>
-    Optional backup of edited/deleted files
-</li>
-<li>
-    Default menu file can be set in settings (If Menu Props fails to detect the
- correct menu file)
-</li>
-<li>
-    Default elevation command can be set in settings (For kdesu, or other
-    command users)
-</li>
-<li>
-    Edit local/system menu file using external editor
-</li>
-<li>
-    Open launcher/directory files from another directory for viewing/editing
-</li>
-<li>
-    Save menu as another filename
-</li>
-<li>
-    Check for update
-</li>
-<li>
-    Refresh list (Manually refresh the menu/items)
-</li>
-</ul>
+<!-- Article Ad -->
+{{ article_ad }}
 
-<p> </p>
+<!-- Menu Props Download -->
+<div class="wp-block feature-list" id='download'>
+	<div class="title-box">
+		<h3 class='title'>Download</h3>
+	</div>
+	<br/>
+	<span>Download of this package has been disabled until further notice.</span>
+</div>
+
+<div class="wp-block feature-list">
+<!--Features -->
+	<div class="title-box">
+		<h3 class='title' id='features'>Features</h3>
+	</div>
+	<ul class="circle-small">
+		<li>
+		    Display menu tree
+		</li>
+		<li>
+		    Move, Edit, Hide, Show, Delete, Create Menus
+		</li>
+		<li>
+		    Move, Edit, Hide, Show, Delete, Create Launcher/Directories
+		</li>
+		<li>
+		    Display launcher/directory information
+		</li>
+		<li>
+		    Delete launcher/directory-file currently being used
+		</li>
+		<li>
+		    Delete launcher/directory-file permanently from all XDG directories
+		</li>
+		<li>
+		    Automatic Back-Up of Menu File on first run
+		</li>
+		<li>
+		    Run As.. (Normal User or Root)
+		</li>
+		<li>
+		    Change launcher execution (Always launch as Normal User/Root)
+		</li>
+		<li>
+		    Export launcher/directory list to text file (Full Mode, all info found in
+		    Description)
+		</li>
+		<li>
+		    Export launcher/directory list to text file (Simple Mode, Names &amp; Filenames)
+		</li>
+		<li>
+		    Edit launcher/directory using external editor (User has choice of external
+		    editor in Settings)
+		</li>
+		<li>
+		    Find all locations of launcher/directory file (Scans all XDG directories)
+		</li>
+		<li>
+		    Validate launcher/directory file using desktop-file-validate (If
+		    "desktop-file-validate" is installed)
+		</li>
+		<li>
+		    Search launcher/directory content
+		</li>
+		<li>
+		    Optional backup of edited/deleted files
+		</li>
+		<li>
+		    Default menu file can be set in settings (If Menu Props fails to detect the
+		 correct menu file)
+		</li>
+		<li>
+		    Default elevation command can be set in settings (For kdesu, or other
+		    command users)
+		</li>
+		<li>
+		    Edit local/system menu file using external editor
+		</li>
+		<li>
+		    Open launcher/directory files from another directory for viewing/editing
+		</li>
+		<li>
+		    Save menu as another filename
+		</li>
+		<li>
+		    Check for update
+		</li>
+		<li>
+		    Refresh list (Manually refresh the menu/items)
+		</li>
+	</ul>
+</div>
 
 <!-- Installation -->
-<h3>
-<span class='title' id='installation'>Installation:</span>
-</h3>
-<p class="desc">
-Installation notes are in a file called 'installation-notes.txt' inside the
- package. Basically, I made an install &amp; uninstall shell script that copies
- the necessary files to the appropriate location. To run it, open a terminal,
- 'cd' to the /menupropsX.X.X directory, and type: <br />
-<samp>sudo ./install</samp><br /> 
-If you do not wish to install the application you can always try it first by
- opening a terminal, 'cd' to the /menupropsX.X.X directory, and type: <br />
-<samp>./menuprops</samp><br /> 
-The install script just ensures that a <strong>Menu Props</strong> icon gets
- placed in the applications menu, and that the icon, desktop file, launch script,
- etc. are placed in their correct directory. If 'install', 'uninstall', or
- 'menuprops' fails to run be sure that they are set to executable using
- <samp>sudo chmod a+x [script name]</samp>. The 'helper script', <strong>Menu
- Props Writer</strong>, needs root privileges due to the directories
- <strong>Menu Props</strong> must access. You will be need to know root's
- password.
-</p>
-
+<div class="wp-block feature-list">
+	<div class="title-box">
+		<h3 class='title' id='installation'>Installation:</h3>
+	</div>
+	<p>
+		Installation notes are in a file called 'installation-notes.txt' inside the
+		 package. Basically, I made an install &amp; uninstall shell script that copies
+		 the necessary files to the appropriate location. To run it, open a terminal,
+		 'cd' to the /menupropsX.X.X directory, and type: <br />
+		<samp>sudo ./install</samp><br /> 
+		If you do not wish to install the application you can always try it first by
+		 opening a terminal, 'cd' to the /menupropsX.X.X directory, and type: <br />
+		<samp>./menuprops</samp><br /> 
+		The install script just ensures that a <strong>Menu Props</strong> icon gets
+		 placed in the applications menu, and that the icon, desktop file, launch script,
+		 etc. are placed in their correct directory. If 'install', 'uninstall', or
+		 'menuprops' fails to run be sure that they are set to executable using
+		 <samp>sudo chmod a+x [script name]</samp>. The 'helper script', <strong>Menu
+		 Props Writer</strong>, needs root privileges due to the directories
+		 <strong>Menu Props</strong> must access. You will be need to know root's
+		 password.
+	</p>
+</div>
 <!-- Fixes -->
-<h3 class='title'>
-    <span class='title' id='fixes'>Fixes:</span>
-</h3>
-<p class="desc">
-This version fixes bugs in the last version, adds new features, and stabilizes
- overall performance of <strong>Menu Props</strong>, includes fixes/features
- such as:
-</p>
-<ul class="checkmark green">
-<li>
-    Items not showing in <strong>Menu Props</strong>, but in the Main Menu.
-</li>
-<li>
-    Changes affect <strong>Menu Props</strong> but not the Main Menu.
-</li>
-<li>
-    User's .local items not showing in <strong>Menu Props</strong>.
-</li>
-<li>
-    Wrong .menu file being edited. (<i>Can now be set in menuprops.conf or
-    Settings</i>)
-</li>
-<li>
-    Elevation command not found in certain environments. (<i>Can now be set
-    in menuprops.conf or Settings</i>)
-</li>
-<li>
-    Too many backup files being created. (<i>Menu file backed up once,
-    item-backup disabled but can be set in settings</i>)
-</li>
-<li>
-    Markup text for message box's not working. (<i>Fixed</i>)
-</li>
-<li>
-    Moved menuprops.log back to /home/USER/ (Main script no longer runs as
-    root)
-</li>
-<li>
-    Better logging. (<i>More information, better information.</i>)
-</li>
-<li>
-    Added OnlyShowIn to properties (<span style="font-style: italic;">
-    ...see Known Bugs</span>)
-</li>
-<li>
-    Added GenericName to properties and description
-</li>
-<li>
-    Better integration between "Menu"/"Items" sections
-</li>
-<li>
-    Helper script writes all files that require root permission (
-    <span style="font-style: italic;">...still need root
-    password</span>)
-</li>
-<li>
-    ...Various other gmenu-related problems. (<i>Currently working on universal
-    menu editing module, to remove gmenu dependency.</i>)
-</li>
-<li>
-    ...Various other performance enhancements &amp; better error handling...
-</li>
-</ul>
-
+<div class='wp-block feature-list'>
+	<div class="title-box">
+		<h3 class='title' id='fixes'>Fixes</h3>
+	</div>
+	<p>
+		This version fixes bugs in the last version, adds new features, and stabilizes
+		 overall performance of <strong>Menu Props</strong>, includes fixes/features
+		 such as:
+	</p>
+	<ul class="checkmark green">
+		<li>
+		    Items not showing in <strong>Menu Props</strong>, but in the Main Menu.
+		</li>
+		<li>
+		    Changes affect <strong>Menu Props</strong> but not the Main Menu.
+		</li>
+		<li>
+		    User's .local items not showing in <strong>Menu Props</strong>.
+		</li>
+		<li>
+		    Wrong .menu file being edited. (<i>Can now be set in menuprops.conf or
+		    Settings</i>)
+		</li>
+		<li>
+		    Elevation command not found in certain environments. (<i>Can now be set
+		    in menuprops.conf or Settings</i>)
+		</li>
+		<li>
+		    Too many backup files being created. (<i>Menu file backed up once,
+		    item-backup disabled but can be set in settings</i>)
+		</li>
+		<li>
+		    Markup text for message box's not working. (<i>Fixed</i>)
+		</li>
+		<li>
+		    Moved menuprops.log back to /home/USER/ (Main script no longer runs as
+		    root)
+		</li>
+		<li>
+		    Better logging. (<i>More information, better information.</i>)
+		</li>
+		<li>
+		    Added OnlyShowIn to properties (<span style="font-style: italic;">
+		    ...see Known Bugs</span>)
+		</li>
+		<li>
+		    Added GenericName to properties and description
+		</li>
+		<li>
+		    Better integration between "Menu"/"Items" sections
+		</li>
+		<li>
+		    Helper script writes all files that require root permission (
+		    <span style="font-style: italic;">...still need root
+		    password</span>)
+		</li>
+		<li>
+		    ...Various other gmenu-related problems. (<i>Currently working on universal
+		    menu editing module, to remove gmenu dependency.</i>)
+		</li>
+		<li>
+		    ...Various other performance enhancements &amp; better error handling...
+		</li>
+	</ul>
+</div>
 <!-- Known Bugs -->
-<a name='knownbugs'></a>
-<h3 class='title'>
-    <span class='title'>Known Bugs:</span>
-</h3>
-<p class="desc">
-There are still a few bugs in this version that I am currently working to fix.
- I'll list them here as a warning. I have tested <strong>Menu Props</strong>
- with several different desktop environments, under several different distros of
- Linux. If any bugs occur, or you wish to port <strong>Menu Props</strong> to
- your favorite environment, please send me a line at cj@welbornproductions.net
- with your current Linux distribution &amp; Desktop Environment name/version. I
- will try my best to correct the issue if possible.
-</p>
-<ul class="circle red">
-<li>
-<strong>KDE</strong> does not move items up or down. <strong>KDE</strong> 
- uses an alphabetical listing as the default, so trying to move items up or
- down may not affect the Main Menu. (Even if it shows up in 
- <strong>Menu Props</strong>.)
-</li>
-<li>
-<strong>Cinnamon</strong> does not display sub-menus. This is
- <strong>Cinnamon's</strong> design, not mine. Any sub-menus created
- will show their items in either the "Other" menu, or the parent menu. I
- discourage the use of sub-menus in the <strong>Cinnamon</strong> environment.
-</li>
-<li>
-Setting <strong>OnlyShowIn</strong> causes items to disappear from 
- <strong>Menu Props</strong> on certain systems, with certain
- values set. (<span style="font-style: italic;">Setting OnlyShowIn=KDE; 
- using KDE will cause this.</span>) I believe this is a limitation of
- <strong>gmenu</strong> (<span style="font-style: italic;">gnome-menus</span>),
- which <strong>Menu Props</strong> is built with. I am currently working to
- remove this dependency (see <span style="font-style: italic;">Future</span>).
- To fix items that have disappeared: Open the launcher from the "Items" tab,
- and remove the OnlyShowIn option.
-</li>
-<li>
-<strong>Some systems don't have gmenu</strong> - Some systems need a little help
- to get gmenu going, here is some good info on 
- how to get it for your system. (<span style="font-style: italic;">
- instructions are for <strong>Fedora</strong>, but it works for
-<strong>Slackware</strong>. It may work on other systems too.</span>): 
-<a href='http://blog.mclaughlinsoftware.com/2011/11/24/gnome-menu-editing-fix/' 
-target='_blank'>
-<strong>gmenu editing fix</strong>
-</a>
-</li>
-</ul>
-<!-- Warning about duplicates -->
-<p class="desc">
-** If <strong>Menu Props</strong> shows duplicates this may not be a bug. 
- <strong>Menu Props</strong> will always show duplicates for certain
- applications, this is by design. For example, Konqueror shows duplicate
- entries in <strong>Menu Props</strong>, but not in the Main Menu. This is by
- Konqueror's design, not mine. They register several launchers with different
- file/url types. Several other applications do this also. It's not an
- <strong>actual duplicate</strong> unless the launcher .desktop files show the
- <strong>exact same</strong> name. Always check the launcher's .desktop file
- name, if they're slightly different then it's not a bug.<br/><br/>
-</p>
+<div class="wp-block feature-list">
+	<a name='knownbugs'></a>
+	<div class="title-box">
+		<h3 class='title'>Known Bugs</h3>
+	</div>
+	<p>
+		There are still a few bugs in this version that I am currently working to fix.
+		 I'll list them here as a warning. I have tested <strong>Menu Props</strong>
+		 with several different desktop environments, under several different distros of
+		 Linux. If any bugs occur, or you wish to port <strong>Menu Props</strong> to
+		 your favorite environment, please send me a line at cj@welbornproductions.net
+		 with your current Linux distribution &amp; Desktop Environment name/version. I
+		 will try my best to correct the issue if possible.
+	</p>
+	<ul class="circle red">
+		<li>
+		<strong>KDE</strong> does not move items up or down. <strong>KDE</strong> 
+		 uses an alphabetical listing as the default, so trying to move items up or
+		 down may not affect the Main Menu. (Even if it shows up in 
+		 <strong>Menu Props</strong>.)
+		</li>
+		<li>
+		<strong>Cinnamon</strong> does not display sub-menus. This is
+		 <strong>Cinnamon's</strong> design, not mine. Any sub-menus created
+		 will show their items in either the "Other" menu, or the parent menu. I
+		 discourage the use of sub-menus in the <strong>Cinnamon</strong> environment.
+		</li>
+		<li>
+		Setting <strong>OnlyShowIn</strong> causes items to disappear from 
+		 <strong>Menu Props</strong> on certain systems, with certain
+		 values set. (<span style="font-style: italic;">Setting OnlyShowIn=KDE; 
+		 using KDE will cause this.</span>) I believe this is a limitation of
+		 <strong>gmenu</strong> (<span style="font-style: italic;">gnome-menus</span>),
+		 which <strong>Menu Props</strong> is built with. I am currently working to
+		 remove this dependency (see <span style="font-style: italic;">Future</span>).
+		 To fix items that have disappeared: Open the launcher from the "Items" tab,
+		 and remove the OnlyShowIn option.
+		</li>
+		<li>
+		<strong>Some systems don't have gmenu</strong> - Some systems need a little help
+		 to get gmenu going, here is some good info on 
+		 how to get it for your system. (<span style="font-style: italic;">
+		 instructions are for <strong>Fedora</strong>, but it works for
+		<strong>Slackware</strong>. It may work on other systems too.</span>): 
+		<a href='http://blog.mclaughlinsoftware.com/2011/11/24/gnome-menu-editing-fix/' 
+		target='_blank'>
+		<strong>gmenu editing fix</strong>
+		</a>
+		</li>
+	</ul>
+	<!-- Warning about duplicates -->
+	<p>
+	** If <strong>Menu Props</strong> shows duplicates this may not be a bug. 
+	 <strong>Menu Props</strong> will always show duplicates for certain
+	 applications, this is by design. For example, Konqueror shows duplicate
+	 entries in <strong>Menu Props</strong>, but not in the Main Menu. This is by
+	 Konqueror's design, not mine. They register several launchers with different
+	 file/url types. Several other applications do this also. It's not an
+	 <strong>actual duplicate</strong> unless the launcher .desktop files show the
+	 <strong>exact same</strong> name. Always check the launcher's .desktop file
+	 name, if they're slightly different then it's not a bug.<br/><br/>
+	</p>
+</div>
 
 <!-- Tested With -->
-<a name='testedwith'></a>
-<h3 class='title'>
-    <span class='title'>Tested With:</span>
-</h3>
-<ul class="checkmark">
-<li>
-    <strong>Ubuntu 12</strong> - <strong>XFCE</strong> (4.6+),
-    <strong>Gnome 2</strong> (Classic), <strong>KDE 4</strong>,
-    <strong>LXDE</strong>, <strong>Cinnamon</strong>
-</li>
-<li>
-    <strong>Linux Mint 9, 12, 13</strong> - <strong>XFCE</strong> (4.8+),
-    <strong>Cinnamon</strong>
-</li>
-<li>
-    <strong>Slackware 14</strong> - <strong>XFCE</strong>
-</li>
-<li>
-    <strong>Vector Linux</strong> - <strong>XFCE</strong> (4.8)
-</li>
-</ul>
-
-<!-- Screenshots -->
-<a name='screenshots'></a>
-<h3 style="text-decoration: underline;">
-    <span style="text-decoration: underline;">Screen Shots:</span>
-</h3>
-<span>----------[INERT SCREENSHOTS HERE]----------------</span>
-<p class="desc">
-    In <strong>Menu Props</strong> actions are in the 'context menu',
-    right-click gives you the available actions or options for that launcher.
-</p>
-
-<!-- Future -->
-<h3 style="text-decoration: underline;">
-    <span style="text-decoration: underline;" id='future'>Future:</span>
-</h3>
-<p class="desc">
-Except for possible bug-fix releases, <strong>Menu Props</strong> is frozen
- until the completion of the next project ("<strong>unimenu</strong>",
- <span style="font-style: italic;">working title</span>). This project aims to
- do at least two things. The first is to rid <strong>Menu Props</strong> of its
- <strong>gmenu</strong>-dependency, and the second is to provide an open-source
- freedesktop.org compliant module for python. At the start of the <strong>Menu
- Props</strong> project I quickly realized that there were few options for
- editing menus in python, especially if you are targeting multiple desktop
- environments. Gmenu was made for Gnome, and is not guaranteed to work for other
- environments. It's actually not guaranteed to work at all (specifically states
- that API's may change, and cannot be held accountable for changes that break
- applications). Now that I have a better understanding of how freedesktop.org
- works, I believe I can write a reliable module to be used in <strong>Menu
- Props</strong> or any other menu-related project for python. I will update
- <strong>Menu Props</strong> and this site as the project progresses.
-
-</p>
+<div class="wp-block feature-list">
+	<a name='testedwith'></a>
+	<div class="title-box">
+		<h3 class='title'>Tested With</h3>
+	</div>
+	<ul class="checkmark">
+		<li>
+		    <strong>Ubuntu 12</strong> - <strong>XFCE</strong> (4.6+),
+		    <strong>Gnome 2</strong> (Classic), <strong>KDE 4</strong>,
+		    <strong>LXDE</strong>, <strong>Cinnamon</strong>
+		</li>
+		<li>
+		    <strong>Linux Mint 9, 12, 13</strong> - <strong>XFCE</strong> (4.8+),
+		    <strong>Cinnamon</strong>
+		</li>
+		<li>
+		    <strong>Slackware 14</strong> - <strong>XFCE</strong>
+		</li>
+		<li>
+		    <strong>Vector Linux</strong> - <strong>XFCE</strong> (4.8)
+		</li>
+	</ul>
+</div>
+<div class="wp-block feature-list">
+		<!-- Screenshots -->
+	<a name='screenshots'></a>
+	<div class="title-box">
+		<h3 class='title'>Screen Shots</h3>
+	</div>
+	<!-- Screen Shots Code Here -->
+	{{ screenshots_code }}
+		<p>
+		    In <strong>Menu Props</strong> actions are in the 'context menu',
+		    right-click gives you the available actions or options for that launcher.
+		</p>
+	
+</div>
+<div class="wp-block feature-list">
+	<!-- Future -->
+	<div class="title-box">
+		<h3 class='title' id="future">Future</h3>
+	</div>
+	<p>
+		Except for possible bug-fix releases, <strong>Menu Props</strong> is frozen
+		 until the completion of the next project ("<strong>unimenu</strong>",
+		 <span style="font-style: italic;">working title</span>). This project aims to
+		 do at least two things. The first is to rid <strong>Menu Props</strong> of its
+		 <strong>gmenu</strong>-dependency, and the second is to provide an open-source
+		 freedesktop.org compliant module for python. At the start of the <strong>Menu
+		 Props</strong> project I quickly realized that there were few options for
+		 editing menus in python, especially if you are targeting multiple desktop
+		 environments. Gmenu was made for Gnome, and is not guaranteed to work for other
+		 environments. It's actually not guaranteed to work at all (specifically states
+		 that API's may change, and cannot be held accountable for changes that break
+		 applications). Now that I have a better understanding of how freedesktop.org
+		 works, I believe I can write a reliable module to be used in <strong>Menu
+		 Props</strong> or any other menu-related project for python. I will update
+		 <strong>Menu Props</strong> and this site as the project progresses.		
+	</p>
+</div>
