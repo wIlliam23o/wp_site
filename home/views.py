@@ -5,6 +5,8 @@ from django.template import Context, loader
 # User-Agent helper...
 from django_user_agents.utils import get_user_agent #@UnresolvedImport
 
+from wp_main import utilities
+
 def index(request):
     """ serve up main site """
     # get user agent
@@ -32,4 +34,4 @@ def index(request):
                       'default_content': default_content})
     #    'latest_poll_list': latest_poll_list,
     #})
-    return HttpResponse(tmp_main.render(c_main))
+    return HttpResponse(utilities.remove_comments(tmp_main.render(c_main)))

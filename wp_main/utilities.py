@@ -121,7 +121,7 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
             <div class="screen">
                 <noscript>
                     <!-- placeholder 1st image when javascript is off -->
-                    <img src="{{initial_image}}"/>
+                    <img src="{{noscript_image}}"/>
                 </noscript>
               </div>
             <div class="c-panel">
@@ -165,9 +165,26 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
         spics = ""
         for sfile in good_pics:
             spics += stemplate.replace('{{image_file}}', sfile)
-        if initial_image is None:
-            initial_image = good_pics[0]
-        sbase = sbase.replace("{{initial_image}}", initial_image)
+        if noscript_image is None:
+            noscript_image = good_pics[0]
+        sbase = sbase.replace("{{noscript_image}}", noscript_image)
         return source_string.replace(target_replacement, sbase + spics + stail)
 
+def remove_comments(source_string):
+    """ splits source_string by newlines and 
+        removes any line starting with <!-- and ending with -->. """
+        
+    if (not "<!--" in source_string) or (not '\n' in source_string):
+        return source_string
+    
+    slines = source_string.split('\n')
+    keeplines = []
+    
+    for sline in slines:
+        strim = sline.replace('\t', '').replace(' ','')
+        if (not (strim.startswith("<!--") and 
+                 strim.endswith("-->"))):
+            keeplines.append(sline)
+    
+    return '\n'.join(keeplines)
   

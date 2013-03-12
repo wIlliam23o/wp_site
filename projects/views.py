@@ -38,7 +38,7 @@ def index(request):
     context_main = Context({'projects_content': mark_safe(projects_content),
                             'extra_style_link': extra_style_link
                             })
-    return HttpResponse(tmp_main.render(context_main))
+    return HttpResponse(utilities.remove_comments(tmp_main.render(context_main)))
 
 
 def project_listing(request, project):
@@ -70,6 +70,8 @@ def project_page(request, project, requested_page, source=""):
     # Get project page template
     tmp_project = loader.get_template("projects/project.html")
     
+    # Set default flags
+    use_screenshots = False
     
     if isinstance(project, list):
         # no project found, build possible matches..
@@ -127,17 +129,13 @@ def project_page(request, project, requested_page, source=""):
             if os.path.isdir(images_dir):
                 use_screenshots = True
                 shtml = utilities.inject_screenshots(shtml, images_dir)
-            else:
-                use_screenshots = False   
-            print "IMAGES_DIR: " + images_dir
-            print "SCREENSHOTS: " + str(use_screenshots)        
     
     # Build Context for project...
     cont_project = Context({'project_content': mark_safe(shtml),
                             'project_title': project_title,
                             'extra_style_link': extra_style_link,
                             'use_screenshots': use_screenshots})
-    return HttpResponse(tmp_project.render(cont_project))
+    return HttpResponse(utilities.remove_comments(tmp_project.render(cont_project)))
 
 
 def request_any(request, _identifier):
