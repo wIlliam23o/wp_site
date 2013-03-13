@@ -32,6 +32,6 @@ def index(request):
     # load variables into template
     c_main = Context({'extra_style_link': extra_style_link,
                       'default_content': default_content})
-    #    'latest_poll_list': latest_poll_list,
-    #})
-    return HttpResponse(utilities.remove_comments(tmp_main.render(c_main)))
+
+    # render final page
+    return HttpResponse(utilities.clean_template(tmp_main, c_main))

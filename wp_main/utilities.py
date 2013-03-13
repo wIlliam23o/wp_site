@@ -171,20 +171,48 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
         return source_string.replace(target_replacement, sbase + spics + stail)
 
 def remove_comments(source_string):
-    """ splits source_string by newlines and 
-        removes any line starting with <!-- and ending with -->. """
-        
-    if (not "<!--" in source_string) or (not '\n' in source_string):
+        """ splits source_string by newlines and 
+            removes any line starting with <!-- and ending with -->. """
+            
+        if ("<!--" in source_string) and ('\n' in source_string):
+            keeplines = []
+            
+            for sline in source_string.split('\n'):
+                strim = sline.replace('\t', '').replace(' ','')
+                if not (strim.startswith("<!--") and strim.endswith("-->")):
+                    keeplines.append(sline)
+
+            return '\n'.join(keeplines)
+        else:
+            return source_string
+
+def remove_newlines(source_string):
+    """ remove all newlines from a string """
+    
+    return source_string.replace('\n', '')
+
+def remove_whitespace(source_string):
+    """ removes leading and trailing whitespace from lines """
+    
+    if '\n' in source_string:
+        keep_ = []
+        for sline in source_string.split('\n'):
+            keep_.append(sline.strip(' ').strip('\t'))
+        return '\n'.join(keep_)
+    else:
         return source_string
     
-    slines = source_string.split('\n')
-    keeplines = []
+def clean_template(template_, context_, force_ = False):
+    """ renders a template with context and 
+        applies the cleaning functions.
+        if DEBUG = True then only comments are removed.
+    """
     
-    for sline in slines:
-        strim = sline.replace('\t', '').replace(' ','')
-        if (not (strim.startswith("<!--") and 
-                 strim.endswith("-->"))):
-            keeplines.append(sline)
-    
-    return '\n'.join(keeplines)
-  
+    if ((settings.DEBUG == True) and (force_ == False)):
+        return remove_comments(template_.render(context_))
+    else:
+        # operations must be performed in this order.
+        return remove_newlines(
+                    remove_whitespace(
+                    remove_comments(
+                    template_.render(context_))))

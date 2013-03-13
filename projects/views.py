@@ -38,7 +38,8 @@ def index(request):
     context_main = Context({'projects_content': mark_safe(projects_content),
                             'extra_style_link': extra_style_link
                             })
-    return HttpResponse(utilities.remove_comments(tmp_main.render(context_main)))
+    # render final page
+    return HttpResponse(utilities.clean_template(tmp_main, context_main))
 
 
 def project_listing(request, project):
@@ -99,7 +100,7 @@ def project_page(request, project, requested_page, source=""):
         salias = project.alias
         shtmlfile = os.path.join(settings.BASE_DIR, "projects/static/html/" + salias + ".html")
 
-        
+        # default response until more information is loaded.
         shtml = "<span>No information found for: " + salias + "</span>"
         if os.path.isfile(shtmlfile):
             with open(shtmlfile) as fhtml:
@@ -111,10 +112,10 @@ def project_page(request, project, requested_page, source=""):
                 shtml += fhtml.read()
                 shtml += "</div>"
                 
-                # inject custom text replacements for ads and such.
-                shtml = utilities.inject_article_ad(shtml)
+            # do article ads.
+            shtml = utilities.inject_article_ad(shtml)
                 
-            # project has screenshots?
+            # do screenshots.
             if project.screenshot_dir == "":
                 # try default location
                 images_dir = os.path.join(settings.BASE_DIR, "projects/static/images/" + salias)
@@ -125,17 +126,19 @@ def project_page(request, project, requested_page, source=""):
                 else:
                     # needs base dir added?
                     images_dir = os.path.join(settings.BASE_DIR, project.screenshot_dir)
-                        
+            # inject screenshots.            
             if os.path.isdir(images_dir):
                 use_screenshots = True
                 shtml = utilities.inject_screenshots(shtml, images_dir)
-    
+
     # Build Context for project...
     cont_project = Context({'project_content': mark_safe(shtml),
                             'project_title': project_title,
                             'extra_style_link': extra_style_link,
                             'use_screenshots': use_screenshots})
-    return HttpResponse(utilities.remove_comments(tmp_project.render(cont_project)))
+    # render final page.
+    force_clean = True
+    return HttpResponse(utilities.clean_template(tmp_project, cont_project, force_clean))
 
 
 def request_any(request, _identifier):
@@ -177,6 +180,9 @@ def get_byname(_name):
         proj = wp_project.objects.get(name=_name)
         return proj
     except wp_project.DoesNotExist:
+        for proj in wp_project.objects.all():
+            if proj.name.lower().replace(' ', '') == _name.lower().replace(' ',''):
+                return proj
         return None
     except:
         return None
