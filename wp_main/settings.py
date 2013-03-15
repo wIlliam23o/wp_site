@@ -20,12 +20,12 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.path.join(BASE_DIR, 'wp_main.db'),                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': 'django.db.backends.sqlite3',       # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': os.path.join(BASE_DIR, 'wp_main.db'), # Or path to database file if using sqlite3.
+        'USER': '',                                   # Not used with sqlite3.
+        'PASSWORD': '',                               # Not used with sqlite3.
+        'HOST': '',                                   # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',                                   # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -62,9 +62,7 @@ MEDIA_ROOT = ''
 MEDIA_URL = ''
 
 # Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-# Example: "/home/media/media.lawrence.com/static/"
+# This is for testing with abyss, otherwise no collection is needed for debugging.
 STATIC_ROOT = "/home/cj/apps/abyssws/htdocs/static/"
 
 
@@ -97,7 +95,19 @@ TEMPLATE_LOADERS = (
 #     'django.template.loaders.eggs.Loader',
 )
 
+# Template context processors
+#TEMPLATE_CONTEXT_PROCESSORS = (
+#    'django.core.context_processors.debug',
+#    'django.core.context_processors.i18n',
+#    'django.core.context_processors.media',
+#    'django.core.context_processors.static',
+#    'django.contrib.auth.context_processors.auth',
+#    'django.contrib.messages.context_processors.messages',
+#)
+
+
 MIDDLEWARE_CLASSES = (
+    'django.middleware.gzip.GZipMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -109,8 +119,11 @@ MIDDLEWARE_CLASSES = (
     # make requests available in templates...
     #'django.core.context_processors.request',
     
+    # django debug tools
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     # special user-agent middleware...
     'django_user_agents.middleware.UserAgentMiddleware',
+
 )
 
 ROOT_URLCONF = 'wp_main.urls'
@@ -127,6 +140,7 @@ TEMPLATE_DIRS = (
     os.path.join(TEMPLATES_BASE, "admindoc/templates"),
 )
 
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -137,12 +151,16 @@ INSTALLED_APPS = (
     # admin enabled:
     'django.contrib.admin',
     'django.contrib.admindocs',
-
+    
+    # django debug tools
+    'debug_toolbar',
     # special user-agent middleware
     'django_user_agents',
     # local apps
     'home',
     'projects',
+    'viewer',
+    'downloads',
     
 )
 
@@ -165,7 +183,7 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         }
-    },
+    },           
     'loggers': {
         'django.request': {
             'handlers': ['mail_admins'],
@@ -174,3 +192,20 @@ LOGGING = {
         },
     }
 }
+
+# IP's debug_toolbar should be shown to.
+INTERNAL_IPS = ('127.0.0.1',)
+
+# These toolbars are already default set.
+#DEBUG_TOOLBAR_PANELS = (
+#    'debug_toolbar.panels.version.VersionDebugPanel',
+#    'debug_toolbar.panels.timer.TimerDebugPanel',
+#    'debug_toolbar.panels.settings_vars.SettingsVarsDebugPanel',
+#    'debug_toolbar.panels.headers.HeaderDebugPanel',
+#    'debug_toolbar.panels.request_vars.RequestVarsDebugPanel',
+#    'debug_toolbar.panels.template.TemplateDebugPanel',
+#    'debug_toolbar.panels.sql.SQLDebugPanel',
+#    'debug_toolbar.panels.signals.SignalDebugPanel',
+#    'debug_toolbar.panels.logger.LoggingPanel',
+#)
+DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}

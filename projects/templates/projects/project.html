@@ -13,7 +13,11 @@
 
 {% block extrahead %}
 {% if use_screenshots %}
-	<!-- Optional Screenshots -->
+	<!-- Optional Screenshots, -->
+	<!-- 	 This won't be used if use_screenshots = False in views.py -->
+	<!-- 	 Option is there to cut down on overhead. If no screenshots were detected, -->
+	<!-- 	 	or if use_screenshots is explicitly set to False, we won't need all -->
+	<!-- 	 	of this code. -->
 	<script type="text/javascript">
 		$(document).ready(	
 				function() {

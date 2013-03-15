@@ -4,23 +4,25 @@ from django.utils.safestring import mark_safe # don't escape html with strings m
 
 #from projects import models
 from projects.models import wp_project
-# User-Agent helper...
-from django_user_agents.utils import get_user_agent #@UnresolvedImport
 # Global settings (for getting absolute path)
 from django.conf import settings
 
 # welborn productions utilities
 from wp_main import utilities
+from projects import tools
 
 
+# logging
+import logging
 
-import os.path
+# initialize logging
+p_log = logging.getLogger('welbornprod.projects.project')
 
 
 def index(request):
     """ Main Project Page (index/listing) """
     # browser specific style
-    extra_style_link = get_browser_style(request)
+    extra_style_link = utilities.get_browser_style(request)
     
     # base template for project listing     
     tmp_main = loader.get_template('projects/index.html')
@@ -33,9 +35,13 @@ def index(request):
         projects_content = "<div class='project_listing'>\n"
         for proj in wp_project.objects.all().order_by('name'):
             projects_content += project_listing(request, proj)
-        projects_content += "</div>\n"     
+        projects_content += "</div>\n"
+    # get vertical projects menu
+    projects_menu = tools.get_projects_menu()                  
+  
     # build context (mark content as safe so we can build our page using html)
     context_main = Context({'projects_content': mark_safe(projects_content),
+                            'projects_menu': mark_safe(projects_menu),
                             'extra_style_link': extra_style_link
                             })
     # render final page
@@ -43,10 +49,10 @@ def index(request):
 
 
 def project_listing(request, project):
-    """ Returns a single project listing when for when building the projects index """
+    """ Returns a single project listing for when building the projects index """
     
     # Build project name/link
-    p_namelink = wrap_link("<span class='header project_name'>" + project.name + "</span>", 
+    p_namelink = utilities.wrap_link("<span class='header project_name'>" + project.name + "</span>", 
                        "/projects/" + project.alias)
     
     # Build project listing module
@@ -65,79 +71,53 @@ def project_listing(request, project):
 
 def project_page(request, project, requested_page, source=""):
     """ Project Page (for individual project) """
+
     # get browser specific css file
-    extra_style_link = get_browser_style(request)
+    extra_style_link = utilities.get_browser_style(request)
     
     # Get project page template
     tmp_project = loader.get_template("projects/project.html")
     
     # Set default flags
     use_screenshots = False
-    
+    # if project matches list was sent, use it.
     if isinstance(project, list):
-        # no project found, build possible matches..
-        if len(project) == 0:
-            shtml = "<span>Sorry, no matching projects found for: " + requested_page + "</span>"
-            project_title = False
-        else:
-            # build possible matches..
-            shtml = "<div class='surround_matches'>" + \
-                "<span>Sorry, I can't find a project at '" + requested_page + "'. Were you " + \
-                "looking for one of these?</span><br/>" + \
-                "<div class='project_matches'>"
-            for proj in project:
-                shtml += "<div class='project_match'>"
-                p_name = "<span class='match_result'>" + \
-                         proj.name + "</span>"
-                p_link = "/projects/" + proj.alias
-                shtml += wrap_link(p_name, p_link) + \
-                     "</div>"
-            shtml += "</div></div>"
-            project_title = False
+        p_log.debug("Found project matches: " + '\n    '.join(project))
+        shtml = tools.get_matches_html(project, requested_page)
+        project_title = False
     else:
         # Found Project, build page.
         project_title = project.name
-        salias = project.alias
-        shtmlfile = os.path.join(settings.BASE_DIR, "projects/static/html/" + salias + ".html")
-
-        # default response until more information is loaded.
-        shtml = "<span>No information found for: " + salias + "</span>"
-        if os.path.isfile(shtmlfile):
-            with open(shtmlfile) as fhtml:
-                # Build project page using html file for contents...
-                shtml = "<div class='project_container'>\n" + \
-                    "<div class='project_title'>\n" + \
-                    "<h1 class='header'>" + project_title + "</h1>\n" + \
-                    "</div>"
-                shtml += fhtml.read()
-                shtml += "</div>"
-                
-            # do article ads.
-            shtml = utilities.inject_article_ad(shtml)
-                
-            # do screenshots.
-            if project.screenshot_dir == "":
-                # try default location
-                images_dir = os.path.join(settings.BASE_DIR, "projects/static/images/" + salias)
-            else:
-                if os.path.isdir(project.screenshot_dir):
-                    # project path was absolute
-                    images_dir = project.screenshot_dir
-                else:
-                    # needs base dir added?
-                    images_dir = os.path.join(settings.BASE_DIR, project.screenshot_dir)
-            # inject screenshots.            
-            if os.path.isdir(images_dir):
-                use_screenshots = True
-                shtml = utilities.inject_screenshots(shtml, images_dir)
-
+        # extra html content, if any.
+        scontent = tools.get_html_content(project)
+        
+        if scontent == "":
+            # default response unless more information is loaded.
+            shtml = "<div class='project_container'>\n" + \
+                "    <div class='project_title'>\n" + \
+                "        <h1 class='project-header'>" + project_title + "</h1>\n" + \
+                "    </div>\n" + \
+                "<span>No information found for: " + project_title + "</span>\n</div>"
+        else:
+            # prepare extra content from html file, adding screenshots/ads/downloads
+            shtml = tools.prepare_content(project, scontent) + '\n</div>'
+            use_screenshots = ("screenshots_box" in shtml)
+            
+           
+    # track project views
+    project.view_count += 1
+    project.save()
+    
+    # build vertical projects menu
+    projects_menu = tools.get_projects_menu()                  
     # Build Context for project...
     cont_project = Context({'project_content': mark_safe(shtml),
                             'project_title': project_title,
+                            'projects_menu': mark_safe(projects_menu),
                             'extra_style_link': extra_style_link,
                             'use_screenshots': use_screenshots})
     # render final page.
-    force_clean = True
+    force_clean = (not settings.DEBUG)
     return HttpResponse(utilities.clean_template(tmp_project, cont_project, force_clean))
 
 
@@ -147,28 +127,28 @@ def request_any(request, _identifier):
         returns project on success
     """
     
-    proj = get_withmatches(safe_arg(_identifier))
+    proj = get_withmatches(utilities.safe_arg(_identifier))
     return project_page(request, proj, _identifier, source="by_any")
    
    
 def request_id(request, _id):
     """ returns project by id """
     
-    proj = get_byid(safe_arg(_id))
+    proj = get_byid(utilities.safe_arg(_id))
     return project_page(request, proj, str(_id), source="by_id")
 
 
 def request_alias(request, _alias):
     """ returns project by alias """
     
-    proj = get_byalias(safe_arg(_alias))
+    proj = get_byalias(utilities.safe_arg(_alias))
     return project_page(request, proj, _alias, source="by_alias")
 
 
 def request_name(request, _name):
     """ returns project by name """
     
-    proj = get_byname(safe_arg(_name))
+    proj = get_byname(utilities.safe_arg(_name))
     return project_page(request, proj, _name, source="by_name")
 
 
@@ -260,54 +240,3 @@ def get_withmatches(_identifier):
         return proj
     
     
-def sorted_projects(sort_method = "date"):
-    """ return sorted list of projects.
-        sort methods: date, name, id
-    """
-    
-    if sort_method == "date":
-        sort_method = "publish_date"
-        
-    return wp_project.objects.all().order_by(sort_method)
-
-     
-def safe_arg(_url):
-    """ basically just trims the / from the args right now """
-    
-    s = _url
-    if s.endswith('/'):
-        s = s[:-1]
-    if s.startswith('/'):
-        s = s[1:]
-    return s
-
-
-def wrap_link(content_, link_url, alt_text = ""):
-    """ wrap content in <a href> """
-    s = ""
-    s_end = ""
-    if link_url != "":
-        s = "<a href='" + link_url + "'"
-        if alt_text != "":
-            s += " alt='" + alt_text + '"'
-        s += ">"
-        s_end = "</a>"
-    
-    return s + content_ + s_end
-
-def get_browser_style(request):
-    """ return browser-specific css file (or False if not needed) """
-    # get user agent
-    user_agent = get_user_agent(request)
-    browser_name = user_agent.browser.family.lower()
-    # get browser css to use...
-    if browser_name.startswith("ie"):
-        return "/static/css/main-ie.css"
-    elif "firefox" in browser_name:
-        return "/static/css/main-gecko.css"
-    elif "chrome" in browser_name:
-        return "/static/css/main-webkit.css"
-    else:
-        return False
-    
-        

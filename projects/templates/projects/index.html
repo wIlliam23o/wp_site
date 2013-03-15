@@ -14,6 +14,12 @@
 {% block extrahead %}
 {% endblock %}
 
+{% block verticalmenu %}
+	{% if projects_menu %}
+		{{ projects_menu }}
+	{% endif %}
+{% endblock %}
+
 <!-- Main Projects Page -->
 {% block content %}
 	{{ projects_content }}

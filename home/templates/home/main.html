@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
 	<title>{% block title %}Welborn Productions{% endblock %}</title>
@@ -14,6 +14,9 @@
 		{% if extra_style_link %}
 			<link rel="stylesheet" href="{{ extra_style_link }}" type="text/css"/>
 		{% endif %}
+		{% if extra_style_link2 %}
+			<link rel="stylesheet" href="{{ extra_style_link2 }}" type="text/css"/>
+		{% endif %}
 	{% endblock %}
 
 	<!-- Custom Local CSS --> 
@@ -25,7 +28,7 @@
 		</style>
 	{% endblock %}
 
-	<!-- dock helper -->
+	<!-- dock no javascript helper -->
 	<noscript>
 		<style type="text/css">
 			#dock { top: -32px; }
@@ -78,6 +81,22 @@
 	    <div id='bg-pattern' class='main-pattern'>
 	    	<div class='pattern-gradient'></div>
 		</div>
+		<!-- Alert Area -->
+		{% block alert %}
+			{% if alert_content %}
+				<div class='alert'>
+					{{ alert_content }}
+				</div>
+			{% elif alert_message %}
+				<div class='alert'>
+					<span class='alert-message'>{{ alert_message }}</span>
+				</div>
+			{% endif %}
+		{% endblock %}
+		
+		<!-- Vertical menu placeholder -->
+		{% block verticalmenu %}
+		{% endblock %}
 		<div class='wp-container'>
 			<!-- LOGO -->
 	    	<div class='wp-block'>
@@ -89,21 +108,39 @@
 	        	<div class="menubar">
 					<div id="dock">
 						<div class="dock-container">
-								<a class="dock-item" href="/"><span>Home</span><img src="/static/images/dock/wp-home.png" alt="home" /></a> 
-								<a class="dock-item" href="/projects"><span>Projects</span><img src="/static/images/dock/wp-projects.png" alt="projects" /></a>
-								<a class="dock-item" href="/"><span>Blog</span><img src="/static/images/dock/wp-blog.png" alt="blog" /></a> 
-								<a class="dock-item" href="/"><span>About</span><img src="/static/images/dock/wp-about.png" alt="about" /></a> 
-								<a class="dock-item" href="#"><span>Search</span><img src="/static/images/dock/wp-search.png" alt="search" /></a> 
+								<a class="dock-item" id='dock-home' href="/">
+									<span>Home</span>
+									<img src="/static/images/dock/wp-home.png" alt="home" />
+								</a> 
+								<a class="dock-item" id='dock-projects' href="/projects">
+									<span>Projects</span>
+									<img src="/static/images/dock/wp-projects.png" alt="projects" />
+								</a>
+								<a class="dock-item" id='dock-blog' href="/">
+									<span>Blog</span>
+									<img src="/static/images/dock/wp-blog.png" alt="blog" />
+								</a> 
+								<a class="dock-item" id='dock-about' href="/">
+									<span>About</span>
+									<img src="/static/images/dock/wp-about.png" alt="about" />
+								</a> 
+								<a class="dock-item" id='dock-search' href="#">
+									<span>Search</span>
+									<img src="/static/images/dock/wp-search.png" alt="search" />
+								</a> 
 
-						</div><!-- end div .dock-container -->
-					</div><!-- end div .dock #dock -->	        						
+						</div>
+					</div>        						
 	        	</div>
 	        </div>
+			
 			<!-- Page Surround -->
 	        <div id='page-surround' class="wp-block">
   				<!-- view content -->
 				{% block content %}
-						<span>Sorry, an error has occurred.</span>
+						{% if main_content %}
+							{{ main_content }}
+						{% endif %}
 				{% endblock %}
 
 	    	</div>

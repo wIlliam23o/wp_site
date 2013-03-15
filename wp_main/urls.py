@@ -17,6 +17,16 @@ urlpatterns += patterns('',
     url(r'^[Pp]rojects/?', include('projects.urls'))
     )
 
+# Download view (downloads)
+urlpatterns += patterns('',
+    # /dl/
+    url(r'^[Dd][Ll]/?', include('downloads.urls'))
+    )
+
+# Viewer view (viewer)
+urlpatterns += patterns('',
+    url(r'^[Vv]iew/?', include('viewer.urls'))
+    )
 # Admin/Other
 urlpatterns += patterns('',
     # Examples:
@@ -24,10 +34,10 @@ urlpatterns += patterns('',
     # url(r'^wp_main/', include('wp_main.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
-    url(r'^[Aa]dmin/[Dd]oc/?', include('django.contrib.admindocs.urls')),
+    url(r'^admin/doc/?', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    url(r'^[Aa]dmin/?', include(admin.site.urls)),
+    url(r'^admin/?', include(admin.site.urls)),
     )
 
 
