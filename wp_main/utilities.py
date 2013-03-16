@@ -26,8 +26,8 @@ def prepend_path(prepend_this, prependto_path):
             mypath = prepend_path("/view" , project.source_dir)
     """
     
-    return (prepend_this + prependto_path) if prependto_path.startswith('/') else (prepend_this + '/' + prependto_path)
-
+    spath = (prepend_this + prependto_path) if prependto_path.startswith('/') else (prepend_this + '/' + prependto_path)
+    return spath.replace("//", '/')
 
 def append_path(appendto_path, append_this):
     """ os.path.join fails if append_this starts with '/'.
@@ -37,7 +37,8 @@ def append_path(appendto_path, append_this):
             mypath = append_path("/view" , project.source_dir)
     """
     
-    return (appendto_path + append_this) if append_this.startswith('/') else (appendto_path + '/' + append_this)
+    spath = (appendto_path + append_this) if append_this.startswith('/') else (appendto_path + '/' + append_this)
+    return spath.replace("//", '/')
 
 
 
@@ -357,7 +358,7 @@ def inject_sourceview(project, source_string, link_text = None, desc_text = None
     # has good link?
     if srelativepath == "":
         wp_log.debug("inject_sourceview: missing source file/dir for: " + project.name)
-        return source_string.replace(target, "")
+        return source_string.replace(target, "<span>Sorry, source not available for " + project.name + ".</span>")
     
     # link href
     slink = append_path("/view", srelativepath)

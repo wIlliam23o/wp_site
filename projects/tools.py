@@ -273,6 +273,9 @@ def prepare_content(project, scontent):
     if "<pre class=" in shtml:
         from viewer.highlighter import highlight_inline
         shtml = highlight_inline(shtml)
+    if "highlight-embedded" in shtml:
+        from viewer.highlighter import highlight_embedded
+        shtml = highlight_embedded(shtml)
         
     # remember to close the project_container div.
     return shead + shtml + "\n</div>\n"

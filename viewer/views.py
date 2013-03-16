@@ -38,9 +38,39 @@ def viewer(request, file_path):
         rendered = utilities.clean_template(tmp_notfound, cont_notfound, (not settings.DEBUG))
         response = HttpResponse(rendered)
     else:
-        # load actual file.
         # see if its a project file.
         proj = tools.get_project_from_path(absolute_path)
+        
+        # directory was passed?
+        if os.path.isdir(absolute_path):
+            try:
+                files = os.listdir(absolute_path)
+            except:
+                files = []
+            # no files in this directory, or bad dir.
+            if len(files) == 0:
+                absolute_path = ""
+            else:
+                # dir has files, get most important to show.
+                if proj is None:
+                    # no project, try first file.
+                    static_path = utilities.append_path(file_path, files[0])
+                    absolute_path = utilities.get_absolute_path(static_path)
+                    hl_log.debug("dir passed: no project for file, using first file: " + absolute_path)
+                else:
+                    # has project, see if source_file is good. if so, use it.
+                    if proj.source_file == "":
+                        # just use first file found.
+                        static_path = utilities.append_path(file_path, files[0])
+                        absolute_path = utilities.get_absolute_path(static_path)
+                        hl_log.debug("dir passed: no source_file for project, using first file: " + absolute_path)
+                    else:
+                        static_path = proj.source_file
+                        absolute_path = utilities.get_absolute_path(static_path)
+                        hl_log.debug("dir passed: using source_file: " + absolute_path)
+                        
+                    
+        # load actual file.
         if proj is None:
             project_title = ""
             vertical_menu = ""
@@ -81,7 +111,7 @@ def viewer(request, file_path):
                             "</div></a>"
             # Add short filename...
             file_name = utilities.get_filename(static_path)
-            shtml += "<a href='" + static_path + "'>" + \
+            shtml += "<a href='" + utilities.append_path("/dl", static_path) + "'>" + \
                      "<div class='viewer-filename-box'><span class='viewer-filename'>" + file_name + "</span></div>" + \
                      "<div class='viewer-download-box'><span class='viewer-download-text'>download</span></div></a>"
                      

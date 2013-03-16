@@ -14,6 +14,9 @@ import pygments
 from pygments import formatters
 from pygments import lexers
 import logging
+# for embedded highlighting
+import re
+
 hl_log = logging.getLogger('welbornprod.viewer.highlighter')
 
 class wp_highlighter(object):
@@ -119,18 +122,122 @@ def highlight_inline(scode, tag_ = "pre"):
                     hl_log.error("encountered empty highlight class: " + sline)
                     return scode
                 else:
-                    try:
-                        lexer_ = lexers.get_lexer_by_name(sclass)
-                        formatter_ = formatters.html.HtmlFormatter(linenos=False, style="default")
-                    except:
-                        hl_log.error("highlight_inline: unable to create lexer/formatter with: " + sclass)
-                        sclass = ""
+                    if sclass.lower() == "none":
+                        # no highlighting wanted here.
                         lexer_ = None
                         formatter_ = None
-                inblock = True
+                        sclass = ""
+                    else:
+                        # try highlighting with this lexer name.
+                        try:
+                            lexer_ = lexers.get_lexer_by_name(sclass)
+                            formatter_ = formatters.html.HtmlFormatter(linenos=False, style="default")
+                        except:
+                            hl_log.error("highlight_inline: unable to create lexer/formatter with: " + sclass)
+                            sclass = ""
+                            lexer_ = None
+                            formatter_ = None
+                
+                # don't attempt to highlight blocks where class is none.
+                # its there for possible css styles/future development.
+                inblock = not (sclass.lower() == "none")
+
                 
     return sfinished
+
+
+def get_embedded_lexer(scode):
+    """ retrieves lexer name from embedded highlight line. """
+    tag_match = re.search(r'\w+[ ]highlight-embedded|highlight-embedded[ ]\w+', scode)
+    if tag_match is None:
+        return None
+    else:
+        tag_list = tag_match.group().split(' ')
+        return tag_list[1 - tag_list.index('highlight-embedded')]
+
+
+def get_embedded_code(scode, tag_ = "span"):
+    """ retrieves code content from embedded highlight line. """
+    code_match = re.search(r'<' + tag_ + r' class\=["\'](\w+[ ]highlight-embedded|highlight-embedded[ ]\w+)["\']>(?P<content>.+)(?=</)', scode)
+    if code_match is None:
+        return None
+    else:
+        if len(code_match.groups()) < 2:
+            return None
+        else:
+            return code_match.groups()[1]
+
+
+def get_embedded_line(scode, tag_ = "span"):
+    """ retrieves the whole embedded line, tags and all. """
     
+    line_match = re.search(r'<' + tag_ + r' class\=["\'](\w+[ ]highlight-embedded|highlight-embedded[ ]\w+)["\']>.+</' + tag_ + '>', scode)
+    if line_match is None:
+        return None
+    else:
+        return line_match.group()
+
+    
+def get_embedded_content(sline, tag_ = "span"):
+    """ retrieves lexer and code from a single embedded highlight line.
+        returns tuple of (lexer name, code to highlight) strings.
+        returns None on error.
+    """
+    
+    lexer_name = get_embedded_lexer(sline)
+    code_content = get_embedded_code(sline, tag_)
+    whole_line = get_embedded_line(sline, tag_)
+    return (lexer_name, code_content, whole_line)
+    
+
+def highlight_embedded(scode, tag_ = "span"):
+    """ highlights embedded code, like:
+        <p>
+            To import the os module do <span class='highlight-embedded python'>import os</span> at the top of your script.
+        </p>
+        
+        tag must have the 'highlight-embedded' class, and the lexer name as the other class.
+    """
+    
+    if '\n' in scode:
+        slines = scode.split('\n')
+    else:
+        # single line only.
+        slines = [scode]
+    
+    keep_lines = []
+    for sline in slines:
+        if 'highlight-embedded' in sline:
+            lexer_name, content_, whole_tag = get_embedded_content(sline)
+            if (lexer_name is None) or (content_ is None) or (whole_tag is None):
+                # error getting info from tag, use old line.
+                keep_lines.append(sline)
+            else:
+                # highlight the embedded content.
+                try:
+                    lexer_ = lexers.get_lexer_by_name(lexer_name)
+                    formatter_ = formatters.html.HtmlFormatter(linenos=False, nowrap=True, style='default')
+                    highlighted = pygments.highlight(content_, lexer_, formatter_)
+                    snewtag = "<" + tag_ + " class='highlighted-embedded'>" + highlighted + "</" + tag_ + ">"
+                    # replace old content with new highlighted content.
+                    snewline = sline.replace(whole_tag, snewtag)
+                    keep_lines.append(snewline)
+                except:
+                    hl_log.debug("highlight_embedded: invalid lexer name in: " + whole_tag)
+                    keep_lines.append(sline)
+        else:
+            # no embedding needed
+            keep_lines.append(sline)   
+            
+    if len(keep_lines) == 1:
+        return keep_lines[0]
+    else:
+        return "\n".join(keep_lines)
+    
+        
+    
+    
+        
 
     
         

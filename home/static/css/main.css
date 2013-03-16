@@ -156,6 +156,11 @@ h2.title {
 	font-size: .8em;
 }
 
+.update-title {
+	color: #6C9EF7;
+	font-weight: bold;
+}
+
 /* Containers */
 .wp-container {
 	position: relative; 
@@ -282,7 +287,6 @@ a.jumpto-nav {
 	padding: 0;
 	left: -60px; /* fix for fisheye being slightly off (see dock.css #dock) */
 	width: auto; /* set to 100% for centered menu, see dock.css for padding-left: 20px  */
-	font-family: "Yanone Kaffeesatz";
 	text-transform: lowercase;
 	text-align: left;
 }
@@ -587,13 +591,13 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
     border-radius: 3px;
     padding: 2px;
     color: #4D6375;
-    font-family: "Source Code Pro", monospace;
+    font-family: "Ubuntu Mono", monospace;
     font-size: .9em;
 }
 
 /* simple inline code highlite */
 code, samp {
-	font-family: "Source Code Pro", monospace;
+	font-family: "Ubuntu Mono", monospace;
 	font-size: .8em;
     color: #4D6375;
     border: 1px solid #7793A7;

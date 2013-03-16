@@ -8,16 +8,27 @@
     padding: 5px;
     line-height: 1.1em;
     font-size: 1em;
-    font-family: "Source Code Pro", monospace;
+    font-family: "Ubuntu Mono", monospace;
 }
+
 .highlighted-inline {
-	font-family: "Source Code Pro", monospace;
+	font-family: "Ubuntu Mono", monospace;
 	padding-left: 5px;
 	margin-top: -10px;
 	border-radius: 5px;
 	border-style: solid;
 	border-width: 1px;
 	border-color: #E0E0E0;	
+}
+
+.highlighted-embedded {
+	font-family: "Ubuntu Mono", monospace;
+	border-style: solid;
+	border-radius: 5px;
+	border-width: 1px;
+	border-color: #D6D6D6;
+	margin-left: 2px;
+	margin-right: 2px;
 }
 .linenos {
 	padding-right: 10px;
