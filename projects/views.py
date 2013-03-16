@@ -102,7 +102,10 @@ def project_page(request, project, requested_page, source=""):
             # prepare extra content from html file, adding screenshots/ads/downloads
             shtml = tools.prepare_content(project, scontent) + '\n</div>'
             use_screenshots = ("screenshots_box" in shtml)
-            
+            if ('<div class="highlight"' in shtml):
+                extra_style_link2 = "/static/css/highlighter.css"
+            else:
+                extra_style_link2 = ""
            
     # track project views
     project.view_count += 1
@@ -115,6 +118,7 @@ def project_page(request, project, requested_page, source=""):
                             'project_title': project_title,
                             'projects_menu': mark_safe(projects_menu),
                             'extra_style_link': extra_style_link,
+                            'extra_style_link2': extra_style_link2,
                             'use_screenshots': use_screenshots})
     # render final page.
     force_clean = (not settings.DEBUG)

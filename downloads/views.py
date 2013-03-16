@@ -3,7 +3,7 @@ from django.template import Context, loader
 from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
 
 from django.conf import settings
-from projects.models import wp_project
+from projects import tools
 from wp_main import utilities
 
 def index(request):
@@ -22,7 +22,7 @@ def download(request, file_path):
     static_path = file_path if (file_path.startswith("/")) else ('/' + file_path)
     absolute_path = utilities.get_absolute_path(file_path)
     if absolute_path == "":
-        # File doesn't exist. Return a 404
+        # File doesn't exist. Return an error.
         alert_message = "Sorry, that file doesn't exist."
         main_content = "<div class='wp-block'><a href='/'><span>Click here to go home.</span></a></div>"
         tmp_notfound = loader.get_template('home/main.html')
@@ -36,7 +36,7 @@ def download(request, file_path):
         response = HttpResponse(static_path, status=302)
         response['Location'] = static_path
         # see if its a project file.
-        proj = get_project(absolute_path)
+        proj = tools.get_project_from_path(absolute_path)
         if proj is not None:
             # increment downloads for this project.
             proj.download_count += 1
@@ -45,16 +45,6 @@ def download(request, file_path):
     return response
 
 
-def get_project(file_path):
-    """ determines if this file is from a project. 
-        returns project object if it is.
-        returns None on failure.
-    """
-    
-    # check all project names
-    for proj in wp_project.objects.all():
-        if proj.alias in str(file_path):
-            return proj
-    return None
+
            
     

@@ -10,7 +10,7 @@
  
    start date: Mar 14, 2013
 '''
-import os #@UnusedImport
+from os import listdir #@UnusedImport: os.listdir is used, aptana is stupid.
 import os.path
 from django.conf import settings
 from projects.models import wp_project
@@ -204,19 +204,19 @@ def get_projects_menu(max_length = 25, max_text_length = 14):
     if wp_project.objects.count() == 0:
         return ""
     
-    shead = "<div class='projects-menu'>\n" + \
-            "<ul class='projects-menu-main'>\n"
+    shead = "<div class='vertical-menu'>\n" + \
+            "<ul class='vertical-menu-main'>\n"
     stail = "</ul>\n</div>\n"
     stemplate = """
-                    <li class='projects-menu-item'>
-                        <a class='projects-menu-link' href='/projects/{{ alias }}'>
-                            <span class='projects-menu-text'>{{ name }}</span>
+                    <li class='vertical-menu-item'>
+                        <a class='vertical-menu-link' href='/projects/{{ alias }}'>
+                            <span class='vertical-menu-text'>{{ name }}</span>
                         </a>
                     </li>
     """
     smenu = ""
     icount = 0
-    for proj in wp_project.objects.all():
+    for proj in wp_project.objects.all().order_by('name'):
         stext = proj.name
         if len(stext) > max_text_length:
             if len(proj.alias) > max_text_length:
@@ -266,6 +266,28 @@ def prepare_content(project, scontent):
     if sdownload_content != "":
         shtml = utilities.inject_text(shtml, "{{ download_code }}", sdownload_content)
     
+    # do source view.
+    shtml = utilities.inject_sourceview(project, shtml)
+    
+    # do auto source highlighting
+    if "<pre class=" in shtml:
+        from viewer.highlighter import highlight_inline
+        shtml = highlight_inline(shtml)
+        
     # remember to close the project_container div.
     return shead + shtml + "\n</div>\n"
 
+
+def get_project_from_path(file_path):
+    """ determines if this file is from a project. 
+        returns project object if it is.
+        returns None on failure.
+    """
+    
+    # check all project names
+    for proj in wp_project.objects.all():
+        if proj.alias in str(file_path):
+            return proj
+    return None
+
+    

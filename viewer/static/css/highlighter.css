@@ -10,6 +10,15 @@
     font-size: 1em;
     font-family: "Source Code Pro", monospace;
 }
+.highlighted-inline {
+	font-family: "Source Code Pro", monospace;
+	padding-left: 5px;
+	margin-top: -10px;
+	border-radius: 5px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #E0E0E0;	
+}
 .linenos {
 	padding-right: 10px;
 	margin-right: 15px;

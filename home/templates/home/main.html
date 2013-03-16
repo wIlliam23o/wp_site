@@ -17,6 +17,9 @@
 		{% if extra_style_link2 %}
 			<link rel="stylesheet" href="{{ extra_style_link2 }}" type="text/css"/>
 		{% endif %}
+		{% if extra_style_link3 %}
+			<link rel="stylesheet" href="{{ extra_style_link3 }}" type="text/css"/>
+		{% endif %}
 	{% endblock %}
 
 	<!-- Custom Local CSS --> 
@@ -96,6 +99,9 @@
 		
 		<!-- Vertical menu placeholder -->
 		{% block verticalmenu %}
+			{% if vertical_menu %}
+				{{ vertical_menu }}
+			{% endif %}
 		{% endblock %}
 		<div class='wp-container'>
 			<!-- LOGO -->

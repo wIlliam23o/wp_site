@@ -26,5 +26,6 @@ a.dock-item {
 	}
 #dock {
 	margin-left: 60px;
+	display: inline-block;
 	
 }

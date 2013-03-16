@@ -106,7 +106,14 @@ ul.menu {padding-left: 0;}
 	padding-top: 5px;
 	text-transform: lowercase;
 	}
-	
+h2.title {
+	font-size: 1.1em;
+	padding-left: 0px;
+	margin-left: 0px;
+	margin-bottom: 5px;
+	color: #BBB;
+	}
+		
 .desc {
 	padding-left: 40px;
 	padding-right: 40px;
@@ -119,11 +126,34 @@ ul.menu {padding-left: 0;}
 	font-size: 1em;
 	color: #585858;
 	font-weight: bold;
-	padding-bottom: 5px;
-	padding-left: 20px;
 }
 .viewer-filename:hover {
 	color: #0066BF;
+}
+.viewer-filename-box {
+	margin-left: 5px;
+	margin-bottom: 5px;
+}
+.viewer-download-box {
+	background: white;
+	border-radius: 5px;
+	margin-left: 5px;
+	margin-bottom: 5px;
+	padding-left: 3px;
+	padding-right: 3px;
+	border-style: solid;
+	border-color: #DDD;
+	border-width: 2px;
+	display: inline-block;
+	text-align: center;
+}
+.viewer-download-box:hover {
+	border-color: #6BBDFD;
+}
+
+.viewer-download-text {
+	color: #167AE7;
+	font-size: .8em;
 }
 
 /* Containers */
@@ -277,6 +307,73 @@ a.jumpto-nav {
 	-moz-border-radius: 5px;
 	*/
 }
+/* Vertical Menu */
+/* Projects Vertical Menu */
+.vertical-menu {
+	position: absolute;
+	left: 10px;
+	top: 235px;
+	background: transparent;
+	/*background: #B6B6B6;*/
+	padding: 5px;
+	/*border-radius: 5px;
+	-webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.45);*/
+}
+
+.vertical-menu-main {
+	/*background: rgba(255, 255, 255, 0.78);
+	border-radius: 4px;*/
+	background: transparent;
+	padding: 5px;
+	list-style: none;
+	list-image-style: none;
+	
+}
+
+.vertical-menu-item {
+	border-radius: 10px;
+	background: white;
+	border-style: solid;
+	border-width: 2px;
+	border-color: white;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	padding-left: 6px;
+	padding-right: 6px;
+	border-right-style: none;
+	border-left-style: none;
+	box-shadow: 4px 4px 5px black;
+}
+
+.vertical-menu-item:hover {
+	/*border-color: #6BB6FC;*/
+	
+}
+.vertical-menu-item:active {
+	border-color: #6BB6FC;
+	
+}
+
+
+.vertical-menu-link {
+	color: #0093F5;
+}
+
+.vertical-menu-link:hover {
+	color: gray;
+}
+
+.vertical-menu-text {
+	font-size: 1.0em;
+	padding-left: 5px;
+	padding-right: 5px;
+	text-transform: lowercase;
+}
+
+.vertical-menu-text:hover {
+	font-size: 1.0em;
+}
+/* OLD MENU STYLES (probably safe to delete now, we'll see.)
 .fusionmenu { /* No Longer Needed */
 	background: url(/static/images/overlays/global/dark-70.png);
 	height: 50px;
@@ -296,7 +393,7 @@ a.jumpto-nav {
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 }
-/* OLD MENU STYLES (probably safe to delete now, we'll see.)
+
 /* Menu forecolor */
 .menutop li a.item {
 	color: #DDDDDD;
@@ -490,14 +587,14 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
     border-radius: 3px;
     padding: 2px;
     color: #4D6375;
-    font-family: "Source Code Pro"
-    font-size: .75em;
+    font-family: "Source Code Pro", monospace;
+    font-size: .9em;
 }
 
 /* simple inline code highlite */
 code, samp {
-	font-family: "Source Code Pro";
-	font-size: .75em;
+	font-family: "Source Code Pro", monospace;
+	font-size: .8em;
     color: #4D6375;
     border: 1px solid #7793A7;
     border-radius: 3px;

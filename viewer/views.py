@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe # don't escape html with strings m
 from django.conf import settings
 
 from wp_main import utilities
-from downloads.views import get_project
+from projects import tools
 from viewer.highlighter import wp_highlighter
 
 import os.path
@@ -40,14 +40,19 @@ def viewer(request, file_path):
     else:
         # load actual file.
         # see if its a project file.
-        proj = get_project(absolute_path)
+        proj = tools.get_project_from_path(absolute_path)
         if proj is None:
             project_title = ""
+            vertical_menu = ""
         else:
             project_title = proj.name
-            # increment downloads for this project.
+            # increment views for this project.
             proj.view_count += 1
             proj.save()
+            # check for source files.
+            source_files = get_source_files(proj)
+            vertical_menu = get_source_files_menu(source_files)
+            
         # get lexer
         lexer_ = get_lexer_fromfile(static_path)
         # get file content
@@ -75,8 +80,11 @@ def viewer(request, file_path):
                             "<div class='project_title'><h1 class='project-header'>" + project_title + "</h1>" +\
                             "</div></a>"
             # Add short filename...
-            sshortname = os.path.split(static_path)[1]
-            shtml += "<a href='" + static_path + "'><div><span class='viewer-filename'>" + sshortname + "</span></div></a>"
+            file_name = utilities.get_filename(static_path)
+            shtml += "<a href='" + static_path + "'>" + \
+                     "<div class='viewer-filename-box'><span class='viewer-filename'>" + file_name + "</span></div>" + \
+                     "<div class='viewer-download-box'><span class='viewer-download-text'>download</span></div></a>"
+                     
             # highlight file content
             highlighter = wp_highlighter(lexer_, "default", False)
             highlighter.code = scontent
@@ -91,6 +99,7 @@ def viewer(request, file_path):
         tmp_view = loader.get_template("home/main.html")
         cont_view = Context({'extra_style_link': "/static/css/highlighter.css",
                              'extra_style_link2': "/static/css/projects.css",
+                             'vertical_menu': mark_safe(vertical_menu),
                              'main_content': mark_safe(shtml),
                              'alert_message': mark_safe(alert_message),
                              })
@@ -114,4 +123,67 @@ def get_lexer_fromfile(sfilename):
                 slexer = sname
                 
     return slexer
+
+def get_source_files(project):
+    """ returns list of all source files for a project, if any.
+        uses relative static path. (/static/files/project/source/file.py)
+        returns None on  failure.
+    """
     
+    if project.source_dir == "":
+        source_files = None
+    else:
+        sabsolute = utilities.get_absolute_path(project.source_dir)
+        if sabsolute == "":
+            source_files = None
+        else:
+            # retrieve all source filenames
+            file_names = os.listdir(sabsolute)
+            print str(file_names)
+            if len(file_names) == 0:
+                source_files = None
+            else:
+                source_files = []
+                for sfilename in file_names:
+                    srelativepath = utilities.get_relative_path(os.path.join(project.source_dir, sfilename))
+                    source_files.append(srelativepath)
+    return source_files
+    
+    
+def get_source_files_menu(source_files, max_length = 25, max_text_length = 24):
+    """ build a vertical menu from all source files.
+        source_files should be a list of relative paths to files.
+        returns Html string.
+    """
+    
+    if source_files is None:
+        return ""
+    if len(source_files) == 0:
+        return ""
+    
+    shead = "<div class='vertical-menu'>\n" + \
+            "<ul class='vertical-menu-main'>\n"
+    stail = "</ul>\n</div>\n"
+    stemplate = """
+                    <li class='vertical-menu-item'>
+                        <a class='vertical-menu-link' href='{{ view_path }}'>
+                            <span class='vertical-menu-text' style='font-size: .8em;'>{{ file_name }}</span>
+                        </a>
+                    </li>
+    """
+    smenu = ""
+    icount = 0
+    for srelativepath in source_files:
+        sviewpath = utilities.append_path("/view", srelativepath)
+        sfilename = utilities.get_filename(srelativepath)
+        # trim filename if needed
+        if len(sfilename) > max_text_length:
+            sfilename = ".." + sfilename[len(sfilename) - max_text_length:]
+
+        
+        smenu += stemplate.replace("{{ view_path }}", sviewpath).replace("{{ file_name }}", sfilename)
+        icount += 1
+        if icount > max_length:
+            break
+        
+    return shead + smenu + stail    

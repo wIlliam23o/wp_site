@@ -9,7 +9,7 @@
 """
 
 import os.path
-from os import walk
+from os import walk #@UnusedImport: os.walk is used, aptana is stupid.
 from django.conf import settings
 import logging
 # User-Agent helper...
@@ -17,6 +17,38 @@ from django_user_agents.utils import get_user_agent #@UnresolvedImport
 
 wp_log = logging.getLogger('welbornprod.utilities')
 
+
+def prepend_path(prepend_this, prependto_path):
+    """ os.path.join fails if prependto_path starts with '/'.
+        so I made my own. it's not as dynamic as os.path.join, but
+        it will work.
+        ex:
+            mypath = prepend_path("/view" , project.source_dir)
+    """
+    
+    return (prepend_this + prependto_path) if prependto_path.startswith('/') else (prepend_this + '/' + prependto_path)
+
+
+def append_path(appendto_path, append_this):
+    """ os.path.join fails if append_this starts with '/'.
+        so I made my own. it's not as dynamic as os.path.join, but
+        it will work.
+        ex:
+            mypath = append_path("/view" , project.source_dir)
+    """
+    
+    return (appendto_path + append_this) if append_this.startswith('/') else (appendto_path + '/' + append_this)
+
+
+
+def get_filename(file_path):
+    try:
+        sfilename = os.path.split(file_path)[1]
+    except:
+        wp_log.error("get_filename: error in os.path.split(" + file_path + ")")
+        sfilename = file_path
+    return sfilename
+    
 def safe_arg(_url):
     """ basically just trims the / from the args right now """
     
@@ -84,11 +116,12 @@ def get_absolute_path(relative_file_path):
         returns empty string on failure.
     """
     
+    sabsolutepath = ""
     for root, dirs, files in os.walk(settings.BASE_DIR): #@UnusedVariable: dirs, files
-        sabsolute = os.path.join(root, relative_file_path)
-        if os.path.isfile(sabsolute):
-            return sabsolute
-    return ""
+        spossible = os.path.join(root, relative_file_path)
+        if os.path.isfile(spossible) or os.path.isdir(spossible):
+            sabsolutepath = spossible
+    return sabsolutepath
 
     
 def load_html_file(sfile):
@@ -119,6 +152,33 @@ def load_html_file(sfile):
         wp_log.error("load_html_file: \nGeneral error opening file: " + sfile + '\n' + str(ex))
         return ""     
         
+
+def check_replacement(source_string, target_replacement):
+    """ fixes target replacement string in inject functions.
+        if {{ }} was ommitted, it adds it.
+        if {{target}} is in replacement instead of "{{ target }}",
+        it fixes the target to match.
+        otherwise, it returns the original target_replacement string.
+    """
+    
+    # fix replacement if {{}} was omitted.
+    if not target_replacement.startswith("{{"):
+        target_replacement = "{{" + target_replacement
+    if not target_replacement.endswith("}}"):
+        target_replacement = target_replacement + "}}"
+        
+    # this will look for '{{ target }}' and '{{target}}'...
+    if target_replacement.replace(' ', '') in source_string:
+        target_replacement = target_replacement.replace(' ', '')
+        
+    if target_replacement in source_string:
+        return target_replacement
+    else:
+        wp_log.debug("fix_target_replacement: target not found in source string: " + target_replacement)
+        return False
+    
+
+
 def inject_text(source_string, target_replacement, replace_with):
     """ basic text replacement, replaces target_replacement with replace_with. """
     
@@ -153,15 +213,10 @@ def inject_article_ad(source_string, target_replacement = "{{ article_ad }}"):
             shtml = inject_article_ad(shtml, "ad")
     """
     
-    # fix replacement if {{}} was omitted.
-    if not target_replacement.startswith("{{"):
-        target_replacement = "{{" + target_replacement
-    if not target_replacement.endswith("}}"):
-        target_replacement = target_replacement + "}}"
-        
-    # this will look for '{{ target }}' and '{{target}}'...
-    if not target_replacement in source_string:
-        target_replacement = target_replacement.replace(' ', '')
+    # fail check.
+    target = check_replacement(source_string, target_replacement)
+    if not target:
+        return source_string
         
     article_ad = """
         <div class='article-ad'>
@@ -179,10 +234,8 @@ def inject_article_ad(source_string, target_replacement = "{{ article_ad }}"):
             </script>
         </div>"""
         
-    if target_replacement in source_string:
-        return source_string.replace(target_replacement, article_ad)
-    else:
-        return source_string
+    return source_string.replace(target, article_ad)
+
 
 
 def inject_bold_words(source_string, wordlist = None):
@@ -213,19 +266,12 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     """
     
     # fail checks.
+    target_replacement = check_replacement(source_string, target_replacement)
+    if not target_replacement:
+        return source_string
     if not os.path.isdir(images_dir):
         wp_log.debug("inject_screenshots: not a directory: " + images_dir)
-        return source_string
-    if not target_replacement.startswith("{{"):
-        target_replacement = "{{" + target_replacement
-    if not target_replacement.endswith("}}"):
-        target_replacement = target_replacement + "}}"
-    if not target_replacement in source_string:
-        if target_replacement.replace(' ', '') in source_string:
-            target_replacement = target_replacement.replace(' ', '')
-        else:
-            wp_log.debug("inject_screenshots: replacement string not found: " + target_replacement)
-            return source_string
+        return source_string.replace(target_replacement, "")
     
     # directory exists, now make it relative.
     relative_dir = get_relative_path(images_dir)
@@ -287,6 +333,55 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
         wp_log.debug("inject_screenshots: success.")
         return source_string.replace(target_replacement, sbase + spics + stail)
 
+
+def inject_sourceview(project, source_string, link_text = None, desc_text = None, target_replacement = "{{ source_view }}"):
+    """ injects code for source viewing.
+        needs wp_project (project) passed to gather info.
+        if target_replacement is not found, returns source_string.
+    """
+
+    # fail check.
+    target = check_replacement(source_string, target_replacement)
+    if not target:
+        return source_string
+    
+    # has project info?
+    if project is None:
+        return source_string.replace(target, "")
+    
+    # get primary source file
+    if project.source_file == "":
+        srelativepath = get_relative_path(project.source_dir)
+    else:
+        srelativepath = get_relative_path(project.source_file)
+    # has good link?
+    if srelativepath == "":
+        wp_log.debug("inject_sourceview: missing source file/dir for: " + project.name)
+        return source_string.replace(target, "")
+    
+    # link href
+    slink = append_path("/view", srelativepath)
+    
+    # get link text
+    if link_text is None:
+        if project.source_file == "":
+            link_text = "View Source (Local)"
+        else:
+            link_text = get_filename(project.source_file) + " (View Source)"
+    # get description text
+    if desc_text is None:
+        desc_text = " - view source for " + project.name + " v." + project.version
+    
+    sbase = """<div class='source-view'>
+                   <a class='source-view-link' href='{{ link }}'>{{ link_text }}</a>&nbsp;
+                       <span class='source-view-text'>{{ desc_text }}</span>
+               </div>
+        """
+    
+    source_view = sbase.replace("{{ link }}", slink).replace("{{ link_text }}", link_text).replace("{{ desc_text }}", desc_text)
+    return source_string.replace(target, source_view)
+    
+        
 def remove_comments(source_string):
         """ splits source_string by newlines and 
             removes any line starting with <!-- and ending with -->. """
