@@ -25,7 +25,7 @@ class wp_highlighter(object):
     def __init__(self, lexer_name_ = "python", style_name_ = "default", line_nums_ = True):
         self.code = ""
         self.lexer_name = lexer_name_
-        self.lexer = lexers.get_lexer_by_name(self.lexer_name)
+        self.lexer = get_lexer_byname(self.lexer_name)
         self.style_name = style_name_
         self.line_nums = line_nums_
         self.formatter = formatters.html.HtmlFormatter(linenos=self.line_nums, style=self.style_name)
@@ -36,7 +36,7 @@ class wp_highlighter(object):
     
     def set_lexer(self, lexer_name_):
         """ another way to set the lexer """
-        self.lexer = lexers.get_lexer_by_name(lexer_name_)
+        self.lexer = get_lexer_byname(lexer_name_)
         self.lexer_name = lexer_name_
             
     def highlight(self):
@@ -46,7 +46,7 @@ class wp_highlighter(object):
         """
         
         try:
-            highlighted = "<div class='highlighted'>" + pygments.highlight(self.code.strip().strip('\t'), self.lexer, self.formatter) + "</div>"
+            highlighted = "<div class='highlighted'>" + pygments.highlight(self.code, self.lexer, self.formatter) + "</div>"
         except:
             highlighted = ""
         return highlighted
@@ -130,7 +130,7 @@ def highlight_inline(scode, tag_ = "pre"):
                     else:
                         # try highlighting with this lexer name.
                         try:
-                            lexer_ = lexers.get_lexer_by_name(sclass)
+                            lexer_ = get_lexer_byname(sclass)
                             formatter_ = formatters.html.HtmlFormatter(linenos=False, style="default")
                         except:
                             hl_log.error("highlight_inline: unable to create lexer/formatter with: " + sclass)
@@ -144,6 +144,62 @@ def highlight_inline(scode, tag_ = "pre"):
 
                 
     return sfinished
+
+
+def check_lexer_name(sname):
+    """ checks against all lexer names to make sure this is a valid lexer name """
+    
+    # retrieves list of tuples with valid lexer names
+    lexer_list = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
+    # searches all tuples, returns True if its found.
+    for names_tuple in lexer_list:
+        if sname in names_tuple:
+            return True
+    return False
+
+
+def get_all_lexer_names():
+    """ retrieves list of all possible lexer names """
+    
+    # retrieves list of tuples with valid lexer names
+    lexer_list = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
+    lexer_names = []
+    for names_tuple in lexer_list:
+        for name_ in names_tuple:
+            lexer_names.append(name_)
+    return lexer_names
+
+
+def get_lexer_byname(sname):
+    """ retrieves a lexer by name, different than lexers.get_lexer_by_name()
+        because it automatically enables certain options.
+        this way all lexers for welbornprod will have the same options
+        and can be set in one place.
+    """
+    
+    return lexers.get_lexer_by_name(sname, stripall=True,)
+
+def get_lexer_name_fromfile(sfilename):
+    """ determine which lexer to use by file extension """
+    
+    try:
+        lexer_ = lexers.get_lexer_for_filename(sfilename)
+        lexer_name = lexer_.aliases[0]
+    except:
+        # no lexer found.
+        lexer_name = ""           
+    return lexer_name
+
+
+def get_lexer_fromfile(sfilename):
+    """ return a lexer based on filename. """
+
+    try:
+        lexer_ = lexers.get_lexer_for_filename(sfilename)
+    except:
+        # no lexer found.
+        lexer_ = None
+    return lexer_
 
 
 def get_embedded_lexer(scode):
@@ -171,7 +227,9 @@ def get_embedded_code(scode, tag_ = "span"):
 def get_embedded_line(scode, tag_ = "span"):
     """ retrieves the whole embedded line, tags and all. """
     
-    line_match = re.search(r'<' + tag_ + r' class\=["\'](\w+[ ]highlight-embedded|highlight-embedded[ ]\w+)["\']>.+</' + tag_ + '>', scode)
+    line_match = re.search(r'<' + tag_ + \
+                           r' class\=["\'](\w+[ ]highlight-embedded|highlight-embedded[ ]\w+)["\']>.+</' + \
+                           tag_ + '>', scode)
     if line_match is None:
         return None
     else:
@@ -193,10 +251,14 @@ def get_embedded_content(sline, tag_ = "span"):
 def highlight_embedded(scode, tag_ = "span"):
     """ highlights embedded code, like:
         <p>
-            To import the os module do <span class='highlight-embedded python'>import os</span> at the top of your script.
+            To import the os module do <span class='highlight-embedded python'>import os</span> 
+            at the top of your script.
         </p>
         
         tag must have the 'highlight-embedded' class, and the lexer name as the other class.
+        if you intend to highlight two things on one line, you still must put the second on a
+        seperate line. Your browser will join them together again. Using a single line for
+        two highlights messes this up.
     """
     
     if '\n' in scode:

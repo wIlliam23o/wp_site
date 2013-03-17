@@ -7,6 +7,7 @@ from django.conf import settings
 from wp_main import utilities
 from projects import tools
 from viewer.highlighter import wp_highlighter
+from viewer.highlighter import get_lexer_name_fromfile
 
 import os.path
 import logging
@@ -83,8 +84,9 @@ def viewer(request, file_path):
             source_files = get_source_files(proj)
             vertical_menu = get_source_files_menu(source_files)
             
-        # get lexer
-        lexer_ = get_lexer_fromfile(static_path)
+        # get lexer name
+        lexer_ = get_lexer_name_fromfile(static_path)
+        
         # get file content
         try:
             with open(absolute_path) as fread:
@@ -137,22 +139,6 @@ def viewer(request, file_path):
         response = HttpResponse(rendered)
     return response
 
-
-def get_lexer_fromfile(sfilename):
-    """ determine which lexer to use by file extension """
-    
-    lexers = [["python", ".py"],
-              ["c", ".c", ".h", ".cpp"]
-              ]
-    slexer = ""
-    for lex_ in lexers:
-        sname = lex_[0]
-        exts = lex_[1:]
-        for ext_ in exts:
-            if sfilename.lower().endswith(ext_):
-                slexer = sname
-                
-    return slexer
 
 def get_source_files(project):
     """ returns list of all source files for a project, if any.
