@@ -43,7 +43,7 @@ Right now I have the projects section done. Instead of writing an 'article' abou
 calling it an 'article'.), I add the project with it's info (name, unique-alias, version, download_url, html_url, and more.) through
 django admin, and then I write the description page in HTML. My view locates each projects HTML description through it's property 
 "html_url", and loads that html into the page. While it's loading the page it also looks for tags that I have embedded in the description
-like "screenshots_code", "source_view", "download_code", "<span class='highlight-embedded python'>", and "<pre class='python'>".
+like "screenshots_code", "source_view", "download_code", "span class='highlight-embedded python'", and "pre class='python'".
 Based on whether these tags exist, and whether or not the project has the info it's looking for, my views will start gathering information
 about screen shots, source code, downloads, and such for each project. It will then generate the HTML needed to display this information
 like I want it. So instead of writing a whole screenshots rotator box for each article, I just point the projects screenshots_dir to the
