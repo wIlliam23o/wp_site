@@ -14,6 +14,10 @@ from django.conf import settings
 import logging
 # User-Agent helper...
 from django_user_agents.utils import get_user_agent #@UnresolvedImport
+from django.http import HttpResponse
+from django.template import Context, loader
+from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
+
 
 wp_log = logging.getLogger('welbornprod.utilities')
 
@@ -116,6 +120,9 @@ def get_absolute_path(relative_file_path):
     """ return absolute path for file, if any
         returns empty string on failure.
     """
+    
+    if relative_file_path == "":
+        return ""
     
     sabsolutepath = ""
     for root, dirs, files in os.walk(settings.BASE_DIR): #@UnusedVariable: dirs, files
@@ -429,3 +436,51 @@ def clean_template(template_, context_, force_ = False):
                     remove_whitespace(
                     remove_comments(
                     template_.render(context_))))
+
+def alert_message(alert_message, body_message="<a href='/'><span>Click here to go home</span></a>", noblock=False):
+    """ Builds an alert message, and returns the HttpResponse object. 
+        alert_message: What to show in the alert box.
+        body_message: Body content wrapped in a wp-block div.
+                      Default is "Click here to go home."
+        noblock: Don't wrap in wp-block div if True.
+    
+    """
+    
+    if noblock:
+        main_content = body_message
+    else:
+        main_content = "<div class='wp-block'>" + body_message + "</div>"
+    tmp_notfound = loader.get_template('home/main.html')
+    cont_notfound = Context({'main_content': mark_safe(main_content),
+                             'alert_message': mark_safe(alert_message),
+                             })
+    rendered = clean_template(tmp_notfound, cont_notfound, (not settings.DEBUG))
+    return HttpResponse(rendered)
+
+def render_response(template_name, context_dict):
+    """ same as render_to_response, 
+        loads template, renders with context,
+        returns HttpResponse.
+    """
+    
+    try:
+        tmp_ = loader.get_template(template_name)
+        cont_ = Context(context_dict)
+        rendered = tmp_.render(cont_)
+    except:
+        rendered = alert_message("Sorry, there was an error loading this page.")
+    return HttpResponse(rendered)
+
+def clean_response(template_name, context_dict):
+    """ same as render_response, except does code minifying/compression 
+        (compresses only if settings.DEBUG=False)
+        returns cleaned HttpResponse.
+    """
+    
+    try:
+        tmp_ = loader.get_template(template_name)
+        cont_ = Context(context_dict)
+        rendered = clean_template(tmp_, cont_, (not settings.DEBUG))
+    except:
+        rendered = alert_message("Sorry, there was an error loading this page.")
+    return HttpResponse(rendered)   

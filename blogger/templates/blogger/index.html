@@ -1,0 +1,30 @@
+{% extends "home/main.html" %}
+{% block title %}Welborn Productions - Blog{% endblock %}
+
+{% block extrastylelink %}
+	<link rel="stylesheet" href="/static/css/blogger.css" type="text/css"/>
+	{{ block.super }}
+		
+{% endblock %}
+
+{% block content %}
+	<div class="blog-posts">
+			{% if blog_posts %}
+				{% for post in blog_posts %}
+					<div class="blog-listing">
+						<a href="/blog/view/{{ post.slug }}">
+							<span class="blog-listing-title">{{ post.title }}</span>
+						</a>
+						<div class="blog-post-date-box">
+							<span class="blog-post-date">{{ post.posted }}</span>
+						</div>			
+							<div class="blog-listing-body">
+								{{ post.body }}
+							</div>
+					</div>
+				{% endfor %}
+			{% else %}
+				<span>Sorry, no blog posts yet.</span>
+			{% endif %}
+	</div>		
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "blogger/index.html" %}
+
+{% block title %}Welborn Productions - Blog - {{ post_title_short }}{% endblock %}
+
+{% block extrastylelink %}
+	{{ block.super }}
+{% endblock %}
+
+{% block content %}
+	<div class="blog-post">
+
+		{% if post_title %}
+			<div class="blog-post-title-box">
+				<span class="blog-post-title">{{ post_title }}</span>
+			</div>
+		{% endif %}
+		{% if post_date %}
+			<div class="blog-post-date-box">
+				<span class="blog-post-date">{{ post_date }}</span>
+			</div>
+		{% endif %}
+		{% if post_tags %}
+			<div class="blog-post-tags-box">
+				<span class="blog-post-tags">tags:</span> {{ post_tags }}
+			</div>
+		{% endif %}
+	
+	
+		<div class="blog-post-body">
+			{{ post_body }}
+		</div>
+	</div>
+{% endblock %}

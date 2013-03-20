@@ -8,6 +8,8 @@ urlpatterns = patterns('',
         url(r'^[Vv]iew/?$', views.no_identifier),
         # view all tags/categories
         url(r'^[Tt]ags/?', views.view_tags),
+        # view posts with tags
+        url(r'^[Tt]ag/(?P<_tag>.+)/?$', views.view_tag),
         # send identifier to blogger.views.view_post
         url(r'^[Vv]iew/(?P<_identifier>.+)/?$', views.view_post),
 

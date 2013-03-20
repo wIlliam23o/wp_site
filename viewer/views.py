@@ -29,15 +29,8 @@ def viewer(request, file_path):
     static_path = file_path if (file_path.startswith("/")) else ('/' + file_path)
     absolute_path = utilities.get_absolute_path(file_path)
     if absolute_path == "":
-        # File doesn't exist. Return a 404
-        alert_message = "Sorry, that file doesn't exist."
-        main_content = "<div class='wp-block'><a href='/'><span>Click here to go home.</span></a></div>"
-        tmp_notfound = loader.get_template('home/main.html')
-        cont_notfound = Context({'main_content': mark_safe(main_content),
-                                 'alert_message': mark_safe(alert_message),
-                                 })
-        rendered = utilities.clean_template(tmp_notfound, cont_notfound, (not settings.DEBUG))
-        response = HttpResponse(rendered)
+        # File doesn't exist. Return an alert.
+        response = utilities.alert_message("Sorry, that file doesn't exist.")
     else:
         # see if its a project file.
         proj = tools.get_project_from_path(absolute_path)
