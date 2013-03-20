@@ -161,6 +161,7 @@ INSTALLED_APPS = (
     'projects',
     'viewer',
     'downloads',
+    'blogger',
     
 )
 

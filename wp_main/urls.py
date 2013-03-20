@@ -27,6 +27,12 @@ urlpatterns += patterns('',
 urlpatterns += patterns('',
     url(r'^[Vv]iew/?', include('viewer.urls'))
     )
+
+# Blogger views (blogger)
+urlpatterns += patterns('',
+    url(r'[Bb]log/?', include('blogger.urls'))
+    )
+
 # Admin/Other
 urlpatterns += patterns('',
     # Examples:
