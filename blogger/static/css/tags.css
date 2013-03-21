@@ -1,0 +1,19 @@
+/* Style for tag/tags view */
+
+.blog-tag-header {
+	margin-bottom: 10px;
+}
+
+.blog-tag-header-text {
+	font-size: 1em;
+}
+
+.blog-tag-header-count {
+	color: #4d4d4d;
+	font-weight: bold;
+}
+
+.blog-tag-header-name {
+	color: #0093F5;
+	font-weight: bold;
+}

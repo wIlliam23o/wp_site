@@ -13,11 +13,11 @@
 import pygments
 from pygments import formatters
 from pygments import lexers
-import logging
+from wp_main.wp_logging import logger
 # for embedded highlighting
 import re
 
-hl_log = logging.getLogger('welbornprod.viewer.highlighter')
+_log = logger('welbornprod.viewer.highlighter', use_file=True)
 
 class wp_highlighter(object):
     """ Class for highlighting code and returning html markup. """
@@ -101,7 +101,7 @@ def highlight_inline(scode, tag_ = "pre"):
                 soldblock = "\n".join(current_block)
                 if ((formatter_ is None) or
                     (lexer_ is None)):
-                    hl_log.error("highlight_inline: tryed to highlight code without lexer and formatter! (=None)")
+                    _log.error("highlight_inline: tryed to highlight code without lexer and formatter! (=None)")
                 else:
                    
                     snewblock = "\n<div class='highlighted-inline'>\n" + \
@@ -119,7 +119,7 @@ def highlight_inline(scode, tag_ = "pre"):
                 # get class name
                 sclass = get_tag_class(sline, tag_)
                 if sclass == "":
-                    hl_log.error("encountered empty highlight class: " + sline)
+                    _log.error("encountered empty highlight class: " + sline)
                     return scode
                 else:
                     if sclass.lower() == "none":
@@ -133,7 +133,7 @@ def highlight_inline(scode, tag_ = "pre"):
                             lexer_ = get_lexer_byname(sclass)
                             formatter_ = formatters.html.HtmlFormatter(linenos=False, style="default")
                         except:
-                            hl_log.error("highlight_inline: unable to create lexer/formatter with: " + sclass)
+                            _log.error("highlight_inline: unable to create lexer/formatter with: " + sclass)
                             sclass = ""
                             lexer_ = None
                             formatter_ = None
@@ -285,7 +285,7 @@ def highlight_embedded(scode, tag_ = "span"):
                     snewline = sline.replace(whole_tag, snewtag)
                     keep_lines.append(snewline)
                 except:
-                    hl_log.debug("highlight_embedded: invalid lexer name in: " + whole_tag)
+                    _log.debug("highlight_embedded: invalid lexer name in: " + whole_tag)
                     keep_lines.append(sline)
         else:
             # no embedding needed

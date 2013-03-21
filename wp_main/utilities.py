@@ -11,16 +11,35 @@
 import os.path
 from os import walk #@UnusedImport: os.walk is used, aptana is stupid.
 from django.conf import settings
-import logging
+#import logging
 # User-Agent helper...
 from django_user_agents.utils import get_user_agent #@UnresolvedImport
 from django.http import HttpResponse
 from django.template import Context, loader
 from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
 
+# use log wrapper for debug and file logging.
+from wp_logging import logger
+_log = logger("welbornprod.utilities", use_file=True)
 
-wp_log = logging.getLogger('welbornprod.utilities')
 
+
+def wsgi_error(request, smessage):
+    """ print message to requests wsgi errors """
+    
+    request.META['wsgi_errors'] = smessage
+    
+def remove_list_dupes(list_, max_allowed=1):
+    """ removes duplicates from a list object.
+        default allowed duplicates is 1, you can allow more if needed.
+        minimum allowed is 1. this is not a list deleter.
+    """
+    
+    for item_ in [item_copy for item_copy in list_]:
+        while list_.count(item_) > max_allowed:
+            list_.remove(item_)
+    
+    return list_
 
 def prepend_path(prepend_this, prependto_path):
     """ os.path.join fails if prependto_path starts with '/'.
@@ -50,7 +69,7 @@ def get_filename(file_path):
     try:
         sfilename = os.path.split(file_path)[1]
     except:
-        wp_log.error("get_filename: error in os.path.split(" + file_path + ")")
+        _log.error("get_filename: error in os.path.split(" + file_path + ")")
         sfilename = file_path
     return sfilename
     
@@ -77,6 +96,12 @@ def wrap_link(content_, link_url, alt_text = ""):
         s_end = "</a>"
     
     return s + content_ + s_end
+
+
+def readmore_box(link_href):
+    """ returns Html string for the readmore box. """
+    
+    return "<br/><a href='" + link_href + "'><div class='readmore-box'><span class='readmore-text'>more...</span></div></a>"
 
 
 def is_file_or_dir(spath):
@@ -144,20 +169,20 @@ def load_html_file(sfile):
             sfile = spath
         else:
             # no file found.
-            wp_log.debug("load_html_file: no file found at: " + sfile)
+            _log.debug("load_html_file: no file found at: " + sfile)
             return ""
         
     try:
         with open(sfile) as fhtml:
             return fhtml.read()
     except IOError as exIO:
-        wp_log.error("load_html_file: \nCannot open file: " + sfile + '\n' + str(exIO))
+        _log.error("load_html_file: \nCannot open file: " + sfile + '\n' + str(exIO))
         return ""
     except OSError as exOS:
-        wp_log.error("load_html_file: \nPossible bad permissions opening file: " + sfile + '\n' + str(exOS))
+        _log.error("load_html_file: \nPossible bad permissions opening file: " + sfile + '\n' + str(exOS))
         return ""
     except Exception as ex:
-        wp_log.error("load_html_file: \nGeneral error opening file: " + sfile + '\n' + str(ex))
+        _log.error("load_html_file: \nGeneral error opening file: " + sfile + '\n' + str(ex))
         return ""     
         
 
@@ -182,7 +207,7 @@ def check_replacement(source_string, target_replacement):
     if target_replacement in source_string:
         return target_replacement
     else:
-        wp_log.debug("fix_target_replacement: target not found in source string: " + target_replacement)
+        _log.debug("fix_target_replacement: target not found in source string: " + target_replacement)
         return False
     
 
@@ -278,7 +303,7 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     if not target_replacement:
         return source_string
     if not os.path.isdir(images_dir):
-        wp_log.debug("inject_screenshots: not a directory: " + images_dir)
+        _log.debug("inject_screenshots: not a directory: " + images_dir)
         return source_string.replace(target_replacement, "")
     
     # directory exists, now make it relative.
@@ -338,7 +363,7 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
         if noscript_image is None:
             noscript_image = good_pics[0]
         sbase = sbase.replace("{{noscript_image}}", noscript_image)
-        wp_log.debug("inject_screenshots: success.")
+        _log.debug("inject_screenshots: success.")
         return source_string.replace(target_replacement, sbase + spics + stail)
 
 
@@ -364,7 +389,7 @@ def inject_sourceview(project, source_string, link_text = None, desc_text = None
         srelativepath = get_relative_path(project.source_file)
     # has good link?
     if srelativepath == "":
-        wp_log.debug("inject_sourceview: missing source file/dir for: " + project.name)
+        _log.debug("inject_sourceview: missing source file/dir for: " + project.name)
         return source_string.replace(target, "<span>Sorry, source not available for " + project.name + ".</span>")
     
     # link href
@@ -409,7 +434,37 @@ def remove_comments(source_string):
 def remove_newlines(source_string):
     """ remove all newlines from a string """
     
-    return source_string.replace('\n', '')
+    ######## TEST TEST TEST 
+    ilines = 0
+    iprelines = 0
+    
+    # removes newlines, except for in pre blocks.
+    if '\n' in source_string:
+        in_pre = False
+        final_output = []
+        for sline in source_string.split('\n'):
+            # start of pre tag
+            if "<pre" in sline.lower():
+                _log.debug("Found pre!: " + sline)
+                in_pre = True
+            # add content, keep newlines for pre.    
+            if in_pre:
+                _log.debug("keeping pre: " + sline)
+                final_output.append(sline + '\n')
+                iprelines += 1
+            else:
+                final_output.append(sline.replace('\n', ''))
+                ilines += 1
+            # end of tag
+            if "</pre>" in sline.lower():
+                _log.debug("End pre!: " + sline)
+                in_pre = False
+    else:
+        ilines = 1
+        final_output = [source_string]
+    _log.debug("remove_newlines: processed " + str(ilines) + " regular lines,\n" + \
+               "                 and " + str(iprelines) + " pre lines.")
+    return "".join(final_output)
 
 def remove_whitespace(source_string):
     """ removes leading and trailing whitespace from lines """
@@ -479,8 +534,34 @@ def clean_response(template_name, context_dict):
     
     try:
         tmp_ = loader.get_template(template_name)
-        cont_ = Context(context_dict)
-        rendered = clean_template(tmp_, cont_, (not settings.DEBUG))
-    except:
-        rendered = alert_message("Sorry, there was an error loading this page.")
-    return HttpResponse(rendered)   
+    except Exception as ex:
+        _log.error("clean_response: could not load template: " + template_name + '<br/>\n' + \
+                   str(ex))
+        rendered = None
+    else:
+        try:
+            cont_ = Context(context_dict)
+        except Exception as ex:
+            _log.error("clean_response: could not load context: " + str(context_dict) + "<br/>\n" + \
+                       str(ex))
+            rendered = None
+        else:
+            try:
+                rendered = clean_template(tmp_, cont_, (not settings.DEBUG))
+            except Exception as ex:
+                _log.error("clean_response: could not clean_template!<br/>\n" + str(ex))
+                rendered = None
+    if rendered is None:
+        return alert_message("Sorry, there was an error loaging this page.")
+    else:
+        return HttpResponse(rendered)
+
+
+def redirect_response(redirect_to):
+    """ returns redirect response.
+        redirects user to redirect_to.
+    """
+    
+    response = HttpResponse(redirect_to, status=302)
+    response['Location'] = redirect_to
+    return response

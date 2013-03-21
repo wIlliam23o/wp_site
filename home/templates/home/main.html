@@ -143,6 +143,8 @@
 			<!-- Page Surround -->
 	        <div id='page-surround' class="wp-block">
   				<!-- view content -->
+  				{% block contentabove %}
+  				{% endblock %}
 				{% block content %}
 						{% if main_content %}
 							{{ main_content }}

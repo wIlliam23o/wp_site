@@ -1,33 +1,32 @@
 {% extends "blogger/index.html" %}
+{% load blogger_tags %}
+{% block title %}Welborn Productions - Blog{% if post_title_short %} - {{ post_title_short }}{% endif %}{% endblock %}
 
-{% block title %}Welborn Productions - Blog - {{ post_title_short }}{% endblock %}
 
 {% block extrastylelink %}
 	{{ block.super }}
 {% endblock %}
 
+{% block contentabove %}
+	{{ block.super }}
+	{% block blogcontentabove %}
+	{% endblock %}
+{% endblock %}
 {% block content %}
 	<div class="blog-post">
-
-		{% if post_title %}
+		{% if blog_post %}
 			<div class="blog-post-title-box">
-				<span class="blog-post-title">{{ post_title }}</span>
+				<span class="blog-post-title">{{ blog_post.title }}</span>
 			</div>
-		{% endif %}
-		{% if post_date %}
 			<div class="blog-post-date-box">
-				<span class="blog-post-date">{{ post_date }}</span>
+				<span class="blog-post-date">{{ blog_post.posted }}</span>
 			</div>
-		{% endif %}
-		{% if post_tags %}
 			<div class="blog-post-tags-box">
-				<span class="blog-post-tags">tags:</span> {{ post_tags }}
+				<span class="blog-post-tags">tags:</span> {{ blog_post|tag_links }}
 			</div>
-		{% endif %}
-	
-	
 		<div class="blog-post-body">
-			{{ post_body }}
+			{{ blog_post|get_body }}
 		</div>
+		{% endif %}
 	</div>
 {% endblock %}

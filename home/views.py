@@ -8,21 +8,19 @@ from django_user_agents.utils import get_user_agent #@UnresolvedImport
 # various welbornprod tools
 from wp_main import utilities
 # logging
-import logging
+from wp_main.wp_logging import logger
 
 def index(request):
     """ serve up main site """
     
     # setup logging
-    wp_log = logging.getLogger("welbornprod.index")
-    wp_log.debug("Requested page: " + request.path)
+    _log = logger("welbornprod.home.index", use_file=True)
+    #wp_log.debug("Requested page: " + request.path)
 
     
     # get user agent
     user_agent = get_user_agent(request)
     browser_name = user_agent.browser.family.lower()
-    # log browser name
-    wp_log.debug("Browser: " + user_agent.browser.family)
     # get browser css to use...
     if browser_name.startswith("ie"):
         extra_style_link = "/static/css/main-ie.css"

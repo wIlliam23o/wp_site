@@ -4,8 +4,9 @@
 # Django settings for wp_main project.
 import os.path
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
+
 
 # root for project
 BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
@@ -63,7 +64,7 @@ MEDIA_URL = ''
 
 # Absolute path to the directory static files should be collected to.
 # This is for testing with abyss, otherwise no collection is needed for debugging.
-STATIC_ROOT = "/home/cj/apps/abyssws/htdocs/static/"
+STATIC_ROOT = "/var/www/static/"
 
 
 # URL prefix for static files.
@@ -197,6 +198,8 @@ LOGGING = {
 # IP's debug_toolbar should be shown to.
 INTERNAL_IPS = ('127.0.0.1',)
 
+# Django's new security setting?
+ALLOWED_HOSTS = ['*']
 # These toolbars are already default set.
 #DEBUG_TOOLBAR_PANELS = (
 #    'debug_toolbar.panels.version.VersionDebugPanel',

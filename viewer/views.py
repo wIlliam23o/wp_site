@@ -5,13 +5,15 @@ from django.utils.safestring import mark_safe # don't escape html with strings m
 from django.conf import settings
 
 from wp_main import utilities
+from wp_main.wp_logging import logger
 from projects import tools
 from viewer.highlighter import wp_highlighter
 from viewer.highlighter import get_lexer_name_fromfile
 
 import os.path
-import logging
-hl_log = logging.getLogger("welbornprod.viewer.highlighter")
+
+_log = logger('welbornprod.viewer', use_file=True)
+
 
 def index(request):
     """ default download page, when no file is specified """
@@ -50,18 +52,18 @@ def viewer(request, file_path):
                     # no project, try first file.
                     static_path = utilities.append_path(file_path, files[0])
                     absolute_path = utilities.get_absolute_path(static_path)
-                    hl_log.debug("dir passed: no project for file, using first file: " + absolute_path)
+                    _log.debug("dir passed: no project for file, using first file: " + absolute_path)
                 else:
                     # has project, see if source_file is good. if so, use it.
                     if proj.source_file == "":
                         # just use first file found.
                         static_path = utilities.append_path(file_path, files[0])
                         absolute_path = utilities.get_absolute_path(static_path)
-                        hl_log.debug("dir passed: no source_file for project, using first file: " + absolute_path)
+                        _log.debug("dir passed: no source_file for project, using first file: " + absolute_path)
                     else:
                         static_path = proj.source_file
                         absolute_path = utilities.get_absolute_path(static_path)
-                        hl_log.debug("dir passed: using source_file: " + absolute_path)
+                        _log.debug("dir passed: using source_file: " + absolute_path)
                         
                     
         # load actual file.
@@ -86,13 +88,13 @@ def viewer(request, file_path):
                 scontent = fread.read()
             alert_message = ""
         except:
-            hl_log.error("unable to open file: " + absolute_path)
+            _log.error("unable to open file: " + absolute_path)
             alert_message = "There was an error opening the file."
             lexer_ = ""
             scontent = "<a href='/'><span>Sorry, click here to go home.</span></a>"
  
         if lexer_ == "":
-            hl_log.debug("no suitable lexer found for: " + absolute_path)
+            _log.debug("no suitable lexer found for: " + absolute_path)
             # no suitable lexer found.
             shtml = scontent
         else:
@@ -115,7 +117,7 @@ def viewer(request, file_path):
             highlighter.code = scontent
             try:
                 shtml += highlighter.highlight()
-                hl_log.debug("Highlighted file: " + absolute_path)
+                _log.debug("Highlighted file: " + absolute_path)
             except:
                 alert_message = "There was an error highlighting this file."
                 shtml = "<a href='/'><span>Sorry, click here to go home.</span></a>"

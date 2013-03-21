@@ -5,6 +5,9 @@ from django.utils.safestring import mark_safe # don't escape html with strings m
 from django.conf import settings
 from projects import tools
 from wp_main import utilities
+from wp_main.wp_logging import logger
+
+_log = logger('welbornprod.downloads', use_file=True)
 
 def index(request):
     """ default download page, when no file is specified """
@@ -23,6 +26,7 @@ def download(request, file_path):
     absolute_path = utilities.get_absolute_path(file_path)
     if absolute_path == "":
         # File doesn't exist. Return an error.
+        _log.debug("file doesn't exist: " + file_path)
         alert_message = "Sorry, that file doesn't exist."
         main_content = "<div class='wp-block'><a href='/'><span>Click here to go home.</span></a></div>"
         tmp_notfound = loader.get_template('home/main.html')
@@ -33,8 +37,7 @@ def download(request, file_path):
         response = HttpResponse(rendered)
     else:
         # redirect to actual file.
-        response = HttpResponse(static_path, status=302)
-        response['Location'] = static_path
+        response = utilities.redirect_response(static_path)
         # see if its a project file.
         proj = tools.get_project_from_path(absolute_path)
         if proj is not None:

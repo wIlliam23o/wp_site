@@ -13,10 +13,11 @@ from projects import tools
 
 
 # logging
-import logging
+from wp_main.wp_logging import logger
+
 
 # initialize logging
-p_log = logging.getLogger('welbornprod.projects.project')
+_log = logger('welbornprod.projects', use_file=True)
 
 
 def index(request):
@@ -82,7 +83,7 @@ def project_page(request, project, requested_page, source=""):
     use_screenshots = False
     # if project matches list was sent, use it.
     if isinstance(project, list):
-        p_log.debug("Found project matches: " + '\n    '.join(project))
+        _log.debug("Found project matches: " + '\n    '.join(project))
         shtml = tools.get_matches_html(project, requested_page)
         project_title = False
     else:
@@ -110,7 +111,9 @@ def project_page(request, project, requested_page, source=""):
     # track project views
     project.view_count += 1
     project.save()
-    
+
+
+        
     # build vertical projects menu
     projects_menu = tools.get_projects_menu()                  
     # Build Context for project...
