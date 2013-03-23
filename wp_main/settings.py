@@ -4,7 +4,7 @@
 # Django settings for wp_main project.
 import os.path
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 

@@ -6,6 +6,7 @@
 
 from django import template
 from blogger import blogtools
+from wp_main import utilities
 from django.utils.safestring import mark_safe
 register = template.Library()
 
@@ -24,5 +25,12 @@ def get_body(value):
     return mark_safe(blogtools.prepare_content(blogtools.get_post_body(value)))
 
 
+def comments_button(value):
+    """ returns comments button for this blog post. """
+    
+    return mark_safe(utilities.comments_button('/blog/view/' + value.slug))
+
+
 register.filter('tag_links', tag_links)
 register.filter('get_body', get_body)
+register.filter('comments_button', comments_button)

@@ -104,6 +104,12 @@ def readmore_box(link_href):
     return "<br/><a href='" + link_href + "'><div class='readmore-box'><span class='readmore-text'>more...</span></div></a>"
 
 
+def comments_button(link_href):
+    """ returns Html string for the comments box (button) """
+
+    return "<a href='" + link_href + "#comments-box'><div class='comments-button'><span class='comments-button-text'>comments...</span></div></a>"
+ 
+    
 def is_file_or_dir(spath):
     """ returns true if path is a file, or is a dir. """
     

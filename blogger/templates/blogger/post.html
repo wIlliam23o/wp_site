@@ -27,6 +27,15 @@
 		<div class="blog-post-body">
 			{{ blog_post|get_body }}
 		</div>
+		<!-- TODO: RELATED PROJECTS -->
 		{% endif %}
 	</div>
+
 {% endblock %}
+
+{% if blog_post %}
+	{% block disqusvariables %}
+		var disqus_identifier = '{{ blog_post.slug }}';
+		var disqus_title = '{{ blog_post.title }}';
+	{% endblock %}
+{% endif %}

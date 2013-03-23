@@ -82,7 +82,6 @@ def highlight_inline(scode, tag_ = "pre"):
     
     if not "<" + tag_ + " class=" in scode:
         return scode
-
     slines = scode.split('\n')
     sclass = ""
     inblock = False
@@ -93,17 +92,16 @@ def highlight_inline(scode, tag_ = "pre"):
     
     for sline in slines:
         strim = sline.replace(' ', '').replace('\t', '')
-        # Already in block?
+        # Inside a block, collect lines and wait for end.
         if inblock:
-            if strim.endswith("</" + tag_ + ">"):
+            if ("</" + tag_ + ">") in strim:
+                
                 inblock = False
                 # highlight block
                 soldblock = "\n".join(current_block)
-                if ((formatter_ is None) or
+                # must have both valid lexer/formatter
+                if not ((formatter_ is None) and
                     (lexer_ is None)):
-                    _log.error("highlight_inline: tryed to highlight code without lexer and formatter! (=None)")
-                else:
-                   
                     snewblock = "\n<div class='highlighted-inline'>\n" + \
                                 pygments.highlight(soldblock, lexer_, formatter_) + \
                                 "\n</div>\n"
@@ -118,6 +116,16 @@ def highlight_inline(scode, tag_ = "pre"):
             if strim.startswith('<' + tag_ + 'class='):
                 # get class name
                 sclass = get_tag_class(sline, tag_)
+                # check for name fixing
+                # certain lexers share names with actual css selectors, 
+                # in a list of shortened blog entries the block may not be highlighted
+                # if the </pre> tag was cut off.
+                # so pre class='c' is a valid statement even if highlighting isn't done.
+                # this causes the pre tag to be styled with the 'c' selector, not as the 'c' language.
+                # the workaround is to add a _ before known conflicting names.
+                if sclass.startswith("_"):
+                    sclass = sclass[1:]
+                # empty class would break this.
                 if sclass == "":
                     _log.error("encountered empty highlight class: " + sline)
                     return scode

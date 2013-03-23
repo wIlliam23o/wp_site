@@ -11,11 +11,13 @@
    start date: Mar 20, 2013
 '''
 from django.utils.safestring import mark_safe
-
+from django.conf import settings
 from wp_main import utilities
 from wp_main.wp_logging import logger
+from viewer.highlighter import highlight_inline, highlight_embedded
 from blogger.models import wp_blog
-_log = logger("welbornprod.blog.tools", use_file=True)
+
+_log = logger("welbornprod.blog.tools", use_file=(not settings.DEBUG))
 
 def get_post_byany(_identifier):
     """ retrieve blog post by any identifier, returns None on failure """
@@ -55,17 +57,17 @@ def get_post_body(post_):
     
     absolute_path = utilities.get_absolute_path(post_.html_url)
     if absolute_path == "":
-        _log.debug("get_post_body: no html url, using post.body.")
+        #_log.debug("get_post_body: no html url, using post.body.")
         # no valid html_url
         return post_.body
     
     # load html file content
-    _log.debug("get_post_body: loading html content from " + absolute_path)
+    #_log.debug("get_post_body: loading html content from " + absolute_path)
     scontent = utilities.load_html_file(absolute_path)
     return scontent
 
 
-def fix_post_list(blog_posts, max_posts=25, max_text_length=250, max_text_lines=17):
+def fix_post_list(blog_posts, max_posts=25, max_text_length=0, max_text_lines=17):
     """ fixes all post.body in a list of posts.
         uses get_post_body to return the correct body to use.
         trims body length to fit maximum allowed for listing.
@@ -141,10 +143,8 @@ def prepare_content(body_content):
     
     # do auto source highlighting
     if "<pre class=" in body_content:
-        from viewer.highlighter import highlight_inline
         body_content = highlight_inline(body_content)
     if "highlight-embedded" in body_content:
-        from viewer.highlighter import highlight_embedded
         body_content = highlight_embedded(body_content)
     return body_content
 

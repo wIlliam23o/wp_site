@@ -7,10 +7,10 @@ from blogger.models import wp_blog
 from blogger import blogtools
 
 # Global settings (for getting absolute path)
-#from django.conf import settings
+from django.conf import settings
 # logging capabilities
 from wp_main.wp_logging import logger
-_log = logger("welbornprod.blog", use_file=True)
+_log = logger("welbornprod.blog", use_file=(not settings.DEBUG))
 
 # welborn productions utilities
 from wp_main import utilities
@@ -60,13 +60,15 @@ def view_post(request, _identifier):
             response = utilities.alert_message("Sorry, no content found for this post.",
                                                "<a href='/blog'><span>Click here to go back to the blog index.</span></a>")
         else:
-            # prepare content (do highlighting)
-            #post_body = blogtools.prepare_content(post_body)
-            
+            # increment view count
+            post_.view_count += 1
+            # enable comments.
+            enable_comments = post_.enable_comments
             # Build clean HttpResponse with post template...
             response = utilities.clean_response("blogger/post.html",
                                                 {'extra_style_link': utilities.get_browser_style(request),
                                                  'post_title_short': post_title_short,
+                                                 'enable_comments': enable_comments,
                                                  'blog_post': post_,
                                                  })
         return response

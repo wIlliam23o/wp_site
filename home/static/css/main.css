@@ -225,8 +225,17 @@ h2.title {
 	
 }
 
-.screenshots_box {
-	text-align: center;
+.screenshots-box {
+
+}
+
+.comments-box {
+	background: white;
+	border-radius: 5px;
+	padding: 5px;
+	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
+	-moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
+	-webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);	
 }
 
 /* Jump-To Styles */
@@ -268,8 +277,8 @@ a.jumpto-nav {
 	padding-right: 3px;
 }
 
-/* ReadMore Box */
-.readmore-box {
+/* ReadMore/Comments Box/Button */
+.readmore-box, .comments-button {
 	margin-top: 10px;
 	border-style: solid;
 	border-radius: 5px;
@@ -279,16 +288,20 @@ a.jumpto-nav {
 	padding-right: 2px;
 	display: inline-block;
 }
-.readmore-box:hover {
+.readmore-box:hover, .comments-button:hover {
 	border-color: #666666;
 }
 
-.readmore-text {
+.readmore-text, .comments-button-text {
 	font-size: .9em;
 	font-weight: bold;
 }
-.readmore-text:hover {
+.readmore-text:hover, .comments-button-text:hover {
 	/*color: #888888;*/
+}
+.comments-button {
+	display: inline;
+	margin-left: 20px;
 }
 
 /* In-Article Ads */
