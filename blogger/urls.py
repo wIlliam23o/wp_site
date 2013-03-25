@@ -12,5 +12,7 @@ urlpatterns = patterns('',
         url(r'^[Tt]ag/(?P<_tag>.+)/?$', views.view_tag),
         # send identifier to blogger.views.view_post
         url(r'^[Vv]iew/(?P<_identifier>.+)/?$', views.view_post),
+        # pagination view
+        url(r'^[Pp]age/?', views.index_page)
 
         )

@@ -45,6 +45,21 @@ def get_post_byany(_identifier):
             post_ = None
     return post_
 
+def get_post_list(starting_id=0, max_posts=25, _order_by="-posted"):
+    """ returns a list of posts, starting with starting_id,
+        as long as max_posts. 
+        this is for pageination.
+    """
+    
+    all_posts = wp_blog.objects.order_by(_order_by)
+    
+    slice_start = all_posts[starting_id:]
+    if len(slice_start) > max_posts:
+        return slice_start[:25]
+    else:
+        return slice_start
+    
+    
 def get_post_body(post_):
     """ retrieves body for post.
         if html_url is set, we will try to load the file
@@ -67,6 +82,36 @@ def get_post_body(post_):
     return scontent
 
 
+def get_post_body_short(post_, max_text_length=0, max_text_lines=17):
+    """ retrieves body for post, timming if needed.
+        uses get_post_body to retrieve the initial body. """
+
+    new_body = get_post_body(post_)
+    trimmed = False
+    
+    # trim by maximum text length        
+    if ((max_text_length > 0) and 
+        (len(new_body) > max_text_length)):
+        new_body = new_body[:max_text_length]
+        trimmed = True
+        
+    # trim by maximum lines
+    if ((max_text_lines > 0) and 
+        ('\n' in new_body)):
+        lines_ = new_body.split('\n')
+        # needs trimming.
+        if len(lines_) > max_text_lines:
+            lines_ = lines_[:max_text_lines + 1]
+            new_body = '\n'.join(lines_)
+            trimmed = True
+    # post was trimmed? add readmore box.
+    if trimmed:
+        new_body += utilities.readmore_box('/blog/view/' + post_.slug)
+
+    
+    return new_body
+
+
 def fix_post_list(blog_posts, max_posts=25, max_text_length=0, max_text_lines=17):
     """ fixes all post.body in a list of posts.
         uses get_post_body to return the correct body to use.
@@ -81,29 +126,10 @@ def fix_post_list(blog_posts, max_posts=25, max_text_length=0, max_text_lines=17
         return []
     
     for post_ in [post_copy for post_copy in blog_posts]:
-        new_body = get_post_body(post_)
-        trimmed = False
-        
-        # trim by maximum text length        
-        if ((max_text_length > 0) and 
-            (len(new_body) > max_text_length)):
-            new_body = new_body[:max_text_length]
-            trimmed = True
-            
-        # trim by maximum lines
-        if ((max_text_lines > 0) and 
-            ('\n' in new_body)):
-            lines_ = new_body.split('\n')
-            # needs trimming.
-            if len(lines_) > max_text_lines:
-                lines_ = lines_[:max_text_lines + 1]
-                new_body = '\n'.join(lines_)
-                trimmed = True
-        # post was trimmed? add readmore box.
-        if trimmed:
-            new_body += utilities.readmore_box('/blog/view/' + post_.slug)
+        new_body = get_post_body_short(post_, max_text_length, max_text_lines)
         # set new body.
-        post_.body = mark_safe(prepare_content(new_body))
+        post_.body = new_body
+        
     # trim posts length
     if ((max_posts > 0) and
         (len(blog_posts) > max_posts)):
@@ -152,6 +178,12 @@ def prepare_content(body_content):
 def get_posts_by_tag(_tag):
     """ retrieve all posts with tag_ as a tag. """
     
+    if ',' in _tag:
+        _tag = _tag.replace(',', ' ')
+        
+    _tag = utilities.trim_special(_tag)
+    
+    
     if ' ' in _tag:
         tag_queries = _tag.split(' ')
     else:
@@ -161,8 +193,9 @@ def get_posts_by_tag(_tag):
     for post_ in wp_blog.objects.order_by('-posted'):
         for tag_name in tag_queries:
             if tag_name.lower() in post_.tags.lower():
-                found.append(post_)
-    
+                if not post_ in found:
+                    found.append(post_)
+
     return found
 
 

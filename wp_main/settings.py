@@ -8,10 +8,38 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 
-# root for project
-BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
+# root for project (location of manage.py - ../wp_site/ on git)
+# automatic settings for debug mode.
+if DEBUG:
+    import socket
+    shostname = socket.gethostname()
+    del socket
+    # decide which base dir to use based on hostname.
+    if "webfactional.com" in shostname:
+        # live site directories
+        BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
+        STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
+        MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
+        MEDIA_URL = "http://welbornprod.info/media/"
+    else:
+        # local development directories
+        BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
+        STATIC_ROOT = "/var/www/static/"
+        MEDIA_ROOT = "/var/www/media/"
+        MEDIA_URL = "http://127.0.0.1/media/"
+else:
+    # default directories for production
+    BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
+    STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
+    MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
+    MEDIA_URL = "http://welbornprod.info/media/"
+    
+# URL prefix for static files.
+STATIC_URL = '/static/'
+# main app (location of settings.py)
 MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
+
 
 ADMINS = (
     ('Christopher Welborn', 'cj@welbornproductions.net'),
@@ -52,24 +80,6 @@ USE_L10N = True
 
 # If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True
-
-# Absolute filesystem path to the directory that will hold user-uploaded files.
-# Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = ''
-
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash.
-# Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = ''
-
-# Absolute path to the directory static files should be collected to.
-# This is for testing with abyss, otherwise no collection is needed for debugging.
-STATIC_ROOT = "/var/www/static/"
-
-
-# URL prefix for static files.
-# Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (

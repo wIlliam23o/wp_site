@@ -1,0 +1,10 @@
+{% extends "home/main.html" %}
+{% block title %}Welborn Productions - About{% endblock %}
+
+{% block content %}
+	{% if about_content %}
+		{{ about_content }}
+	{% else %}
+		<span>Sorry, the about page hasn't been built yet.</span>
+	{% endif %}
+{% endblock %}

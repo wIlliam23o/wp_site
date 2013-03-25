@@ -24,6 +24,54 @@ _log = logger("welbornprod.utilities", use_file=True)
 
 
 
+def get_request_arg(request, arg_name, default_value=None, min_val=0, max_val=9999):
+    """ return argument from request (GET or POST),
+        default value can be set.
+        automatically returns int/float values instead of string where needed.
+        min/max can be set for integer/float values.
+    """
+    
+    try:
+        val = request.REQUEST[arg_name]
+    except:
+        # no arg passed.
+        val = ""
+    
+    if val.isalnum():
+        # check min/max for int values
+        try:
+            int_val = int(val)
+            if (int_val < min_val):
+                int_val = min_val
+            if (int_val > max_val):
+                int_val = max_val
+            # return float instead of string
+            val = int_val
+        except:
+            pass
+    else:
+        # try float, check min/max if needed.
+        try:
+            float_val = float(val)
+            if (float_val < min_val):
+                float_val = min_val
+            if (float_val > max_val):
+                float_val = max_val
+            # return float instead of string
+            val = float_val
+        except:
+            pass
+    
+    # default value is empty string if none was passed.
+    if default_value is None:
+        default_value = ""    
+    # final return after processing,
+    # will goto default value if val is empty.
+    if val == "":
+        val = default_value
+    return val
+        
+    
 def wsgi_error(request, smessage):
     """ print message to requests wsgi errors """
     
@@ -74,7 +122,7 @@ def get_filename(file_path):
     return sfilename
     
 def safe_arg(_url):
-    """ basically just trims the / from the args right now """
+    """ basically just trims the / from the POST args right now """
     
     s = _url
     if s.endswith('/'):
@@ -84,6 +132,23 @@ def safe_arg(_url):
     return s
 
 
+def trim_special(source_string):
+    """ removes all html, and other code related special chars.
+        so <tag> becomes tag, and javascript.code("write"); becomes javascriptcodewrite.
+        to apply some sort of safety to functions that generate html strings.
+        if someone did this: 
+            welbornprod.com/blog/tag/<script type="text/javascript">document.write("d");</script>
+        you're gonna have a bad time.
+    """
+    
+    special_chars = "<>/.'" + '"' + "#!;:&"
+    working_copy = source_string
+    for char_ in source_string:
+        if char_ in special_chars:
+            working_copy = working_copy.replace(char_, '')
+    return working_copy
+
+            
 def wrap_link(content_, link_url, alt_text = ""):
     """ wrap content in <a href> """
     s = ""
@@ -116,11 +181,17 @@ def is_file_or_dir(spath):
     return (os.path.isfile(spath) or os.path.isdir(spath))
 
 
-def get_browser_style(request):
-    """ return browser-specific css file (or False if not needed) """
+def get_browser_name(request):
+    """ return the user's browser name """
+    
     # get user agent
     user_agent = get_user_agent(request)
-    browser_name = user_agent.browser.family.lower()
+    return user_agent.browser.family.lower()
+    
+def get_browser_style(request):
+    """ return browser-specific css file (or False if not needed) """
+    
+    browser_name = get_browser_name(request)
     # get browser css to use...
     if browser_name.startswith("ie"):
         return "/static/css/main-ie.css"
@@ -169,8 +240,8 @@ def load_html_file(sfile):
     """
     
     if not os.path.isfile(sfile):
-        # try adding base dir
-        spath = os.path.join(settings.BASE_DIR, sfile)
+        # try getting absolute path
+        spath = get_absolute_path(sfile)
         if os.path.isfile(spath):
             sfile = spath
         else:

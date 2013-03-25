@@ -49,6 +49,14 @@ a.blog-listing-title {
 	padding-bottom: 5px;
 }
 
+.blog-header-count {
+	color: #4d4d4d;
+	font-weight: bold;
+}
+
+
+
+
 /* Post Styles */
 .blog-post {
 	background: white;

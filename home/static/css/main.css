@@ -283,21 +283,22 @@ a.jumpto-nav {
 	border-style: solid;
 	border-radius: 5px;
 	border-width: 1px;
-	border-color: #066AE9;
+	border-color: #74AFEE;
 	padding-left: 2px;
 	padding-right: 2px;
 	display: inline-block;
 }
 .readmore-box:hover, .comments-button:hover {
-	border-color: #666666;
+	border-color: #087FFF;
 }
 
 .readmore-text, .comments-button-text {
 	font-size: .9em;
 	font-weight: bold;
+	color: #74AFEE;
 }
 .readmore-text:hover, .comments-button-text:hover {
-	/*color: #888888;*/
+	color: #087FFF;
 }
 .comments-button {
 	display: inline;

@@ -1,0 +1,55 @@
+{% extends "blogger/index.html" %}
+
+{% block contentabove %}
+	<div class="blog-header">
+		<div class="blog-header-title">
+			<a href='/blog'>
+				<h3 class='header'>Blog</h3>
+			</a>
+		</div>
+		
+		<div class="blog-header-text">
+			{% block blogcontentabove %}
+				<div class='blog-header'>
+					<span class="blog-header-text">Viewing posts </span>
+					  <span class="blog-header-count">{{ start_id }}</span>
+					    <span class="blog-header-text"> through </span>
+					      <span class="blog-header-count">{{ end_id }}</span>
+					        <span class="blog-header-text"> of </span>
+					          <span class="blog-header-count">{{ post_count }}</span>
+					            <span class="blog-header-text">.</span>
+				</div>
+			{% endblock %}
+		</div>
+	</div>
+{% endblock %}
+{% block content %}
+	{{ block.super }}
+	<!-- NAVIGATION -->
+	<div class='blog-nav-box'>
+		<!-- START -->
+		<div class='blog-nav-button'>
+			<a href='/blog/page?start_id=0'>
+				<span>&lt;&lt;</span>
+			</a>
+		</div>
+		<!-- START -->
+		<div class='blog-nav-button'>
+			<a href='/blog/page?start_id={{ prev_page }}'>
+				<span>&lt;</span>
+			</a>
+		</div>
+		<!-- START -->
+		<div class='blog-nav-button'>
+			<a href='/blog/page?start_id={{ next_page }}'>
+				<span>&gt;</span>
+			</a>
+		</div>
+		<!-- END -->
+		<div class='blog-nav-button'>
+			<a href='/blog/page?start_id=last'>
+				<span>&gt;&gt;</span>
+			</a>
+		</div>
+	</div>
+{% endblock %}

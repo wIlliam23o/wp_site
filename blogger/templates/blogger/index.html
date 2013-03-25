@@ -19,9 +19,15 @@
 		</div>
 		
 		<div class="blog-header-text">
-		{% block blogcontentabove %}
-			<span class="title">Latest blog posts</span>
-		{% endblock %}
+			{% block blogcontentabove %}
+				<span class="title">Latest blog posts</span>
+				<br/>
+				<a href="/blog/page?start_id=0">
+					<div class="readmore-box" style="margin-left: 5px;">
+						<span class="readmore-text">view all posts</span>
+					</div>
+				</a>
+			{% endblock %}
 		</div>
 	</div>
 {% endblock %}
@@ -34,8 +40,8 @@
 							<a href="/blog/view/{{ post.slug }}">
 								<span class="blog-listing-title">{{ post.title }}</span>
 							</a>
-					</div>	
-					{% if post.enable_comments %}
+						</div>
+						{% if post.enable_comments %}
 							{{ post|comments_button }}
 						{% endif %}						
 						<div class="blog-post-date-box">
@@ -45,7 +51,7 @@
 							{{ post|tag_links }}
 						</div>			
 						<div class="blog-listing-body">
-							{{ post.body }}
+							{{ post|get_body_short }}
 						</div>
 						<!-- TODO: RELATED PROJECTS -->
 					</div>

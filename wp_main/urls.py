@@ -3,13 +3,16 @@
 
 from django.conf.urls import patterns, include, url
 
+from home import views as homeviews
+
 # enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
 # Main Site (home)
 urlpatterns = patterns('',
-    url(r'^$', include('home.urls')),
+    url(r'^$', homeviews.index),
+    url(r'^[Aa]bout/?$', homeviews.view_about),
     )
 
 # Projects view (projects)

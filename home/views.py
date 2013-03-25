@@ -1,9 +1,5 @@
-# basic Response/Template/Context stuff...
-from django.http import HttpResponse
-from django.template import Context, loader
-
-# User-Agent helper...
-from django_user_agents.utils import get_user_agent #@UnresolvedImport
+# safe html in responses.
+from django.utils.safestring import mark_safe
 
 # various welbornprod tools
 from wp_main import utilities
@@ -15,30 +11,23 @@ def index(request):
     
     # setup logging
     _log = logger("welbornprod.home.index", use_file=True)
-    #wp_log.debug("Requested page: " + request.path)
 
-    
-    # get user agent
-    user_agent = get_user_agent(request)
-    browser_name = user_agent.browser.family.lower()
-    # get browser css to use...
-    if browser_name.startswith("ie"):
-        extra_style_link = "/static/css/main-ie.css"
-    elif "firefox" in browser_name:
-        extra_style_link = "/static/css/main-gecko.css"
-    elif "chrome" in browser_name:
-        extra_style_link = "/static/css/main-webkit.css"
-    else:
-        extra_style_link = False
-    
-        
-    
-    # initialize main template
-    tmp_main = loader.get_template('home/index.html')
-    default_content = browser_name
-    # load variables into template
-    c_main = Context({'extra_style_link': extra_style_link,
-                      'default_content': default_content})
+    # default content for index
+    default_content = utilities.get_browser_name(request)
 
     # render final page
-    return HttpResponse(utilities.clean_template(tmp_main, c_main))
+    return utilities.clean_response("home/index.html",
+                                    {'extra_style_link': utilities.get_browser_style(request),
+                                     'default_content': mark_safe(default_content),
+                                     })
+    
+
+def view_about(request):
+    """ return the about page for welbornproductions. """
+    
+    about_content = utilities.load_html_file("static/html/about.html")
+    return utilities.clean_response("home/about.html",
+                                    {'extra_style_link': "/static/css/about.css",
+                                     'about_content': mark_safe(about_content),
+                                     })
+

@@ -161,7 +161,7 @@ def get_source_files(project):
     return source_files
     
     
-def get_source_files_menu(source_files, max_length = 25, max_text_length = 24):
+def get_source_files_menu(source_files, max_length = 25, max_text_length = 18):
     """ build a vertical menu from all source files.
         source_files should be a list of relative paths to files.
         returns Html string.

@@ -25,6 +25,12 @@ def get_body(value):
     return mark_safe(blogtools.prepare_content(blogtools.get_post_body(value)))
 
 
+def get_body_short(value):
+    """ returns the body for a listing, shortened if needed. """
+    
+    return mark_safe(blogtools.prepare_content(blogtools.get_post_body_short(value)))
+
+
 def comments_button(value):
     """ returns comments button for this blog post. """
     
@@ -33,4 +39,5 @@ def comments_button(value):
 
 register.filter('tag_links', tag_links)
 register.filter('get_body', get_body)
+register.filter('get_body_short', get_body_short)
 register.filter('comments_button', comments_button)

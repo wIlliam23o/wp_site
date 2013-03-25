@@ -20,7 +20,10 @@ def index(request):
 
     # load blog posts...
     try:
-        blog_posts = blogtools.fix_post_list(wp_blog.objects.order_by('-posted'),
+        raw_posts = wp_blog.objects.order_by('-posted')
+        post_count = len(raw_posts)
+        blog_posts = blogtools.fix_post_list(raw_posts,
+                                             max_posts=25,
                                              max_text_lines=16)
     except:
         _log.error("No blog posts found!")
@@ -28,9 +31,67 @@ def index(request):
         
     return utilities.clean_response("blogger/index.html",
                                     {'blog_posts': blog_posts,
+                                     'post_count': post_count,
                                      'extra_style_link': utilities.get_browser_style(request)})
 
 
+def index_page(request):
+    """ return a slice of all posts using start_id and max_posts
+        to determine the location.
+    """
+    
+    # get order_by
+    order_by_ = utilities.get_request_arg(request, 'order_by', '-posted')
+        
+    # get max_posts
+    max_posts_ = utilities.get_request_arg(request, 'max_posts', 25, min_val=1, max_val=100)
+    # calculate last page based on max_posts
+    post_count = wp_blog.objects.count()   
+    last_page = ( post_count - max_posts_ ) if ( post_count > max_posts_ ) else 0
+
+    # get start_id
+    start_id = utilities.get_request_arg(request, 'start_id', 0, min_val=0, max_val=9999)
+    # fix starting id.
+    if isinstance(start_id, (str, unicode)):
+        if start_id.lower() == 'last':
+            start_id = last_page
+        else:
+            # this shouldn't happen, get_request_arg() returns an integer or float
+            # if a good integer/float value was passed. So any unexpected string value
+            # means someone is messing with the args in a way that would break the view.
+            # so if the conditions above aren't met ('last'), it defaults to a safe value (0).
+            start_id = 0
+        
+    # fix maximum start_id
+    if start_id > last_page:
+        start_id = last_page
+        
+    # get prev page
+    prev_page = start_id - max_posts_
+    if prev_page < 0:
+        prev_page = 0
+    # get next page
+    next_page = start_id + max_posts_
+    if next_page > wp_blog.objects.count():
+        next_page = last_page
+    
+    # retrieve blog posts slice
+    post_slice = blogtools.get_post_list(start_id,
+                                         max_posts=max_posts_,
+                                         _order_by=order_by_)
+    blog_posts = blogtools.fix_post_list(post_slice, max_text_lines=16)        
+    # fix nav info
+    end_id = str(start_id + len(blog_posts))
+
+    return utilities.clean_response("blogger/index_paged.html",
+                                    {"blog_posts": blog_posts,
+                                     "start_id": (start_id + 1),
+                                     "end_id": end_id,
+                                     "post_count": post_count,
+                                     "prev_page": prev_page,
+                                     "next_page": next_page,
+                                    "extra_style_link": utilities.get_browser_style(request),
+                                    })
 
 def view_post(request, _identifier):
     """ view a post by identifier.
@@ -83,7 +144,7 @@ def view_tag(request, _tag):
     """ list all posts with these tags """
     
     
-    tag_name = _tag
+    tag_name = utilities.trim_special(_tag).replace(',', ' ')
     blog_posts = blogtools.fix_post_list(blogtools.get_posts_by_tag(tag_name))
     post_count = len(blog_posts)
     
