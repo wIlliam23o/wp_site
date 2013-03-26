@@ -3,12 +3,8 @@
 
 # Django settings for wp_main project.
 import os.path
-from wp_main.wp_logging import logger
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
-# Setup log (should only be used for errors)
-_log = logger('welbornprod.settings', use_file=(not DEBUG))
-
 
 # root for project (location of manage.py - ../wp_site/ on git)
 # automatic settings for debug mode.
@@ -17,7 +13,7 @@ if DEBUG:
     shostname = socket.gethostname()
     del socket
     # decide which base dir to use based on hostname.
-    if "webfactional.com" in shostname:
+    if "webfactional" in shostname:
         # live site directories
         BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
         STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
@@ -41,6 +37,15 @@ STATIC_URL = '/static/'
 # main app (location of settings.py)
 MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
+
+# IP's debug_toolbar should be shown to.
+INTERNAL_IPS = ('127.0.0.1',
+                # webfactional?
+                '108.168.213.73', 
+                '108.168.213.*')
+
+# Django's new security setting?
+ALLOWED_HOSTS = ['*']
 
 
 ADMINS = (
@@ -107,12 +112,8 @@ if os.path.isfile(SECRET_KEY_FILE):
         with open(SECRET_KEY_FILE) as fread:
             SECRET_KEY = fread.read().replace('\n', '')
     except (IOError, OSError)as ex_access:
-        _log.error("Can't access secret key file!: " + str(ex_access))
-        print "Can't access secret key file!: " + str(ex_access)
         SECRET_KEY = NONSECRET_KEY
 else:
-    _log.error("Secret key file doesn't exist!: " + SECRET_KEY_FILE)
-    print "Secret key file doesn't exist!:" + SECRET_KEY_FILE
     SECRET_KEY = NONSECRET_KEY
 
 # List of callables that know how to import templates from various sources.
@@ -221,11 +222,6 @@ LOGGING = {
     }
 }
 
-# IP's debug_toolbar should be shown to.
-INTERNAL_IPS = ('127.0.0.1',)
-
-# Django's new security setting?
-ALLOWED_HOSTS = ['*']
 # These toolbars are already default set.
 #DEBUG_TOOLBAR_PANELS = (
 #    'debug_toolbar.panels.version.VersionDebugPanel',
