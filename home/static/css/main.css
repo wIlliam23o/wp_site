@@ -642,3 +642,14 @@ code, samp {
     border-radius: 3px;
     padding: 1px
 }
+
+/* email spam bot protection */
+/* this only works if you write the email backwards in the HTML */
+.protected-address {
+	unicode-bidi: bidi-override;
+	direction: rtl;
+}
+
+.wp-address {
+	/* empty selector for tagging protected addresses (possibly) */
+}

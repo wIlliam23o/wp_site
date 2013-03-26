@@ -553,6 +553,18 @@ def remove_whitespace(source_string):
         return '\n'.join(keep_)
     else:
         return source_string
+
+
+def hide_email(source_string):
+    """ base64 encodes all email addresses for use with wptool.js reveal functions.
+        for spam protection.
+    """
+    ##########################
+    ##########################
+    ##########################
+    #@todo: Automatically base64 encode any href tag or innerHTML with .wp-address as the class
+    ##########################
+    pass
     
 def clean_template(template_, context_, force_ = False):
     """ renders a template with context and 
