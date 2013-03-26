@@ -13,7 +13,7 @@ if DEBUG:
     shostname = socket.gethostname()
     del socket
     # decide which base dir to use based on hostname.
-    if "webfactional" in shostname:
+    if "webfaction" in shostname:
         # live site directories
         BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
         STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
@@ -41,8 +41,7 @@ TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
 # IP's debug_toolbar should be shown to.
 INTERNAL_IPS = ('127.0.0.1',
                 # webfactional?
-                '108.168.213.73', 
-                '108.168.213.*')
+                '108.168.213.73')
 
 # Django's new security setting?
 ALLOWED_HOSTS = ['*']
