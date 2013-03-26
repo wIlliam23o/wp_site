@@ -3,9 +3,11 @@
 
 # Django settings for wp_main project.
 import os.path
-
+from wp_main.wp_logging import logger
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+# Setup log (should only be used for errors)
+_log = logger('welbornprod.settings', use_file=(not DEBUG))
 
 
 # root for project (location of manage.py - ../wp_site/ on git)
@@ -96,8 +98,22 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
+# SECRET_KEY SETTINGS
+NONSECRET_KEY = '2h&amp;yk)@#2v&amp;ja6nl-3_!!vbp)$3xy*h5pi1el4x#rx6djv-6(z'
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '2h&amp;yk)@#2v&amp;ja6nl-3_!!vbp)$3xy*h5pi1el4x#rx6djv-6(z'
+SECRET_KEY_FILE = os.path.join(BASE_DIR, "secretkey.txt")
+if os.path.isfile(SECRET_KEY_FILE):
+    try:
+        with open(SECRET_KEY_FILE) as fread:
+            SECRET_KEY = fread.read().replace('\n', '')
+    except (IOError, OSError)as ex_access:
+        _log.error("Can't access secret key file!: " + str(ex_access))
+        print "Can't access secret key file!: " + str(ex_access)
+        SECRET_KEY = NONSECRET_KEY
+else:
+    _log.error("Secret key file doesn't exist!: " + SECRET_KEY_FILE)
+    print "Secret key file doesn't exist!:" + SECRET_KEY_FILE
+    SECRET_KEY = NONSECRET_KEY
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (

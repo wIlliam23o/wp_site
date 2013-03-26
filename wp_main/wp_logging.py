@@ -31,7 +31,6 @@ class logger(object):
             self.filehandler.setFormatter(self.formatter)
             self.log.addHandler(self.filehandler)
 
-
             
     def debug(self, message):
         self.log.debug(message)
