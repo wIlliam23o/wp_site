@@ -28,9 +28,12 @@ var wpTools = {
                         if (length > 0) {
                             for (var i=0; i < length; i++) {
                                 // fix href target
-                                var target_ = elems[i].getAttribute('href').valueOf();
-                                if (target_) {
-                                    elems[i].setAttribute('href', this.wpaddress(target_));
+                                var href_ = elems[i].getAttribute('href');
+                                if (href_) {
+	                                var target_ = href_.valueOf();
+	                                if (target_) {
+	                                    elems[i].setAttribute('href', this.wpaddress(target_));
+	                                }
                                 }
                                 // fix inner html..
                                 elems[i].innerHTML = this.wpaddress(elems[i].innerHTML);

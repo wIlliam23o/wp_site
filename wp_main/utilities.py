@@ -10,6 +10,10 @@
 
 import os.path
 from os import walk #@UnusedImport: os.walk is used, aptana is stupid.
+# email hiding (with hide_email, find_mailtos, find_email_addresses)
+import re 
+import base64
+# global settings
 from django.conf import settings
 #import logging
 # User-Agent helper...
@@ -22,6 +26,7 @@ from django.utils.safestring import mark_safe # don't escape html with strings m
 from wp_logging import logger
 _log = logger("welbornprod.utilities", use_file=True)
 
+re_email_address = r'[\d\w\-\.]+@[\d\w\-\.]+\.[\w\d\-\.]+'
 
 
 def get_request_arg(request, arg_name, default_value=None, min_val=0, max_val=9999):
@@ -543,13 +548,18 @@ def remove_newlines(source_string):
                "                 and " + str(iprelines) + " pre lines.")
     return "".join(final_output)
 
+
 def remove_whitespace(source_string):
-    """ removes leading and trailing whitespace from lines """
+    """ removes leading and trailing whitespace from lines,
+        and removes blank lines.
+    """
     
     if '\n' in source_string:
         keep_ = []
         for sline in source_string.split('\n'):
-            keep_.append(sline.strip(' ').strip('\t'))
+            stripped_ = sline.strip(' ').strip('\t')
+            if stripped_ != "":
+                keep_.append(stripped_)
         return '\n'.join(keep_)
     else:
         return source_string
@@ -559,27 +569,84 @@ def hide_email(source_string):
     """ base64 encodes all email addresses for use with wptool.js reveal functions.
         for spam protection.
     """
-    ##########################
-    ##########################
-    ##########################
-    #@todo: Automatically base64 encode any href tag or innerHTML with .wp-address as the class
-    ##########################
-    pass
     
+    if '\n' in source_string:
+        slines = source_string.split('\n')
+    else:
+        # single line
+        slines = [source_string]
+    
+    final_output = []
+    for sline in slines:
+        mailtos_ = find_mailtos(sline)
+        for mailto_ in mailtos_:
+            b64_mailto = base64.encodestring(mailto_).replace('\n','')
+            sline = sline.replace(mailto_, b64_mailto )
+            _log.debug("mailto: replaced " + mailto_ +'\n    with: ' + b64_mailto)
+        emails_ = find_email_addresses(sline)
+        for email_ in emails_:
+            b64_addr = base64.encodestring(email_).replace('\n','')
+            sline = sline.replace(email_, b64_addr )
+            _log.debug("email: replaced " + email_ +'\n    with: ' + b64_addr)
+        # add line (encoded or not)
+        final_output.append(sline)
+    return '\n'.join(final_output)
+
+
+def find_mailtos(source_string):
+    """ finds all instances of <a class='wp-address' href='mailto:email@adress.com'></a> for hide_email().
+        returns a list of href targets ['mailto:name@test.com', 'mailto:test2.com'],
+        returns empty list on failure.
+    
+    """
+    
+    # regex pattern for finding href tag with 'mailto:??????' and a wp-address class
+    s_mailto = r'<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]wp-address[\'"][ ]href[ ]?\=[ ]?["\']((mailto:)?' + re_email_address + ')'
+    re_pattern = re.compile(s_mailto)
+    raw_matches = re.findall(re_pattern, source_string)
+    mailtos_ = []
+    for groups_ in raw_matches:
+        # first item is the mailto: line we want.
+        mailtos_.append(groups_[0])
+    return mailtos_
+
+
+def find_email_addresses(source_string):
+    """ finds all instances of email@addresses.com. for hide_email()"""
+    
+    # regex pattern for locating an email address.
+    s_addr = r"(<\w+(?!>)[ ]class[ ]?\=[ ]?['\"]wp-address['\"])(.+)?[ >](" + re_email_address + ")"
+    re_pattern = re.compile(s_addr)
+    raw_matches = re.findall(re_pattern, source_string)
+    addresses_ = []
+    for groups_ in raw_matches:
+        # the last item is the address we want
+        addresses_.append(groups_[-1])
+    return addresses_
+        
+        
 def clean_template(template_, context_, force_ = False):
     """ renders a template with context and 
         applies the cleaning functions.
-        if DEBUG = True then only comments are removed.
+        
+        Email addresses are hidden with hide_email(),
+        then fixed on document load with wptools.js.
+        
+        Blank Lines, Whitespace, Comments are removed if DEBUG = True.
+        if DEBUG = False then New Lines are removed also (to minify)
     """
     
-    if ((settings.DEBUG == True) and (force_ == False)):
-        return remove_comments(template_.render(context_))
-    else:
-        # operations must be performed in this order.
-        return remove_newlines(
-                    remove_whitespace(
-                    remove_comments(
-                    template_.render(context_))))
+    # these things have to be done in a certain order to work correctly.
+    # hide_email, remove_comments, remove_whitespace, remove_newlines
+    clean_output = remove_whitespace(
+                        remove_comments(
+                        hide_email(template_.render(context_))))
+
+    if ((not settings.DEBUG) or (force_)):
+        # minify (kinda)
+        clean_output = remove_newlines(clean_output)
+    return clean_output
+
 
 def alert_message(alert_message, body_message="<a href='/'><span>Click here to go home</span></a>", noblock=False):
     """ Builds an alert message, and returns the HttpResponse object. 
@@ -641,7 +708,7 @@ def clean_response(template_name, context_dict):
                 _log.error("clean_response: could not clean_template!<br/>\n" + str(ex))
                 rendered = None
     if rendered is None:
-        return alert_message("Sorry, there was an error loaging this page.")
+        return alert_message("Sorry, there was an error loading this page.")
     else:
         return HttpResponse(rendered)
 
