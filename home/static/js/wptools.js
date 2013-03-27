@@ -52,12 +52,12 @@ var wpTools = {
                     },
 
         is_mailto : function (input_) {
-                        regex_ = /^mailto:\w+@?\w+\.?\w+?$/;
+                        regex_ = /^mailto:[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
                         return input_.search(regex_) > -1;
                     },
 
         is_address : function (input_) {
-                        regex_ = /^\w+@?\w+\.?\w+?$/;
+                        regex_ = /^[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
                         return input_.search(regex_) > -1;
                     },
         }
