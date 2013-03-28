@@ -90,9 +90,11 @@ def load_html_file(sfile):
 def check_replacement(source_string, target_replacement):
     """ fixes target replacement string in inject functions.
         if {{ }} was ommitted, it adds it.
-        if {{target}} is in replacement instead of "{{ target }}",
+        if "{{target}}" is in source_string instead of "{{ target }}",
         it fixes the target to match.
-        otherwise, it returns the original target_replacement string.
+        if nothing is needed, it returns the original target_replacement string.
+        if the target_replacement isn't in the source_string, it returns false,
+        so use [if check_replacement()], not [if check_replacement() in source_string].
     """
     
     # fix replacement if {{}} was omitted.
@@ -112,39 +114,10 @@ def check_replacement(source_string, target_replacement):
         return False
     
 
-
-def inject_text(source_string, target_replacement, replace_with):
-    """ basic text replacement, replaces target_replacement with replace_with. """
-    
-    if target_replacement in source_string:
-        return source_string.replace(target_replacement, replace_with)
-    else:
-        return source_string
-    
-     
-def inject_all(source_string):
-    """ runs all custom injection functions with default settings. """
-    
-    # so far just the one function.
-    custom_replacements = [inject_article_ad,
-                           inject_screenshots]
-    
-    for replacement_function in custom_replacements:
-        source_string = replacement_function(source_string)
-        
-    return source_string
-  
-    
 def inject_article_ad(source_string, target_replacement = "{{ article_ad }}"):
     """ basically does a text replacement, 
-        replaces 'target_replacement' with 'article_ad'.
-        returns finished string.
-        ex:
-            # looks for {{ ad }}, and {{ad}} to replace.
-            shtml = inject_article_ad(shtml, "{{ ad }}")
-            -or-
-            # automatically wraps target in {{}} if it was omitted.
-            shtml = inject_article_ad(shtml, "ad")
+        replaces 'target_replacement' with the code for article ads.
+        returns finished html string.
     """
     
     # fail check.
@@ -180,6 +153,8 @@ def inject_bold_words(source_string, wordlist = None):
     """
     
     # experimental, needs some regex...
+    #@todo: use regex to replace only words that aren't already wrapped in <strong>.
+    #@todo: build common word list like Python,Linux,Windows,etc.
     if wordlist is None:
         wordlist = ['menuprops', 'MenuProps', 
                     'menu props', 'Menu Props',
@@ -190,7 +165,8 @@ def inject_bold_words(source_string, wordlist = None):
     return source_string
 
 
-def inject_screenshots(source_string, images_dir, target_replacement = "{{ screenshots_code }}", noscript_image = None):
+def inject_screenshots(source_string, images_dir, target_replacement = "{{ screenshots_code }}", 
+                       noscript_image = None):
     """ inject code for screenshots box.
         walks image directory, building html for the image rotator box.
         examples:
@@ -237,7 +213,7 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     </div>
     """
     
-    # template for inecting image files
+    # template for injecting image files
     stemplate = """
                         <li>
                             <a href="{{image_file}}" title="screen shots">
@@ -272,6 +248,7 @@ def inject_sourceview(project, source_string, link_text = None, desc_text = None
     """ injects code for source viewing.
         needs wp_project (project) passed to gather info.
         if target_replacement is not found, returns source_string.
+        ** this probably needs to be in projects.tools **
     """
 
     # fail check.
@@ -318,7 +295,8 @@ def inject_sourceview(project, source_string, link_text = None, desc_text = None
         
 def remove_comments(source_string):
         """ splits source_string by newlines and 
-            removes any line starting with <!-- and ending with -->. """
+            removes any line starting with <!-- and ending with -->. 
+        """
             
         if ("<!--" in source_string) and ('\n' in source_string):
             keeplines = []
@@ -331,6 +309,7 @@ def remove_comments(source_string):
             return '\n'.join(keeplines)
         else:
             return source_string
+
 
 def remove_newlines(source_string):
     """ remove all newlines from a string """
@@ -414,7 +393,7 @@ def hide_email(source_string):
 
 def find_mailtos(source_string):
     """ finds all instances of <a class='wp-address' href='mailto:email@adress.com'></a> for hide_email().
-        returns a list of href targets ['mailto:name@test.com', 'mailto:test2.com'],
+        returns a list of href targets ['mailto:name@test.com', 'mailto:name2@test2.com'],
         returns empty list on failure.
     
     """
@@ -431,7 +410,7 @@ def find_mailtos(source_string):
 
 
 def find_email_addresses(source_string):
-    """ finds all instances of email@addresses.com. for hide_email()"""
+    """ finds all instances of email@addresses.com inside a wp-address classed tag. for hide_email() """
     
     # regex pattern for locating an email address.
     s_addr = r"(<\w+(?!>)[ ]class[ ]?\=[ ]?['\"]wp-address['\"])(.+)?[ >](" + re_email_address + ")"
