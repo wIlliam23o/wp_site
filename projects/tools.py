@@ -14,10 +14,10 @@ from os import listdir #@UnusedImport: os.listdir is used, aptana is stupid.
 import os.path
 from django.conf import settings
 from projects.models import wp_project
-from wp_main import utilities
-import logging
-
-tools_log = logging.getLogger('welbornprod.projects.tools')
+from wp_main.utilities import utilities
+from wp_main.utilities import htmltools
+from wp_main.utilities.wp_logging import logger
+_log = logger('welbornprod.projects.tools')
 
 def sorted_projects(sort_method = "date"):
     """ return sorted list of projects.
@@ -48,7 +48,7 @@ def get_matches_html(project, requested_page):
                 p_name = "<span class='match_result'>" + \
                          proj.name + "</span>"
                 p_link = "/projects/" + proj.alias
-                shtml += utilities.wrap_link(p_name, p_link) + \
+                shtml += htmltools.wrap_link(p_name, p_link) + \
                      "</div>"
             shtml += "</div></div>"
     return shtml
@@ -74,7 +74,7 @@ def get_html_file(project):
     
     if project.html_url == "":
         html_file = os.path.join(settings.BASE_DIR, "projects/static/html/" + project.alias + ".html")
-        tools_log.debug("get_html_file: no html_url set, trying: " + html_file)
+        _log.debug("get_html_file: no html_url set, trying: " + html_file)
     else:
         if os.path.isfile(project.html_url):
             html_file = project.html_url
@@ -87,10 +87,10 @@ def get_html_content(project):
     """ retrieves extra html content for project, if any """
     
     sfile = get_html_file(project)
-    shtml = utilities.load_html_file(sfile)
+    shtml = htmltools.load_html_file(sfile)
     
     if shtml == "":
-        tools_log.debug("get_html_content: missing html for " + project.name + ": " + sfile)
+        _log.debug("get_html_content: missing html for " + project.name + ": " + sfile)
     
     return shtml
 
@@ -140,7 +140,7 @@ def get_download_file_content(project, surl):
     """
     
     if surl.lower().endswith('.html') or surl.lower().endswith('.htm'):
-        return utilities.load_html_file(surl)
+        return htmltools.load_html_file(surl)
     else:
         shead = "<div class='wp-block download-list'>\n"
         stail = '</div>'
@@ -185,7 +185,7 @@ def get_download_dir_content(project, surl):
     try:
         files = os.listdir(surl)
     except Exception as ex:
-        tools_log.error("get_download_dir_content: unable to list dir: " + surl + '\n' + str(ex))
+        _log.error("get_download_dir_content: unable to list dir: " + surl + '\n' + str(ex))
         return ""
 
     shead = "<div class='wp-block download-list'>\n"
@@ -246,28 +246,28 @@ def prepare_content(project, scontent):
     # Working copy
     shtml = scontent
     # do article ads.
-    shtml = utilities.inject_article_ad(shtml)
+    shtml = htmltools.inject_article_ad(shtml)
         
     # do screenshots.
     images_dir = get_screenshots_dir(project)
-    tools_log.debug("trying screenshots_dir: " + images_dir)
+    _log.debug("trying screenshots_dir: " + images_dir)
     # inject screenshots.            
     if os.path.isdir(images_dir):
-        tools_log.debug("using screenshot_dir: " + images_dir)
-        shtml = utilities.inject_screenshots(shtml, images_dir)
+        _log.debug("using screenshot_dir: " + images_dir)
+        shtml = htmltools.inject_screenshots(shtml, images_dir)
     else:
         if images_dir == "":
-            tools_log.debug("No screenshots_dir specified.")
+            _log.debug("No screenshots_dir specified.")
         else:
-            tools_log.debug("screenshots_dir doesn't exist!: " + images_dir)
+            _log.debug("screenshots_dir doesn't exist!: " + images_dir)
     
     # do downloads.
     sdownload_content = get_download_content(project)
     if sdownload_content != "":
-        shtml = utilities.inject_text(shtml, "{{ download_code }}", sdownload_content)
+        shtml = htmltools.inject_text(shtml, "{{ download_code }}", sdownload_content)
     
     # do source view.
-    shtml = utilities.inject_sourceview(project, shtml)
+    shtml = htmltools.inject_sourceview(project, shtml)
     
     # do auto source highlighting
     if "<pre class=" in shtml:

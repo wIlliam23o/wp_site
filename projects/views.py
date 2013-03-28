@@ -1,32 +1,25 @@
-from django.http import HttpResponse
-from django.template import Context, loader
+# Mark generated Html as safe to view.
 from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
 
-#from projects import models
+# Project Info
 from projects.models import wp_project
-# Global settings (for getting absolute path)
-from django.conf import settings
 
-# welborn productions utilities
-from wp_main import utilities
+# Local tools
+from wp_main.utilities import utilities
+from wp_main.utilities import responses
+from wp_main.utilities import htmltools
 from projects import tools
 
 
 # logging
-from wp_main.wp_logging import logger
-
-
-# initialize logging
+from wp_main.utilities.wp_logging import logger
 _log = logger('welbornprod.projects', use_file=True)
+
+
 
 
 def index(request):
     """ Main Project Page (index/listing) """
-    # browser specific style
-    extra_style_link = utilities.get_browser_style(request)
-    
-    # base template for project listing     
-    tmp_main = loader.get_template('projects/index.html')
     
     # get projects
     if wp_project.objects.count() == 0:
@@ -40,20 +33,19 @@ def index(request):
     # get vertical projects menu
     projects_menu = tools.get_projects_menu()                  
   
-    # build context (mark content as safe so we can build our page using html)
-    context_main = Context({'projects_content': mark_safe(projects_content),
-                            'projects_menu': mark_safe(projects_menu),
-                            'extra_style_link': extra_style_link
-                            })
     # render final page
-    return HttpResponse(utilities.clean_template(tmp_main, context_main))
+    return responses.clean_response("projects/index.html",
+                                    {'extra_style_link': utilities.get_browser_style(request),
+                                     'projects_content': mark_safe(projects_content),
+                                     'projects_menu': mark_safe(projects_menu),
+                                     })
 
 
 def project_listing(request, project):
     """ Returns a single project listing for when building the projects index """
     
     # Build project name/link
-    p_namelink = utilities.wrap_link("<span class='header project_name'>" + project.name + "</span>", 
+    p_namelink = htmltools.wrap_link("<span class='header project_name'>" + project.name + "</span>", 
                        "/projects/" + project.alias)
     
     # Build project listing module
@@ -72,12 +64,6 @@ def project_listing(request, project):
 
 def project_page(request, project, requested_page, source=""):
     """ Project Page (for individual project) """
-
-    # get browser specific css file
-    extra_style_link = utilities.get_browser_style(request)
-    
-    # Get project page template
-    tmp_project = loader.get_template("projects/project.html")
     
     # Set default flags
     use_screenshots = False
@@ -116,16 +102,15 @@ def project_page(request, project, requested_page, source=""):
         
     # build vertical projects menu
     projects_menu = tools.get_projects_menu()                  
-    # Build Context for project...
-    cont_project = Context({'project_content': mark_safe(shtml),
-                            'project_title': project_title,
-                            'projects_menu': mark_safe(projects_menu),
-                            'extra_style_link': extra_style_link,
-                            'extra_style_link2': extra_style_link2,
-                            'use_screenshots': use_screenshots})
-    # render final page.
-    force_clean = (not settings.DEBUG)
-    return HttpResponse(utilities.clean_template(tmp_project, cont_project, force_clean))
+
+    return responses.clean_response("projects/project.html",
+                                    {'project_content': mark_safe(shtml),
+                                     'project_title': project_title,
+                                     'projects_menu': mark_safe(projects_menu),
+                                     'extra_style_link': utilities.get_browser_style(request),
+                                     'extra_style_link2': extra_style_link2,
+                                     'use_screenshots': use_screenshots,
+                                     })
 
 
 def request_any(request, _identifier):

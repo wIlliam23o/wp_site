@@ -1,19 +1,15 @@
-from django.http import HttpResponse
-#from django.template import Context, loader
-#from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
-
-
+#Blog Info/Tools
 from blogger.models import wp_blog
 from blogger import blogtools
 
 # Global settings (for getting absolute path)
 from django.conf import settings
-# logging capabilities
-from wp_main.wp_logging import logger
-_log = logger("welbornprod.blog", use_file=(not settings.DEBUG))
 
-# welborn productions utilities
-from wp_main import utilities
+# Local tools
+from wp_main.utilities import utilities
+from wp_main.utilities import responses
+from wp_main.utilities.wp_logging import logger
+_log = logger("welbornprod.blog", use_file=(not settings.DEBUG))
 
 def index(request):
     """ index list of all blog posts """
@@ -29,7 +25,7 @@ def index(request):
         _log.error("No blog posts found!")
         blog_posts = False
         
-    return utilities.clean_response("blogger/index.html",
+    return responses.clean_response("blogger/index.html",
                                     {'blog_posts': blog_posts,
                                      'post_count': post_count,
                                      'extra_style_link': utilities.get_browser_style(request)})
@@ -41,16 +37,16 @@ def index_page(request):
     """
     
     # get order_by
-    order_by_ = utilities.get_request_arg(request, 'order_by', '-posted')
+    order_by_ = responses.get_request_arg(request, 'order_by', '-posted')
         
     # get max_posts
-    max_posts_ = utilities.get_request_arg(request, 'max_posts', 25, min_val=1, max_val=100)
+    max_posts_ = responses.get_request_arg(request, 'max_posts', 25, min_val=1, max_val=100)
     # calculate last page based on max_posts
     post_count = wp_blog.objects.count()   
     last_page = ( post_count - max_posts_ ) if ( post_count > max_posts_ ) else 0
 
     # get start_id
-    start_id = utilities.get_request_arg(request, 'start_id', 0, min_val=0, max_val=9999)
+    start_id = responses.get_request_arg(request, 'start_id', 0, min_val=0, max_val=9999)
     # fix starting id.
     if isinstance(start_id, (str, unicode)):
         if start_id.lower() == 'last':
@@ -83,7 +79,7 @@ def index_page(request):
     # fix nav info
     end_id = str(start_id + len(blog_posts))
 
-    return utilities.clean_response("blogger/index_paged.html",
+    return responses.clean_response("blogger/index_paged.html",
                                     {"blog_posts": blog_posts,
                                      "start_id": (start_id + 1),
                                      "end_id": end_id,
@@ -105,7 +101,7 @@ def view_post(request, _identifier):
     
     if post_ is None:
         _log.error("Post not found: " + _identifier)
-        response = utilities.alert_message("Sorry, I can't find that post.",
+        response = responses.alert_message("Sorry, I can't find that post.",
                                            "<a href='/blog'><span>Click here to go back to the blog index.</span></a>")
     else:
         # build blog post.
@@ -118,7 +114,7 @@ def view_post(request, _identifier):
         
         # no content found.
         if blogtools.get_post_body(post_) == "":
-            response = utilities.alert_message("Sorry, no content found for this post.",
+            response = responses.alert_message("Sorry, no content found for this post.",
                                                "<a href='/blog'><span>Click here to go back to the blog index.</span></a>")
         else:
             # increment view count
@@ -126,7 +122,7 @@ def view_post(request, _identifier):
             # enable comments.
             enable_comments = post_.enable_comments
             # Build clean HttpResponse with post template...
-            response = utilities.clean_response("blogger/post.html",
+            response = responses.clean_response("blogger/post.html",
                                                 {'extra_style_link': utilities.get_browser_style(request),
                                                  'post_title_short': post_title_short,
                                                  'enable_comments': enable_comments,
@@ -137,7 +133,7 @@ def view_post(request, _identifier):
 def view_tags(request):
     """ list all posts by tags (categories) """
     
-    return HttpResponse("You are looking for all tags.")
+    return responses.basic_response("You are looking for all tags.")
 
 
 def view_tag(request, _tag):
@@ -148,7 +144,7 @@ def view_tag(request, _tag):
     blog_posts = blogtools.fix_post_list(blogtools.get_posts_by_tag(tag_name))
     post_count = len(blog_posts)
     
-    return utilities.clean_response("blogger/tag.html",
+    return responses.clean_response("blogger/tag.html",
                                     {'extra_style_link': utilities.get_browser_style(request),
                                      'extra_style_link2': "/static/css/tags.css",
                                      'tag_name': tag_name,
@@ -158,6 +154,6 @@ def view_tag(request, _tag):
 def no_identifier(request):
     """ returns a message when user forgets to add an identifier """
     
-    return utilities.redirect_response('/blog')
+    return responses.redirect_response('/blog')
 
 

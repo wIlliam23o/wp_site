@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-      project: blog tools for welborn productions site
+      project: welborn productions - blogger - blogtools
      @summary: helps to build views/info for blog posts.
     
       @author: Christopher Welborn <cj@welbornproductions.net>
@@ -10,14 +10,19 @@
  
    start date: Mar 20, 2013
 '''
-from django.utils.safestring import mark_safe
+
+# Global settings
 from django.conf import settings
-from wp_main import utilities
-from wp_main.wp_logging import logger
+# Local tools
+from wp_main.utilities import utilities
+from wp_main.utilities import htmltools
+from wp_main.utilities.wp_logging import logger
+_log = logger("welbornprod.blog.tools", use_file=(not settings.DEBUG))
+# Viewer/Highlighter
 from viewer.highlighter import highlight_inline, highlight_embedded
+# Blog Info
 from blogger.models import wp_blog
 
-_log = logger("welbornprod.blog.tools", use_file=(not settings.DEBUG))
 
 def get_post_byany(_identifier):
     """ retrieve blog post by any identifier, returns None on failure """
@@ -78,7 +83,7 @@ def get_post_body(post_):
     
     # load html file content
     #_log.debug("get_post_body: loading html content from " + absolute_path)
-    scontent = utilities.load_html_file(absolute_path)
+    scontent = htmltools.load_html_file(absolute_path)
     return scontent
 
 
@@ -106,7 +111,7 @@ def get_post_body_short(post_, max_text_length=0, max_text_lines=17):
             trimmed = True
     # post was trimmed? add readmore box.
     if trimmed:
-        new_body += utilities.readmore_box('/blog/view/' + post_.slug)
+        new_body += htmltools.readmore_box('/blog/view/' + post_.slug)
 
     
     return new_body

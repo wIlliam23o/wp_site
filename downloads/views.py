@@ -1,12 +1,11 @@
-from django.http import HttpResponse
-from django.template import Context, loader
+# Mark generated Html as safe to view.
 from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
-
-from django.conf import settings
+# Project Info
 from projects import tools
-from wp_main import utilities
-from wp_main.wp_logging import logger
-
+# Local Tools
+from wp_main.utilities import utilities
+from wp_main.utilities import responses
+from wp_main.utilities.wp_logging import logger
 _log = logger('welbornprod.downloads', use_file=True)
 
 def index(request):
@@ -29,15 +28,13 @@ def download(request, file_path):
         _log.debug("file doesn't exist: " + file_path)
         alert_message = "Sorry, that file doesn't exist."
         main_content = "<div class='wp-block'><a href='/'><span>Click here to go home.</span></a></div>"
-        tmp_notfound = loader.get_template('home/main.html')
-        cont_notfound = Context({'main_content': mark_safe(main_content),
-                                 'alert_message': mark_safe(alert_message),
-                                 })
-        rendered = utilities.clean_template(tmp_notfound, cont_notfound, (not settings.DEBUG))
-        response = HttpResponse(rendered)
+        response = responses.clean_response("home/main.html",
+                                            {'main_content': mark_safe(main_content),
+                                             'alert_message': mark_safe(alert_message),
+                                             })
     else:
         # redirect to actual file.
-        response = utilities.redirect_response(static_path)
+        response = responses.redirect_response(static_path)
         # see if its a project file.
         proj = tools.get_project_from_path(absolute_path)
         if proj is not None:

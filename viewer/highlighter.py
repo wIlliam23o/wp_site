@@ -13,7 +13,7 @@
 import pygments
 from pygments import formatters
 from pygments import lexers
-from wp_main.wp_logging import logger
+from wp_main.utilities.wp_logging import logger
 # for embedded highlighting
 import re
 

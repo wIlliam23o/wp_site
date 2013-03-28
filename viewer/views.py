@@ -1,18 +1,20 @@
-from django.http import HttpResponse
-from django.template import Context, loader
+# File/Path
+import os.path
+# Mark generated html as safe to view.
 from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
 
-from django.conf import settings
+# Local tools
+from wp_main.utilities import utilities
+from wp_main.utilities import responses
+from wp_main.utilities.wp_logging import logger
+_log = logger('welbornprod.viewer', use_file=True)
 
-from wp_main import utilities
-from wp_main.wp_logging import logger
+# For retrieving project information (source viewing)
 from projects import tools
+
+# For source highlighting
 from viewer.highlighter import wp_highlighter
 from viewer.highlighter import get_lexer_name_fromfile
-
-import os.path
-
-_log = logger('welbornprod.viewer', use_file=True)
 
 
 def index(request):
@@ -32,7 +34,7 @@ def viewer(request, file_path):
     absolute_path = utilities.get_absolute_path(file_path)
     if absolute_path == "":
         # File doesn't exist. Return an alert.
-        response = utilities.alert_message("Sorry, that file doesn't exist.")
+        response = responses.alert_message("Sorry, that file doesn't exist.")
     else:
         # see if its a project file.
         proj = tools.get_project_from_path(absolute_path)
@@ -123,15 +125,13 @@ def viewer(request, file_path):
                 shtml = "<a href='/'><span>Sorry, click here to go home.</span></a>"
         
         # build template
-        tmp_view = loader.get_template("home/main.html")
-        cont_view = Context({'extra_style_link': "/static/css/highlighter.css",
-                             'extra_style_link2': "/static/css/projects.css",
-                             'vertical_menu': mark_safe(vertical_menu),
-                             'main_content': mark_safe(shtml),
-                             'alert_message': mark_safe(alert_message),
-                             })
-        rendered = utilities.clean_template(tmp_view, cont_view, (not settings.DEBUG))
-        response = HttpResponse(rendered)
+        response = responses.clean_response("home/main.html",
+                                            {'extra_style_link': "/static/css/highlighter.css",
+                                             'extra_style_link2': "/static/css/projects.css",
+                                             'vertical_menu': mark_safe(vertical_menu),
+                                             'main_content': mark_safe(shtml),
+                                             'alert_message': mark_safe(alert_message),
+                                             })
     return response
 
 
