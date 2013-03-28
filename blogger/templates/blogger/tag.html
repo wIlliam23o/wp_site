@@ -1,9 +1,10 @@
 {% extends "blogger/index.html" %}
+
 {% block title %}{{ block.super }}{% endblock %}
 
 {% block extrastylelink %}
 	{{ block.super }}
-	<link stylesheet="stylesheet" href="/static/css/tags.css" type="text/css"/>
+	<link rel="stylesheet" href="/static/css/tags.css" type="text/css"/>
 {% endblock %}
 
 {% block contentabove %}

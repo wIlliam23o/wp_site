@@ -37,7 +37,21 @@ def comments_button(value):
     return mark_safe(htmltools.comments_button('/blog/view/' + value.slug))
 
 
+def is_false(value):
+    """ checks python value for false """
+    
+    return (value is False)
+
+
+def is_true(value):
+    """ checks python value for true """
+    
+    return (value is True)
+
+
 register.filter('tag_links', tag_links)
 register.filter('get_body', get_body)
 register.filter('get_body_short', get_body_short)
 register.filter('comments_button', comments_button)
+register.filter("is_false", is_false)
+register.filter("is_true", is_true)

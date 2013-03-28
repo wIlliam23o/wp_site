@@ -181,11 +181,14 @@ a.blog-listing-title {
 .blog-nav-button:hover {
 	border-color: #087FFF;
 }
-.blog-nav-button-text {
+.blog-nav-button-text, .blog-nav-button-text-disabled {
 	font-size: .9em;
 	font-weight: bold;
 	color: #74AFEE;
 }
 .blog-nav-button-text:hover {
 	color: #087FFF;
+}
+.blog-nav-button-text-disabled:hover {
+	color: #74AFEE;
 }

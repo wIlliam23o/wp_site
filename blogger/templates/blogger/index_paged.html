@@ -1,5 +1,5 @@
 {% extends "blogger/index.html" %}
-
+{% load blogger_tags %}
 {% block contentabove %}
 	<div class="blog-header">
 		<div class="blog-header-title">
@@ -31,15 +31,23 @@
 						</div>
 						<!-- PREV -->
 						<div class='blog-nav-button'>
-							<a href='/blog/page?start_id={{ prev_page }}'>
-								<span class='blog-nav-button-text'>previous</span>
-							</a>
+							{% if has_prev|is_true %}
+								<a href='/blog/page?start_id={{ prev_page }}'>
+									<span class='blog-nav-button-text'>previous</span>
+								</a>
+							{% else %}
+								<span class='blog-nav-button-text-disabled'>previous</span>
+							{% endif %}
 						</div>
 						<!-- NEXT -->
 						<div class='blog-nav-button'>
-							<a href='/blog/page?start_id={{ next_page }}'>
-								<span class='blog-nav-button-text'>next</span>
-							</a>
+							{% if has_next|is_true %}
+								<a href='/blog/page?start_id={{ next_page }}'>
+									<span class='blog-nav-button-text'>next</span>
+								</a>
+							{% else %}
+								<span class='blog-nav-button-text-disabled'>next</span>
+							{% endif %}
 						</div>
 						<!-- END -->
 						<div class='blog-nav-button'>
@@ -67,15 +75,23 @@
 			</div>
 			<!-- PREV -->
 			<div class='blog-nav-button'>
-				<a href='/blog/page?start_id={{ prev_page }}'>
-					<span class='blog-nav-button-text'>previous</span>
-				</a>
+				{% if has_prev|is_true %}
+					<a href='/blog/page?start_id={{ prev_page }}'>
+						<span class='blog-nav-button-text'>previous</span>
+					</a>
+				{% else %}
+					<span class='blog-nav-button-text-disabled'>previous</span>
+				{% endif %}
 			</div>
 			<!-- NEXT -->
 			<div class='blog-nav-button'>
-				<a href='/blog/page?start_id={{ next_page }}'>
-					<span class='blog-nav-button-text'>next</span>
-				</a>
+				{% if has_next|is_true %}
+					<a href='/blog/page?start_id={{ next_page }}'>
+						<span class='blog-nav-button-text'>next</span>
+					</a>
+				{% else %}
+					<span class='blog-nav-button-text-disabled'>next</span>
+				{% endif %}
 			</div>
 			<!-- END -->
 			<div class='blog-nav-button'>

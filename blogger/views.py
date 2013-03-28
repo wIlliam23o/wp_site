@@ -55,6 +55,8 @@ def index_page(request):
                                      "post_count": post_count,
                                      "prev_page": page_args['prev_page'],
                                      "next_page": page_args['next_page'],
+                                     "has_prev": (page_args['start_id'] > 0),
+                                     "has_next": (page_args['start_id'] < (post_count - page_args['max_posts'])),
                                      "extra_style_link": utilities.get_browser_style(request),
                                      })
 
@@ -117,7 +119,6 @@ def view_tag(request, _tag):
     item_count = len(blog_posts)
     return responses.clean_response("blogger/tag.html",
                                     {'extra_style_link': utilities.get_browser_style(request),
-                                     'extra_style_link2': "/static/css/tags.css",
                                      'tag_name': tag_name,
                                      'post_count': post_count,
                                      'item_count': item_count,
@@ -141,10 +142,11 @@ def tag_page(request, _tag):
                                             starting_index=page_args['start_id'],
                                             max_posts=page_args['max_posts'],
                                             _order_by=page_args['order_by'])
+        
     # fix posts for listing.
     blog_posts = blogtools.fix_post_list(post_slice, max_text_lines=16)
     # number of items in this slice (to get the last index)
-    end_id = str(page_args['start_id'] + len(post_slice))
+    end_id = str(page_args['start_id'] + len(blog_posts))
     # build page.
     return responses.clean_response("blogger/tag_paged.html",
                                     {"blog_posts": blog_posts,
@@ -155,6 +157,8 @@ def tag_page(request, _tag):
                                      "prev_page": page_args['prev_page'],
                                      "next_page": page_args['next_page'],
                                      "extra_style_link": utilities.get_browser_style(request),
+                                     "has_prev": (page_args['start_id'] > 0),
+                                     "has_next": (page_args['start_id'] < (post_count - page_args['max_posts'])),
                                      })    
 def no_identifier(request):
     """ returns a message when user forgets to add an identifier """
@@ -173,11 +177,11 @@ def get_paged_args(request, total_count):
         
     # get max_posts
     max_posts_ = responses.get_request_arg(request, 'max_posts', 25, min_val=1, max_val=100)
-    # calculate last page based on max_posts
-    last_page = ( total_count - max_posts_ ) if ( total_count > max_posts_ ) else 0
-
+    
     # get start_id
     start_id = responses.get_request_arg(request, 'start_id', 0, min_val=0, max_val=9999)
+    # calculate last page based on max_posts
+    last_page = ( total_count - max_posts_ ) if ( total_count > max_posts_ ) else 0
     # fix starting id.
     if isinstance(start_id, (str, unicode)):
         if start_id.lower() == 'last':
@@ -192,15 +196,15 @@ def get_paged_args(request, total_count):
             # so if the conditions above aren't met ('last' or 'first'), it defaults to a safe value (0).
             start_id = 0
         
-    # fix maximum start_id
-    if start_id > last_page:
-        start_id = last_page
-        
-    # get prev page
+    # fix maximum start_id (must be within the bounds)
+    if start_id > (total_count - 1):
+        start_id = total_count - 1
+         
+    # get prev page (if previous page is out of bounds, just show the first page)
     prev_page = start_id - max_posts_
     if prev_page < 0:
         prev_page = 0
-    # get next page
+    # get next page (if next page is out of bounds, just show the last page)
     next_page = start_id + max_posts_
     if next_page > total_count:
         next_page = last_page
