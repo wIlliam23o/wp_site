@@ -1,6 +1,3 @@
-Welborn Productions Site
-========================
-
 ![welborn prod.](http://welbornproductions.net/images/welbornprod-logo.png)
 
 [Django] site for [welbornproductions.net]...

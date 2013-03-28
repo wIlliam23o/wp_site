@@ -20,6 +20,20 @@ from django_user_agents.utils import get_user_agent #@UnresolvedImport
 from wp_main.utilities.wp_logging import logger
 _log = logger("welbornprod.utilities", use_file=True)
 
+
+def slice_list(list_, starting_index=0, max_items=-1):
+    """ slice a list starting at: starting index.
+        if max_items > 0 then only that length of items is returned.
+        otherwise, all items are returned.
+    """
+    
+    sliced_ = list_[starting_index:]
+    if ((max_items > 0) and
+        (len(sliced_) > max_items)):
+        return sliced_[:max_items]
+    else:
+        return sliced_
+
     
 def remove_list_dupes(list_, max_allowed=1):
     """ removes duplicates from a list object.

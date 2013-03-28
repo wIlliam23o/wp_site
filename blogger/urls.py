@@ -9,6 +9,7 @@ urlpatterns = patterns('',
         # view all tags/categories
         url(r'^[Tt]ags/?', views.view_tags),
         # view posts with tags
+        url(r'^[Tt]ag/?[Pp]age/(?P<_tag>.+)/?', views.tag_page), # must come before view_tag url.
         url(r'^[Tt]ag/(?P<_tag>.+)/?$', views.view_tag),
         # send identifier to blogger.views.view_post
         url(r'^[Vv]iew/(?P<_identifier>.+)/?$', views.view_post),

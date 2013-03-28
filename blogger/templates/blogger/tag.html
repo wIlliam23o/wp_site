@@ -17,10 +17,18 @@
 		<div class="blog-header-text">
 		{% block blogcontentabove %}
 			<div class="blog-header">
-				<span class="blog-header-text">Found </span>
-					<span class="blog-header-count">{{ post_count }}</span>
-						<span class="blog-header-text"> posts containing the tag: </span>
-				<span class="blog-tag-header-name">{{ tag_name }}</span>
+				<span class="blog-header-text">Viewing the first </span>
+					<span class="blog-header-count">{{ item_count }}</span>
+						<span class="blog-header-text"> of </span>
+							<span class="blog-header-count">{{ post_count }}</span>
+								<span class="blog-header-text"> posts containing the tag: </span>
+									<span class="blog-tag-header-name">{{ tag_name }}</span>
+				<br/>
+				<a href="/blog/tag/page/{{ tag_name }}?start_id=0">
+					<div class="readmore-box" style="margin-left: 5px;">
+						<span class="readmore-text">view all results</span>
+					</div>
+				</a>				
 			</div>
 		{% endblock %}
 		</div>

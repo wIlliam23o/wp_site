@@ -50,7 +50,7 @@ def get_post_byany(_identifier):
             post_ = None
     return post_
 
-def get_post_list(starting_id=0, max_posts=25, _order_by="-posted"):
+def get_post_list(starting_index=0, max_posts=-1, _order_by="-posted"):
     """ returns a list of posts, starting with starting_id,
         as long as max_posts. 
         this is for pageination.
@@ -58,11 +58,7 @@ def get_post_list(starting_id=0, max_posts=25, _order_by="-posted"):
     
     all_posts = wp_blog.objects.order_by(_order_by)
     
-    slice_start = all_posts[starting_id:]
-    if len(slice_start) > max_posts:
-        return slice_start[:25]
-    else:
-        return slice_start
+    return utilities.slice_list(all_posts, starting_index, max_posts)
     
     
 def get_post_body(post_):
@@ -180,7 +176,7 @@ def prepare_content(body_content):
     return body_content
 
 
-def get_posts_by_tag(_tag):
+def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, _order_by='-posted'):
     """ retrieve all posts with tag_ as a tag. """
     
     if ',' in _tag:
@@ -194,14 +190,23 @@ def get_posts_by_tag(_tag):
     else:
         tag_queries = [_tag]
     
+    # get all posts with these tags.
     found = []
-    for post_ in wp_blog.objects.order_by('-posted'):
+    for post_ in wp_blog.objects.order_by(_order_by):
+        post_tags = post_.tags.replace(',', ' ')
+        # get list of post tags
+        if ' ' in post_tags:
+            post_tag_list = post_tags.split(' ')
+        else:
+            post_tag_list = [post_tags]
+        # find tag queries: whole word, case sensative match.
         for tag_name in tag_queries:
-            if tag_name.lower() in post_.tags.lower():
+            if tag_name in post_tag_list:
                 if not post_ in found:
                     found.append(post_)
-
-    return found
+    
+    # trim for optional pagination.
+    return utilities.slice_list(found, starting_index, max_posts)
 
 
 def get_tag_list(post_object_or_tag_string):

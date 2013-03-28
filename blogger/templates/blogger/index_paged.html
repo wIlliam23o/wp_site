@@ -19,37 +19,70 @@
 					          <span class="blog-header-count">{{ post_count }}</span>
 					            <span class="blog-header-text">.</span>
 				</div>
+				{% if blog_posts %}
+					<!-- NAVIGATION -->
+					<div class='blog-nav-box'>
+						<span class='blog-nav-label'>Navigation:</span>
+						<!-- START -->
+						<div class='blog-nav-button'>
+							<a href='/blog/page?start_id=first'>
+								<span class='blog-nav-button-text'>first</span>
+							</a>
+						</div>
+						<!-- PREV -->
+						<div class='blog-nav-button'>
+							<a href='/blog/page?start_id={{ prev_page }}'>
+								<span class='blog-nav-button-text'>previous</span>
+							</a>
+						</div>
+						<!-- NEXT -->
+						<div class='blog-nav-button'>
+							<a href='/blog/page?start_id={{ next_page }}'>
+								<span class='blog-nav-button-text'>next</span>
+							</a>
+						</div>
+						<!-- END -->
+						<div class='blog-nav-button'>
+							<a href='/blog/page?start_id=last'>
+								<span class='blog-nav-button-text'>last</span>
+							</a>
+						</div>
+					</div>
+				{% endif %}
 			{% endblock %}
 		</div>
 	</div>
 {% endblock %}
 {% block content %}
 	{{ block.super }}
-	<!-- NAVIGATION -->
-	<div class='blog-nav-box'>
-		<!-- START -->
-		<div class='blog-nav-button'>
-			<a href='/blog/page?start_id=0'>
-				<span>&lt;&lt;</span>
-			</a>
+	{% if blog_posts %}
+		<!-- NAVIGATION -->
+		<div class='blog-nav-box'>
+			<span class='blog-nav-label'>Navigation:</span>
+			<!-- START -->
+			<div class='blog-nav-button'>
+				<a href='/blog/page?start_id=first'>
+					<span class='blog-nav-button-text'>first</span>
+				</a>
+			</div>
+			<!-- PREV -->
+			<div class='blog-nav-button'>
+				<a href='/blog/page?start_id={{ prev_page }}'>
+					<span class='blog-nav-button-text'>previous</span>
+				</a>
+			</div>
+			<!-- NEXT -->
+			<div class='blog-nav-button'>
+				<a href='/blog/page?start_id={{ next_page }}'>
+					<span class='blog-nav-button-text'>next</span>
+				</a>
+			</div>
+			<!-- END -->
+			<div class='blog-nav-button'>
+				<a href='/blog/page?start_id=last'>
+					<span class='blog-nav-button-text'>last</span>
+				</a>
+			</div>
 		</div>
-		<!-- START -->
-		<div class='blog-nav-button'>
-			<a href='/blog/page?start_id={{ prev_page }}'>
-				<span>&lt;</span>
-			</a>
-		</div>
-		<!-- START -->
-		<div class='blog-nav-button'>
-			<a href='/blog/page?start_id={{ next_page }}'>
-				<span>&gt;</span>
-			</a>
-		</div>
-		<!-- END -->
-		<div class='blog-nav-button'>
-			<a href='/blog/page?start_id=last'>
-				<span>&gt;&gt;</span>
-			</a>
-		</div>
-	</div>
+	{% endif %}
 {% endblock %}
