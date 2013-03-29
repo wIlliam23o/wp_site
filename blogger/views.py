@@ -104,7 +104,21 @@ def view_post(request, _identifier):
 def view_tags(request):
     """ list all posts by tags (categories) """
     
-    return responses.basic_response("You are looking for all tags.")
+    # get all tag counts
+    tag_count = blogtools.get_tags_post_count()
+    tag_sizes = blogtools.get_tags_fontsizes(tag_count)
+    # build list of tags and info for tags.html template
+    tag_list = []
+    for tag_name in tag_count.keys():
+        tag_list.append(blogtools.wp_tag(name_=tag_name,
+                                         count_=tag_count[tag_name], 
+                                         size_=tag_sizes[tag_name]))
+    
+    return responses.clean_response("blogger/tags.html",
+                                    {'tag_list': tag_list,
+                                     'tag_count': len(tag_list),
+                                     'extra_style_link': utilities.get_browser_style(request),
+                                     })
 
 
 def view_tag(request, _tag):

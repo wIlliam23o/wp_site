@@ -1,0 +1,45 @@
+{% extends "home/main.html" %}
+
+{% block title %}Welborn Productions - Blog Tags{% endblock %}
+
+{% block extrastylelink %}
+	{{ block.super }}
+	<link rel="stylesheet" href="/static/css/blogger.css" type="text/css"/>
+	<link rel="stylesheet" href="/static/css/tags.css" type="text/css"/>
+{% endblock %}
+
+{% block contentabove %}
+	<div class="blog-header">
+		<div class="blog-header-title">
+			<a href='/blog'>
+				<h3 class='header'>Tags</h3>
+			</a>
+		</div>
+		
+		<div class="blog-header-text">
+				<span class="blog-header-text">Viewing all </span>
+					<span class="blog-header-count">{{ tag_count }}</span>
+						<span class="blog-header-text"> tags.</span>
+		</div>
+	</div>
+{% endblock %}
+
+{% block content %}
+	{% if tag_list %}
+		<div class="blog-tag-list">
+			{% for tag_ in tag_list %}
+				<div class="blog-tag-list-item">
+					<a href="/blog/tag/page/{{ tag_.name }}?start_id=0">
+						<span class="blog-tag-list-text" style="font-size: {{ tag_.size }}">
+							{{ tag_.name }}
+						</span>
+					</a>
+				</div>
+				{% endfor %}
+		</div>
+	{% else %}
+		<span style="font-style: italic;">Sorry, no tags were found.</span>
+		<br/>
+		<a href="/blog/page"><span>Click here to go back to the blog.</span></a>
+	{% endif %}
+{% endblock %}

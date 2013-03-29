@@ -5,3 +5,25 @@
 	color: #0093F5;
 	font-weight: bold;
 }
+
+.blog-tag-list {
+	border-radius: 5px;
+	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
+	background: #FFFFFF;
+	padding: 5px;
+}
+
+.blog-tag-list-item {
+	padding: 2px;
+	border-radius: 5px;
+	/*border-style: solid;
+	border-width: 1px;
+	border-color: #D6D6D6;*/
+	display: inline-block;
+}
+
+.blog-tag-list-text {
+	padding-left: 2px;
+	padding-right: 2px;
+}
+

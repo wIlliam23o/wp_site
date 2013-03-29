@@ -246,4 +246,58 @@ def get_all_tags():
         all_tags += get_tag_list(post_)
     # remove duplicates and return.
     return utilities.remove_list_dupes(all_tags)
-        
+
+
+def get_tags_post_count():
+    """ retrieve the number of posts each tag has.
+        returns a dict containing tag_name:count
+    """
+    
+    tag_counts = {}
+    
+    for post_ in wp_blog.objects.all():
+        tags = get_tag_list(post_)
+        for tag_ in tags:
+            if tag_counts.has_key(tag_):
+                tag_counts[tag_] += 1
+            else:
+                tag_counts[tag_] = 1
+            
+    return tag_counts
+    
+
+def get_tags_fontsizes(tags_dict = None):
+    """ returns all tag name with font size according to post count.
+        for listing all tags on the tags.html page.
+        returns a dict with {tag_name:font size} (in em's)
+    """
+    
+    if tags_dict is None:
+        tags_dict = get_tags_post_count()
+
+    tag_sizes = {}
+    for tag_name in tags_dict.keys():
+        tag_count = tags_dict[tag_name]
+        if tag_count < 10:
+            tag_sizes[tag_name] = "0.6em"
+        elif 9 < tag_count < 30:
+            tag_sizes[tag_name] = "0.8em"
+        elif 29 < tag_count < 50:
+            tag_sizes[tag_name] = "1em"
+        elif 49 < tag_count < 70:
+            tag_sizes[tag_name] = "1.2em"
+        elif 69 < tag_count < 100:
+            tag_sizes[tag_name] = "1.4em"
+        elif 99 < tag_count < 200:
+            tag_sizes[tag_name] = "1.7em"
+        elif 199 < tag_count:
+            tag_sizes[tag_name] = "2em"
+            
+    return tag_sizes
+
+class wp_tag():
+    """ tag class for use with the tags.html template and view. """
+    def __init__(self, name_="", count_=0, size_="1em"):
+        self.name = name_
+        self.count = count_
+        self.size = size_
