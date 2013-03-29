@@ -1,0 +1,47 @@
+{% extends "home/main.html" %}
+{% block title %}Welborn Productions - Search Results{% endblock %}
+
+{% block extrastylelink %}
+	<link rel="stylesheet" href="/static/css/searcher.css" type="text/css"/>
+	<link rel="stylesheet" href="/static/css/highlighter.css" type="text/css"/>
+{% endblock %}
+
+{% block contentabove %}
+	<div class="search-header">
+		<div class="search-header-title">
+			<a href='/search'>
+				<h3 class='header'>Results</h3>
+			</a>
+		</div>
+		
+		<div class="search-header-text">
+			<span class="search-header-text">Found </span>
+				<span class="search-header-count">{{ results_count }}</span>
+					<span class="search-header-text"> results.</span>
+		</div>
+	</div>
+{% endblock %}
+
+{% block content %}
+	{% if results_list %}
+		<div class="search-results">
+			{% for result in results_list %}
+				<div class="search-result">
+					<a href="{{ result.link }}">
+					<span class="search-result-title">{{ result.title }}</span>
+					</a>
+					<div class="search-result-date-box">
+						<span class="search-result-date">{{ result.posted }}</span>
+					</div>
+					<div class="search-result-desc-box">
+						{{ result.description }}
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	{% else %}
+		<span style="font-style: italic;">Sorry, I couldn't find anything.</span>
+		<br/>
+		<a href="/"><span>Click here to go home.</span></a>
+	{% endif %}
+{% endblock %}

@@ -189,6 +189,7 @@ INSTALLED_APPS = (
     'viewer',
     'downloads',
     'blogger',
+    'searcher',
     
 )
 

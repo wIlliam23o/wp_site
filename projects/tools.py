@@ -264,7 +264,9 @@ def prepare_content(project, scontent):
     # do downloads.
     sdownload_content = get_download_content(project)
     if sdownload_content != "":
-        shtml = htmltools.inject_text(shtml, "{{ download_code }}", sdownload_content)
+        target_ = htmltools.check_replacement(shtml, "{{ download_code }}")
+        if target_:
+            shtml = shtml.replace(target_, sdownload_content)
     
     # do source view.
     shtml = htmltools.inject_sourceview(project, shtml)

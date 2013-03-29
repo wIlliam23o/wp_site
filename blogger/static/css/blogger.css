@@ -9,8 +9,11 @@
 
 .blog-header-text {
 	margin-top: 5px;
+}
 
-	
+.blog-header-count {
+	color: #4d4d4d;
+	font-weight: bold;
 }
 
 /* Index Styles */
@@ -49,10 +52,6 @@ a.blog-listing-title {
 	padding-bottom: 5px;
 }
 
-.blog-header-count {
-	color: #4d4d4d;
-	font-weight: bold;
-}
 
 
 

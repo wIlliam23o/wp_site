@@ -36,6 +36,11 @@ urlpatterns += patterns('',
     url(r'[Bb]log/?', include('blogger.urls'))
     )
 
+# Searcher views (searcher)
+urlpatterns += patterns('',
+    url(r'[Ss]earch/?', include('searcher.urls'))
+    )
+
 # Admin/Other
 urlpatterns += patterns('',
     # Examples:

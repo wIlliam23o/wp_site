@@ -1,0 +1,16 @@
+.search-header {
+	margin-bottom: 10px;
+}
+
+.search-header-title {
+	display: inline-block;
+}
+
+.search-header-text {
+	margin-top: 5px;
+}
+
+.search-header-count {
+	color: #4d4d4d;
+	font-weight: bold;
+}
