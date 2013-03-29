@@ -184,6 +184,7 @@ INSTALLED_APPS = (
     # special user-agent middleware
     'django_user_agents',
     # local apps
+    'wp_main', # contains global template tags (wp_tags)
     'home',
     'projects',
     'viewer',

@@ -39,10 +39,10 @@ def index_page(request):
     # get overall total of all blog posts
     post_count = wp_blog.objects.count()
     # get request args.
-    page_args = get_paged_args(request, post_count)
+    page_args = responses.get_paged_args(request, post_count)
     # retrieve blog posts slice
     post_slice = blogtools.get_post_list(starting_index=page_args['start_id'],
-                                         max_posts=page_args['max_posts'],
+                                         max_posts=page_args['max_items'],
                                          _order_by=page_args['order_by'])
     # fix posts for listing.
     blog_posts = blogtools.fix_post_list(post_slice, max_text_lines=16)
@@ -56,7 +56,7 @@ def index_page(request):
                                      "prev_page": page_args['prev_page'],
                                      "next_page": page_args['next_page'],
                                      "has_prev": (page_args['start_id'] > 0),
-                                     "has_next": (page_args['start_id'] < (post_count - page_args['max_posts'])),
+                                     "has_next": (page_args['start_id'] < (post_count - page_args['max_items'])),
                                      "extra_style_link": utilities.get_browser_style(request),
                                      })
 
@@ -150,11 +150,11 @@ def tag_page(request, _tag):
     # overall total of all blog posts with this tag.
     post_count = len(all_posts)
     # get request args.
-    page_args = get_paged_args(request, post_count)
+    page_args = responses.get_paged_args(request, post_count)
     # retrieve blog posts slice
     post_slice = blogtools.get_posts_by_tag(tag_name, 
                                             starting_index=page_args['start_id'],
-                                            max_posts=page_args['max_posts'],
+                                            max_posts=page_args['max_items'],
                                             _order_by=page_args['order_by'])
         
     # fix posts for listing.
@@ -172,7 +172,7 @@ def tag_page(request, _tag):
                                      "next_page": page_args['next_page'],
                                      "extra_style_link": utilities.get_browser_style(request),
                                      "has_prev": (page_args['start_id'] > 0),
-                                     "has_next": (page_args['start_id'] < (post_count - page_args['max_posts'])),
+                                     "has_next": (page_args['start_id'] < (post_count - page_args['max_items'])),
                                      })    
 def no_identifier(request):
     """ returns a message when user forgets to add an identifier """
@@ -180,52 +180,5 @@ def no_identifier(request):
     return responses.redirect_response('/blog')
 
 
-def get_paged_args(request, total_count):
-    """ retrieve request arguments for paginated post/tag lists.
-        total count must be given to calculate last page.
-        returns dict with arg names as keys, and values.
-    """
 
-    # get order_by
-    order_by_ = responses.get_request_arg(request, 'order_by', '-posted')
-        
-    # get max_posts
-    max_posts_ = responses.get_request_arg(request, 'max_posts', 25, min_val=1, max_val=100)
-    
-    # get start_id
-    start_id = responses.get_request_arg(request, 'start_id', 0, min_val=0, max_val=9999)
-    # calculate last page based on max_posts
-    last_page = ( total_count - max_posts_ ) if ( total_count > max_posts_ ) else 0
-    # fix starting id.
-    if isinstance(start_id, (str, unicode)):
-        if start_id.lower() == 'last':
-            start_id = last_page
-        #elif ((start_id.lower() == 'first') or # not needed. duh. (see below) 
-        #      (start_id.lower() == 'start')):
-        #    start_id = 0
-        else:
-            # this shouldn't happen, get_request_arg() returns an integer or float
-            # if a good integer/float value was passed. So any unexpected string value
-            # means someone is messing with the args in a way that would break the view.
-            # so if the conditions above aren't met ('last' or 'first'), it defaults to a safe value (0).
-            start_id = 0
-        
-    # fix maximum start_id (must be within the bounds)
-    if start_id > (total_count - 1):
-        start_id = total_count - 1
-         
-    # get prev page (if previous page is out of bounds, just show the first page)
-    prev_page = start_id - max_posts_
-    if prev_page < 0:
-        prev_page = 0
-    # get next page (if next page is out of bounds, just show the last page)
-    next_page = start_id + max_posts_
-    if next_page > total_count:
-        next_page = last_page
-    
-    return {"start_id": start_id,
-            "max_posts": max_posts_,
-            "prev_page": prev_page,
-            "next_page": next_page,
-            "order_by": order_by_}
 

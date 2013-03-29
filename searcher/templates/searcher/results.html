@@ -1,4 +1,6 @@
 {% extends "home/main.html" %}
+{% load wp_tags %}
+{% load searcher_tags %}
 {% block title %}Welborn Productions - Search Results{% endblock %}
 
 {% block extrastylelink %}
@@ -8,17 +10,42 @@
 
 {% block contentabove %}
 	<div class="search-header">
+		<!-- Header/Title -->
 		<div class="search-header-title">
-			<a href='/search'>
-				<h3 class='header'>Results</h3>
-			</a>
+			<h3 class='header'>Search</h3>
 		</div>
-		
 		<div class="search-header-text">
-			<span class="search-header-text">Found </span>
-				<span class="search-header-count">{{ results_count }}</span>
-					<span class="search-header-text"> results.</span>
+				<span class="title">Search welborn productions</span>
 		</div>
+
+		<!-- Search Box -->
+		<div class="search-form">
+			<span class="search-label">Enter something to search for: </span>
+			<form>
+				<input type="search" name="q" id="searchbox" class="search-textbox" required=True></input>
+				<input type="submit" id="search-button" class="submit-button" title="Search"></input>
+			
+			</form>
+		</div>
+
+		<!-- Results Header -->
+		<div class="search-header-text" style="padding-left: 5px;">
+			{% if results_count|exceeds_max:25 %}
+				<span class="search-header-text">Viewing the first page of </span>
+			{% else %}
+				<span class="search-header-text">Found </span>
+			{% endif %}
+				<span class="search-header-count">{{ results_count }}</span>
+					<span class="search-header-text"> results for: </span>
+					  <span class="search-header-query"> {{ query_text }}</span>
+		</div>
+		{% if results_count|exceeds_max:25 %}
+			<a href="/search/page/?q={{ query_safe }}&?start_id=0">
+				<div class="readmore-box" style="margin-left: 5px;">
+					<span class="readmore-text">view all results</span>
+				</div>
+			</a>
+		{% endif %}
 	</div>
 {% endblock %}
 
@@ -26,14 +53,14 @@
 	{% if results_list %}
 		<div class="search-results">
 			{% for result in results_list %}
-				<div class="search-result">
+				<div class="search-listing">
 					<a href="{{ result.link }}">
-					<span class="search-result-title">{{ result.title }}</span>
+					<span class="search-listing-title">{{ result.title }}</span>
 					</a>
-					<div class="search-result-date-box">
-						<span class="search-result-date">{{ result.posted }}</span>
+					<div class="search-listing-date-box">
+						<span class="search-listing-date">{{ result.posted }}</span>
 					</div>
-					<div class="search-result-desc-box">
+					<div class="search-listing-body">
 						{{ result.description }}
 					</div>
 				</div>
@@ -42,6 +69,6 @@
 	{% else %}
 		<span style="font-style: italic;">Sorry, I couldn't find anything.</span>
 		<br/>
-		<a href="/"><span>Click here to go home.</span></a>
+		<span>{{ "[RANDOM MSG]"|random_result_msg }}</span>
 	{% endif %}
 {% endblock %}

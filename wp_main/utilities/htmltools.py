@@ -313,11 +313,7 @@ def remove_comments(source_string):
 
 def remove_newlines(source_string):
     """ remove all newlines from a string """
-    
-    ######## TEST TEST TEST 
-    ilines = 0
-    iprelines = 0
-    
+        
     # removes newlines, except for in pre blocks.
     if '\n' in source_string:
         in_pre = False
@@ -325,25 +321,19 @@ def remove_newlines(source_string):
         for sline in source_string.split('\n'):
             # start of pre tag
             if "<pre" in sline.lower():
-                _log.debug("Found pre!: " + sline)
                 in_pre = True
-            # add content, keep newlines for pre.    
+            # process line.  
             if in_pre:
-                _log.debug("keeping pre: " + sline)
+                # add original line.
                 final_output.append(sline + '\n')
-                iprelines += 1
             else:
+                # add trimmed line.
                 final_output.append(sline.replace('\n', ''))
-                ilines += 1
             # end of tag
             if "</pre>" in sline.lower():
-                _log.debug("End pre!: " + sline)
                 in_pre = False
     else:
-        ilines = 1
         final_output = [source_string]
-    _log.debug("remove_newlines: processed " + str(ilines) + " regular lines,\n" + \
-               "                 and " + str(iprelines) + " pre lines.")
     return "".join(final_output)
 
 
@@ -352,16 +342,43 @@ def remove_whitespace(source_string):
         and removes blank lines.
     """
     
+    # removes newlines, except for in pre blocks.
     if '\n' in source_string:
-        keep_ = []
-        for sline in source_string.split('\n'):
-            stripped_ = sline.strip(' ').strip('\t')
-            if stripped_ != "":
-                keep_.append(stripped_)
-        return '\n'.join(keep_)
+        slines = source_string.split('\n')
     else:
-        return source_string
+        slines = [source_string]
+    # start processing    
+    in_pre = False
+    final_output = []
+    for sline in slines:
+        # start of pre tag
+        if "<pre" in sline.lower():
+            in_pre = True
+        # process line.   
+        if in_pre:
+            # add original line.
+            final_output.append(sline + '\n')
+        else:
+            # add trimmed line.
+            final_output.append(trim_whitespace_line(sline))
+        # end of tag
+        if "</pre>" in sline.lower():
+            in_pre = False
+    else:
+        final_output = [source_string]
+    return "".join(final_output)
 
+
+
+def trim_whitespace_line(sline):
+    """ trims whitespace from a single line """
+    
+    scopy = sline
+    while scopy.startswith(' ') or scopy.startswith('\t'):
+        scopy = scopy[1:]
+    while scopy.endswith(' ') or scopy.endswith('\t'):
+        scopy = scopy[:-1]
+    return scopy
 
 def hide_email(source_string):
     """ base64 encodes all email addresses for use with wptool.js reveal functions.

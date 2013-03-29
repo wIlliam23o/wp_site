@@ -274,12 +274,13 @@ def get_tags_fontsizes(tags_dict = None):
     
     if tags_dict is None:
         tags_dict = get_tags_post_count()
-
+    
+    
     tag_sizes = {}
     for tag_name in tags_dict.keys():
         tag_count = tags_dict[tag_name]
         if tag_count < 10:
-            tag_sizes[tag_name] = "0.6em"
+            tag_sizes[tag_name] = "0.7em"
         elif 9 < tag_count < 30:
             tag_sizes[tag_name] = "0.8em"
         elif 29 < tag_count < 50:

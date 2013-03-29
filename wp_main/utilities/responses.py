@@ -128,18 +128,27 @@ def redirect_response(redirect_to):
     return response
 
 
-def get_request_arg(request, arg_name, default_value=None, min_val=0, max_val=9999):
+def get_request_arg(request, arg_names, default_value=None, min_val=0, max_val=9999):
     """ return argument from request (GET or POST),
+        arg_names can be a list of alias names like: ['q', 'query', 'search']
+           and this will look for any of those args.
         default value can be set.
         automatically returns int/float values instead of string where needed.
         min/max can be set for integer/float values.
     """
     
-    try:
-        val = request.REQUEST[arg_name]
-    except:
-        # no arg passed.
-        val = ""
+    # blank value to start with. (until we confirm it exists)
+    val = ""
+    if isinstance(arg_names, (list, tuple)):
+        # list of arg aliases was passed, try them all.
+        for arg_ in arg_names:
+            if request.REQUEST.has_key(arg_):
+                val = request.REQUEST[arg_]
+                break
+    else:
+        # single arg_name was passed.    
+        if request.REQUEST.has_key(arg_names):
+            val = request.REQUEST[arg_names]
     
     if val.isalnum():
         # check min/max for int values
@@ -175,9 +184,64 @@ def get_request_arg(request, arg_name, default_value=None, min_val=0, max_val=99
         val = default_value
     return val
         
+
+def get_request_args(request):
+    """ returns a dict of all request args (for testing) """
+    
+    return request.REQUEST
+
     
 def wsgi_error(request, smessage):
     """ print message to requests wsgi errors """
     
     request.META['wsgi_errors'] = smessage
    
+
+def get_paged_args(request, total_count):
+    """ retrieve request arguments for paginated post/tag lists.
+        total count must be given to calculate last page.
+        returns dict with arg names as keys, and values.
+    """
+
+    # get order_by
+    order_by_ = get_request_arg(request, ['order_by','order'], '-posted')
+        
+    # get max_posts
+    max_ = get_request_arg(request, ['max_items','max'], 25, min_val=1, max_val=100)
+    
+    # get start_id
+    start_id = get_request_arg(request, ['start_id','start'], 0, min_val=0, max_val=9999)
+    # calculate last page based on max_posts
+    last_page = ( total_count - max_ ) if ( total_count > max_ ) else 0
+    # fix starting id.
+    if isinstance(start_id, (str, unicode)):
+        if start_id.lower() == 'last':
+            start_id = last_page
+        #elif ((start_id.lower() == 'first') or # not needed. duh. (see below) 
+        #      (start_id.lower() == 'start')):
+        #    start_id = 0
+        else:
+            # this shouldn't happen, get_request_arg() returns an integer or float
+            # if a good integer/float value was passed. So any unexpected string value
+            # means someone is messing with the args in a way that would break the view.
+            # so if the conditions above aren't met ('last' or 'first'), it defaults to a safe value (0).
+            start_id = 0
+        
+    # fix maximum start_id (must be within the bounds)
+    if start_id > (total_count - 1):
+        start_id = total_count - 1
+         
+    # get prev page (if previous page is out of bounds, just show the first page)
+    prev_page = start_id - max_
+    if prev_page < 0:
+        prev_page = 0
+    # get next page (if next page is out of bounds, just show the last page)
+    next_page = start_id + max_
+    if next_page > total_count:
+        next_page = last_page
+    
+    return {"start_id": start_id,
+            "max_items": max_,
+            "prev_page": prev_page,
+            "next_page": next_page,
+            "order_by": order_by_}

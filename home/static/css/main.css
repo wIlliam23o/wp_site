@@ -549,7 +549,17 @@ a.jumpto-nav {
 	}
 #wp-totop:hover {background-position: 0 -26px;}
 
-	   
+/* Form Styles */
+
+.submit-button {
+	background: white;
+	color: #008FFF;
+	font-family: "Source Sans Pro", "Arial Black";
+	font-weight: bold;
+	border-color: #919191;
+	border-radius: 5px;
+	border-width: 1px;
+}	   
 
 /* Inset Styles */
 span.inset-left {float: left;margin-right: 20px;}

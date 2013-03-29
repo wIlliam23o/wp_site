@@ -1,4 +1,5 @@
 {% extends "blogger/index.html" %}
+{% load wp_tags %} {# for exceeds_max #}
 
 {% block title %}{{ block.super }}{% endblock %}
 
@@ -25,11 +26,13 @@
 								<span class="blog-header-text"> posts containing the tag: </span>
 									<span class="blog-tag-header-name">{{ tag_name }}</span>
 				<br/>
-				<a href="/blog/tag/page/{{ tag_name }}?start_id=0">
-					<div class="readmore-box" style="margin-left: 5px;">
-						<span class="readmore-text">view all results</span>
-					</div>
-				</a>
+				{% if post_count|exceeds_max:"25" %}
+					<a href="/blog/tag/page/{{ tag_name }}?start_id=0">
+						<div class="readmore-box" style="margin-left: 5px;">
+							<span class="readmore-text">view all results</span>
+						</div>
+					</a>
+				{% endif %}
 				<a href="/blog/tags">
 					<div class="readmore-box" style="margin-left: 5px;">
 						<span class="readmore-text">view all tags</span>

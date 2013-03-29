@@ -19,6 +19,13 @@
 	</div>
 {% endblock %}
 {% block content %}
-	<span>Nothing here yet.</span>
+	<div class="search-form">
+		<span class="search-label">Enter something to search for: </span>
+		<form>
+			<input type="search" name="q" id="searchbox" class="search-textbox" required=True></input>
+			<input type="submit" id="search-button" class="submit-button" title="Search"></input>
+			
+		</form>
+	</div>
 {% endblock %}
 
