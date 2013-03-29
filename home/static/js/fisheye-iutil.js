@@ -28,7 +28,18 @@
  * @type jQuery
  * @cat Plugins/Interface
  * @author Stefan Petre
+ * 
  */
+
+/* fix for jQuery1.9 compatibility - Cj */
+if (!jQuery.browser) {
+    jQuery.browser = {};
+    jQuery.browser.mozilla = /mozilla/.test(navigator.userAgent.toLowerCase()) && !/webkit/.test(navigator.userAgent.toLowerCase());
+    jQuery.browser.webkit = /webkit/.test(navigator.userAgent.toLowerCase());
+    jQuery.browser.opera = /opera/.test(navigator.userAgent.toLowerCase());
+    jQuery.browser.msie = /msie/.test(navigator.userAgent.toLowerCase());
+}
+
 jQuery.iFisheye = {
 	
 	build : function(options)
