@@ -46,6 +46,7 @@ def viewer(request, file_path):
                 files = os.listdir(absolute_path)
             except:
                 files = []
+                _log.debug("viewer: unable to listdir: " + absolute_path)
             # no files in this directory, or bad dir.
             if len(files) == 0:
                 absolute_path = ""
@@ -72,6 +73,9 @@ def viewer(request, file_path):
         # load actual file.
         if proj is None:
             project_title = ""
+            # we're not letting you browse the /js dir that easily.
+            # not that I care, it's just code that is not needed.
+            # this site is about my projects, not my external libs.
             vertical_menu = ""
         else:
             project_title = proj.name
@@ -86,13 +90,13 @@ def viewer(request, file_path):
         lexer_ = get_lexer_name_fromfile(static_path)
         
         # get file content
+        alert_msg = ""
         try:
             with open(absolute_path) as fread:
                 scontent = fread.read()
-            alert_message = ""
         except:
             _log.error("unable to open file: " + absolute_path)
-            alert_message = "There was an error opening the file."
+            alert_msg = "There was an error opening the file."
             lexer_ = ""
             scontent = "<a href='/'><span>Sorry, click here to go home.</span></a>"
  
@@ -122,7 +126,7 @@ def viewer(request, file_path):
                 shtml += highlighter.highlight()
                 _log.debug("Highlighted file: " + absolute_path)
             except:
-                alert_message = "There was an error highlighting this file."
+                alert_msg = "There was an error highlighting this file."
                 shtml = "<a href='/'><span>Sorry, click here to go home.</span></a>"
         
         # build template
@@ -131,7 +135,7 @@ def viewer(request, file_path):
                                              'extra_style_link2': "/static/css/projects.css",
                                              'vertical_menu': mark_safe(vertical_menu),
                                              'main_content': mark_safe(shtml),
-                                             'alert_message': mark_safe(alert_message),
+                                             'alert_message': mark_safe(alert_msg),
                                              })
     return response
 
