@@ -58,14 +58,14 @@ def get_screenshots_dir(project):
     """ determine screenshots directory for project """
     if project.screenshot_dir == "":
         # try default location
-        images_dir = os.path.join(settings.BASE_DIR, "projects/static/images/" + project.alias)
+        images_dir = utilities.get_absolute_path("static/images/" + project.alias)
     else:
         if os.path.isdir(project.screenshot_dir):
             # project path was absolute
             images_dir = project.screenshot_dir
         else:
-            # needs base dir added?
-            images_dir = os.path.join(settings.BASE_DIR, project.screenshot_dir)
+            # needs absolute?
+            images_dir = utilities.get_absolute_path(project.screenshot_dir)
     return images_dir
 
 
@@ -73,14 +73,17 @@ def get_html_file(project):
     """ finds html file to use for project content, if any """
     
     if project.html_url == "":
-        html_file = os.path.join(settings.BASE_DIR, "projects/static/html/" + project.alias + ".html")
-        _log.debug("get_html_file: no html_url set, trying: " + html_file)
+        html_file = utilities.get_absolute_path("static/html/" + project.alias + ".html")
+    elif project.html_url.lower() == "none":
+        # html files can be disabled by putting None in the html_url field.
+        return ""
     else:
         if os.path.isfile(project.html_url):
+            # already absolute
             html_file = project.html_url
         else:
-            # try adding base dir.
-            html_file = os.path.join(settings.BASE_DIR, project.html_url)
+            # try absolute path
+            html_file = utilities.get_absolute_path(project.html_url)
     return html_file
 
 def get_html_content(project):
@@ -103,13 +106,12 @@ def get_download_file(project):
     if surl == "":
         return ""
     if utilities.is_file_or_dir(surl):
+        # already absolute
         return surl
     else:
-        # try adding base dir
-        spath = os.path.join(settings.BASE_DIR, surl)
-        if utilities.is_file_or_dir(spath):
-            return spath
-    return ""
+        # try absolute_path
+        return utilities.get_absolute_path(surl)
+       
 
 def get_download_content(project):
     """ retrieve download content for project.
@@ -250,16 +252,9 @@ def prepare_content(project, scontent):
         
     # do screenshots.
     images_dir = get_screenshots_dir(project)
-    _log.debug("trying screenshots_dir: " + images_dir)
-    # inject screenshots.            
+    # inject screenshots.      
     if os.path.isdir(images_dir):
-        _log.debug("using screenshot_dir: " + images_dir)
         shtml = htmltools.inject_screenshots(shtml, images_dir)
-    else:
-        if images_dir == "":
-            _log.debug("No screenshots_dir specified.")
-        else:
-            _log.debug("screenshots_dir doesn't exist!: " + images_dir)
     
     # do downloads.
     sdownload_content = get_download_content(project)

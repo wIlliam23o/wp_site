@@ -2,6 +2,7 @@
 {% load wp_tags %}
 {% block contentabove %}
 	<div class="search-header">
+		<!-- Header/Title -->
 		<div class="search-header-title">
 				<h3 class='header'>Results</h3>
 		</div>
@@ -18,6 +19,16 @@
 					              <span class="search-header-query">{{ query_text }}</span>
 					            
 				</div>
+				<!-- Search Box -->
+				<div class="search-form" style="top: 50px;">
+					<span class="search-label">Enter something to search for: </span>
+					<form>
+						<input type="search" name="q" id="searchbox" class="search-textbox" required=True></input>
+						<input type="submit" id="search-button" class="submit-button" title="Search"></input>
+			
+					</form>
+				</div>
+
 				{% if results_list %}
 					{% if results_count|exceeds_max:"25" %}
 						<!-- NAVIGATION -->

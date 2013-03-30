@@ -32,6 +32,7 @@ def viewer(request, file_path):
     
     static_path = file_path if (file_path.startswith("/")) else ('/' + file_path)
     absolute_path = utilities.get_absolute_path(file_path)
+    _log.debug("viewer: using absolute_path: " + absolute_path)
     if absolute_path == "":
         # File doesn't exist. Return an alert.
         response = responses.alert_message("Sorry, that file doesn't exist.")

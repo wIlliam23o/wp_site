@@ -170,17 +170,18 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     """ inject code for screenshots box.
         walks image directory, building html for the image rotator box.
         examples:
-            shtml = inject_screenshots(shtml, "/static/images/myapp")
-            shtml = inject_screenshots(shtml, "/images/myapp/", noscript_image="sorry_no_javascript.png")
-            shtml = inject_screenshots(shtml, "/images/myapp", "{{ replace_with_screenshots }}", "noscript.png")
+            shtml = inject_screenshots(shtml, "static/images/myapp")
+            shtml = inject_screenshots(shtml, "images/myapp/", noscript_image="sorry_no_javascript.png")
+            shtml = inject_screenshots(shtml, "images/myapp", "{{ replace_with_screenshots }}", "noscript.png")
     """
     
-    # fail checks.
+    # fail checks, make sure target exists in source_string
     target_replacement = check_replacement(source_string, target_replacement)
     if not target_replacement:
         return source_string
-    if not os.path.isdir(images_dir):
-        _log.debug("inject_screenshots: not a directory: " + images_dir)
+    # get absolute path for images dir, if none exists then quit.
+    images_dir = utilities.get_absolute_path(images_dir)
+    if images_dir == "":
         return source_string.replace(target_replacement, "")
     
     # directory exists, now make it relative.
@@ -225,22 +226,22 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     
     # accceptable image formats
     formats = ["png", "jpg", "gif", "bmp"]
-    # acceptable pics
+    # find acceptable pics
     good_pics = []
     for sfile in os.listdir(images_dir):
         if sfile[-3:].lower() in formats:
             good_pics.append(os.path.join(relative_dir, sfile))
-    
+    # no good pictures found?
     if len(good_pics) == 0:
         return source_string.replace(target_replacement, '')
     else:
+        # found pics, process them.
         spics = ""
         for sfile in good_pics:
             spics += stemplate.replace('{{image_file}}', sfile)
         if noscript_image is None:
             noscript_image = good_pics[0]
         sbase = sbase.replace("{{noscript_image}}", noscript_image)
-        _log.debug("inject_screenshots: success.")
         return source_string.replace(target_replacement, sbase + spics + stail)
 
 
@@ -260,15 +261,21 @@ def inject_sourceview(project, source_string, link_text = None, desc_text = None
     if project is None:
         return source_string.replace(target, "")
     
-    # get primary source file
-    if project.source_file == "":
-        srelativepath = utilities.get_relative_path(project.source_dir)
-    else:
+    # use source_file if no source_dir was set.
+    if project.source_dir == "":
         srelativepath = utilities.get_relative_path(project.source_file)
+    else:
+        srelativepath = utilities.get_relative_path(project.source_dir)
+    # get default filename to display in link.
+    if project.source_file == "":
+        file_name = project.name
+    else:
+        file_name = utilities.get_filename(project.source_file)
+            
     # has good link?
     if srelativepath == "":
         _log.debug("inject_sourceview: missing source file/dir for: " + project.name)
-        return source_string.replace(target, "<span>Sorry, source not available for " + project.name + ".</span>")
+        return source_string.replace(target, "<span>Sorry, local source not available for " + project.name + ".</span>")
     
     # link href
     slink = utilities.append_path("/view", srelativepath)
@@ -278,7 +285,7 @@ def inject_sourceview(project, source_string, link_text = None, desc_text = None
         if project.source_file == "":
             link_text = "View Source (Local)"
         else:
-            link_text = utilities.get_filename(project.source_file) + " (View Source)"
+            link_text = file_name + " (View Source)"
     # get description text
     if desc_text is None:
         desc_text = " - view source for " + project.name + " v." + project.version

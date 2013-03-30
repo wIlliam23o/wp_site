@@ -153,16 +153,21 @@ def get_relative_path(spath):
 def get_absolute_path(relative_file_path):
     """ return absolute path for file, if any
         returns empty string on failure.
+        restricted to public STATIC_PARENT dir.
+        if no_dir is True, then only file paths are returned.
     """
     
     if relative_file_path == "":
         return ""
     
     sabsolutepath = ""
-    for root, dirs, files in os.walk(settings.BASE_DIR): #@UnusedVariable: dirs, files
+    for root, dirs, files in os.walk(settings.STATIC_PARENT): #@UnusedVariable: dirs, files
         spossible = os.path.join(root, relative_file_path)
+        # dirs allowed
         if os.path.isfile(spossible) or os.path.isdir(spossible):
             sabsolutepath = spossible
+            break
+    
     return sabsolutepath
 
     

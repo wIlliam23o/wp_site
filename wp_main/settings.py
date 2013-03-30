@@ -16,18 +16,21 @@ if DEBUG:
     if "webfaction" in shostname:
         # live site directories
         BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
+        STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
         STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
         MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
         MEDIA_URL = "http://welbornprod.info/media/"
     else:
         # local development directories
         BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
+        STATIC_PARENT= "/var/www/"
         STATIC_ROOT = "/var/www/static/"
         MEDIA_ROOT = "/var/www/media/"
         MEDIA_URL = "http://127.0.0.1/media/"
 else:
     # default directories for production
     BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
+    STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
     STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
     MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
     MEDIA_URL = "http://welbornprod.info/media/"

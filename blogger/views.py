@@ -90,6 +90,7 @@ def view_post(request, _identifier):
         else:
             # increment view count
             post_.view_count += 1
+            post_.save()
             # enable comments.
             enable_comments = post_.enable_comments
             # Build clean HttpResponse with post template...
