@@ -93,7 +93,7 @@ ul.menu {padding-left: 0;}
 .header {
 	text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
 	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Liberations Sans", sans-serif;
-	font-size: 3.5em; /* big header for projects/sections */
+	font-size: 3.5em; /* big header for projects/main pages/sections */
 	color: #26A1F4;
 	text-transform: lowercase;
     }
@@ -159,6 +159,20 @@ h2.title {
 .update-title {
 	color: #6C9EF7;
 	font-weight: bold;
+}
+
+.italic, .I {
+	font-style: italic;
+}
+.bold, .B {
+	font-weight: bold;
+}
+.underline, .underlined, .U {
+	text-decoration: underline;
+}
+
+.big, .large {
+	font-size: 1.2em;
 }
 
 /* Containers */

@@ -6,7 +6,6 @@ import os.path
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-# root for project (location of manage.py - ../wp_site/ on git)
 # automatic settings for debug mode.
 if DEBUG:
     import socket

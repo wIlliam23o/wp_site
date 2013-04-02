@@ -7,6 +7,8 @@ from wp_main.utilities import responses
 from wp_main.utilities import htmltools
 # logging
 #from wp_main.utilities.wp_logging import logger
+# Home tools
+from home import hometools as htools
 
 def index(request):
     """ serve up main site """
@@ -14,13 +16,11 @@ def index(request):
     # setup logging
     #_log = logger("welbornprod.home.index", use_file=True)
 
-    # default content for index
-    default_content = utilities.get_browser_name(request)
-
     # render final page
     return responses.clean_response("home/index.html",
-                                    {'extra_style_link': utilities.get_browser_style(request),
-                                     'default_content': mark_safe(default_content),
+                                    {'blog_post': htools.get_latest_blog(),
+                                     'featured_project': htools.get_featured_project(),
+                                     'extra_style_link': utilities.get_browser_style(request),
                                      })
     
 
