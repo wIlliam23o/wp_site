@@ -10,10 +10,12 @@
  
    start date: Mar 14, 2013
 '''
+# File/Path stuff
 from os import listdir #@UnusedImport: os.listdir is used, aptana is stupid.
 import os.path
-from django.conf import settings
+# Project info
 from projects.models import wp_project
+# Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
 from wp_main.utilities.wp_logging import logger

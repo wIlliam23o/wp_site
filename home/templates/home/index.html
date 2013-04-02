@@ -1,5 +1,83 @@
 {% extends "home/main.html" %}
+{% load blogger_tags %}
+
 {% block title %}Welborn Productions - Home{% endblock %}
+
+{% block extrastylelink %}
+	<link rel="stylesheet" href="static/css/home.css" type="text/css"/>
+	<link rel="stylesheet"href="static/css/highlighter.css"type="text/css"/>
+	
+{% endblock %}
+
 {% block content %}
-	<span>This is the index page for welbornproductions.net</span>
+	<div class="home-welcome-box">
+		<p class="home-welcome-text">
+			Welcome to the <span class="I">new</span>&nbsp;
+			Welborn Productions site.
+			I moved from <span class="B">Joomla</span> to <span class="B">
+				<a href="http://djangoproject.com">Django</a></span>, and
+			this is the end result.
+		</p>
+		<p>
+			If I ever get around to posting about my experience while switching, I plan
+			on putting a link here.
+		</p>
+		<p>
+			Feel free to browse my <a href="/projects">projects</a>,
+			and for the latest information my <a href="/blog">blog</a> is here.		
+		</p>
+	</div>
+	
+	{% if featured_project %}
+	<!-- Main Featured Box: Project -->
+		<div class="featured-main-box">
+			<div class="title-box">
+				<h3 class="title">Featured Project</h3>
+			</div>
+			<!-- Featured Project Box -->
+			<div class="featured-item-container">
+				<!-- Project Header (Title, Version) -->
+				<div class="featured-header-box">
+					<a href="/projects/{{ featured_project.alias }}">
+						<span class="header featured-name">{{ featured_project.name }}</span>						
+					</a>
+					<br/>
+					<span class="featured-version">{{ featured_project.version }}</span>
+				</div>
+				<!-- Project Desc -->
+				<div class="featured-desc">
+					<span class="desc">
+						{{ featured_project.description }}
+					</span>
+				</div>
+			</div>
+		</div>
+	{% endif %}
+	
+	{% if blog_post %}
+	<!-- Main Featured Box: Blog Post -->
+		<div class="featured-main-box">
+			<div class="title-box">
+				<h3 class="title">Latest Blog Post</h3>
+			</div>
+			<!-- Latest Blog Post Box -->
+			<div class="featured-item-container">
+				<!-- Blog Post Header (Title, Date) -->
+				<div class="featured-header-box">
+					<a href="/blog/view/{{ blog_post.slug }}">
+						<span class="header featured-name">{{ blog_post.title }}</span>						
+					</a>
+					<br/>
+					<span class="featured-version">{{ blog_post.posted }}</span>
+				</div>
+				<!-- Project Desc -->
+				<div class="featured-desc">
+					<span class="desc">
+						{{ blog_post|get_body_short }}
+					</span>
+				</div>
+			</div>
+		</div>
+	{% endif %}
+	
 {% endblock %}
