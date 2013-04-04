@@ -7,7 +7,12 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 	outline: 0;
 	font-size: 1em;
 	background: transparent;
-	}
+}
+	
+/* Mobile Reset for Doubled Font Headers */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: normal;
+}
 
 /* Core */
 *:focus { outline: 0 !important; } /* hopefully fixes IE9's stupid little attitude */
@@ -15,7 +20,7 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 html {
 	margin-bottom: 1px;
 	height: 100%;
-	}
+}
 	
 body {
 	min-width: 960px;
