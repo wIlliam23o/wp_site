@@ -21,7 +21,7 @@
 
 .project-header {
 	text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
-	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Liberations Sans", sans-serif;
+	font-family: "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", sans-serif;
 	font-size: 3.5em; /* big header for projects/sections */
 	color: #26A1F4;
 	text-transform: lowercase;
@@ -35,7 +35,7 @@
 	font-size: .75em;
 	color: #535353;
 	font-weight: bold;
-	font-family: "Carrois Gothic", "Arial Black", "Liberation Sans", Arial, sans-serif;
+	font-family: "Open Sans", "Arial Black", "Liberation Sans", Arial, sans-serif;
 	text-align: right;
 	padding-left: 0%;
 }
@@ -53,7 +53,7 @@
 	border-radius: 5px;
 }
 .project_match {
-	font-family: "Carrois Gothic", "Century Gothic", "Arial Black", "Arial", "sans-serif";
+	font-family: "Open Sans", "Century Gothic", "Arial Black", "Arial", "sans-serif";
 	padding: 5px;
 }
 
