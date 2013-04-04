@@ -232,11 +232,16 @@ def get_tag_list(post_object_or_tag_string):
     ptags = ptags.replace(',', ' ')
     # make list of tags
     if ptags == "":
-        return []
+        tag_list = []
     else:
-        return ptags.split(" ")
+        tag_list = ptags.split(" ")
+    # remove empty items
+    while tag_list.count("") > 0:
+        tag_list.remove("")
     
-    
+    return tag_list
+
+
 def get_all_tags():
     """ retrieve a list of all tags from all blog posts """
     
