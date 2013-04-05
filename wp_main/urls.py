@@ -3,7 +3,10 @@
 
 from django.conf.urls import patterns, include, url
 
+# main views
 from home import views as homeviews
+# get sitemaps
+from wp_main.sitemaps.main import view_sitemap
 
 # enable the admin:
 from django.contrib import admin
@@ -11,7 +14,11 @@ admin.autodiscover()
 
 # Main Site (home)
 urlpatterns = patterns('',
+    # sitemap server
+    url(r'^sitemap\.xml$',view_sitemap),
+    # home (index)
     url(r'^$', homeviews.index),
+    # about page
     url(r'^[Aa]bout/?$', homeviews.view_about),
     )
 

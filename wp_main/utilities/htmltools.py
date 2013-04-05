@@ -364,16 +364,17 @@ def remove_whitespace(source_string):
         # process line.   
         if in_pre:
             # add original line.
-            final_output.append(sline + '\n')
+            final_output.append(sline)
         else:
-            # add trimmed line.
-            final_output.append(trim_whitespace_line(sline))
+            trimmed = trim_whitespace_line(sline)
+            # no blanks.
+            if trimmed != '\n' and trimmed != '':
+                final_output.append(trimmed)
         # end of tag
         if "</pre>" in sline.lower():
             in_pre = False
-    else:
-        final_output = [source_string]
-    return "".join(final_output)
+
+    return '\n'.join(final_output)
 
 
 

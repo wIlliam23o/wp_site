@@ -18,6 +18,11 @@ from os.path import join
 class logger(object):
     def __init__(self, log_name, use_file = False):
         self.log = logging.getLogger(log_name)
+        # override default behaviour.
+        # force use of file when DEBUG = False.
+        if (not use_file) and (not settings.DEBUG):
+            use_file = True
+        # prepare file handler.
         if use_file:
             # short filename
             file_name = log_name + ".log"
