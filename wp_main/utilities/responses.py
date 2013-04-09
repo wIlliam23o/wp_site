@@ -41,9 +41,9 @@ def clean_template(template_, context_, force_ = False):
                         htmltools.remove_comments(
                         htmltools.hide_email(template_.render(context_))))
 
-    #if ((not settings.DEBUG) or (force_)):
-    #    # minify (TEMPORARILY DISABLED....)
-    #    clean_output = htmltools.remove_newlines(clean_output)
+    if ((not settings.DEBUG) or (force_)):
+        # minify (removes newlines except in certain tags [pre, script, etc.])
+        clean_output = htmltools.remove_newlines(clean_output)
     return clean_output
 
 

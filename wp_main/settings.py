@@ -2,37 +2,42 @@
 # -*- coding: utf-8 -*-
 
 # Django settings for wp_main project.
+
+# file/path (path joining)
 import os.path
+
 DEBUG = True
 TEMPLATE_DEBUG = True
 
+# decide which dirs to use based on hostname.
+# determine parent dir for script
+SCRIPT_PARENT = os.path.dirname(os.path.realpath(__file__))
+# get application base dir
+BASE_DIR = os.path.split(SCRIPT_PARENT)[0]
+# get parent of application
+BASE_PARENT = os.path.split(BASE_DIR)[0]
+
 # automatic settings for debug mode.
-#if DEBUG:
-import socket
-shostname = socket.gethostname()
-del socket
-# decide which base dir to use based on hostname.
-if "webfaction" in shostname:
+#import socket
+#shostname = socket.gethostname()
+#del socket
+
+if "webapps" in BASE_PARENT:
     # live site directories
-    BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
-    STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
-    STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
-    MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
-    MEDIA_URL = "http://welbornprod.info/media/"
+    #BASE_PARENT = "/home/cjwelborn/webapps/wp_site/"
+    #BASE_DIR = os.path.join(BASE_PARENT, "wp_site")
+    STATIC_PARENT = BASE_PARENT
+    MEDIA_URL = "http://welbornprod.com/media/"
 else:
     # local development directories
-    BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
+    #BASE_PARENT = "/home/cj/workspace/welbornprod"
+    #BASE_DIR = os.path.join(BASE_PARENT, "wp_main")
     STATIC_PARENT= "/var/www/"
-    STATIC_ROOT = "/var/www/static/"
-    MEDIA_ROOT = "/var/www/media/"
     MEDIA_URL = "http://127.0.0.1/media/"
-#else:
-#    # default directories for production
-#    BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
-#    STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
-#    STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
-#    MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
-#    MEDIA_URL = "http://welbornprod.info/media/"
+
+# Static/Media directories. 
+STATIC_ROOT = os.path.join(STATIC_PARENT, "static")
+MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
     
 # URL prefix for static files.
 STATIC_URL = '/static/'
