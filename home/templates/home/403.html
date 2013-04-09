@@ -1,0 +1,24 @@
+{% extends "home/main.html" %}
+{% block title %}Welborn Productions - Forbidden{% endblock %}
+
+{% block content %}
+	<div class='notfound-box'>
+		<span class='notfound-message'>
+			Step away from:
+		</span>
+		<br/>
+		<span class='notfound-path'>
+			{{ request_path }}
+		</span>
+		<br/>
+		<span class='notfound-home-message'>
+			<br/>
+			You don't have permission to go there.
+			<br/>
+			<a href='/'>Click here to go to the home page</a>,
+			<br/>
+			<br/>
+			Or you can browse my <a href='/projects'>projects</a> or <a href='/blog'>blog</a>.
+		</span>		
+	</div>
+{% endblock %}

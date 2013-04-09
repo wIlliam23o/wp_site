@@ -1,4 +1,3 @@
-
 /* Reset */
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, caption {
 	margin: 0;
@@ -10,7 +9,7 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 }
 	
 /* Mobile Reset for Doubled Font Headers */
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, span, p {
     font-weight: normal;
 }
 
@@ -29,8 +28,9 @@ body {
 	background-attachment:fixed;
 	height: 100%;
 	margin-bottom: 1px;
-	font-family: "Source Sans Pro", Arial, "Liberation Sans", sans-serif;
-	font-weight: 200;
+	font-family: "Ubuntu", "Open Sans", Arial, "Liberation Sans", sans-serif;
+	font-weight: Normal;
+	color: #727272;
 	}
 	
 body.component-body {
@@ -96,7 +96,7 @@ ul.menu {padding-left: 0;}
 
 /* Cj's Text Styles */
 .header {
-	text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+	text-shadow: 2px 2px 3px rgba(0, 0, 0, 1);
 	font-family: "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", sans-serif;
 	font-size: 3.5em; /* big header for projects/main pages/sections */
 	color: #26A1F4;
@@ -142,6 +142,8 @@ h2.title {
 .viewer-download-box {
 	background: white;
 	border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
 	margin-left: 5px;
 	margin-bottom: 5px;
 	padding-left: 3px;
@@ -187,8 +189,11 @@ h2.title {
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	background: transparent; 
-	margin: 0 auto; 
-	width: 75%;
+	margin-top: 0;
+	margin-bottom: 0;
+	margin-left: 16%;
+	margin-right: 5%;
+	width: auto;
 	}
 	
 .wp-block {
@@ -203,7 +208,10 @@ h2.title {
 	padding: 10px;
 	margin-bottom: 10px;
 	background-color: #F7F7F7;
-	border-radius: 5px 5px 5px 5px;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+
 	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.17);
 	}
 .bottom { 
@@ -234,6 +242,8 @@ h2.title {
 	border-bottom-width: 2px;
 	border-bottom-color: #E7E7E7;
 	border-radius: 15px;
+    -moz-border-radius: 15px;
+    -webkit-border-radius: 15px;
 	border-left-style: solid;
 	border-left-width: 2px;
 	border-left-color: #E7E7E7;
@@ -251,6 +261,8 @@ h2.title {
 .comments-box {
 	background: white;
 	border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
 	padding: 5px;
 	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
 	-moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
@@ -265,6 +277,8 @@ h2.title {
 	margin-bottom: 20px;
 	padding-bottom: 10px;
 	border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
 	border-width: 1px;
 	border-style: solid;
 	border-color: #E6E6E6;
@@ -285,6 +299,8 @@ h2.title {
 
 a.jumpto-nav {
 	border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
 	border-style: solid;
 	border-color: #D6E2EB;
 	border-bottom-color: #68ABDF;
@@ -301,6 +317,8 @@ a.jumpto-nav {
 	margin-top: 10px;
 	border-style: solid;
 	border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
 	border-width: 1px;
 	border-color: #74AFEE;
 	padding-left: 2px;
@@ -339,7 +357,7 @@ a.jumpto-nav {
 .menubar {
 	display: inline-block;
 	position: relative;
-	margin-top: 60px;
+	margin-top: 50px;
 	padding: 0;
 	left: -60px; /* fix for fisheye being slightly off (see dock.css #dock) */
 	width: auto; /* set to 100% for centered menu, see dock.css for padding-left: 20px  */
@@ -347,8 +365,6 @@ a.jumpto-nav {
 	text-align: left;
 }
 
-
-}
 .menu-spacer {
 	/* experimental */
 	width: 10px;
@@ -371,12 +387,12 @@ a.jumpto-nav {
 /* Projects Vertical Menu */
 .vertical-menu {
 	position: absolute;
-	left: 10px;
-	top: 235px;
+	left: 5px;
+	top: 220px;
 	background: transparent;
 	/*background: #B6B6B6;*/
 	padding: 5px;
-	width: 10%;
+	width: auto;
 	/*border-radius: 5px;
 	-webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.45);*/
 }
@@ -393,6 +409,8 @@ a.jumpto-nav {
 
 .vertical-menu-item {
 	border-radius: 10px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
 	background: white;
 	border-style: solid;
 	border-width: 2px;
@@ -434,7 +452,7 @@ a.jumpto-nav {
 .vertical-menu-text:hover {
 	font-size: 1.0em;
 }
-/* OLD MENU STYLES (probably safe to delete now, we'll see.)
+/* OLD MENU STYLES (probably safe to delete now, we'll see.) */
 .fusionmenu { /* No Longer Needed */
 	background: url(/static/images/overlays/global/dark-70.png);
 	height: 50px;
@@ -573,10 +591,12 @@ a.jumpto-nav {
 .submit-button {
 	background: white;
 	color: #008FFF;
-	font-family: "Source Sans Pro", "Arial Black";
+	font-family: "Open Sans", "Arial Black";
 	font-weight: bold;
 	border-color: #919191;
 	border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
 	border-width: 1px;
 }	   
 
@@ -656,6 +676,8 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
     display: inline-block;
     border: 1px solid #7793A7;
     border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
     padding: 2px;
     color: #4D6375;
     font-family: "Ubuntu Mono", monospace;
@@ -669,6 +691,8 @@ code, samp {
     color: #4D6375;
     border: 1px solid #7793A7;
     border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
     padding: 1px
 }
 
@@ -682,3 +706,50 @@ code, samp {
 .wp-address {
 	/* empty selector for tagging protected addresses (possibly) */
 }
+
+/* 404 page styles */
+.notfound-box {
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	background: white;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #C5C5C5;
+	padding: 5px;
+	text-align: center;
+}
+
+.notfound-message {
+	color: #C00000;
+	font-weight: bold;
+	font-size: 1.3em;
+}
+
+.notfound-path {
+	color: #3c3c3c;
+	font-weight: normal;
+	font-size: 1.2em;
+}
+
+.notfound-home-message {
+	font-size: 0.9em;
+}
+
+.notfound-image-box {
+	text-align: center;
+}
+
+.notfound-image {
+	border-radius: 30px;
+	-moz-border-radius: 30px;
+	-webkit-border-radius: 30px;
+	border-width: 4px;
+	border-style: dashed;
+	border-color: #DADADA;
+	padding: 10px;
+	width: 200px;
+	height: auto;
+}
+
+	

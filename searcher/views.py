@@ -22,7 +22,8 @@ def view_index(request):
     # no query, show search form.
     if query == "":
         return responses.clean_response("searcher/searchform.html",
-                                        {'extra_style_link': utilities.get_browser_style(request),
+                                        {'is_mobile': utilities.is_mobile(request),
+                                         'extra_style_link': utilities.get_browser_style(request),
                                          })
     else:
         # pass it to view_results
@@ -36,7 +37,8 @@ def view_results(request, _query):
     results_slice = utilities.slice_list(results_list, starting_index=0, max_items=25)
     
     return responses.clean_response("searcher/results.html",
-                                    {'results_list': results_slice,
+                                    {'is_mobile': utilities.is_mobile(request),
+                                     'results_list': results_slice,
                                      'query_text': _query,
                                      'query_safe': mark_for_escaping(_query),
                                      'results_count': len(results_list),
@@ -68,7 +70,8 @@ def view_paged(request):
     # get last index.     
     end_id = str(page_args['start_id'] + len(results_slice))
     return responses.clean_response("searcher/results_paged.html",
-                                    {"results_list": results_slice,
+                                    {"is_mobile": utilities.is_mobile(request),
+                                     "results_list": results_slice,
                                      "query_text": _query,
                                      "query_safe": query_safe,
                                      "start_id": (page_args['start_id'] + 1),

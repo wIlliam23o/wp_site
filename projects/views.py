@@ -35,7 +35,8 @@ def index(request):
   
     # render final page
     return responses.clean_response("projects/index.html",
-                                    {'extra_style_link': utilities.get_browser_style(request),
+                                    {'is_mobile': utilities.is_mobile(request),
+                                     'extra_style_link': utilities.get_browser_style(request),
                                      'projects_content': mark_safe(projects_content),
                                      'projects_menu': mark_safe(projects_menu),
                                      })
@@ -104,7 +105,8 @@ def project_page(request, project, requested_page, source=""):
     projects_menu = tools.get_projects_menu()                  
 
     return responses.clean_response("projects/project.html",
-                                    {'project_content': mark_safe(shtml),
+                                    {'is_mobile': utilities.is_mobile(request),
+                                     'project_content': mark_safe(shtml),
                                      'project_title': project_title,
                                      'projects_menu': mark_safe(projects_menu),
                                      'extra_style_link': utilities.get_browser_style(request),

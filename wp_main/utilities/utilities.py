@@ -134,6 +134,12 @@ def get_browser_style(request):
     else:
         return False
     
+def is_mobile(request):
+    """ determine if the client is a mobile phone/tablet
+        actually, determine if its not a pc.
+    """
+    
+    return (not get_user_agent(request).is_pc)
 
 
 def get_relative_path(spath):

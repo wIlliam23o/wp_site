@@ -39,42 +39,44 @@
 				</a>	
 			</div>
 			{% if blog_posts %}
-				<!-- NAVIGATION -->
-				<div class='blog-nav-box'>
-					<span class='blog-nav-label'>Navigation:</span>
-					<!-- START -->
-					<div class='blog-nav-button'>
-						<a href='/blog/tag/page/{{ tag_name }}?start_id=first'>
-							<span class='blog-nav-button-text'>first</span>
-						</a>
-					</div>
-					<!-- PREV -->
-					<div class='blog-nav-button'>
-						{% if has_prev|is_true %}
-							<a href='/blog/tag/page/{{ tag_name }}?start_id={{ prev_page }}'>
-								<span class='blog-nav-button-text'>previous</span>
+				{% if post_count|exceeds_max:25 %}
+					<!-- NAVIGATION -->
+					<div class='blog-nav-box'>
+						<span class='blog-nav-label'>Navigation:</span>
+						<!-- START -->
+						<div class='blog-nav-button'>
+							<a href='/blog/tag/page/{{ tag_name }}?start_id=first'>
+								<span class='blog-nav-button-text'>first</span>
 							</a>
-						{% else %}
-							<span class='blog-nav-button-text-disabled'>previous</span>
-						{% endif %}
-					</div>
-					<!-- NEXT -->
-					<div class='blog-nav-button'>
-						{% if has_next|is_true %}
-							<a href='/blog/tag/page/{{ tag_name }}?start_id={{ next_page }}'>
-								<span class='blog-nav-button-text'>next</span>
+						</div>
+						<!-- PREV -->
+						<div class='blog-nav-button'>
+							{% if has_prev|is_true %}
+								<a href='/blog/tag/page/{{ tag_name }}?start_id={{ prev_page }}'>
+									<span class='blog-nav-button-text'>previous</span>
+								</a>
+							{% else %}
+								<span class='blog-nav-button-text-disabled'>previous</span>
+							{% endif %}
+						</div>
+						<!-- NEXT -->
+						<div class='blog-nav-button'>
+							{% if has_next|is_true %}
+								<a href='/blog/tag/page/{{ tag_name }}?start_id={{ next_page }}'>
+									<span class='blog-nav-button-text'>next</span>
+								</a>
+							{% else %}
+								<span class='blog-nav-button-text-disabled'>next</span>
+							{% endif %}
+						</div>
+						<!-- END -->
+						<div class='blog-nav-button'>
+							<a href='/blog/tag/page/{{ tag_name }}?start_id=last'>
+								<span class='blog-nav-button-text'>last</span>
 							</a>
-						{% else %}
-							<span class='blog-nav-button-text-disabled'>next</span>
-						{% endif %}
+						</div>
 					</div>
-					<!-- END -->
-					<div class='blog-nav-button'>
-						<a href='/blog/tag/page/{{ tag_name }}?start_id=last'>
-							<span class='blog-nav-button-text'>last</span>
-						</a>
-					</div>
-				</div>
+				{% endif %}
 			{% endif %}
 		{% endblock %}
 		</div>
@@ -84,41 +86,43 @@
 {% block content %}
 	{{ block.super }}
 	{% if blog_posts %}
-		<!-- NAVIGATION -->
-		<div class='blog-nav-box'>
-			<span class='blog-nav-label'>Navigation:</span>
-			<!-- START -->
-			<div class='blog-nav-button'>
-				<a href='/blog/tag/page/{{ tag_name }}?start_id=first'>
-					<span class='blog-nav-button-text'>first</span>
-				</a>
-			</div>
-			<!-- PREV -->
-			<div class='blog-nav-button'>
-				{% if has_prev|is_true %}
-					<a href='/blog/tag/page/{{ tag_name }}?start_id={{ prev_page }}'>
-						<span class='blog-nav-button-text'>previous</span>
+		{% if post_count|exceeds_max:25 %}
+			<!-- NAVIGATION -->
+			<div class='blog-nav-box'>
+				<span class='blog-nav-label'>Navigation:</span>
+				<!-- START -->
+				<div class='blog-nav-button'>
+					<a href='/blog/tag/page/{{ tag_name }}?start_id=first'>
+						<span class='blog-nav-button-text'>first</span>
 					</a>
-				{% else %}
-					<span class='blog-nav-button-text-disabled'>previous</span>
-				{% endif %}
-			</div>
-			<!-- NEXT -->
-			<div class='blog-nav-button'>
-				{% if has_next|is_true %}
-					<a href='/blog/tag/page/{{ tag_name }}?start_id={{ next_page }}'>
-						<span class='blog-nav-button-text'>next</span>
+				</div>
+				<!-- PREV -->
+				<div class='blog-nav-button'>
+					{% if has_prev|is_true %}
+						<a href='/blog/tag/page/{{ tag_name }}?start_id={{ prev_page }}'>
+							<span class='blog-nav-button-text'>previous</span>
+						</a>
+					{% else %}
+						<span class='blog-nav-button-text-disabled'>previous</span>
+					{% endif %}
+				</div>
+				<!-- NEXT -->
+				<div class='blog-nav-button'>
+					{% if has_next|is_true %}
+						<a href='/blog/tag/page/{{ tag_name }}?start_id={{ next_page }}'>
+							<span class='blog-nav-button-text'>next</span>
+						</a>
+					{% else %}
+						<span class='blog-nav-button-text-disabled'>next</span>
+					{% endif %}
+				</div>
+				<!-- END -->
+				<div class='blog-nav-button'>
+					<a href='/blog/tag/page/{{ tag_name }}?start_id=last'>
+						<span class='blog-nav-button-text'>last</span>
 					</a>
-				{% else %}
-					<span class='blog-nav-button-text-disabled'>next</span>
-				{% endif %}
+				</div>
 			</div>
-			<!-- END -->
-			<div class='blog-nav-button'>
-				<a href='/blog/tag/page/{{ tag_name }}?start_id=last'>
-					<span class='blog-nav-button-text'>last</span>
-				</a>
-			</div>
-		</div>
+		{% endif %}
 	{% endif %}
 {% endblock %}

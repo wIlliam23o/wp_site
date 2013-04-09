@@ -4,35 +4,35 @@
 # Django settings for wp_main project.
 import os.path
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+TEMPLATE_DEBUG = True
 
 # automatic settings for debug mode.
-if DEBUG:
-    import socket
-    shostname = socket.gethostname()
-    del socket
-    # decide which base dir to use based on hostname.
-    if "webfaction" in shostname:
-        # live site directories
-        BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
-        STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
-        STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
-        MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
-        MEDIA_URL = "http://welbornprod.info/media/"
-    else:
-        # local development directories
-        BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
-        STATIC_PARENT= "/var/www/"
-        STATIC_ROOT = "/var/www/static/"
-        MEDIA_ROOT = "/var/www/media/"
-        MEDIA_URL = "http://127.0.0.1/media/"
-else:
-    # default directories for production
+#if DEBUG:
+import socket
+shostname = socket.gethostname()
+del socket
+# decide which base dir to use based on hostname.
+if "webfaction" in shostname:
+    # live site directories
     BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
     STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
     STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
     MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
     MEDIA_URL = "http://welbornprod.info/media/"
+else:
+    # local development directories
+    BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
+    STATIC_PARENT= "/var/www/"
+    STATIC_ROOT = "/var/www/static/"
+    MEDIA_ROOT = "/var/www/media/"
+    MEDIA_URL = "http://127.0.0.1/media/"
+#else:
+#    # default directories for production
+#    BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
+#    STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
+#    STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
+#    MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
+#    MEDIA_URL = "http://welbornprod.info/media/"
     
 # URL prefix for static files.
 STATIC_URL = '/static/'
@@ -50,7 +50,7 @@ ALLOWED_HOSTS = ['*']
 
 
 ADMINS = (
-    ('Christopher Welborn', 'cj@welbornproductions.net'),
+    ('Christopher Welborn', 'cj@welbornprod.com'),
 )
 
 MANAGERS = ADMINS
@@ -113,8 +113,10 @@ if os.path.isfile(SECRET_KEY_FILE):
         with open(SECRET_KEY_FILE) as fread:
             SECRET_KEY = fread.read().replace('\n', '')
     except (IOError, OSError)as ex_access:
+        # failed to read secretkey.txt
         SECRET_KEY = NONSECRET_KEY
 else:
+    # no secret key exists.
     SECRET_KEY = NONSECRET_KEY
 
 # List of callables that know how to import templates from various sources.
@@ -124,16 +126,12 @@ TEMPLATE_LOADERS = (
 #     'django.template.loaders.eggs.Loader',
 )
 
-# Template context processors
-#TEMPLATE_CONTEXT_PROCESSORS = (
-#    'django.core.context_processors.debug',
-#    'django.core.context_processors.i18n',
-#    'django.core.context_processors.media',
-#    'django.core.context_processors.static',
-#    'django.contrib.auth.context_processors.auth',
-#    'django.contrib.messages.context_processors.messages',
-#)
-
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.core.context_processors.request",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.media",
+    "django.contrib.auth.context_processors.auth",
+)
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.gzip.GZipMiddleware',
@@ -225,16 +223,4 @@ LOGGING = {
     }
 }
 
-# These toolbars are already default set.
-#DEBUG_TOOLBAR_PANELS = (
-#    'debug_toolbar.panels.version.VersionDebugPanel',
-#    'debug_toolbar.panels.timer.TimerDebugPanel',
-#    'debug_toolbar.panels.settings_vars.SettingsVarsDebugPanel',
-#    'debug_toolbar.panels.headers.HeaderDebugPanel',
-#    'debug_toolbar.panels.request_vars.RequestVarsDebugPanel',
-#    'debug_toolbar.panels.template.TemplateDebugPanel',
-#    'debug_toolbar.panels.sql.SQLDebugPanel',
-#    'debug_toolbar.panels.signals.SignalDebugPanel',
-#    'debug_toolbar.panels.logger.LoggingPanel',
-#)
 DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
