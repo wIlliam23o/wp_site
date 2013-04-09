@@ -43,7 +43,8 @@ TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
 # IP's debug_toolbar should be shown to.
 INTERNAL_IPS = ('127.0.0.1',
                 # webfactional?
-                '108.168.213.73')
+                '10.80.234.144',
+                )
 
 # Django's new security setting?
 ALLOWED_HOSTS = ['*']
