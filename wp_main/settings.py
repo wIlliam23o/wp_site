@@ -4,35 +4,35 @@
 # Django settings for wp_main project.
 import os.path
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+TEMPLATE_DEBUG = True
 
 # automatic settings for debug mode.
-if DEBUG:
-    import socket
-    shostname = socket.gethostname()
-    del socket
-    # decide which base dir to use based on hostname.
-    if "webfaction" in shostname:
-        # live site directories
-        BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
-        STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
-        STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
-        MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
-        MEDIA_URL = "http://welbornprod.info/media/"
-    else:
-        # local development directories
-        BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
-        STATIC_PARENT= "/var/www/"
-        STATIC_ROOT = "/var/www/static/"
-        MEDIA_ROOT = "/var/www/media/"
-        MEDIA_URL = "http://127.0.0.1/media/"
-else:
-    # default directories for production
+#if DEBUG:
+import socket
+shostname = socket.gethostname()
+del socket
+# decide which base dir to use based on hostname.
+if "webfaction" in shostname:
+    # live site directories
     BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
     STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
     STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
     MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
     MEDIA_URL = "http://welbornprod.info/media/"
+else:
+    # local development directories
+    BASE_DIR = "/home/cj/workspace/welbornprod/wp_main"
+    STATIC_PARENT= "/var/www/"
+    STATIC_ROOT = "/var/www/static/"
+    MEDIA_ROOT = "/var/www/media/"
+    MEDIA_URL = "http://127.0.0.1/media/"
+#else:
+#    # default directories for production
+#    BASE_DIR = "/home/cjwelborn/webapps/wp_site/wp_site"
+#    STATIC_PARENT = "/home/cjwelborn/webapps/wp_site/"
+#    STATIC_ROOT = "/home/cjwelborn/webapps/wp_site/static/"
+#    MEDIA_ROOT = "/home/cjwelborn/webapps/wp_site/media/"
+#    MEDIA_URL = "http://welbornprod.info/media/"
     
 # URL prefix for static files.
 STATIC_URL = '/static/'
@@ -124,6 +124,13 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
 #     'django.template.loaders.eggs.Loader',
+)
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.core.context_processors.request",
+    "django.core.context_processors.debug",
+    "django.core.context_processors.media",
+    "django.contrib.auth.context_processors.auth",
 )
 
 MIDDLEWARE_CLASSES = (

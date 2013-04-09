@@ -14,6 +14,13 @@ admin.autodiscover()
 
 # Main Site (home)
 urlpatterns = patterns('',
+    # 404 tester
+    url(r'^404\-test\.html$', homeviews.view_404),
+    # 403 tester
+    url(r'^403\-test\.html$', homeviews.view_403),
+    # 500 tester
+    url(r'^500\-test\.html$', homeviews.view_500),
+    
     # sitemap server
     url(r'^sitemap\.xml$',view_sitemap),
     # home (index)
@@ -61,4 +68,7 @@ urlpatterns += patterns('',
     url(r'^admin/?', include(admin.site.urls)),
     )
 
-
+# Error handlers
+handler404 = 'home.views.view_404'
+handler403 = 'home.views.view_403'
+handler500 = 'home.views.view_500'

@@ -13,6 +13,7 @@
 
 from django import template
 from wp_main.utilities import htmltools
+from wp_main.utilities import utilities
 from django.utils.safestring import mark_safe
 register = template.Library()
 
@@ -81,8 +82,19 @@ def exceeds_min(value, min_):
     return False
 
 
+def is_mobile(value):
+    """ value is the request from the view, 
+        this is actually not needed with django_user_agents installed.
+        you can just use: request.user_agent.is_mobile
+        returns whether or not the client is mobile/tablet.
+    """
+    
+    return utilities.is_mobile(value)
+
+
 register.filter('comments_button', comments_button)
 register.filter("is_false", is_false)
 register.filter("is_true", is_true)
 register.filter("exceeds_max", exceeds_max)
 register.filter("exceeds_min", exceeds_min)
+register.filter('is_mobile', is_mobile)

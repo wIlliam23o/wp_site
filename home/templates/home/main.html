@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE "html">
 <html>
 <head>
 	<title>{% block title %}Welborn Productions{% endblock %}</title>
@@ -20,6 +20,11 @@
 		{% if extra_style_link3 %}
 			<link rel="stylesheet" href="{{ extra_style_link3 }}" type="text/css"/>
 		{% endif %}
+		{% if extra_style_link_list %}
+			{% for extra_link in extra_style_link_list %}
+				<link rel="stylesheet" href="{{ extra_link }}" type="text/css"/>
+			{% endfor %}
+		{% endif %}
 	{% endblock %}
 
 	<!-- Custom Local CSS --> 
@@ -31,22 +36,55 @@
 		</style>
 	{% endblock %}
 
-	<!-- dock no javascript helper -->
-	<noscript>
+	<!-- Dock (No Javascript/Mobile Site)-->
+	{% if is_mobile %}
 		<style type="text/css">
+			<!-- Fixes mobile view of menus -->
 			#dock { top: -32px; }
-			a.dock-item { position: relative; float: left; margin-right: 10px; }
+			a.dock-item { position: relative; float: left; margin-right: 30px; }
+			a.dock-item:hover { color: #9c9c9c; }
+			a.dock-item:active { color: #9c9c9c; }
 			.dock-item span { display: block; }
+			
+			.vertical-menu {
+				top: 200px;
+			}
+			
+			.menubar {
+				margin-top: 0px;
+			}
+			
 		</style>
-	</noscript>
-	<!-- Javascript Sources -->
+	{% else %}		
+		<noscript>
+			<style type="text/css">
+				#dock { top: -32px; }
+				a.dock-item { position: relative; float: left; margin-right: 30px; }
+				a.dock-item:hover { color: #9c9c9c; }
+				a.dock-item:active { color: #9c9c9c; }
+				.dock-item span { display: block; }
+				
+			</style>
+		</noscript>
+	{% endif %}
+	
+	<!-- Javascript: jQuery -->
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-	<!--old jquery= <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>-->
-	<script type="text/javascript" src="/static/js/fisheye-iutil.js"></script>
-	<script type="text/javascript" src="/static/js/dock.js"></script>
+	
+	<!-- Javascript: Fisheye Dock -->
+	{% if is_mobile %}
+		<!-- No dock js loaded on mobile site. It looks funny -->
+	{% else %}
+		<script type="text/javascript" src="/static/js/fisheye-iutil.js"></script>
+		<script type="text/javascript" src="/static/js/dock.js"></script>
+	{% endif %}
+	
+	<!-- Javascript: Image Rotator -->
 	<script type="text/javascript" src="/static/js/jquery.wt-rotator-wp.js"></script>
 	<!--<script type="text/javascript" src="/static/js/jquery.banner-rotator-wp.js"></script>-->
 	<script type="text/javascript" src="/static/js/jquery.easing.1.3.min.js"></script>
+	
+	<!-- Javascript: Local Tools (email protection) -->
 	<script type="text/javascript" src="/static/js/wptools.js"></script>
 
 
@@ -59,13 +97,16 @@
 
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-33573966-1']);
-    _gaq.push(['_trackPageview']);
+  _gaq.push(['_setDomainName', 'welbornprod.com']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
 
   (function() {
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
+
 </script>
 <!-- End of Google Analytics -->
 
@@ -79,7 +120,7 @@
 <body>
 	{% block body-javascript %}
 	{% endblock %}
-	
+
 	<link href='http://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' />
 	<div id='bg-surround'>
 	    <div id='bg-pattern' class='main-pattern'>

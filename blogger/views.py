@@ -26,7 +26,8 @@ def index(request):
         blog_posts = False
         
     return responses.clean_response("blogger/index.html",
-                                    {'blog_posts': blog_posts,
+                                    {'is_mobile': utilities.is_mobile(request),
+                                     'blog_posts': blog_posts,
                                      'post_count': post_count,
                                      'extra_style_link': utilities.get_browser_style(request)})
 
@@ -49,7 +50,8 @@ def index_page(request):
     # get last index.     
     end_id = str(page_args['start_id'] + len(post_slice))
     return responses.clean_response("blogger/index_paged.html",
-                                    {"blog_posts": blog_posts,
+                                    {'is_mobile': utilities.is_mobile(request),
+                                     "blog_posts": blog_posts,
                                      "start_id": (page_args['start_id'] + 1),
                                      "end_id": end_id,
                                      "post_count": post_count,
@@ -95,7 +97,8 @@ def view_post(request, _identifier):
             enable_comments = post_.enable_comments
             # Build clean HttpResponse with post template...
             response = responses.clean_response("blogger/post.html",
-                                                {'extra_style_link': utilities.get_browser_style(request),
+                                                {'is_mobile': utilities.is_mobile(request),
+                                                 'extra_style_link': utilities.get_browser_style(request),
                                                  'post_title_short': post_title_short,
                                                  'enable_comments': enable_comments,
                                                  'blog_post': post_,
@@ -116,7 +119,8 @@ def view_tags(request):
                                          size_=tag_sizes[tag_name]))
     
     return responses.clean_response("blogger/tags.html",
-                                    {'tag_list': tag_list,
+                                    {'is_mobile': utilities.is_mobile(request),
+                                     'tag_list': tag_list,
                                      'tag_count': len(tag_list),
                                      'extra_style_link': utilities.get_browser_style(request),
                                      })
@@ -133,7 +137,8 @@ def view_tag(request, _tag):
     blog_posts = blogtools.fix_post_list(found_posts, max_posts=25, max_text_lines=16)
     item_count = len(blog_posts)
     return responses.clean_response("blogger/tag.html",
-                                    {'extra_style_link': utilities.get_browser_style(request),
+                                    {'is_mobile': utilities.is_mobile(request),
+                                     'extra_style_link': utilities.get_browser_style(request),
                                      'tag_name': tag_name,
                                      'post_count': post_count,
                                      'item_count': item_count,
@@ -164,7 +169,8 @@ def tag_page(request, _tag):
     end_id = str(page_args['start_id'] + len(blog_posts))
     # build page.
     return responses.clean_response("blogger/tag_paged.html",
-                                    {"blog_posts": blog_posts,
+                                    {'is_mobile': utilities.is_mobile(request),
+                                     "blog_posts": blog_posts,
                                      "tag_name": tag_name,
                                      "start_id": (page_args['start_id'] + 1),
                                      "end_id": end_id,

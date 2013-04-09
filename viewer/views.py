@@ -131,7 +131,8 @@ def viewer(request, file_path):
         
         # build template
         response = responses.clean_response("home/main.html",
-                                            {'extra_style_link': "/static/css/highlighter.css",
+                                            {'is_mobile': utilities.is_mobile(request),
+                                             'extra_style_link': "/static/css/highlighter.css",
                                              'extra_style_link2': "/static/css/projects.css",
                                              'vertical_menu': mark_safe(vertical_menu),
                                              'main_content': mark_safe(shtml),

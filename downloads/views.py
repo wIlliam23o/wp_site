@@ -29,7 +29,8 @@ def download(request, file_path):
         alert_message = "Sorry, that file doesn't exist."
         main_content = "<div class='wp-block'><a href='/'><span>Click here to go home.</span></a></div>"
         response = responses.clean_response("home/main.html",
-                                            {'main_content': mark_safe(main_content),
+                                            {'is_mobile': utilities.is_mobile(request),
+                                             'main_content': mark_safe(main_content),
                                              'alert_message': mark_safe(alert_message),
                                              })
     else:

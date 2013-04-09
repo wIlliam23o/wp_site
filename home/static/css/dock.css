@@ -9,6 +9,7 @@ a.dock-item {
 	width: 50px;
 	position: absolute;
 	bottom: 0;
+	font-family: "Open Sans", "Century Gothic", Arial, "Liberation Sans", sans-serif;
 	font-weight: bold;
 	text-align: center;
 	text-decoration: none;
