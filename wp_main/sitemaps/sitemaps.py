@@ -22,13 +22,32 @@ from projects.models import wp_project
 from datetime import date
 
 def view_sitemap(request):
-    """ delivers sitemap for current domain using sitemap.html template """
+    """ delivers sitemap for current domain using sitemap.xml template """
     
-
     # return xml sitemap response
     return responses.xml_response("sitemaps/sitemap.xml",
                                   {"url_list": get_urls(request), 
                                    })
+
+
+def view_blank_sitemap(request):
+    """ delivers a blank sitemap (for servers that don't need a sitemap like the test-server). """
+    
+    return responses.text_response("")
+
+
+def view_byserver(request):
+    """ decides which sitemap to deliver according to server.
+        sends blank sitemap to server with names starting with 'test.'
+    """
+    
+    server_name = request.META["SERVER_NAME"]
+    if server_name.startswith("test."):
+        return view_blank_sitemap(request)
+    else:
+        # normal sitemap.
+        return view_sitemap(request)
+    
     
 def get_urls(request):
     """ builds a list of sitemap_url() containing:

@@ -6,7 +6,7 @@ from django.conf.urls import patterns, include, url
 # main views
 from home import views as homeviews
 # get sitemaps
-from wp_main.sitemaps.main import view_sitemap
+from wp_main.sitemaps import sitemaps
 # get robots.txt
 from wp_main.robots import robots
 # enable the admin:
@@ -24,7 +24,7 @@ urlpatterns = patterns('',
     # robots.txt server
     url(r'^robots\.txt$', robots.view_byserver),
     # sitemap server
-    url(r'^sitemap\.xml$',view_sitemap),
+    url(r'^sitemap\.xml$',sitemaps.view_byserver),
     # home (index)
     url(r'^$', homeviews.index),
     # about page
