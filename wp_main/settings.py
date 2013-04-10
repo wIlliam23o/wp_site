@@ -5,6 +5,7 @@
 
 # file/path (path joining)
 import os.path
+import socket
 
 DEBUG = True
 TEMPLATE_DEBUG = True
@@ -46,9 +47,12 @@ MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
 
 # IP's debug_toolbar should be shown to.
+LOCAL_HOST = socket.gethostname()
+LOCAL_IP = socket.gethostbyname(LOCAL_HOST)
+
 INTERNAL_IPS = ('127.0.0.1',
                 # webfactional?
-                '10.80.234.144',
+                LOCAL_IP,
                 )
 
 # Django's new security setting?
@@ -60,6 +64,7 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
+SERVER_EMAIL = 'cj@welbornprod.com'
 
 DATABASES = {
     'default': {
