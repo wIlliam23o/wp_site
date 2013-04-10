@@ -16,10 +16,14 @@ def index(request):
     
     # setup logging
     #_log = logger("welbornprod.home.index", use_file=True)
+    
+    # test site? the view will show a message if it is.
+    test_site = request.META["SERVER_NAME"].startswith("test.")
 
     # render final page
     return responses.clean_response("home/index.html",
                                     {'is_mobile': utilities.is_mobile(request),
+                                     'test_site': test_site,
                                      'blog_post': htools.get_latest_blog(),
                                      'featured_project': htools.get_featured_project(),
                                      'extra_style_link': utilities.get_browser_style(request),
