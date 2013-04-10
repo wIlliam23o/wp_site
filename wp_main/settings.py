@@ -46,10 +46,28 @@ MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
 
 # IP's debug_toolbar should be shown to.
-INTERNAL_IPS = ('127.0.0.1',
-                # external ip?
-                '97.82.39.67',
-                )
+# check for local internal_ips.txt,
+# allow the ips in that file if it exists.
+_internal_ips = ['127.0.0.1']
+if os.path.isfile(os.path.join(BASE_DIR, "internal_ips.txt")):
+    try:
+        with open(os.path.join(BASE_DIR, "internal_ips.txt")) as f_ips:
+            ip_raw = f_ips.read()
+            if '\n' in ip_raw:
+                # list of ips in file.
+                ips_list = []
+                for ip_ in ip_raw.split('\n'):
+                    if len(ip_) > 7:
+                        _internal_ips.append(ip_)
+            else:
+                # single ip in file
+                _internal_ips.append(ip_raw)
+    except Exception as ex:
+        pass
+
+# set global allowed ips
+INTERNAL_IPS = tuple(_internal_ips)
+
 
 # Django's new security setting?
 ALLOWED_HOSTS = ['*']
