@@ -9,6 +9,14 @@
 	
 {% endblock %}
 
+{% block extrahead %}
+	<!-- no search engines on the test site -->
+	{% if test_site %}
+		<meta name="robots" content="noindex, nofollow" />
+		<meta name="googlebot" content="noindex, nofollow" />
+	{% endif %}
+{% endblock %}
+
 {% block content %}
 	<div class="home-welcome-box">
 		<p class="home-welcome-text">

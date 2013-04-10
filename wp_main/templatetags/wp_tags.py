@@ -91,7 +91,6 @@ def is_mobile(value):
     
     return utilities.is_mobile(value)
 
-
 register.filter('comments_button', comments_button)
 register.filter("is_false", is_false)
 register.filter("is_true", is_true)

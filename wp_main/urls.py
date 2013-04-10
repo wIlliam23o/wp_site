@@ -7,7 +7,8 @@ from django.conf.urls import patterns, include, url
 from home import views as homeviews
 # get sitemaps
 from wp_main.sitemaps.main import view_sitemap
-
+# get robots.txt
+from wp_main.robots import robots
 # enable the admin:
 from django.contrib import admin
 admin.autodiscover()
@@ -20,7 +21,8 @@ urlpatterns = patterns('',
     url(r'^403\-test\.html$', homeviews.view_403),
     # 500 tester
     url(r'^500\-test\.html$', homeviews.view_500),
-    
+    # robots.txt server
+    url(r'^robots\.txt$', robots.view_byserver),
     # sitemap server
     url(r'^sitemap\.xml$',view_sitemap),
     # home (index)

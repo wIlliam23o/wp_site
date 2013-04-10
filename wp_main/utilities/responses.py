@@ -90,6 +90,12 @@ def xml_response(template_name, context_dict):
     
     return response
 
+def text_response(text_content):
+    """ sends basic HttpResponse with mime type as text/plain """
+    
+    return HttpResponse(text_content, mimetype="text/plain")
+
+
 def render_response(template_name, context_dict):
     """ same as render_to_response, 
         loads template, renders with context,
