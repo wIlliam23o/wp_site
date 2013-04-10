@@ -22,14 +22,40 @@ from projects.models import wp_project
 from datetime import date
 
 def view_sitemap(request):
-    """ delivers sitemap for current domain using sitemap.html template """
+    """ delivers sitemap for current domain using sitemap.xml template """
     
-
     # return xml sitemap response
     return responses.xml_response("sitemaps/sitemap.xml",
                                   {"url_list": get_urls(request), 
                                    })
+
+
+def view_blank_sitemap(request):
+    """ delivers a blank sitemap (for servers that don't need a sitemap like the test-server). """
     
+    return responses.text_response("")
+
+
+def view_byserver(request):
+    """ decides which sitemap to deliver according to server.
+        sends blank sitemap to server with names starting with 'test.'
+    """
+    
+    server_name = request.META["SERVER_NAME"]
+    if server_name.startswith("test."):
+        return view_blank_sitemap(request)
+    else:
+        # normal sitemap.
+        return view_sitemap(request)
+    
+
+def view_bing_verify(request):
+    """ verify ownership for bing. [DELETE THIS!] """
+    
+    return responses.basic_response('<?xml version="1.0"?>\n<users>\n<user>1817450E18B739E38CD4E0C148E6A092</user>\n</users>',
+                                    content_type='application/xml')
+
+  
 def get_urls(request):
     """ builds a list of sitemap_url() containing:
         Full URL, Change Frequency, Last Modified Date

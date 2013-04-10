@@ -13,7 +13,8 @@
 
 import logging
 from django.conf import settings
-from os.path import join
+from os.path import join as pathjoin
+from os import getcwd
 
 class logger(object):
     def __init__(self, log_name, use_file = False):
@@ -30,7 +31,7 @@ class logger(object):
             if "welbornprod." in file_name:
                 file_name = file_name.replace('welbornprod.', '')
             # add base dir
-            file_name = join(settings.BASE_DIR, file_name)
+            file_name = pathjoin(settings.BASE_DIR, file_name)
             self.filehandler = logging.FileHandler(file_name)
             self.formatter = logging.Formatter('%(asctime)s - [%(levelname)s] %(message)s')
             self.filehandler.setFormatter(self.formatter)

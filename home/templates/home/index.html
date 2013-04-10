@@ -9,9 +9,34 @@
 	
 {% endblock %}
 
+{% block extrahead %}
+	<!-- no search engines on the test site -->
+	{% if test_site %}
+		<meta name="robots" content="noindex, nofollow" />
+		<meta name="googlebot" content="noindex, nofollow" />
+	{% endif %}
+{% endblock %}
+
 {% block content %}
 	<div class="home-welcome-box">
 		<p class="home-welcome-text">
+			<!-- Test-Site warning -->
+			{% if test_site %}
+				<div style="text-align: center; border-style: solid; border-color: #B90000; border-width: 2px; border-radius: 15px; margin-bottom: 20px">
+					<span style="color: #B90000; font-size: 1.2em;">
+						You are viewing the test-site!
+						<br/> 
+						I cannot be help responsible for anything
+						that may happen.
+					</span>
+					<br/>
+					<span style="color: #0085FF; font-size: 1.2em;">
+						<a href='http://welbornprod.com'>Click here for the real site.</a>
+					</span>
+				</div>
+			{% endif %}
+			
+			<!-- Welcome Message -->
 			Welcome to the <span class="I">new</span>&nbsp;
 			Welborn Productions site.
 			I moved from <span class="B">Joomla</span> to <span class="B">

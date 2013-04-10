@@ -42,7 +42,7 @@ def clean_template(template_, context_, force_ = False):
                         htmltools.hide_email(template_.render(context_))))
 
     if ((not settings.DEBUG) or (force_)):
-        # minify (kinda)
+        # minify (removes newlines except in certain tags [pre, script, etc.])
         clean_output = htmltools.remove_newlines(clean_output)
     return clean_output
 
@@ -70,7 +70,7 @@ def alert_message(alert_msg, body_message="<a href='/'><span>Click here to go ho
 
 def basic_response(scontent='', *args, **kwargs):
     """ just a wrapper for the basic HttpResponse object. """
-    return HttpResponse(scontent, args, kwargs)
+    return HttpResponse(scontent, *args, **kwargs)
 
 
 
@@ -89,6 +89,12 @@ def xml_response(template_name, context_dict):
         response = HttpResponseNotFound()
     
     return response
+
+def text_response(text_content):
+    """ sends basic HttpResponse with mime type as text/plain """
+    
+    return HttpResponse(text_content, mimetype="text/plain")
+
 
 def render_response(template_name, context_dict):
     """ same as render_to_response, 

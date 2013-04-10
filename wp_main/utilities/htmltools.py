@@ -319,26 +319,32 @@ def remove_comments(source_string):
 
 
 def remove_newlines(source_string):
-    """ remove all newlines from a string """
+    """ remove all newlines from a string 
+        skips some tags, leaving them alone. like 'pre', so
+        formatting doesn't get messed up.
+    """
         
     # removes newlines, except for in pre blocks.
     if '\n' in source_string:
-        in_pre = False
+        in_skipped = False
         final_output = []
         for sline in source_string.split('\n'):
+            sline_lower = sline.lower()
             # start of pre tag
-            if "<pre" in sline.lower():
-                in_pre = True
+            if (("<pre" in sline_lower) or
+                ("<script" in sline_lower)):
+                in_skipped = True
             # process line.  
-            if in_pre:
+            if in_skipped:
                 # add original line.
                 final_output.append(sline + '\n')
             else:
                 # add trimmed line.
                 final_output.append(sline.replace('\n', ''))
             # end of tag
-            if "</pre>" in sline.lower():
-                in_pre = False
+            if (("</pre>" in sline_lower) or
+                ("</script>" in sline_lower)):
+                in_skipped = False
     else:
         final_output = [source_string]
     return "".join(final_output)
@@ -347,6 +353,7 @@ def remove_newlines(source_string):
 def remove_whitespace(source_string):
     """ removes leading and trailing whitespace from lines,
         and removes blank lines.
+
     """
     
     # removes newlines, except for in pre blocks.
@@ -355,14 +362,15 @@ def remove_whitespace(source_string):
     else:
         slines = [source_string]
     # start processing    
-    in_pre = False
+    in_skipped = False
     final_output = []
     for sline in slines:
-        # start of pre tag
-        if "<pre" in sline.lower():
-            in_pre = True
+        sline_lower = sline.lower()
+        # start of skipped tag
+        if "<pre" in sline_lower:
+            in_skipped = True
         # process line.   
-        if in_pre:
+        if in_skipped:
             # add original line.
             final_output.append(sline)
         else:
@@ -371,8 +379,8 @@ def remove_whitespace(source_string):
             if trimmed != '\n' and trimmed != '':
                 final_output.append(trimmed)
         # end of tag
-        if "</pre>" in sline.lower():
-            in_pre = False
+        if "</pre>" in sline_lower:
+            in_skipped = False
 
     return '\n'.join(final_output)
 
