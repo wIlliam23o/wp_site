@@ -70,7 +70,7 @@ def alert_message(alert_msg, body_message="<a href='/'><span>Click here to go ho
 
 def basic_response(scontent='', *args, **kwargs):
     """ just a wrapper for the basic HttpResponse object. """
-    return HttpResponse(scontent, args, kwargs)
+    return HttpResponse(scontent, *args, **kwargs)
 
 
 

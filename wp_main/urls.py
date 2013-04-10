@@ -24,7 +24,7 @@ urlpatterns = patterns('',
     # robots.txt server
     url(r'^robots\.txt$', robots.view_byserver),
     # bing verification
-    url(r'^BingSiteAuth.xml$', sitemaps.view_bing_verify),
+    url(r'^BingSiteAuth\.xml$', sitemaps.view_bing_verify),
     # sitemap server
     url(r'^sitemap\.xml$',sitemaps.view_byserver),
     # home (index)
