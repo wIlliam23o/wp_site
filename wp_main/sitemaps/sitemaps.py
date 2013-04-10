@@ -48,7 +48,14 @@ def view_byserver(request):
         # normal sitemap.
         return view_sitemap(request)
     
+
+def view_bing_verify(request):
+    """ verify ownership for bing. [DELETE THIS!] """
     
+    return responses.basic_response('<?xml version="1.0"?>\n<users>\n<user>1817450E18B739E38CD4E0C148E6A092</user>\n</users>',
+                                    content_type='application/xml')
+
+  
 def get_urls(request):
     """ builds a list of sitemap_url() containing:
         Full URL, Change Frequency, Last Modified Date
