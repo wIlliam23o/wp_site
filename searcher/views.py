@@ -22,8 +22,8 @@ def view_index(request):
     # no query, show search form.
     if query == "":
         return responses.clean_response("searcher/searchform.html",
-                                        {'is_mobile': utilities.is_mobile(request),
-                                         'extra_style_link': utilities.get_browser_style(request),
+                                        {'request': request,
+                                         'extra_style_link_list': [utilities.get_browser_style(request)],
                                          })
     else:
         # pass it to view_results
@@ -37,12 +37,12 @@ def view_results(request, _query):
     results_slice = utilities.slice_list(results_list, starting_index=0, max_items=25)
     
     return responses.clean_response("searcher/results.html",
-                                    {'is_mobile': utilities.is_mobile(request),
+                                    {'request': request,
                                      'results_list': results_slice,
                                      'query_text': _query,
                                      'query_safe': mark_for_escaping(_query),
                                      'results_count': len(results_list),
-                                     'extra_style_link': utilities.get_browser_style(request),
+                                     'extra_style_link_list': [utilities.get_browser_style(request)],
                                      })
 
 def view_paged(request):
@@ -70,7 +70,7 @@ def view_paged(request):
     # get last index.     
     end_id = str(page_args['start_id'] + len(results_slice))
     return responses.clean_response("searcher/results_paged.html",
-                                    {"is_mobile": utilities.is_mobile(request),
+                                    {"request": request,
                                      "results_list": results_slice,
                                      "query_text": _query,
                                      "query_safe": query_safe,
@@ -81,5 +81,5 @@ def view_paged(request):
                                      "next_page": page_args['next_page'],
                                      "has_prev": (page_args['start_id'] > 0),
                                      "has_next": (page_args['start_id'] < (results_count - page_args['max_items'])),
-                                     "extra_style_link": utilities.get_browser_style(request),
+                                     "extra_style_link_list": [utilities.get_browser_style(request)],
                                      })

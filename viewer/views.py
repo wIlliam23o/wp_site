@@ -24,10 +24,10 @@ def index(request):
 
 
 def viewer(request, file_path):
-    """ provides download of files, 
-        tracks download count of projects and possibly others
+    """ provides view of files, 
+        tracks view count of projects and possibly others
         by checking file's project owner, incrementing the count,
-        and then redirecting to the actual file.
+        and then highlights the file where applicable..
     """
     
     static_path = file_path if (file_path.startswith("/")) else ('/' + file_path)
@@ -131,9 +131,9 @@ def viewer(request, file_path):
         
         # build template
         response = responses.clean_response("home/main.html",
-                                            {'is_mobile': utilities.is_mobile(request),
-                                             'extra_style_link': "/static/css/highlighter.css",
-                                             'extra_style_link2': "/static/css/projects.css",
+                                            {'request': request,
+                                             'extra_style_link_list': ["/static/css/highlighter.css",
+                                                                       "/static/css/projects.css"],
                                              'vertical_menu': mark_safe(vertical_menu),
                                              'main_content': mark_safe(shtml),
                                              'alert_message': mark_safe(alert_msg),

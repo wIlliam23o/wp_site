@@ -2,9 +2,19 @@
 {% load wp_tags %}
 <html>
 <head>
-	<title>{% block title %}Welborn Productions{% endblock %}</title>
+	<title>
+		Welborn Productions
+		{% if request|is_test_site %}
+			- Test Site
+		{% endif %}
+		{% block title %}
+		{% endblock %}
+	</title>
+	
+	<!-- FavIcon -->
 	<link rel="icon" href="/static/images/favicon.ico" type="image/x-icon"/>
     <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon"/> <!-- vnd.microsoft.icon"-->
+    
 	<!-- CSS Links -->
  	<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400|Open+Sans:400italic,600italic,700italic,800italic,400,800,600,700|Ubuntu+Mono:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
  	<link rel="stylesheet" href="/static/css/main.css" type="text/css" />
@@ -12,15 +22,6 @@
 	<link rel="stylesheet" type="text/css" href="/static/css/wt-rotator.css"/>
 	<!-- Browser-Specific CSS File (Browser detected in views...) -->
 	{% block extrastylelink %}
-		{% if extra_style_link %}
-			<link rel="stylesheet" href="{{ extra_style_link }}" type="text/css"/>
-		{% endif %}
-		{% if extra_style_link2 %}
-			<link rel="stylesheet" href="{{ extra_style_link2 }}" type="text/css"/>
-		{% endif %}
-		{% if extra_style_link3 %}
-			<link rel="stylesheet" href="{{ extra_style_link3 }}" type="text/css"/>
-		{% endif %}
 		{% if extra_style_link_list %}
 			{% for extra_link in extra_style_link_list %}
 				<link rel="stylesheet" href="{{ extra_link }}" type="text/css"/>
@@ -30,15 +31,15 @@
 
 	<!-- Custom Local CSS --> 
 	{% block extrastyle %}
-		<style type="text/css">
-			{% if extra_style %}
+		{% if extra_style %}
+			<style type="text/css">
 				{{ extra_style }}
-			{% endif %}
-		</style>
+			</style>
+		{% endif %}
 	{% endblock %}
 
 	<!-- Dock (No Javascript/Mobile Site)-->
-	{% if is_mobile %}
+	{% if request|is_mobile %}
 		<style type="text/css">
 			<!-- Fixes mobile view of menus -->
 			#dock { top: -32px; }
@@ -73,7 +74,7 @@
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	
 	<!-- Javascript: Fisheye Dock -->
-	{% if is_mobile %}
+	{% if request|is_mobile %}
 		<!-- No dock js loaded on mobile site. It looks funny -->
 	{% else %}
 		<script type="text/javascript" src="/static/js/fisheye-iutil.js"></script>
@@ -185,14 +186,44 @@
 			
 			<!-- Page Surround -->
 	        <div id='page-surround' class="wp-block">
-  				<!-- view content -->
+	        	
+	        	<!-- Debug box -->
+	        	{% if request|is_test_site %}
+	        		<!-- show/hide debug btn -->
+	        		<div class="debug-button">
+	        			<a href="javascript: wpTools.toggle_debug();">
+	        				<span class="debug-button-text">
+	        					show debug
+	        				</span>
+	        			</a>
+	        		</div>
+	        		<div class="debug-box">
+	        			<!-- debug info -->
+	        			{% filter highlight_python %}
+	        				{% debug %}
+	        			{% endfilter %}
+	        			<!-- hide debug btn -->
+	        			<div class="debug-button">
+	        				<a href="javascript: wpTools.toggle_debug();">
+	        					<span class="debug-button-text">
+	        						hide debug
+	        					</span>
+	        				</a>
+	        			</div>
+	        		</div>
+	        	{% endif %}
+  				<!-- Above Page Content -->
   				{% block contentabove %}
   				{% endblock %}
+  				
+  				<!-- Page Content -->
 				{% block content %}
 					{% if main_content %}
 						{{ main_content }}
 					{% endif %}
 				{% endblock %}
+				
+				<!-- Comments for applicable pages -->
 				{% if enable_comments %}
 					<!-- DISQUS COMMENTS -->
 					<div class="comments-box" id='comments-box'>

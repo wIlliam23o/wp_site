@@ -110,7 +110,7 @@ def render_response(template_name, context_dict):
         rendered = alert_message("Sorry, there was an error loading this page.")
     return HttpResponse(rendered)
 
-def clean_response(template_name, context_dict):
+def clean_response(template_name, context_dict, request_ = None):
     """ same as render_response, except does code minifying/compression 
         (compresses only if settings.DEBUG=False)
         returns cleaned HttpResponse.
@@ -124,6 +124,11 @@ def clean_response(template_name, context_dict):
         rendered = None
     else:
         try:
+            # Add request to context if available.
+            if request_ is not None:
+                context_dict['request'] = request_
+                context_dict['meta'] = request_.META
+                
             cont_ = Context(context_dict)
         except Exception as ex:
             _log.error("clean_response: could not load context: " + str(context_dict) + "<br/>\n" + \

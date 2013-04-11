@@ -35,8 +35,8 @@ def index(request):
   
     # render final page
     return responses.clean_response("projects/index.html",
-                                    {'is_mobile': utilities.is_mobile(request),
-                                     'extra_style_link': utilities.get_browser_style(request),
+                                    {'request': request,
+                                     'extra_style_link_list': [utilities.get_browser_style(request)],
                                      'projects_content': mark_safe(projects_content),
                                      'projects_menu': mark_safe(projects_menu),
                                      })
@@ -89,11 +89,12 @@ def project_page(request, project, requested_page, source=""):
         else:
             # prepare extra content from html file, adding screenshots/ads/downloads
             shtml = tools.prepare_content(project, scontent) + '\n</div>'
+            # tell the template whether or not to use the screenshots box.
             use_screenshots = ("screenshots_box" in shtml)
+            # gather extra style needed
+            extra_style_link_list = [utilities.get_browser_style(request)]
             if ('<div class="highlight"' in shtml):
-                extra_style_link2 = "/static/css/highlighter.css"
-            else:
-                extra_style_link2 = ""
+                extra_style_link_list.append("/static/css/highlighter.css")
            
     # track project views
     project.view_count += 1
@@ -105,12 +106,11 @@ def project_page(request, project, requested_page, source=""):
     projects_menu = tools.get_projects_menu()                  
 
     return responses.clean_response("projects/project.html",
-                                    {'is_mobile': utilities.is_mobile(request),
+                                    {'request': request,
                                      'project_content': mark_safe(shtml),
                                      'project_title': project_title,
                                      'projects_menu': mark_safe(projects_menu),
-                                     'extra_style_link': utilities.get_browser_style(request),
-                                     'extra_style_link2': extra_style_link2,
+                                     'extra_style_link_list': extra_style_link_list,
                                      'use_screenshots': use_screenshots,
                                      })
 

@@ -21,6 +21,8 @@ urlpatterns = patterns('',
     url(r'^403\-test\.html$', homeviews.view_403),
     # 500 tester
     url(r'^500\-test\.html$', homeviews.view_500),
+    # debug info
+    url(r'^debug\.html$', homeviews.view_debug),
     # robots.txt server
     url(r'^robots\.txt$', robots.view_byserver),
     # sitemap server
