@@ -9,15 +9,20 @@
 		
 		<div class="search-header-text">
 				<div class='search-header'>
-					<span class="search-header-text">Viewing results </span>
-					  <span class="search-header-count">{{ start_id }}</span>
-					    <span class="search-header-text"> through </span>
-					      <span class="search-header-count">{{ end_id }}</span>
-					        <span class="search-header-text"> of </span>
-					          <span class="search-header-count">{{ results_count }}</span>
-					            <span class="search-header-text"> for: </span>
-					              <span class="search-header-query">{{ query_text }}</span>
-					            
+					{% if search_warning %}
+						<span class="search-header-text" style="color: darkred; font-weight: bold;">
+							{{ search_warning }}
+						</span>
+					{% else %}
+						<span class="search-header-text">Viewing results </span>
+						  <span class="search-header-count">{{ start_id }}</span>
+						    <span class="search-header-text"> through </span>
+						      <span class="search-header-count">{{ end_id }}</span>
+						        <span class="search-header-text"> of </span>
+						          <span class="search-header-count">{{ results_count }}</span>
+						            <span class="search-header-text"> for: </span>
+						              <span class="search-header-query">{{ query_text }}</span>
+					{% endif %}  
 				</div>
 				<!-- Search Box -->
 				<div class="search-form" style="top: 50px;">

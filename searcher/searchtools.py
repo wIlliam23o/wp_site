@@ -39,7 +39,8 @@ def search_projects(query_):
     """ search all wp_projects and return a list of results (wp_results).
         returns empty list on failure.
     """
-    if query_ == "":
+    if ((query_ == "") or
+        (len(query_) < 3)):
         return []
     
     if ' ' in query_:
@@ -81,7 +82,8 @@ def search_blog(query_):
     """ search all wp_blogs and return a list of results (wp_results).
         returns empty list on failure.
     """
-    if query_ == "":
+    if ((query_ == "") or
+        (len(query_) < 3)):
         return []
     
     if ' ' in query_:

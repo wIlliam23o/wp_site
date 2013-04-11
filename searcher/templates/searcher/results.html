@@ -25,14 +25,20 @@
 
 		<!-- Results Header -->
 		<div class="search-header-text" style="padding-left: 5px;">
-			{% if results_count|exceeds_max:25 %}
-				<span class="search-header-text">Viewing the first page of </span>
+			{% if search_warning %}
+				<span class="search-header-text" style="color: darkred; font-weight: bold;">
+					{{ search_warning }}
+				</span>
 			{% else %}
-				<span class="search-header-text">Found </span>
+				{% if results_count|exceeds_max:25 %}
+					<span class="search-header-text">Viewing the first page of </span>
+				{% else %}
+					<span class="search-header-text">Found </span>
+				{% endif %}
+					<span class="search-header-count">{{ results_count }}</span>
+						<span class="search-header-text"> results for: </span>
+						  <span class="search-header-query"> {{ query_text }}</span>
 			{% endif %}
-				<span class="search-header-count">{{ results_count }}</span>
-					<span class="search-header-text"> results for: </span>
-					  <span class="search-header-query"> {{ query_text }}</span>
 		</div>
 		{% if results_count|exceeds_max:25 %}
 			<a href="/search/page/?q={{ query_safe }}&?start_id=0">
@@ -62,8 +68,10 @@
 			{% endfor %}
 		</div>
 	{% else %}
-		<span style="font-style: italic;">Sorry, I couldn't find anything.</span>
-		<br/>
-		<span>{{ "[RANDOM MSG]"|random_result_msg }}</span>
+		{% if not search_warning %}
+			<span style="font-style: italic;">Sorry, I couldn't find anything.</span>
+			<br/>
+			<span>{{ "[RANDOM MSG]"|random_result_msg }}</span>
+		{% endif %}
 	{% endif %}
 {% endblock %}
