@@ -28,8 +28,10 @@
 				<link rel="stylesheet" href="{{ extra_link }}" type="text/css"/>
 			{% endfor %}
 			<!-- add highlighter css if not already added for debug (test-site) -->
-			{% if not extra_style_link_list|contains:"/static/css/highlighter.css" and request|is_test_site %}
-				<link rel="stylesheet" href="/static/css/highlighter.css" type="text/css"/>
+			{% if request|is_test_site %}
+				{% if not extra_style_link_list|contains:"/static/css/highlighter.css" %}
+					<link rel="stylesheet" href="/static/css/highlighter.css" type="text/css"/>
+				{% endif %}
 			{% endif %}
 		{% else %}
 			<!-- no extra style, but we need highlighter css for debug (test-site) -->
@@ -132,12 +134,42 @@
 <body>
 	{% block body-javascript %}
 	{% endblock %}
-
+	
+	<!-- RSS Feed -->
 	<link href='http://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' />
+	
+   	<!-- Debug box -->
+   	{% if request|is_test_site %}
+   		<!-- show/hide debug btn -->
+   		<div class="debug-button">
+   			<a href="javascript: wpTools.toggle_debug();">
+   				<span class="debug-button-text">
+   					show debug
+   				</span>
+   			</a>
+   		</div>
+   		<div class="debug-box">
+   			<!-- debug info -->
+   			{% filter highlight_python %}
+   				{% debug %}
+   			{% endfilter %}
+   			<!-- hide debug btn -->
+   			<div class="debug-button">
+   				<a href="javascript: wpTools.toggle_debug();">
+   					<span class="debug-button-text">
+   						hide debug
+   					</span>
+  				</a>
+   			</div>
+   		</div>
+   	{% endif %}
+	
+	<!-- Whole Page Container (Background and everything inside) -->
 	<div id='bg-surround'>
 	    <div id='bg-pattern' class='main-pattern'>
 	    	<div class='pattern-gradient'></div>
 		</div>
+		
 		<!-- Alert Area -->
 		{% block alert %}
 			{% if alert_content %}
@@ -197,31 +229,6 @@
 			<!-- Page Surround -->
 	        <div id='page-surround' class="wp-block">
 	        	
-	        	<!-- Debug box -->
-	        	{% if request|is_test_site %}
-	        		<!-- show/hide debug btn -->
-	        		<div class="debug-button">
-	        			<a href="javascript: wpTools.toggle_debug();">
-	        				<span class="debug-button-text">
-	        					show debug
-	        				</span>
-	        			</a>
-	        		</div>
-	        		<div class="debug-box">
-	        			<!-- debug info -->
-	        			{% filter highlight_python %}
-	        				{% debug %}
-	        			{% endfilter %}
-	        			<!-- hide debug btn -->
-	        			<div class="debug-button">
-	        				<a href="javascript: wpTools.toggle_debug();">
-	        					<span class="debug-button-text">
-	        						hide debug
-	        					</span>
-	        				</a>
-	        			</div>
-	        		</div>
-	        	{% endif %}
   				<!-- Above Page Content -->
   				{% block contentabove %}
   				{% endblock %}

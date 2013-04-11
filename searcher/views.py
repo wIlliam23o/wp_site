@@ -23,7 +23,8 @@ def view_index(request):
     if query == "":
         return responses.clean_response("searcher/searchform.html",
                                         {'request': request,
-                                         'extra_style_link_list': [utilities.get_browser_style(request)],
+                                         'extra_style_link_list': [utilities.get_browser_style(request),
+                                                                   "/static/css/searcher.css"],
                                          })
     else:
         # pass it to view_results
@@ -42,7 +43,9 @@ def view_results(request, _query):
                                      'query_text': _query,
                                      'query_safe': mark_for_escaping(_query),
                                      'results_count': len(results_list),
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
+                                     'extra_style_link_list': [utilities.get_browser_style(request),
+                                                               "/static/css/searcher.css",
+                                                               "/static/css/highlighter.css"],
                                      })
 
 def view_paged(request):
@@ -81,5 +84,7 @@ def view_paged(request):
                                      "next_page": page_args['next_page'],
                                      "has_prev": (page_args['start_id'] > 0),
                                      "has_next": (page_args['start_id'] < (results_count - page_args['max_items'])),
-                                     "extra_style_link_list": [utilities.get_browser_style(request)],
+                                     "extra_style_link_list": [utilities.get_browser_style(request),
+                                                               "/static/css/searcher.css",
+                                                               "/static/css/highlighter.css"],
                                      })
