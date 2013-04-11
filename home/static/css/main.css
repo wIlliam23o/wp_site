@@ -775,6 +775,11 @@ code, samp {
 	z-index: 1000;
 }
 
+#debug-button-top {
+	/* top debug button should not scroll */
+	position: fixed;
+}
+
 .debug-button-text {
 	color: darkgray;
 

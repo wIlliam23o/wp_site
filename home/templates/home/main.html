@@ -140,8 +140,8 @@
 	
    	<!-- Debug box -->
    	{% if request|is_test_site %}
-   		<!-- show/hide debug btn -->
-   		<div class="debug-button">
+   		<!-- show/hide debug btn (top button) -->
+   		<div class="debug-button" id="debug-button-top">
    			<a href="javascript: wpTools.toggle_debug();">
    				<span class="debug-button-text">
    					show debug
@@ -154,7 +154,7 @@
    				{% debug %}
    			{% endfilter %}
    			<!-- hide debug btn -->
-   			<div class="debug-button">
+   			<div class="debug-button" id="debug-button-bottom">
    				<a href="javascript: wpTools.toggle_debug();">
    					<span class="debug-button-text">
    						hide debug
