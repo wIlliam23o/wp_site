@@ -755,7 +755,7 @@ code, samp {
 /* Debug Info Styles */
 .debug-box {
 	display: none;
-	margin-top: 5px;
+	/*margin-top: 5px; // not needed anymore now that box displays full width on the top */
 	margin-bottom: 5px;
 }
 
@@ -766,9 +766,10 @@ code, samp {
 	border-style: solid;
 	border-width: 2px;
 	border-color: gray;
-	padding: 2px;
+	padding-left: 2px;
+	padding-right: 2px;
 	background: white;
-	width: 100px;
+	width: 75px;
 	text-align: center;
 	position: absolute;
 	right: 0px;
@@ -782,6 +783,6 @@ code, samp {
 
 .debug-button-text {
 	color: darkgray;
-
+	font-size:  0.75em;
 }
 	

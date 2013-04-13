@@ -139,7 +139,7 @@
 	<link href='http://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' />
 	
    	<!-- Debug box -->
-   	{% if request|is_test_site %}
+   	{% if request|debug_allowed %}
    		<!-- show/hide debug btn (top button) -->
    		<div class="debug-button" id="debug-button-top">
    			<a href="javascript: wpTools.toggle_debug();">

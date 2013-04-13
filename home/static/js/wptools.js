@@ -1,23 +1,27 @@
 /* Welborn Productions
     spam protection for email addresses.
-    uses base64 to decode what content is in the href tag and possibly
-    innerHTML of all wp-address selectors.
-    you only need to be sure to base64 encode addresses before wrapping them
-    in the wp-address class.
-    ex:
-        mailto:cj@test.com = bWFpbHRvOmNqQHRlc3QuY29tCg==
-        
-        <a class='wp-address' href="bWFpbHRvOmNqQHRlc3QuY29tCg==">Mail Me</a>
-    or:
+    	uses base64 to decode what content is in the href tag and possibly
+    	innerHTML of all wp-address selectors.
+    	you only need to be sure to base64 encode addresses before wrapping them
+    	in the wp-address class.
+    	ex:
+    	    mailto:cj@test.com = bWFpbHRvOmNqQHRlc3QuY29tCg==
+    	    
+    	    <a class='wp-address' href="bWFpbHRvOmNqQHRlc3QuY29tCg==">Mail Me</a>
+    	or:
+    	
+     	   mailto:cj@welbornprod.com = bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQo=
+     	   cj@welbornprod.com = Y2pAd2VsYm9ybnByb2QuY29tCg==
+      	  
+     	   <a class='wp-address' href="bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQo=">
+      	      Y2pAd2VsYm9ybnByb2QuY29tCg==
+      	  </a>
     
-        mailto:cj@welbornprod.com = bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQo=
-        cj@welbornprod.com = Y2pAd2VsYm9ybnByb2QuY29tCg==
-        
-        <a class='wp-address' href="bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQo=">
-            Y2pAd2VsYm9ybnByb2QuY29tCg==
-        </a>
+    	** can be any tag with the wp-address class.
     
-    ** can be any tag with the wp-address class.
+    Debug button/box toggle added.
+    	shows/hides the django debug info box (for use with test site)
+    	
 */
 
 var wpTools = {
@@ -80,17 +84,24 @@ var wpTools = {
         	var elem_ = $(selector_)[0];
         	elem_.innerText = text_;
         },
+        
+        set_innerhtml : function (selector_, html_) {
+        	/* sets innerHTML property for element */
+        	// uses first element in query, so choose selectors wisely.
+        	var elem_ = $(selector_)[0];
+        	elem_.innerHTML = html_;
+        },
                     
        	show_debug : function () {
        		/* displays the debug box */
         	this.set_display('.debug-box', 'block');
-        	this.set_innertext('.debug-button-text', 'hide debug');
+        	this.set_innerhtml('.debug-button-text', 'hide debug');
         },
             
         hide_debug : function () {
         	/* hides the debug box */
         	this.set_display('.debug-box', 'none');
-        	this.set_innertext('.debug-button-text', 'show debug');
+        	this.set_innerhtml('.debug-button-text', 'show debug');
         },
             
         elem_is_hidden : function(selector_) {

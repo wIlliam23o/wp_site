@@ -164,6 +164,12 @@ def highlight_python(scontent):
     return results
 
 
+def debug_allowed(request_object):
+    """ uses utilities to determine if debug info is allowed for this request. """
+    
+    return utilities.debug_allowed(request_object)
+
+
 # tuple of filters to register.
 registered_filters = (comments_button,
                       is_false,
@@ -177,7 +183,8 @@ registered_filters = (comments_button,
                       contains,
                       starts,
                       ends,
-                      highlight_python)
+                      highlight_python,
+                      debug_allowed)
 
 # register all filters in the registered tuple.
 for filter_ in registered_filters:
