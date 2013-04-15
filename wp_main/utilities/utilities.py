@@ -18,7 +18,7 @@ from django_user_agents.utils import get_user_agent #@UnresolvedImport
 
 # use log wrapper for debug and file logging.
 from wp_main.utilities.wp_logging import logger
-_log = logger("welbornprod.utilities", use_file=True)
+_log = logger("utilities").log
 
 
 def slice_list(list_, starting_index=0, max_items=-1):
@@ -75,7 +75,7 @@ def get_filename(file_path):
     try:
         sfilename = os.path.split(file_path)[1]
     except:
-        _log.error("get_filename: error in os.path.split(" + file_path + ")")
+        _log.error("error in os.path.split(" + file_path + ")")
         sfilename = file_path
     return sfilename
     

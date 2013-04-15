@@ -14,30 +14,34 @@
 import logging
 from django.conf import settings
 from os.path import join as pathjoin
-from os import getcwd
 
 class logger(object):
-    def __init__(self, log_name, use_file = False):
+    def __init__(self, log_name, use_file_in_debug = True):
+        # initialize logger with name (from module)
         self.log = logging.getLogger(log_name)
-        # override default behaviour.
-        # force use of file when DEBUG = False.
-        if (not use_file) and (not settings.DEBUG):
-            use_file = True
+        # file will always be used in production site.
+        use_file = True
+        
+        # use file during debug mode?
+        if (bool(settings.DEBUG) and (not use_file_in_debug)):
+            use_file = False
+
         # prepare file handler.
         if use_file:
             # short filename
-            file_name = log_name + ".log"
-            # trim unwanted info
-            if "welbornprod." in file_name:
-                file_name = file_name.replace('welbornprod.', '')
+            file_name = "welbornprod.log"
             # add base dir
             file_name = pathjoin(settings.BASE_DIR, file_name)
+            # build handler
             self.filehandler = logging.FileHandler(file_name)
-            self.formatter = logging.Formatter('%(asctime)s - [%(levelname)s] %(message)s')
+            # format for logging messages
+            log_format = '%(asctime)s - [%(levelname)s] %(name)s.%(funcName)s (%(lineno)d):\n %(message)s\n'
+            self.formatter = logging.Formatter(log_format)
             self.filehandler.setFormatter(self.formatter)
             self.log.addHandler(self.filehandler)
 
-            
+    # not using these from now on, we will use logger().log.debug(),
+    # to keep better track of funcName and lineno (hopefully),    
     def debug(self, message):
         self.log.debug(message)
     

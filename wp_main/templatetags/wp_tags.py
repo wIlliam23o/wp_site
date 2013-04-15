@@ -14,7 +14,7 @@
 from django import template
 from wp_main.utilities import htmltools
 from wp_main.utilities import utilities
-from viewer.highlighter import wp_highlighter
+from wp_main.utilities.highlighter import wp_highlighter
 from django.utils.safestring import mark_safe
 register = template.Library()
 

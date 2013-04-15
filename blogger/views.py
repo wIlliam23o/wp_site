@@ -9,7 +9,7 @@ from django.conf import settings
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
 from wp_main.utilities.wp_logging import logger
-_log = logger("welbornprod.blog", use_file=(not settings.DEBUG))
+_log = logger("blog").log
 
 def index(request):
     """ index list of all blog posts """

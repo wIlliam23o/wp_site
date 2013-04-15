@@ -13,21 +13,25 @@
 # File/Path stuff
 from os import listdir #@UnusedImport: os.listdir is used, aptana is stupid.
 import os.path
+
 # Project info
 from projects.models import wp_project
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
+# Code highlighting
+#from wp_main.utilities.highlighter import highlight_inline, highlight_embedded
+# Logging
 from wp_main.utilities.wp_logging import logger
-_log = logger('welbornprod.projects.tools')
+_log = logger('projects.tools').log
 
-def sorted_projects(sort_method = "date"):
+def sorted_projects(sort_method = "-publish_date"):
     """ return sorted list of projects.
         sort methods: date, name, id
     """
     
-    if sort_method == "date":
-        sort_method = "publish_date"
+    if sort_method.startswith("date") or sort_method.startswith("-date"):
+        sort_method = "-publish_date"
         
     return wp_project.objects.all().order_by(sort_method)
 
@@ -95,7 +99,7 @@ def get_html_content(project):
     shtml = htmltools.load_html_file(sfile)
     
     if shtml == "":
-        _log.debug("get_html_content: missing html for " + project.name + ": " + sfile)
+        _log.debug("missing html for " + project.name + ": " + sfile)
     
     return shtml
 
@@ -189,7 +193,7 @@ def get_download_dir_content(project, surl):
     try:
         files = os.listdir(surl)
     except Exception as ex:
-        _log.error("get_download_dir_content: unable to list dir: " + surl + '\n' + str(ex))
+        _log.error("unable to list dir: " + surl + '\n' + str(ex))
         return ""
 
     shead = "<div class='wp-block download-list'>\n"
@@ -248,36 +252,35 @@ def prepare_content(project, scontent):
         "        <h1 class='project-header'>" + project.name + "</h1>\n" + \
         "    </div>\n"
     # Working copy
-    shtml = scontent
+    html_ = htmltools.html_content(scontent)
+    
     # do article ads.
-    shtml = htmltools.inject_article_ad(shtml)
+    html_.inject_article_ad()
         
     # do screenshots.
     images_dir = get_screenshots_dir(project)
     # inject screenshots.      
     if os.path.isdir(images_dir):
-        shtml = htmltools.inject_screenshots(shtml, images_dir)
-    
+        html_.inject_screenshots(images_dir)
+        
     # do downloads.
     sdownload_content = get_download_content(project)
     if sdownload_content != "":
-        target_ = htmltools.check_replacement(shtml, "{{ download_code }}")
-        if target_:
-            shtml = shtml.replace(target_, sdownload_content)
-    
+        target_ = html_.check_replacement("{{ download_code }}")
+        html_.replace_if(target_, sdownload_content)
+            
     # do source view.
-    shtml = htmltools.inject_sourceview(project, shtml)
-    
+    html_.inject_sourceview(project)
+
     # do auto source highlighting
-    if "<pre class=" in shtml:
-        from viewer.highlighter import highlight_inline
-        shtml = highlight_inline(shtml)
-    if "highlight-embedded" in shtml:
-        from viewer.highlighter import highlight_embedded
-        shtml = highlight_embedded(shtml)
-        
+    html_.highlight()
+ 
     # remember to close the project_container div.
-    return shead + shtml + "\n</div>\n"
+    html_.prepend(shead)
+    html_.append('\n</div>\n')
+    
+    # returning STRING until the rest of the project starts using html_content.
+    return html_.tostring()
 
 
 def get_project_from_path(file_path):

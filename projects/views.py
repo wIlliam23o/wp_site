@@ -13,7 +13,7 @@ from projects import tools
 
 # logging
 from wp_main.utilities.wp_logging import logger
-_log = logger('welbornprod.projects', use_file=True)
+_log = logger('projects').log
 
 
 

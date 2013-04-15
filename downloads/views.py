@@ -6,7 +6,7 @@ from projects import tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
 from wp_main.utilities.wp_logging import logger
-_log = logger('welbornprod.downloads', use_file=True)
+_log = logger('downloads').log
 
 def index(request):
     """ default download page, when no file is specified """

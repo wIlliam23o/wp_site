@@ -17,7 +17,7 @@ from wp_main.utilities.wp_logging import logger
 # for embedded highlighting
 import re
 
-_log = logger('welbornprod.viewer.highlighter', use_file=True)
+_log = logger('utilities.highlighter').log
 
 class wp_highlighter(object):
     """ Class for highlighting code and returning html markup. """
@@ -81,6 +81,7 @@ def highlight_inline(scode, tag_ = "pre"):
     """
     
     if not "<" + tag_ + " class=" in scode:
+        _log.debug("highlight_inline: no tag or class found, will not be highlighted.")
         return scode
     slines = scode.split('\n')
     sclass = ""

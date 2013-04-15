@@ -6,7 +6,7 @@ from django.utils.safestring import mark_for_escaping
 from wp_main.utilities import responses
 from wp_main.utilities import utilities
 from wp_main.utilities.wp_logging import logger
-_log = logger("welbornprod.search", use_file=(not settings.DEBUG))
+_log = logger("search").log
 
 # Search tools
 from searcher import searchtools
@@ -34,13 +34,13 @@ def view_index(request):
 def view_results(request, _query):
     """ searches welbornprod content and returns the findings. """
     
-    # 3 character minimum
-    if len(_query.replace(' ', '')) < 3:
-        search_warning = "3 character minimum, try again."
-        results_list = []
-        results_slice = []
-    else:
-        search_warning = ""
+    # search is okay until it's ran through our little 'gotcha' checker below.
+    results_list, results_slice = ([], [])
+    search_warning = searchtools.valid_query(_query)
+    allow_search = (search_warning == '')
+        
+    if allow_search:
+        # search terms are okay, let's do it.
         results_list = searchtools.search_all(_query, projects_first=True)
         results_slice = utilities.slice_list(results_list, starting_index=0, max_items=25)
     
@@ -59,31 +59,34 @@ def view_results(request, _query):
 def view_paged(request):
     """ views page slice of results using GET args. """
     
+    # intialize results in case of failure...
+    results_list, results_slice = ([], [])
+    
     # get query
     _query = responses.get_request_arg(request, ['q', 'query', 'search'])
     query_safe = mark_for_escaping(_query)
     
-    # 3 character minimum
-    if len(_query.replace(' ', '')) < 3:
-        search_warning = "3 character minimum, try again."
-        results_list = []
-    else:
-        search_warning = ""
+    # check query
+    search_warning = searchtools.valid_query(_query)
+    allow_search = (search_warning == '')
+    
+    # search okay?
+    if allow_search:
         # get initial results
         results_list = searchtools.search_all(_query, projects_first=True)
+            
+        # get overall total count
+        results_count = len(results_list)
         
-    # get overall total count
-    results_count = len(results_list)
-    
-    # get args
-    page_args = responses.get_paged_args(request, results_count)
-    # results slice
-    if results_count > 0:
-        results_slice = utilities.slice_list(results_list,
-                                             starting_index = page_args['start_id'],
-                                             max_items = page_args['max_items'])
-    else:
-        results_slice = []
+        # get args
+        page_args = responses.get_paged_args(request, results_count)
+        # results slice
+        if results_count > 0:
+            results_slice = utilities.slice_list(results_list,
+                                                 starting_index = page_args['start_id'],
+                                                 max_items = page_args['max_items'])
+        else:
+            results_slice = []
         
     # get last index.     
     end_id = str(page_args['start_id'] + len(results_slice))

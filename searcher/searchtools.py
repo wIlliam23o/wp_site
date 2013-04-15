@@ -16,7 +16,8 @@ from django.conf import settings
 from django.utils.safestring import mark_safe
 # Logging
 from wp_main.utilities.wp_logging import logger
-_log = logger("welbornprod.search.tools", use_file=(not settings.DEBUG))
+_log = logger("search.tools").log
+
 # Project Info/Tools
 from projects.models import wp_project
 from projects import tools as ptools
@@ -59,15 +60,16 @@ def search_projects(query_):
         pbody =  ptools.get_html_content(proj_)
         
         for query in queries:
-            query = query.lower()
-            
-            if ((query in pname.lower()) or
-                (query in pver) or
-                (query in pdesc.lower()) or
-                (query in pdate.lower()) or
-                (query in pbody.lower())):
-                # found match.
-                got_match = True
+            if len(query.replace(' ', '')) > 2:
+                query = query.lower()
+                
+                if ((query in pname.lower()) or
+                    (query in pver) or
+                    (query in pdesc.lower()) or
+                    (query in pdate.lower()) or
+                    (query in pbody.lower())):
+                    # found match.
+                    got_match = True
         # Add this project if it matched any of the queries.
         if got_match:
             results.append(wp_result(title_ = pname + " v." + pver,
@@ -101,12 +103,13 @@ def search_blog(query_):
         pdate = str(post_.posted)
         
         for query in queries:
-            query = query.lower()
-            if ((query in ptitle.lower()) or
-                (query in pslug.lower()) or
-                (query in pbody.lower()) or
-                (query in pdate.lower())):
-                got_match = True
+            if len(query.replace(' ', '')) > 2:
+                query = query.lower()
+                if ((query in ptitle.lower()) or
+                    (query in pslug.lower()) or
+                    (query in pbody.lower()) or
+                    (query in pdate.lower())):
+                    got_match = True
         if got_match:
             results.append(wp_result(title_ = ptitle,
                                      desc_ = highlight_queries(queries, pdesc),
@@ -159,17 +162,56 @@ def highlight_queries(queries_, scontent):
         word_trim = word_lower.replace(',','').replace('.', '').replace(';', '').replace(':', '')
         fixed_word = word_
         for query in queries_lower:
-            if ((query in word_lower) and
-                (not "<strong>" in word_) and
-                (not "</strong>" in word_)):
-                # stops highlighting 'a' and 'apple' in 'applebaum'
-                # when queries are: 'a', 'apple', 'applebaum'
-                possible_fix = word_.replace(word_trim, "<strong>" + word_trim + "</strong>")
-                if len(possible_fix) > len(fixed_word):
-                    fixed_word = possible_fix
-                    _log.debug("set possible: " + fixed_word)
+            if len(query.replace(' ', '')) > 1:
+                if ((query in word_lower) and
+                    (not "<strong>" in word_) and
+                    (not "</strong>" in word_)):
+                    # stops highlighting 'a' and 'apple' in 'applebaum'
+                    # when queries are: 'a', 'apple', 'applebaum'
+                    possible_fix = word_.replace(word_trim, "<strong>" + word_trim + "</strong>")
+                    if len(possible_fix) > len(fixed_word):
+                        fixed_word = possible_fix
+                        _log.debug("set possible: " + fixed_word)
 
         fixed_words.append(fixed_word)
     return ' '.join(fixed_words)
 
-            
+
+def valid_query(query_):
+    """ check for gotchas in search query,
+        returns Warning string on failure to pass. """
+    
+    search_warning = ''
+    # Gotcha checkers: 3 character minimum, too many spaces, etc.
+    if len(query_.replace(' ', '')) < 3:
+        # check a single term.
+        search_warning = "3 character minimum, try again."
+    elif ' ' in query_:
+        # check all terms when seperated by a space.
+        queries = query_.split(' ')
+        for query_len in [len(q.replace(' ', '')) for q in queries]:
+            if query_len == 0:
+                search_warning = 'Too many spaces, try again.'
+                break
+            elif query_len < 3:
+                search_warning = '3 character minimum for all terms, try again.'
+                break
+    # final illegal char check
+    if has_illegal_chars(query_):
+        _log.debug("illegal chars in query: " + query_)
+        search_warning = 'Illegal characters in search term, try again.'
+
+    return search_warning
+    
+def has_illegal_chars(query_):
+    """ check for illegal characters in query """
+    
+    illegal_ = (':', '<', '>', ';', 'javascript:', '{', '}')
+    invalid_ = False
+    for char_ in illegal_:
+        _log.debug("checking " + char_ + " in " + query_.replace(' ', ''))
+        if char_ in query_.replace(' ', ''):
+            invalid_ = True
+            break
+        
+    return invalid_

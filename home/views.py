@@ -7,7 +7,9 @@ from wp_main.utilities import responses
 from wp_main.utilities import htmltools
 
 # logging
-#from wp_main.utilities.wp_logging import logger
+from wp_main.utilities.wp_logging import logger
+_log = logger("home").log
+############# @todo: make log_context() so context keys/values can be passed to logging!
 # Home tools
 from home import hometools as htools
 

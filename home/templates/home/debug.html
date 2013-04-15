@@ -2,8 +2,12 @@
 {% load wp_tags %}
 {% block title %}- Debug Info{% endblock %}
 
+{% block debug-box %}
+	<!-- No debug box needed for this page. -->
+{% endblock %}
+
 {% block content %}
-	{% if request|is_test_site %}
+	{% if request|debug_allowed  and request|is_test_site %}
 		<!-- Show Debugging Info -->
 		<div class="wp-block welcome-message-box">
 				<span class="welcome-message-text">

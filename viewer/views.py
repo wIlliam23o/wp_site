@@ -6,15 +6,15 @@ from django.utils.safestring import mark_safe # don't escape html with strings m
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
+# For source highlighting
+from wp_main.utilities.highlighter import wp_highlighter, get_lexer_name_fromfile
+# Logging
 from wp_main.utilities.wp_logging import logger
-_log = logger('welbornprod.viewer', use_file=True)
+_log = logger('viewer').log
 
 # For retrieving project information (source viewing)
 from projects import tools
 
-# For source highlighting
-from viewer.highlighter import wp_highlighter
-from viewer.highlighter import get_lexer_name_fromfile
 
 
 def index(request):
@@ -32,7 +32,7 @@ def viewer(request, file_path):
     
     static_path = file_path if (file_path.startswith("/")) else ('/' + file_path)
     absolute_path = utilities.get_absolute_path(file_path)
-    _log.debug("viewer: using absolute_path: " + absolute_path)
+    _log.debug("using absolute_path: " + absolute_path)
     if absolute_path == "":
         # File doesn't exist. Return an alert.
         response = responses.alert_message("Sorry, that file doesn't exist.")
@@ -46,7 +46,7 @@ def viewer(request, file_path):
                 files = os.listdir(absolute_path)
             except:
                 files = []
-                _log.debug("viewer: unable to listdir: " + absolute_path)
+                _log.debug("unable to listdir: " + absolute_path)
             # no files in this directory, or bad dir.
             if len(files) == 0:
                 absolute_path = ""

@@ -139,31 +139,32 @@
 	<link href='http://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' />
 	
    	<!-- Debug box -->
-   	{% if request|debug_allowed %}
-   		<!-- show/hide debug btn (top button) -->
-   		<div class="debug-button" id="debug-button-top">
-   			<a href="javascript: wpTools.toggle_debug();">
-   				<span class="debug-button-text">
-   					show debug
-   				</span>
-   			</a>
-   		</div>
-   		<div class="debug-box">
-   			<!-- debug info -->
-   			{% filter highlight_python %}
-   				{% debug %}
-   			{% endfilter %}
-   			<!-- hide debug btn -->
-   			<div class="debug-button" id="debug-button-bottom">
-   				<a href="javascript: wpTools.toggle_debug();">
-   					<span class="debug-button-text">
-   						hide debug
-   					</span>
-  				</a>
-   			</div>
-   		</div>
-   	{% endif %}
-	
+	{% block debug-box %}
+	   	{% if request|debug_allowed and request|is_test_site %}
+	   		<!-- show/hide debug btn (top button) -->
+	   		<div class="debug-button" id="debug-button-top">
+	   			<a href="javascript: wpTools.toggle_debug();">
+	   				<span class="debug-button-text">
+	   					show debug
+	   				</span>
+	   			</a>
+	   		</div>
+	   		<div class="debug-box">
+	   			<!-- debug info -->
+	   			{% filter highlight_python %}
+	   				{% debug %}
+	   			{% endfilter %}
+	   			<!-- hide debug btn -->
+	   			<div class="debug-button" id="debug-button-bottom">
+	   				<a href="javascript: wpTools.toggle_debug();">
+	   					<span class="debug-button-text">
+	   						hide debug
+	   					</span>
+	  				</a>
+	   			</div>
+	   		</div>
+	   	{% endif %}
+	{% endblock %}
 	<!-- Whole Page Container (Background and everything inside) -->
 	<div id='bg-surround'>
 	    <div id='bg-pattern' class='main-pattern'>
