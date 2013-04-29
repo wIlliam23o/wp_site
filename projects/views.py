@@ -68,9 +68,12 @@ def project_page(request, project, requested_page, source=""):
     
     # Set default flags
     use_screenshots = False
+    # default extra style needed
+    extra_style_link_list = [utilities.get_browser_style(request)]
+
     # if project matches list was sent, use it.
-    if isinstance(project, list):
-        _log.debug("Found project matches: " + '\n    '.join(project))
+    if isinstance(project, (list, tuple)):
+        _log.debug("Found project matches: " + '\n    '.join([p.name for p in project]))
         shtml = tools.get_matches_html(project, requested_page)
         project_title = False
     else:
@@ -92,13 +95,12 @@ def project_page(request, project, requested_page, source=""):
             # tell the template whether or not to use the screenshots box.
             use_screenshots = ("screenshots_box" in shtml)
             # gather extra style needed
-            extra_style_link_list = [utilities.get_browser_style(request)]
             if ('<div class="highlight"' in shtml):
                 extra_style_link_list.append("/static/css/highlighter.css")
            
-    # track project views
-    project.view_count += 1
-    project.save()
+        # track project views
+        project.view_count += 1
+        project.save()
 
 
         

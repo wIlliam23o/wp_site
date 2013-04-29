@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 '''
@@ -126,19 +125,22 @@ def clean_response(template_name, context_dict, request_ = None):
         try:
             # Add request to context if available.
             if request_ is not None:
-                context_dict['request'] = request_
+                # some views already pass the request, we'll use the views.
+                # this was an idea from earlier, this could probably be removed.
+                if not context_dict.has_key('request'):
+                    context_dict['request'] = request_
                 context_dict['meta'] = request_.META
                 
             cont_ = Context(context_dict)
         except Exception as ex:
-            _log.error("could not load context: " + str(context_dict) + "<br/>\n" + \
-                       str(ex))
+            _log.error("could not load context: " + str(context_dict) + str(ex))
             rendered = None
         else:
             try:
+                # Clean the template using clean_template() methods...
                 rendered = clean_template(tmp_, cont_, (not settings.DEBUG))
             except Exception as ex:
-                _log.error("could not clean_template!<br/>\n" + str(ex))
+                _log.error("could not clean_template!: " + str(ex))
                 rendered = None
     if rendered is None:
         return alert_message("Sorry, there was an error loading this page.")

@@ -1,10 +1,13 @@
-#!/usr/bin/python2.6
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Django settings for wp_main project.
 
 # file/path (path joining)
 import os.path
+# db stuff
+import wp_db
+
 
 DEBUG = True
 TEMPLATE_DEBUG = True
@@ -49,14 +52,18 @@ TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
 # check for local internal_ips.txt,
 # allow the ips in that file if it exists.
 _internal_ips = ['127.0.0.1']
-if os.path.isfile(os.path.join(BASE_DIR, "internal_ips.txt")):
+# KEY is in the variable name so django debug automatically
+# hides it from debug.
+KEY_INTERNAL_IPS_FILE = os.path.join(BASE_DIR, "internal_ips.txt")
+if os.path.isfile(KEY_INTERNAL_IPS_FILE):
     try:
-        with open(os.path.join(BASE_DIR, "internal_ips.txt")) as f_ips:
+        with open(KEY_INTERNAL_IPS_FILE) as f_ips:
             ip_raw = f_ips.read()
             if '\n' in ip_raw:
                 # list of ips in file.
                 ips_list = []
                 for ip_ in ip_raw.split('\n'):
+                    # allows '1.1.1.01' as the least ip length right now, but not '1.1.1.1'.
                     if len(ip_) > 7:
                         _internal_ips.append(ip_)
             else:
@@ -68,25 +75,29 @@ if os.path.isfile(os.path.join(BASE_DIR, "internal_ips.txt")):
 # set global allowed ips
 INTERNAL_IPS = tuple(_internal_ips)
 
-
 # Django's new security setting?
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1', '.welbornprod.com', '.welbornprod.info']
 
-
+# Admin info
 ADMINS = (
     ('Christopher Welborn', 'cj@welbornprod.com'),
 )
-
 MANAGERS = ADMINS
 SERVER_EMAIL = 'cj@welbornprod.com'
 
+# Database info
+SECRET_DBKEY = wp_db.get_key(os.path.join(BASE_DIR, 'secretkey2.txt'))
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',       # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.path.join(BASE_DIR, 'wp_main.db'), # Or path to database file if using sqlite3.
-        'USER': '',                                   # Not used with sqlite3.
-        'PASSWORD': '',                               # Not used with sqlite3.
-        'HOST': '',                                   # Set to empty string for localhost. Not used with sqlite3.
+        #OLD: ENGINE: django.db.backends.sqlite3
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',       # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        #OLD: os.path.join(BASE_DIR, 'wp_main.db')
+        'NAME': 'welbornprod_db', # Or path to database file if using sqlite3.
+        'USER': 'cj',                                   # Not used with sqlite3.
+        'PASSWORD': wp_db.decrypt(SECRET_DBKEY,
+                                  '\x8b\x82\x85P\x9c_{nl}\xfe\xd3\x12\x8fn\xa3\xf7\x9a\xd3'),# Not used with sqlite3.
+        'HOST': 'localhost',                                   # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                                   # Set to empty string for default. Not used with sqlite3.
     }
 }
@@ -249,3 +260,5 @@ LOGGING = {
 }
 
 DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
+
+

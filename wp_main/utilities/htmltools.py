@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 '''
@@ -16,7 +15,7 @@
 import os.path
 
 # Global settings
-from django.conf import settings
+#from django.conf import settings
 
 # Regex for email hiding
 import re 
@@ -162,7 +161,15 @@ class html_content(object):
         self.content += '\n' + append_line
         return self
     
-
+    
+    def append_lines(self, lines_):
+        """ appends a list/tuple of lines to content """
+        
+        if isinstance(lines_, (list, tuple)):
+            self.content += '\n' + ('\n'.join(lines_))
+        return self
+    
+    
     def prepend(self, prepend_text):
         """ prepends text to the beginning of content """
         
@@ -176,6 +183,14 @@ class html_content(object):
         self.content = prepend_line + '\n' + self.content
         return self
 
+    
+    def prepend_lines(self, lines_):
+        """ prepends a list/tuple of lines to content """
+        
+        if isinstance(lines_, (list, tuple)):
+            self.content = '\n'.join(lines_) + '\n' + self.content
+        return self
+    
     
     def split(self, split_by=' '):
         """ just like str.split() """
