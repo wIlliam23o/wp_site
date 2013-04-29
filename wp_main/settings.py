@@ -5,12 +5,8 @@
 
 # file/path (path joining)
 import os.path
-# db stuff
-import wp_db
 
-
-DEBUG = True
-TEMPLATE_DEBUG = True
+#DEBUG is in settings_local...
 
 # decide which dirs to use based on hostname.
 # determine parent dir for script
@@ -27,14 +23,10 @@ BASE_PARENT = os.path.split(BASE_DIR)[0]
 
 if "webapps" in BASE_PARENT:
     # live site directories
-    #BASE_PARENT = "/home/cjwelborn/webapps/wp_site/"
-    #BASE_DIR = os.path.join(BASE_PARENT, "wp_site")
     STATIC_PARENT = BASE_PARENT
     MEDIA_URL = "http://welbornprod.com/media/"
 else:
     # local development directories
-    #BASE_PARENT = "/home/cj/workspace/welbornprod"
-    #BASE_DIR = os.path.join(BASE_PARENT, "wp_main")
     STATIC_PARENT= "/var/www/"
     MEDIA_URL = "http://127.0.0.1/media/"
 
@@ -75,32 +67,27 @@ if os.path.isfile(KEY_INTERNAL_IPS_FILE):
 # set global allowed ips
 INTERNAL_IPS = tuple(_internal_ips)
 
-# Django's new security setting?
-ALLOWED_HOSTS = ['127.0.0.1', '.welbornprod.com', '.welbornprod.info']
 
 # Admin info
-ADMINS = (
-    ('Christopher Welborn', 'cj@welbornprod.com'),
-)
+ADMINS = ( ('Christopher Welborn', 'cj@welbornprod.com'), )
 MANAGERS = ADMINS
 SERVER_EMAIL = 'cj@welbornprod.com'
 
-# Database info
-SECRET_DBKEY = wp_db.get_key(os.path.join(BASE_DIR, 'secretkey2.txt'))
-
+# Database info (filled in with settings_local)
 DATABASES = {
     'default': {
-        #OLD: ENGINE: django.db.backends.sqlite3
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',       # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        #OLD: os.path.join(BASE_DIR, 'wp_main.db')
-        'NAME': 'welbornprod_db', # Or path to database file if using sqlite3.
-        'USER': 'cj',                                   # Not used with sqlite3.
-        'PASSWORD': wp_db.decrypt(SECRET_DBKEY,
-                                  '\x8b\x82\x85P\x9c_{nl}\xfe\xd3\x12\x8fn\xa3\xf7\x9a\xd3'),# Not used with sqlite3.
-        'HOST': 'localhost',                                   # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                                   # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': '', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': '', 
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
     }
 }
+
+# Fill in missing settings from local file (not in git).
+execfile(os.path.join(BASE_DIR, 'settings_local.py'))
+
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
