@@ -128,7 +128,6 @@ STATICFILES_FINDERS = (
 )
 
 # SECRET_KEY SETTINGS
-NONSECRET_KEY = '2h&amp;yk)@#2v&amp;ja6nl-3_!!vbp)$3xy*h5pi1el4x#rx6djv-6(z'
 # Make this unique, and don't share it with anybody.
 SECRET_KEY_FILE = os.path.join(BASE_DIR, "secretkey.txt")
 if os.path.isfile(SECRET_KEY_FILE):
@@ -137,10 +136,10 @@ if os.path.isfile(SECRET_KEY_FILE):
             SECRET_KEY = fread.read().replace('\n', '')
     except (IOError, OSError)as ex_access:
         # failed to read secretkey.txt
-        SECRET_KEY = NONSECRET_KEY
+        SECRET_KEY = NONSECRET_KEY #@UndefinedVariable: in local settings.
 else:
     # no secret key exists.
-    SECRET_KEY = NONSECRET_KEY
+    SECRET_KEY = NONSECRET_KEY #@UndefinedVariable
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
