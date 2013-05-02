@@ -35,14 +35,16 @@ def clean_template(template_, context_, force_ = False):
     """
     
     # these things have to be done in a certain order to work correctly.
-    # hide_email, remove_comments, remove_whitespace, remove_newlines
+    # hide_email, fix p spaces, remove_comments, remove_whitespace, remove_newlines
     clean_output = htmltools.remove_whitespace(
                         htmltools.remove_comments(
                         htmltools.hide_email(template_.render(context_))))
 
     if ((not settings.DEBUG) or (force_)):
         # minify (removes newlines except in certain tags [pre, script, etc.])
-        clean_output = htmltools.remove_newlines(clean_output)
+        # fixes <p> linebreak spaces before, making sure &nbsp; is there.
+        clean_output = htmltools.remove_newlines(
+                                htmltools.fix_p_spaces(clean_output))
     return clean_output
 
 

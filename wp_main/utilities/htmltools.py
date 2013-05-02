@@ -960,6 +960,51 @@ def remove_whitespace(source_string):
     return '\n'.join(final_output)
 
 
+def fix_p_spaces(source_string):
+    """ adds a &nbsp; to the end of lines inside all <p> tags.
+        removing newlines breaks the <p> functionality of adding spaces on linebreaks.
+        this function will add a &nbsp; where needed but must be called before any
+        remove_newlines() type function.
+    """
+    
+    # no nones allowed
+    if source_string is None:
+        return source_string
+    # fix for html_content()
+    if isinstance(source_string, html_content):
+        source_string = source_string.content
+    # get lines
+    if '\n' in source_string:
+        slines = source_string.split('\n')
+    else:
+        slines = [source_string]
+    
+    # cycle thru lines
+    inside_p = False
+    modified_lines = []
+    for i in range(0, len(slines)):
+        sline = slines[i]
+        strim = sline.replace('\t', '').replace(' ', '').lower()
+        
+        # end of p tag? (the </p> line itself will not be processed.)
+        if "</p>" in strim:
+            inside_p = False
+            
+        # process p tag.
+        if inside_p:
+            # add space if not already spaced.
+            if not strim.endswith('&nbsp;'):
+                sline += '&nbsp;'
+        # start of p tag? (the <p> line itself will not be processed.)
+        if sline.startswith('<p>'):
+            inside_p = True
+        
+        # append line to list, modified or not.
+        modified_lines.append(sline)
+    
+    # finished
+    return '\n'.join(modified_lines)
+
 
 def trim_whitespace_line(sline):
     """ trims whitespace from a single line """
