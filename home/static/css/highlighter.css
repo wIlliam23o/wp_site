@@ -23,6 +23,7 @@
 
 .highlighted-embedded {
 	font-family: "Ubuntu Mono", monospace;
+	font-size: .8em;
 	border-style: solid;
 	border-radius: 5px;
 	border-width: 1px;
