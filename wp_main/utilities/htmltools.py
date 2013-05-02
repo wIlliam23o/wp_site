@@ -996,7 +996,7 @@ def fix_p_spaces(source_string):
             if not strim.endswith('&nbsp;'):
                 sline += '&nbsp;'
         # start of p tag? (the <p> line itself will not be processed.)
-        if sline.startswith('<p>'):
+        if strim.startswith('<p>') or strim.startswith("<p "):
             inside_p = True
         
         # append line to list, modified or not.
