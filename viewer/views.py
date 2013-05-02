@@ -6,15 +6,15 @@ from django.utils.safestring import mark_safe # don't escape html with strings m
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
+# For source highlighting
+from wp_main.utilities.highlighter import wp_highlighter, get_lexer_name_fromfile
+# Logging
 from wp_main.utilities.wp_logging import logger
-_log = logger('welbornprod.viewer', use_file=True)
+_log = logger('viewer').log
 
 # For retrieving project information (source viewing)
 from projects import tools
 
-# For source highlighting
-from viewer.highlighter import wp_highlighter
-from viewer.highlighter import get_lexer_name_fromfile
 
 
 def index(request):
@@ -24,15 +24,15 @@ def index(request):
 
 
 def viewer(request, file_path):
-    """ provides download of files, 
-        tracks download count of projects and possibly others
+    """ provides view of files, 
+        tracks view count of projects and possibly others
         by checking file's project owner, incrementing the count,
-        and then redirecting to the actual file.
+        and then highlights the file where applicable..
     """
     
     static_path = file_path if (file_path.startswith("/")) else ('/' + file_path)
     absolute_path = utilities.get_absolute_path(file_path)
-    _log.debug("viewer: using absolute_path: " + absolute_path)
+    _log.debug("using absolute_path: " + absolute_path)
     if absolute_path == "":
         # File doesn't exist. Return an alert.
         response = responses.alert_message("Sorry, that file doesn't exist.")
@@ -46,7 +46,7 @@ def viewer(request, file_path):
                 files = os.listdir(absolute_path)
             except:
                 files = []
-                _log.debug("viewer: unable to listdir: " + absolute_path)
+                _log.debug("unable to listdir: " + absolute_path)
             # no files in this directory, or bad dir.
             if len(files) == 0:
                 absolute_path = ""
@@ -131,9 +131,9 @@ def viewer(request, file_path):
         
         # build template
         response = responses.clean_response("home/main.html",
-                                            {'is_mobile': utilities.is_mobile(request),
-                                             'extra_style_link': "/static/css/highlighter.css",
-                                             'extra_style_link2': "/static/css/projects.css",
+                                            {'request': request,
+                                             'extra_style_link_list': ["/static/css/highlighter.css",
+                                                                       "/static/css/projects.css"],
                                              'vertical_menu': mark_safe(vertical_menu),
                                              'main_content': mark_safe(shtml),
                                              'alert_message': mark_safe(alert_msg),

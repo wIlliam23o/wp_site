@@ -1,0 +1,36 @@
+{% extends "home/main.html" %}
+{% load wp_tags %}
+{% block title %}- Debug Info{% endblock %}
+
+{% block debug-box %}
+	<!-- No debug box needed for this page. -->
+{% endblock %}
+
+{% block content %}
+	{% if request|debug_allowed  and request|is_test_site %}
+		<!-- Show Debugging Info -->
+		<div class="wp-block welcome-message-box">
+				<span class="welcome-message-text">
+					Django Debugging Info:
+				</span>
+		</div>
+				
+				{% filter highlight_python %}
+					{% debug %}
+				{% endfilter %}
+
+	{% else %}
+		<!-- No Permissions -->
+		<div class="alert">
+			<span class="alert-message">
+				Sorry, you don't have permissions to view the debugging info.
+			</span>
+		</div>
+		<div class="wp-block welcome-message-box">
+			<span class="welcome-message-text">
+				You wouldn't like it anyway, try going back to my&nbsp;
+				<a href="/">home page</a>.
+			</span>
+		</div>
+	{% endif %}
+{% endblock %}	

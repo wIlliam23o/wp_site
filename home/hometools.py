@@ -19,7 +19,7 @@ from blogger.models import wp_blog
 from projects.models import wp_project
 # Local tools
 from wp_main.utilities.wp_logging import logger
-_log = logger("welbornprod.home.tools", use_file=(not settings.DEBUG))
+_log = logger("home.tools").log
 
 
 def get_latest_blog():

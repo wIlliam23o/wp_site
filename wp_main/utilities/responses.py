@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 '''
@@ -17,7 +16,7 @@ from django.conf import settings
 from wp_main.utilities import htmltools
 # Log
 from wp_main.utilities.wp_logging import logger
-_log = logger("welbornprod.utilities.responses", use_file=(not settings.DEBUG))
+_log = logger("utilities.responses").log
 # Template loading, and Contexts
 from django.http import HttpResponse, HttpResponseNotFound
 from django.template import Context, loader
@@ -90,10 +89,10 @@ def xml_response(template_name, context_dict):
     
     return response
 
-def text_response(text_content):
-    """ sends basic HttpResponse with mime type as text/plain """
+def text_response(text_content, content_type = 'text/plain'):
+    """ sends basic HttpResponse with content type as text/plain """
     
-    return HttpResponse(text_content, mimetype="text/plain")
+    return HttpResponse(text_content, content_type = content_type)
 
 
 def render_response(template_name, context_dict):
@@ -110,7 +109,7 @@ def render_response(template_name, context_dict):
         rendered = alert_message("Sorry, there was an error loading this page.")
     return HttpResponse(rendered)
 
-def clean_response(template_name, context_dict):
+def clean_response(template_name, context_dict, request_ = None):
     """ same as render_response, except does code minifying/compression 
         (compresses only if settings.DEBUG=False)
         returns cleaned HttpResponse.
@@ -119,21 +118,29 @@ def clean_response(template_name, context_dict):
     try:
         tmp_ = loader.get_template(template_name)
     except Exception as ex:
-        _log.error("clean_response: could not load template: " + template_name + '<br/>\n' + \
+        _log.error("could not load template: " + template_name + '<br/>\n' + \
                    str(ex))
         rendered = None
     else:
         try:
+            # Add request to context if available.
+            if request_ is not None:
+                # some views already pass the request, we'll use the views.
+                # this was an idea from earlier, this could probably be removed.
+                if not context_dict.has_key('request'):
+                    context_dict['request'] = request_
+                context_dict['meta'] = request_.META
+                
             cont_ = Context(context_dict)
         except Exception as ex:
-            _log.error("clean_response: could not load context: " + str(context_dict) + "<br/>\n" + \
-                       str(ex))
+            _log.error("could not load context: " + str(context_dict) + str(ex))
             rendered = None
         else:
             try:
+                # Clean the template using clean_template() methods...
                 rendered = clean_template(tmp_, cont_, (not settings.DEBUG))
             except Exception as ex:
-                _log.error("clean_response: could not clean_template!<br/>\n" + str(ex))
+                _log.error("could not clean_template!: " + str(ex))
                 rendered = None
     if rendered is None:
         return alert_message("Sorry, there was an error loading this page.")

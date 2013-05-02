@@ -24,14 +24,14 @@ Created on Jan 16, 2013
 @author: Christopher Welborn
 '''
 # easy settings version
-__version__ = '1.7.5'
+__version__ = '1.8.1'
 
 # file related imports
 import sys, os.path
 # pickling the whole settings object
 import pickle
 
-__all__ = ['easysettings','esError', 'esGetError', 'esSetError', 'esCompareError', 
+__all__ = ['easysettings', 'version', 'esError', 'esGetError', 'esSetError', 'esCompareError', 
            'esSaveError', 'esValueError', 'test_run']
 
 # Python 3 compatibility flag
@@ -537,18 +537,12 @@ class easysettings():
     def has_value(self, value):
         """ Returns True if svalue is in settings. """
         # had to lengthen the code after adding non-string types
-        if isinstance(value, str):
-            return (value in self.settings.values())
-        else:
-            # try non-string types
-            for val in (self.settings.values()):
-                try:
-                    pval = pickle.loads(val)
-                    if pval == value:
-                        return True
-                except:
-                    pass
-            return False
+
+        try:
+            hasit = (value in self.settings.values())
+        except:
+            hasit = False
+        return hasit
        
 
     def is_saved(self):
@@ -688,6 +682,12 @@ class easysettings():
             if not itm2 in list(set1.values()):
                 return False
         return True
+    
+    
+    def es_version(self):
+        """ returns module-level easysettings version string """
+        return __version__
+    
      
     def __repr__(self):
         if self.configfile is None:
@@ -859,6 +859,11 @@ def pickled_str(pickle_dumps_returned):
     else:
         return pickle_dumps_returned
     
+
+
+def version():
+    """ returns version string. """
+    return __version__
 
            
 def test_run(stestconfigfile = None):

@@ -13,21 +13,25 @@
 # File/Path stuff
 from os import listdir #@UnusedImport: os.listdir is used, aptana is stupid.
 import os.path
+
 # Project info
 from projects.models import wp_project
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
+# Code highlighting
+#from wp_main.utilities.highlighter import highlight_inline, highlight_embedded
+# Logging
 from wp_main.utilities.wp_logging import logger
-_log = logger('welbornprod.projects.tools')
+_log = logger('projects.tools').log
 
-def sorted_projects(sort_method = "date"):
+def sorted_projects(sort_method = "-publish_date"):
     """ return sorted list of projects.
         sort methods: date, name, id
     """
     
-    if sort_method == "date":
-        sort_method = "publish_date"
+    if sort_method.startswith("date") or sort_method.startswith("-date"):
+        sort_method = "-publish_date"
         
     return wp_project.objects.all().order_by(sort_method)
 
@@ -36,24 +40,27 @@ def get_matches_html(project, requested_page):
     """ returns Html code for project matches, or 'sorry' html if no matches """
 
     # initial html, no project found, not a list.
-    shtml = "<span>Sorry, no matching projects found for: " + requested_page + "</span>"
-    
-    if isinstance(project, list):
+    html_ = htmltools.html_content("<span>Sorry, no matching projects found for: " + requested_page + "</span>")
+    # found matches, build html content
+    if isinstance(project, (list, tuple)):
         if len(project) > 0:
             # build possible matches..
-            shtml = "<div class='surround_matches'>" + \
+            html_ = htmltools.html_content("<div class='surround_matches'>" + \
                 "<span>Sorry, I can't find a project at '" + requested_page + "'. Were you " + \
                 "looking for one of these?</span><br/>" + \
-                "<div class='project_matches'>"
+                "<div class='project_matches'>")
             for proj in project:
-                shtml += "<div class='project_match'>"
+                # build project match
+                html_.append_line("<div class='project_match'>")
                 p_name = "<span class='match_result'>" + \
                          proj.name + "</span>"
                 p_link = "/projects/" + proj.alias
-                shtml += htmltools.wrap_link(p_name, p_link) + \
-                     "</div>"
-            shtml += "</div></div>"
-    return shtml
+                # add project name link
+                html_.append_line(htmltools.wrap_link(p_name, p_link) + '\n</div>')
+            # add div tails
+            html_.append_lines(("</div>", "</div>"))
+
+    return html_.tostring()
 
 
 def get_screenshots_dir(project):
@@ -75,6 +82,7 @@ def get_html_file(project):
     """ finds html file to use for project content, if any """
     
     if project.html_url == "":
+        # use default location if no manual override is set.
         html_file = utilities.get_absolute_path("static/html/" + project.alias + ".html")
     elif project.html_url.lower() == "none":
         # html files can be disabled by putting None in the html_url field.
@@ -95,7 +103,7 @@ def get_html_content(project):
     shtml = htmltools.load_html_file(sfile)
     
     if shtml == "":
-        _log.debug("get_html_content: missing html for " + project.name + ": " + sfile)
+        _log.debug("missing html for " + project.name + ": " + sfile)
     
     return shtml
 
@@ -146,9 +154,11 @@ def get_download_file_content(project, surl):
     if surl.lower().endswith('.html') or surl.lower().endswith('.htm'):
         return htmltools.load_html_file(surl)
     else:
-        shead = "<div class='wp-block download-list'>\n"
-        stail = '</div>'
-        return shead + build_download_file_content(project, surl) + stail
+        # intialize with download-list div
+        html_ = htmltools.html_content("<div class='wp-block download-list'>")
+        # build html for download link
+        html_.append_lines((build_download_file_content(project, surl), '</div>'))
+        return html_.tostring()
     
     
 def build_download_file_content(project, surl, desc_text = ' - Current package.'):
@@ -156,26 +166,29 @@ def build_download_file_content(project, surl, desc_text = ' - Current package.'
         given the file to download, it outputs the html for the
         download section.
     """
-        
-    sbase = """
+    
+    # intial template for this downloadable file link    
+    html_ = htmltools.html_content("""
         <div class='download-file'>
-            <a class='download-link' href="{{ relative_link }}">
+            <a class='download-link' href='{{ relative_link }}'>
                 <span class='download-link-text'>{{ link_text }}</span>
             </a>
             <span class='download-desc'>&nbsp;{{ desc_text }}</span>
-        </div>
-    """
+        </div>""")
+    
     # make link
-    sbase = sbase.replace('{{ relative_link }}', '/dl' + utilities.get_relative_path(surl))
+    html_.replace('{{ relative_link }}', '/dl' + utilities.get_relative_path(surl))
     # make desc text
-    sbase = sbase.replace("{{ desc_text }}", desc_text)
+    html_.replace('{{ desc_text }}', desc_text)
     # make link text
     sver = project.version
     if sver == "":
         slinktext = project.name
     else:
         slinktext = project.name + ' v' + sver
-    return sbase.replace('{{ link_text }}', slinktext)
+    html_.replace('{{ link_text }}', slinktext)
+    
+    return html_.tostring()
 
     
 def get_download_dir_content(project, surl):
@@ -189,17 +202,20 @@ def get_download_dir_content(project, surl):
     try:
         files = os.listdir(surl)
     except Exception as ex:
-        _log.error("get_download_dir_content: unable to list dir: " + surl + '\n' + str(ex))
+        _log.error("unable to list dir: " + surl + '\n' + str(ex))
         return ""
 
-    shead = "<div class='wp-block download-list'>\n"
-    stail = '</div>'
-    content_ = ""
+    # intialize with head for download content
+    html_ = htmltools.html_content("<div class='wp-block download-list'>")
+
     for sfile in files:
         spath = os.path.join(surl, sfile)
-        content_ += build_download_file_content(project, spath, "")
-    
-    return shead + content_ + stail
+        # add this file to content
+        html_.append_line(build_download_file_content(project, spath, ""))
+    # add tail to download content
+    html_.append_line('</div>')
+
+    return html_.tostring()
     
 
 def get_projects_menu(max_length = 25, max_text_length = 14):
@@ -207,10 +223,10 @@ def get_projects_menu(max_length = 25, max_text_length = 14):
     
     if wp_project.objects.count() == 0:
         return ""
-    
-    shead = "<div class='vertical-menu'>\n" + \
-            "<ul class='vertical-menu-main'>\n"
-    stail = "</ul>\n</div>\n"
+    # intialize with head of menu
+    html_ = htmltools.html_content("<div class='vertical-menu'>\n" + \
+                                   "<ul class='vertical-menu-main'>\n")
+    # project menu item template
     stemplate = """
                     <li class='vertical-menu-item'>
                         <a class='vertical-menu-link' href='/projects/{{ alias }}'>
@@ -218,7 +234,7 @@ def get_projects_menu(max_length = 25, max_text_length = 14):
                         </a>
                     </li>
     """
-    smenu = ""
+
     icount = 0
     for proj in wp_project.objects.all().order_by('name'):
         stext = proj.name
@@ -227,14 +243,15 @@ def get_projects_menu(max_length = 25, max_text_length = 14):
                 stext = proj.alias[:max_text_length - 3] + "..."
             else:
                 stext = proj.alias
-        
-        smenu += stemplate.replace("{{ alias }}", proj.alias).replace("{{ name }}", stext)
+        # add menu item for this project
+        html_.append_line(stemplate.replace("{{ alias }}", proj.alias).replace("{{ name }}", stext))
         icount += 1
         if icount > max_length:
             break
         
-    return shead + smenu + stail
-
+    # add tail of menu
+    html_.append_lines(("</ul>", "</div>"))
+    return html_.tostring()
 
 def prepare_content(project, scontent):
     """ prepares project content for final view.
@@ -247,37 +264,36 @@ def prepare_content(project, scontent):
         "    <div class='project_title'>\n" + \
         "        <h1 class='project-header'>" + project.name + "</h1>\n" + \
         "    </div>\n"
-    # Working copy
-    shtml = scontent
+    # Working copy of html content
+    html_ = htmltools.html_content(scontent)
+    
     # do article ads.
-    shtml = htmltools.inject_article_ad(shtml)
+    html_.inject_article_ad()
         
     # do screenshots.
     images_dir = get_screenshots_dir(project)
     # inject screenshots.      
     if os.path.isdir(images_dir):
-        shtml = htmltools.inject_screenshots(shtml, images_dir)
-    
+        html_.inject_screenshots(images_dir)
+        
     # do downloads.
     sdownload_content = get_download_content(project)
     if sdownload_content != "":
-        target_ = htmltools.check_replacement(shtml, "{{ download_code }}")
-        if target_:
-            shtml = shtml.replace(target_, sdownload_content)
-    
+        target_ = html_.check_replacement("{{ download_code }}")
+        html_.replace_if(target_, sdownload_content)
+            
     # do source view.
-    shtml = htmltools.inject_sourceview(project, shtml)
-    
+    html_.inject_sourceview(project)
+
     # do auto source highlighting
-    if "<pre class=" in shtml:
-        from viewer.highlighter import highlight_inline
-        shtml = highlight_inline(shtml)
-    if "highlight-embedded" in shtml:
-        from viewer.highlighter import highlight_embedded
-        shtml = highlight_embedded(shtml)
-        
+    html_.highlight()
+ 
     # remember to close the project_container div.
-    return shead + shtml + "\n</div>\n"
+    html_.prepend(shead)
+    html_.append('\n</div>\n')
+    
+    # returning STRING until the rest of the project starts using html_content.
+    return html_.tostring()
 
 
 def get_project_from_path(file_path):

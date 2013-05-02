@@ -1,4 +1,4 @@
-#!/usr/bin/python2.6
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Django settings for wp_main project.
@@ -6,8 +6,7 @@
 # file/path (path joining)
 import os.path
 
-DEBUG = True
-TEMPLATE_DEBUG = True
+#DEBUG is in settings_local...
 
 # decide which dirs to use based on hostname.
 # determine parent dir for script
@@ -24,14 +23,10 @@ BASE_PARENT = os.path.split(BASE_DIR)[0]
 
 if "webapps" in BASE_PARENT:
     # live site directories
-    #BASE_PARENT = "/home/cjwelborn/webapps/wp_site/"
-    #BASE_DIR = os.path.join(BASE_PARENT, "wp_site")
     STATIC_PARENT = BASE_PARENT
     MEDIA_URL = "http://welbornprod.com/media/"
 else:
     # local development directories
-    #BASE_PARENT = "/home/cj/workspace/welbornprod"
-    #BASE_DIR = os.path.join(BASE_PARENT, "wp_main")
     STATIC_PARENT= "/var/www/"
     MEDIA_URL = "http://127.0.0.1/media/"
 
@@ -49,14 +44,18 @@ TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
 # check for local internal_ips.txt,
 # allow the ips in that file if it exists.
 _internal_ips = ['127.0.0.1']
-if os.path.isfile(os.path.join(BASE_DIR, "internal_ips.txt")):
+# KEY is in the variable name so django debug automatically
+# hides it from debug.
+KEY_INTERNAL_IPS_FILE = os.path.join(BASE_DIR, "internal_ips.txt")
+if os.path.isfile(KEY_INTERNAL_IPS_FILE):
     try:
-        with open(os.path.join(BASE_DIR, "internal_ips.txt")) as f_ips:
+        with open(KEY_INTERNAL_IPS_FILE) as f_ips:
             ip_raw = f_ips.read()
             if '\n' in ip_raw:
                 # list of ips in file.
                 ips_list = []
                 for ip_ in ip_raw.split('\n'):
+                    # allows '1.1.1.01' as the least ip length right now, but not '1.1.1.1'.
                     if len(ip_) > 7:
                         _internal_ips.append(ip_)
             else:
@@ -69,27 +68,26 @@ if os.path.isfile(os.path.join(BASE_DIR, "internal_ips.txt")):
 INTERNAL_IPS = tuple(_internal_ips)
 
 
-# Django's new security setting?
-ALLOWED_HOSTS = ['*']
-
-
-ADMINS = (
-    ('Christopher Welborn', 'cj@welbornprod.com'),
-)
-
+# Admin info
+ADMINS = ( ('Christopher Welborn', 'cj@welbornprod.com'), )
 MANAGERS = ADMINS
 SERVER_EMAIL = 'cj@welbornprod.com'
 
+# Database info (filled in with settings_local)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',       # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.path.join(BASE_DIR, 'wp_main.db'), # Or path to database file if using sqlite3.
-        'USER': '',                                   # Not used with sqlite3.
-        'PASSWORD': '',                               # Not used with sqlite3.
-        'HOST': '',                                   # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                                   # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': '', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': '', 
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
     }
 }
+
+# Fill in missing settings from local file (not in git).
+execfile(os.path.join(BASE_DIR, 'settings_local.py'))
+
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -130,7 +128,6 @@ STATICFILES_FINDERS = (
 )
 
 # SECRET_KEY SETTINGS
-NONSECRET_KEY = '2h&amp;yk)@#2v&amp;ja6nl-3_!!vbp)$3xy*h5pi1el4x#rx6djv-6(z'
 # Make this unique, and don't share it with anybody.
 SECRET_KEY_FILE = os.path.join(BASE_DIR, "secretkey.txt")
 if os.path.isfile(SECRET_KEY_FILE):
@@ -139,10 +136,10 @@ if os.path.isfile(SECRET_KEY_FILE):
             SECRET_KEY = fread.read().replace('\n', '')
     except (IOError, OSError)as ex_access:
         # failed to read secretkey.txt
-        SECRET_KEY = NONSECRET_KEY
+        SECRET_KEY = NONSECRET_KEY #@UndefinedVariable: in local settings.
 else:
     # no secret key exists.
-    SECRET_KEY = NONSECRET_KEY
+    SECRET_KEY = NONSECRET_KEY #@UndefinedVariable
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -249,3 +246,5 @@ LOGGING = {
 }
 
 DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
+
+

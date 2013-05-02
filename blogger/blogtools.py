@@ -17,9 +17,9 @@ from django.conf import settings
 from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
 from wp_main.utilities.wp_logging import logger
-_log = logger("welbornprod.blog.tools", use_file=(not settings.DEBUG))
+_log = logger("blog.tools").log
 # Viewer/Highlighter
-from viewer.highlighter import highlight_inline, highlight_embedded
+from wp_main.utilities.highlighter import highlight_inline, highlight_embedded
 # Blog Info
 from blogger.models import wp_blog
 
@@ -68,17 +68,15 @@ def get_post_body(post_):
     """
     
     if post_ is None:
-        _log.error("get_post_body: post_ = None!")
+        _log.error("post_ = None!")
         return ""
     
     absolute_path = utilities.get_absolute_path(post_.html_url)
     if absolute_path == "":
-        #_log.debug("get_post_body: no html url, using post.body.")
         # no valid html_url
         return post_.body
     
     # load html file content
-    #_log.debug("get_post_body: loading html content from " + absolute_path)
     scontent = htmltools.load_html_file(absolute_path)
     return scontent
 
@@ -226,7 +224,7 @@ def get_tag_list(post_object_or_tag_string):
             ptags = post_object_or_tag_string.tags
         except:
             # no valid object passed.
-            _log.error("get_tag_list: error getting tags from a " + str(post_object_or_tag_string) + " object!")
+            _log.error("error getting tags from a " + str(post_object_or_tag_string) + " object!")
             return []
     # fix commas
     ptags = ptags.replace(',', ' ')

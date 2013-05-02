@@ -1,9 +1,5 @@
 {% extends "home/main.html" %}
-{% block title %}Welborn Productions - Search{% endblock %}
-
-{% block extrastylelink %}
-	<link rel="stylesheet" href="/static/css/searcher.css" type="text/css"/>
-{% endblock %}
+{% block title %}- Search{% endblock %}
 
 {% block contentabove %}
 	<div class="search-header">
@@ -22,7 +18,9 @@
 	<div class="search-form" style="top: 50px;">
 		<span class="search-label">Enter something to search for: </span>
 		<form>
+			<!-- Search query (3 char minimum) -->
 			<input type="search" name="q" id="searchbox" class="search-textbox" required=True></input>
+			<!-- Search Button -->
 			<input type="submit" id="search-button" class="submit-button" title="Search"></input>
 			
 		</form>

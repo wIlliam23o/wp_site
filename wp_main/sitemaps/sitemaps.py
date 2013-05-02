@@ -12,7 +12,7 @@
 '''
 # local logging.
 from wp_main.utilities.wp_logging import logger
-_log = logger("welbornprod.sitemaps.main")
+_log = logger("sitemaps").log
 # xml_response.
 from wp_main.utilities import responses
 # Blog/Project info
@@ -33,7 +33,7 @@ def view_sitemap(request):
 def view_blank_sitemap(request):
     """ delivers a blank sitemap (for servers that don't need a sitemap like the test-server). """
     
-    return responses.text_response("")
+    return responses.text_response("", content_type='application/xml')
 
 
 def view_byserver(request):

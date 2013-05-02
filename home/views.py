@@ -7,7 +7,9 @@ from wp_main.utilities import responses
 from wp_main.utilities import htmltools
 
 # logging
-#from wp_main.utilities.wp_logging import logger
+from wp_main.utilities.wp_logging import logger
+_log = logger("home").log
+############# @todo: make log_context() so context keys/values can be passed to logging!
 # Home tools
 from home import hometools as htools
 
@@ -16,17 +18,13 @@ def index(request):
     
     # setup logging
     #_log = logger("welbornprod.home.index", use_file=True)
-    
-    # test site? the view will show a message if it is.
-    test_site = request.META["SERVER_NAME"].startswith("test.")
 
     # render final page
     return responses.clean_response("home/index.html",
-                                    {'is_mobile': utilities.is_mobile(request),
-                                     'test_site': test_site,
+                                    {'request': request,
                                      'blog_post': htools.get_latest_blog(),
                                      'featured_project': htools.get_featured_project(),
-                                     'extra_style_link': utilities.get_browser_style(request),
+                                     'extra_style_link_list': [utilities.get_browser_style(request)],
                                      })
     
 
@@ -35,9 +33,20 @@ def view_about(request):
     
     about_content = htmltools.load_html_file("static/html/about.html")
     return responses.clean_response("home/about.html",
-                                    {'is_mobile': utilities.is_mobile(request),
-                                     'extra_style_link': "/static/css/about.css",
+                                    {'request': request,
+                                     'extra_style_link_list': ["/static/css/about.css",
+                                                               utilities.get_browser_style(request)],
                                      'about_content': mark_safe(about_content),
+                                     })
+
+
+def view_debug(request):
+    """ return the django debug info page. """
+    
+    return responses.clean_response("home/debug.html",
+                                    {'request': request,
+                                     'extra_style_link_list': [utilities.get_browser_style(request),
+                                                               "/static/css/highlighter.css"],
                                      })
 
 
@@ -73,5 +82,8 @@ def view_error(request, error_number):
         serror = "404"
         
     return responses.clean_response("home/" + serror + ".html",
-                                    {"request_path": mark_for_escaping(request_path)})
+                                    {"request": request,
+                                     "request_path": mark_for_escaping(request_path),
+                                     "extra_style_link_list": utilities.get_browser_style(request),
+                                     })
     

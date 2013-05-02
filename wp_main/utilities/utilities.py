@@ -18,7 +18,7 @@ from django_user_agents.utils import get_user_agent #@UnresolvedImport
 
 # use log wrapper for debug and file logging.
 from wp_main.utilities.wp_logging import logger
-_log = logger("welbornprod.utilities", use_file=True)
+_log = logger("utilities").log
 
 
 def slice_list(list_, starting_index=0, max_items=-1):
@@ -75,7 +75,7 @@ def get_filename(file_path):
     try:
         sfilename = os.path.split(file_path)[1]
     except:
-        _log.error("get_filename: error in os.path.split(" + file_path + ")")
+        _log.error("error in os.path.split(" + file_path + ")")
         sfilename = file_path
     return sfilename
     
@@ -177,6 +177,26 @@ def get_absolute_path(relative_file_path):
     return sabsolutepath
 
     
-        
-        
+def debug_allowed(request):
+    """ returns True if the debug info is allowed for this ip/request.
+        inspired by debug_toolbar's _show_toolbar() method.
+    """
+    
+    # full test mode, no debug allowed.
+    if getattr(settings, 'TEST', False):
+        return False
 
+    # possible ip forwarding, if available use it.
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', None)
+    if x_forwarded_for:
+        remote_addr = x_forwarded_for.split(',')[0].strip()
+    else:
+        remote_addr = request.META.get('REMOTE_ADDR', None)
+
+    # run address through our quick debug security check (settings.INTERNAL_IPS and settings.DEBUG)
+    # future settings may have a different or seperate list of debug-allowed ip's.
+    ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
+    
+    return (ip_in_settings and bool(settings.DEBUG))
+       
+        

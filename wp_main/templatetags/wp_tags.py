@@ -14,6 +14,7 @@
 from django import template
 from wp_main.utilities import htmltools
 from wp_main.utilities import utilities
+from wp_main.utilities.highlighter import wp_highlighter
 from django.utils.safestring import mark_safe
 register = template.Library()
 
@@ -82,18 +83,110 @@ def exceeds_min(value, min_):
     return False
 
 
-def is_mobile(value):
-    """ value is the request from the view, 
-        this is actually not needed with django_user_agents installed.
-        you can just use: request.user_agent.is_mobile
-        returns whether or not the client is mobile/tablet.
+def dict_value(dict_object, dictkey):
+    """ retrieves value for dict key,
+        like: value['dictkey'].
     """
     
-    return utilities.is_mobile(value)
+    try:
+        val = dict_object[dictkey]
+    except: # Exception as ex:
+        val = ''
+    return val
 
-register.filter('comments_button', comments_button)
-register.filter("is_false", is_false)
-register.filter("is_true", is_true)
-register.filter("exceeds_max", exceeds_max)
-register.filter("exceeds_min", exceeds_min)
-register.filter('is_mobile', is_mobile)
+
+def meta_value(request_object, dictkey):
+    """ returns .META dict value from request """
+    
+    try:
+        val = request_object.META[dictkey]
+    except: # Exception as ex:
+        val = ''
+    return val
+
+
+def is_mobile(request_object):
+    """ determines whether or not the client is mobile/tablet.
+        requires a request object.
+        returns True/False.
+    """
+    
+    return utilities.is_mobile(request_object)
+
+
+def is_test_site(request_object):
+    """ determines whether or not the site is a test-server.
+        looks for 'test.welbornprod' domains.
+        returns True/False.
+    """
+    
+    server_name = request_object.META['SERVER_NAME']
+    return (server_name.startswith('test.') or
+            server_name == '127.0.0.1')
+
+
+def contains(str_or_list, val_to_find):
+    """ uses 'if val in str_or_list'.
+        returns True if val_to_find is in str_or_list.
+    """
+    
+    return (val_to_find in str_or_list)
+
+
+def starts(str_, val_to_check):
+    """ uses str_.startswith() to check a value.
+        returns True if str_.startswith(val_to_check)
+    """
+    
+    return (str_.startswith(val_to_check))
+
+
+def ends(str_, val_to_check):
+    """ uses str_.endswith() to check a value.
+        returns True if str_.endswith(val_to_check)
+    """
+    
+    return (str_.endswith(val_to_check))
+
+
+def highlight_python(scontent):
+    """ highlight code using lexer by name.
+        line numbers are optional.
+        This is really for the debug page.
+    """
+    
+    try:
+        highlighter = wp_highlighter(lexer_name_='python', line_nums_=False)
+        highlighter.code = scontent
+        results = highlighter.highlight()
+    except:
+        results = scontent
+    return results
+
+
+def debug_allowed(request_object):
+    """ uses utilities to determine if debug info is allowed for this request. """
+    
+    return utilities.debug_allowed(request_object)
+
+
+# tuple of filters to register.
+registered_filters = (comments_button,
+                      is_false,
+                      is_true,
+                      exceeds_max,
+                      exceeds_min,
+                      dict_value,
+                      meta_value,
+                      is_mobile,
+                      is_test_site,
+                      contains,
+                      starts,
+                      ends,
+                      highlight_python,
+                      debug_allowed)
+
+# register all filters in the registered tuple.
+for filter_ in registered_filters:
+    register.filter(filter_.func_name, filter_)
+
