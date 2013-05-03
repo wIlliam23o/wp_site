@@ -986,16 +986,19 @@ def fix_p_spaces(source_string):
         sline = slines[i]
         strim = sline.replace('\t', '').replace(' ', '').lower()
         
-        # end of p tag? (the </p> line itself will not be processed.)
-        if "</p>" in strim:
-            _log.debug("found ending p tag: " + sline)
-            inside_p = False
             
         # process p tag.
         if inside_p:
-            # add space if not already spaced.
-            if not strim.endswith('&nbsp;'):
-                sline += '&nbsp;'
+            # Found end of tag.
+            if "</p>" in strim or "</div>" in strim:
+                # end of p tag? (the </p> line itself will not be processed.)
+                # some times the </p> gets cut off due to blog-post previews.
+                # in this case we will stop on the next </div>.
+                inside_p = False
+            else:
+                # add space if not already spaced.
+                if not strim.endswith('&nbsp;'):
+                    sline += '&nbsp;'
         # start of p tag? (the <p> line itself will not be processed.)
         if strim.startswith('<p>') or strim.startswith("<pid") or strim.startswith("<pclass"):
             inside_p = True
