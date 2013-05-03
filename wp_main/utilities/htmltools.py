@@ -988,6 +988,7 @@ def fix_p_spaces(source_string):
         
         # end of p tag? (the </p> line itself will not be processed.)
         if "</p>" in strim:
+            _log.debug("found ending p tag: " + sline)
             inside_p = False
             
         # process p tag.
