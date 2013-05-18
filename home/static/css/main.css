@@ -83,7 +83,7 @@ blockquote p {
 	}
 
 strong {
-	font-weight: 400;
+	font-weight: bold; /* old-fonts used: 400 */
 }
 
 p {
