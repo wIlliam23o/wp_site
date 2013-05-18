@@ -163,9 +163,10 @@ def highlight_queries(queries_, scontent):
         fixed_word = word_
         for query in queries_lower:
             if len(query.replace(' ', '')) > 1:
-                if ((query in word_lower) and
-                    (not "<strong>" in word_) and
-                    (not "</strong>" in word_)):
+                if ((query in word_lower) and # contains query
+                    (not "<strong>" in word_) and # not words that are already bold
+                    (not "</strong>" in word_) and
+                    (not (word_.count('=') and word_.count('>')))): # not words that may be html code
                     # stops highlighting 'a' and 'apple' in 'applebaum'
                     # when queries are: 'a', 'apple', 'applebaum'
                     possible_fix = word_.replace(word_trim, "<strong>" + word_trim + "</strong>")
