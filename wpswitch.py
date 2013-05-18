@@ -12,17 +12,17 @@
    start date: May 2, 2013
 '''
 
-#@attention: NOT COMPLETELY WORKING, has no 'setters'
-#@todo: COMPLETE 'set functions'
-
+import copy # copies switch() class, saves previous version while editing/building switches.
 import sys
 import os.path
 import re # for regex 'finders'
 
 usage_str = """
-    usage: wpswitch <command>|<switch_name on|off|-|?|!|@> [options]
+    usage: wpswitch <command> | <switch_name on|off|-|?|!|@> [options]
     
     commands:
+              help : show the long help message
+         -h,--help : show the usage help message
              names : list all switch names
             groups : list all groups and members
             status : list all switch names and state
@@ -191,25 +191,46 @@ class switch(object):
     
     def __repr__(self):
         """ representation of switch """
+        return self.get_switch_str()
+    
+    def __eq__(self, other):
+        if isinstance(other, switch):
+            return ((self.get_switch_str() == other.get_switch_str()) and (self.group == other.group))
+        else:
+            return False
+    def __ne__(self, other):
+        return (not self.__eq__(other))
+    
+    def get_switch_str(self):
+        """ Returns the switch string, or what the switch looks like in the switches file. """
         
-        file = str(self.filename)
+        if self.aliases is None:
+            names = str(self.name)
+        else:
+            names = str(','.join(self.aliases))
+
+        if self.values is None:
+            values = 'None'
+        else:
+            values = str(','.join(self.values))
+        
+        return str(SWITCH_SEPARATOR.join((str(self.filename), 
+                                          names, 
+                                          values, 
+                                          str(self.finder),
+                                          str(self.description))))
+    
+    def get_switch_id(self):
+        """ Like the switch string, but only returns filename|name1,name2 """
         
         if self.aliases is None:
             names = str(self.name)
         else:
             names = str(','.join(self.aliases))
         
-        if self.values is None:
-            values = 'None'
-        else:
-            values = str(','.join(self.values))
-        
-        finder = str(self.finder)
-        desc = str(self.description)
-        
-        return str(SWITCH_SEPARATOR.join([file, names, values, finder, desc]))
-            
-        
+        return str(SWITCH_SEPARATOR.join((str(self.filename), names)))
+    
+                
     def get_name(self):
         """ safely etrieves default name for this switch if aliases are given.
             Otherwise returns self.name
@@ -283,7 +304,7 @@ class switch(object):
         filename = self.relative_filename()
         if filename is None:
             print_fail("Cannot find file for " + str(self.get_name()) + ': ' + self.filename)
-        
+
         try:
             with open(filename) as fread:
                 contents = fread.read()
@@ -471,6 +492,12 @@ class switch(object):
         else:
             return None
 
+class cmdlineExit(Exception):
+    """ Error to raise when interactive cmd-line stuff is exited by user,
+        this way I can trap it and handle it.
+    """
+    pass
+
 # Global switches holder
 switches = None
 # char in between switch data
@@ -483,7 +510,7 @@ DEFAULT_SWITCHES_FILE = "switches.conf"
 # possible command-line switches for setting/getting switch values.
 good_switch_args = ("on", "off", "-", "?", "!", "@")
 # possible commands
-good_commands = ("help", "names", "status", "values", "full", "groups")
+good_commands = ("help", "names", "status", "values", "full", "groups", "build")
 
 def main(args):
     """ main entry-point for wpswitches.
@@ -526,7 +553,7 @@ def main(args):
             
     # Commands ---------------------------------------
     if name.lower() in good_commands:
-        do_command(name.lower(), val)
+        do_command(name.lower(), val, dryrun=bdryrun)
  
     # Perform switch operations -----------------------
     if name.lower() in [sw.name.lower() for sw in switches]:
@@ -562,13 +589,14 @@ def main(args):
     # Finished.
     sys.exit(0)
     
-    #@todo: toggle state.
-    #@todo: Do actual 'switching.' (it's late tonight)
 
-def do_command(name, val):
-    """ perform a simple command and exit. """
+def do_command(name, val, dryrun=False):
+    """ perform a simple command and exit. 
+        name : the name of the command.
+         val : any argument the command can accept
+    """
     
-    if val is not None:
+    if (name != "build") and (val is not None):
         group_members = get_group_members(val)
         if len(group_members) == 0:
             print_fail("no members found for group: " + val)
@@ -595,6 +623,11 @@ def do_command(name, val):
             list_full(group_members)
     elif name == "groups":
         list_groups()
+        
+    elif name == "build":
+        # start interactive switch builder
+        cmdline_build_switch(val, dryrun)
+        
     sys.exit(0)
 
 def check_value(name, actual=False):
@@ -698,8 +731,7 @@ def get_groups():
     """ returns a list of group names """
     groups = []
     for sw in switches:
-        if sw.group is not None:
-            if not sw.group in groups: groups.append(sw.group)
+        if not sw.group in groups: groups.append(str(sw.group))
     return groups
     
 
@@ -741,6 +773,8 @@ def get_group_bylist(switchlist = None):
 def get_switch_byname(name):
     """ retrieves switch by name """
     
+    if name is None: return None
+    
     for sw in switches:
         if sw.aliases is None:
             # Check against single name
@@ -758,7 +792,7 @@ def get_switch_byname(name):
 
 def get_toggle_value(name_or_switch):
     """ retrieves the opposite of whatever value the switch has.
-        (what the switch should toggle to)
+        (what the switch should be toggled to)
     """
     
     if not isinstance(name_or_switch, (switch)):
@@ -767,19 +801,27 @@ def get_toggle_value(name_or_switch):
     return "off" if oldval == "on" else "on"
 
 
-def read_file(filename="switches.conf"):
-    """ reads a set of switches from a file. """
+def file_exists(filename="switches.conf"):
+    """ checks filepath, or current directory for file. """
     
     if not os.path.isfile(filename):
         filename = os.path.join(sys.path[0], filename)
         if not os.path.isfile(filename):
-            print_fail("switches file does not exist!: " + filename)
+            return False
+    return filename
+
+def read_file(filename="switches.conf"):
+    """ reads a set of switches from a file. """
+    
+    filepath = file_exists(filename)
+    if not filepath:
+        print_fail("switches file does not exist!: " + filename)
     
     try:
-        with open(filename) as fread:
+        with open(filepath) as fread:
             lines = fread.readlines()
     except Exception as ex:
-        print_fail("unable to read file: " + filename + '\n' + \
+        print_fail("unable to read file: " + filepath + '\n' + \
                    str(ex))
     
     good_switches = []
@@ -912,6 +954,7 @@ def parse_values(values):
     
     return values
 
+
 def validate_switches():
     """ make sure switches aren't duplicates, and groups don't have the same name as switches. """
     
@@ -954,7 +997,95 @@ def validate_switches():
               '\nplease correct these errors and try again...'
         sys.exit(1)
         
+def write_file(filename = 'switches.conf', dryrun = False):
+    """ Writes all switches to file. """
+    
+    filepath = file_exists(filename)
+    if not filepath:
+        print_fail("switches file not found!: " + filename)
+    newcontents = []
+    for groupname in get_groups():
+        newcontents.append('[' + groupname + ']\n')
+        groupswitches = get_group_members(groupname)
+        newcontents.append('    ' + '\n    '.join([sw.get_switch_str() for sw in groupswitches]))
+        newcontents.append('\n[\\' + groupname + ']\n')
+    
+    if dryrun:
+        print "\nwriting file: " + filename + '\n\n'
+        print ''.join(newcontents)
+        return True
+    else:
+        try:
+            with open(filename, 'w') as fwrite:
+                fwrite.writelines(newcontents)
+                return True
+        except (OSError, IOError) as exio:
+            print_fail("unable to write switches file: " + filename + '\n' + str(exio))
+        except Exception as ex:
+            print_fail("error writing switches file: " + filename + '\n' + str(ex))
+    return False
         
+def write_switch_line(switch_, old_switch = None, filename='switches.conf', dryrun = False):
+    """ replace old switch line with a new one, or
+         add new switch line to file. 
+         switch_ should be a valid switch().
+    """
+    #@todo: Add Group Handling! (groups would be nice.)
+    
+    filepath = file_exists(filename)
+    if not filepath:
+        print_fail("switches file does not exist!: " + filename)
+    
+    try:
+        oldlines = []
+        with open(filepath) as fread:
+            oldlines = fread.readlines()
+    except (OSError, IOError) as exio:
+        print_fail("unable to read file for editing: " + filename + '\n' + str(exio))
+    except Exception as ex:
+        print_fail("error reading file for edit: " + filename + '\n' + str(ex))
+    
+    if old_switch is None:
+        oldswitchid = None
+    else:
+        oldswitchid = old_switch.get_switch_id()
+        if dryrun: print "checking for old switch id: " + oldswitchid
+    
+    switchstr = switch_.get_switch_str()
+    
+    editedlines = []
+    replaced = False
+    for oldline in oldlines:
+        editedline = oldline
+        oldtrim = oldline.strip(' ').strip('\t')
+        if (oldswitchid is not None) and (oldtrim.startswith(oldswitchid)):
+            # Replace old switch setting.
+            editedline = oldline.replace(oldtrim, switchstr)
+            if dryrun: print "\nreplacing old line:\n    " + oldtrim
+            replaced = True
+        editedlines.append(editedline)
+    # Add as new switch
+    if not replaced:
+        if dryrun: print "\nadding new line:\n    " + switchstr
+        editedlines.append(switchstr)
+    
+    # Write new file
+    if dryrun:
+        print "\n\nwriting file " + filename + "..."
+        print ''.join(editedlines)
+    else:
+        try:
+            with open(filepath, 'w') as fwrite:
+                fwrite.writelines(editedlines)
+        except (OSError, IOError) as exio:
+            print_fail("unable to write file for editing: " + filename + '\n' + str(exio))
+        except Exception as ex:
+            print_fail("error writing file for edit: " + filename + '\n' + str(ex))
+    
+    return True
+        
+        
+     
 def validate_args(args):
     """ makes sure valid arguments are passed. """
     
@@ -1000,6 +1131,222 @@ def find_unique_item(items):
             # return original item, not trimmed.
             return items[i]
 
+def cmdline_build_switch(initial_name=None, dryrun = False, filename = 'switches.conf'):
+    """ interactive 'switch builder/editor' in the console, 
+        parses input to build a switch, validates info, and adds it to switches.conf.
+    """
+
+    sw = get_switch_byname(initial_name)
+    if sw is None:
+        oldswitch = None
+        sw = switch()
+        header = "Ready to build switch: "
+        if initial_name is not None: header += initial_name
+        print header + '\n'
+    else:
+        # save old switch for comparison during switch-write.
+        oldswitch = copy.deepcopy(sw)
+        print "Editing switch: " + sw.name + '\n'
+    
+    def prompt_val(s, val):
+        max_prompt_len=60
+        if s.endswith(':'): s = s[0:-1]
+        if val is None:
+            s = s + ':'
+        else:
+            s = s + ' [' + str(val) + ']:'
+        return (' ' * (max_prompt_len - len(s))) + s + ' '
+    
+    # Build list of current switch names to check against (aliases included)
+    switch_names = [eachswitch.name for eachswitch in switches]
+    #switch_aliases = []
+    for aliaslst in [eachswitch.aliases if (eachswitch.aliases is not None) else [] for eachswitch in switches]:
+        switch_names += aliaslst
+    
+    
+    # remove this name from the list if a name is set,
+    # we will be using the list of names to block answers to the "name:" prompt.
+    if (sw.name is not None) and (sw.name in switch_names):
+        switch_names.remove(sw.name)
+    if (sw.aliases is not None):
+        for thisalias in sw.aliases:
+            if thisalias in switch_names:
+                switch_names.remove(thisalias)
+    
+    try:
+        # Build name, Aliases
+        if initial_name is None:
+            names = sw.name
+        else:
+            names = initial_name
+        
+        if sw.aliases is None:
+            aliases = []
+        else:
+            names = ','.join(sw.aliases)
+            aliases = sw.aliases
+
+        name = cmdline_get_response(prompt_val("Name", names), 
+                                    default_value=names,
+                                    blocked_values=switch_names)
+        if ',' in name:
+            # Set new aliases
+            aliases += [a.strip(' ') for a in name.split(',')]
+            name = aliases[0]
+        else:
+            if sw.aliases is not None:
+                remove_aliases = cmdline_get_response(prompt_val("Remove Aliases? (y/n)", "n"),
+                                                      acceptable_values = ("y", "n", "yes", "no"),
+                                                      default_value = "n",
+                                                      allow_blank = False)
+                if remove_aliases.startswith('y'):
+                    aliases = []
+        
+        # remove duplicates from aliases.
+        for aliasdupe in [a for a in aliases]:
+            if aliases.count(aliasdupe) > 1: aliases.remove(aliasdupe)
+        sw.name = name
+        sw.aliases = None if aliases == [] else aliases
+
+        # Group?
+        group = cmdline_get_response(prompt_val("Group", str(sw.group)), 
+                                     default_value = str(sw.group),
+                                     allow_blank=True)
+        if group == '':
+            group = None
+        sw.group = group
+        
+        # Get filename
+        sw.filename = cmdline_get_response(prompt_val("Target File", sw.filename), 
+                                           default_value=sw.filename,
+                                           file_must_exist=True)
+        
+        # Get finder
+        sw.finder = cmdline_get_response(prompt_val("Target String (Finder)", sw.finder),
+                                         default_value=sw.finder)
+    
+        
+        # Get Values
+        if sw.values is None:
+            onvalue = None
+            offvalue = None
+        else:
+            onvalue = sw.values[0]
+            offvalue = sw.values[1]
+            
+        onvalue = cmdline_get_response(prompt_val("On Value", onvalue),
+                                       default_value=onvalue)
+        offvalue = cmdline_get_response(prompt_val("Off Value", offvalue),
+                                        default_value=offvalue)
+        sw.values = (onvalue, offvalue)
+    
+        # Get Description
+        sw.description = cmdline_get_response(prompt_val("Description", sw.description), 
+                                       default_value=sw.description,
+                                       allow_blank=True)
+        
+        # Set values
+        if sw == oldswitch:
+            if dryrun:
+                print "\nswitches are still equal,\nwould've wrote: " + sw.get_switch_str()
+            else:
+                print "\nswitch not changed."
+        else:
+            print "\nwriting switch: " + sw.get_name()
+            if write_file(filename, dryrun):
+                print "...success."
+        
+    except cmdlineExit as excancel: #@UnusedVariable: excancel
+        print "\nswitch editing cancelled, no changes were made.\n"
+    
+        
+
+def cmdline_get_response(prompt, **kwargs):
+    """ prints a prompt, retrieves response
+        keyword arguments allow validation:
+        allow_blank       : allow a blank answer
+                            [default: False]
+        default_value     : returns default value if answer is blank.
+                            ** overrides allow_blank
+                            [default: None]
+        max_length        : maximum character length of answer
+                            [default: 255]
+        acceptable_values : list/tuple of acceptable answers
+                             won't accept any other if given,
+                             non-case-sensitive - no-spaces comparison made.
+        blocked_values    : same as acceptable but reverse, we won't allow them.
+        file_must_exist   : response must be an existing file name/path (full or relative)
+                            [default: False]
+        condition         : condition to check before allowing this answer
+                            [default: True]
+    """
+    allow_blank = get_dict_val(kwargs, 'allow_blank', False)
+    default_value = get_dict_val(kwargs, 'default_value', None)
+    max_length = get_dict_val(kwargs, 'max_length', 255)
+    acceptable_values = get_dict_val(kwargs, 'acceptable_values', None)
+    blocked_values = get_dict_val(kwargs, 'blocked_values', None)
+    file_must_exist = get_dict_val(kwargs, 'file_must_exist', False)
+    condition = get_dict_val(kwargs, 'condition', True)
+    
+    def answer_warn(s):
+        print '\n' + s
+        print '...type !exit, !cancel, or !quit to cancel building this switch.\n'
+        
+    # this traps the EOFError that is raised on user cancelling...
+    # a cmdlineExit() is raised instead, same as when '!exit' is the response.
+    # the calling function should trap cmdlineExit()... (cmdline_build_switch())
+    try:
+        while True:
+            response = raw_input(prompt)
+            response_trim = response.replace(' ', '').lower()
+            response_multicheck = response_trim.replace(',', '')
+            
+            # first checks (exit, blank, max_len, acceptable answer)
+            if (response_trim in ('!exit', '!cancel', '!quit')):
+                raise cmdlineExit("User Cancelled")
+            # Blank, use default value
+            elif (response_trim == '' and (default_value is not None)):
+
+                return default_value
+            # Blank, no default, no blanks allowed
+            elif (response_trim == '' and (not allow_blank)):
+                answer_warn("You must provide an answer.")
+            # All commas, weird, but would mess up the Name/Aliases prompt.
+            elif (response_multicheck == '' and (not allow_blank)):
+                answer_warn("Commas are for entering multiple values where accepted, but values cannot be empty.")
+            # Max Length
+            elif (len(response) > max_length):
+                answer_warn("Answer was too long! > " + str(max_length)) + " characters."
+            # Acceptable Values
+            elif ((acceptable_values is not None) and (response_trim not in acceptable_values)):
+                answer_warn("Not an acceptable value. Has to be one of:\n    " + '\n    '.join(acceptable_values))
+            # Blocked Values
+            elif ((blocked_values is not None) and (response_trim in blocked_values)):
+                answer_warn("Not an acceptable value. Cannot be one of:\n    " + '\n    '.join(blocked_values))
+            # Must be a file that exists
+            elif (file_must_exist and (not os.path.isfile(response))):
+                answer_warn("File must exist (relative, or full path).")
+            
+            # All other checks passed
+            else:
+                # final check (condition)
+                if condition:
+                    return response
+            
+    except EOFError as exeof: #@UnusedVariable: exeof
+        raise cmdlineExit("User Cancelled")
+    except KeyboardInterrupt as exkey: #@UnusedVariable: exkey
+        raise cmdlineExit("User Cancelled")
+    
+
+def get_dict_val(dict_, key, default_val=None):
+    """ safely retrieves dict values,
+        returns None on failure/missing key
+    """
+    
+    if dict_.has_key(key):
+        return dict_[key]
+    return default_val
 
 def print_debug(s):
     """ just a wrapper for print that can be easily searched for and replaced. """
