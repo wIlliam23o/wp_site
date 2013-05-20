@@ -66,8 +66,8 @@ user_=$USER
 if [ "$user_" == "" ]; then
     user_=$LOGNAME
     if [ "$user_" == ""]; then
-        printf "\nCan't find user name, using: cjwelborn\n"
-        user_="cjwelborn"
+        printf "\nCan't find user name!"
+        exit 1
     fi
 fi
 
