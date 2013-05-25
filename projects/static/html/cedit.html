@@ -1,0 +1,156 @@
+<div class='wp-block feature-list'>
+	<!-- Description -->
+	<p>
+		Linux command-line tool that opens files with your favorite editor,
+		but also automatically uses your favorite sudo command when needed for write-permissions.
+		This way, you won't forget to open with sudo and get that annoying "no-permissions" or
+		"cannot save" message.
+	</p>
+	<p>
+		If root-permissions are required for write-access, your elevation command will ask you
+		for the password. If they are not required, your editor command will be used alone.
+		This is because opening all files as root may put root ownership/group status on files
+		that don't really need it, which is also annoying. 
+	</p>
+</div>
+
+<!-- Insert article ad -->
+{{ article_ad }}
+
+<!-- Download -->
+<div class='wp-block feature-list'>
+	<div class='title-box'>
+		<h3 class='title'>Download</h3>
+	</div>
+	{{ download_code }}
+</div>
+
+<!-- Source -->
+<div class='wp-block feature-list' id='source'>
+	<div class='title-box'>
+		<h3 class='title'>Source Code</h3>
+	</div>
+	<p>
+	    <a href='https://github.com/welbornprod/cedit.git' target='blank'>
+	    cedit (github)
+	    </a>
+	    &nbsp;- current <strong>cedit</strong> source code at 
+	    <a href='http://github.com' target="_blank">github</a>.
+	</p>
+	{{ source_view }}
+</div>
+
+<!-- Usage -->
+<div class='wp-block feature-list'>
+	<div class='title-box'>
+		<h3 class='title'>Usage</h3>
+	</div>
+
+	<pre class='bash'>
+cedit <filename>
+# ...to open a file.
+	
+cedit list
+# ...lists current configuration (editor and elevation command)
+		
+cedit set editor=[your editor]
+cedit set elevcmd=[your elevation-cmd]
+# ...sets your favorite commands so cedit will remember what to use.
+	</pre>
+
+	<p>
+		If your favorite editor isn't in the same directory as cedit or /usr/bin, then
+		you will need to set the editor like this:
+		<pre class='bash'>
+cedit set editor=/my/path/to/myeditor
+		</pre>
+	</p>
+</div>
+
+<!-- Installation -->
+<div class='wp-block feature-list'>
+	<div class='title-box'>
+		<h3 class='title'>Installation</h3>
+	</div>
+	<p>
+		You can create a symlink to the cedit.py script yourself, or you can use the builtin 'install' command.
+	</p>
+	<p>
+		To install cedit in /usr/bin (for all users) run:
+    </p>
+    <pre class='bash'>
+sudo ./cedit.py install
+	</pre>
+	
+	<p>
+		To install cedit for a single user run:
+   	</p>
+   	<pre class='bash'>
+./cedit.py install user
+    
+# this will try to install cedit to /home/USERNAME/.local/bin
+# you will need this directory to exist, and be included in your PATH variable.
+	</pre>
+	<p>
+		If everything went well, or you manually created the symlink yourself, you should be able to run
+		cedit like this from anywhere:
+    </p>
+    <pre class='bash'>
+cedit <filename>
+# with no .py extension or ./ prefix...
+	</pre>
+</div>
+
+<!-- With no settings -->
+<div class='wp-block feature-list'>
+	<div class='title-box'>
+		<h3 class='title'>With no settings</h3>
+	</div>
+	<p>
+		If no settings are set, cedit will try to look for a few 'popular' commands to
+		work with. 
+	</p>
+	<p>
+		cedit will look for these editors if your favorite isn't set:
+	</p>
+	<ul class='circle-small'>
+		<li>kate</li>
+		<li>gedit</li>
+		<li>leafpad</li>
+		<li>kwrite</li>
+	</ul>
+
+	<p>
+		cedit will look for these elevation commands if your favorite isn't set:
+	</p>
+	<ul class='circle-small'>
+		<li>kdesudo</li>
+		<li>gksudo</li>
+		<li>sudo</li>
+	</ul>
+	<p>
+		Without any settings, if you have both <span class='B'>kate</span> and 
+		<span class='B'>kdesudo</span> installed, cedit will
+		open your 'root-permissions' file by running: 
+		<span class='highlight-embedded bash'>kdesudo kate <filename></span>
+		If the file doesn't require root permissions then just: 
+		<span class='highlight-embedded bash'>kate <filename></span>
+	</p>
+</div>
+
+<!-- Future -->
+<div class='wp-block feature-list'>
+	<div class='title-box'>
+		<h3 class='title'>Future</h3>
+	</div>
+	<p>
+		There may be plans to allow different editors to be chosen for different file-types.
+		Right now cedit works as expected, as long as you only use one editor most often.
+		I may add the ability to set favorite editors for favorite file-types like:
+	</p>
+	<pre class='bash'>
+cedit set .py=geany
+	</pre>
+</div>
+	
+
