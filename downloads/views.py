@@ -49,7 +49,7 @@ def download(request, file_path):
                                              })
     else:
         # redirect to actual file.
-        _log.debug("redirecting to: " + static_path)
+        #_log.debug("redirecting to: " + static_path)
         response = responses.redirect_response(static_path)
         # see if its a project file.
         proj = tools.get_project_from_path(absolute_path)

@@ -10,6 +10,8 @@
  
    start date: Apr 1, 2013
 '''
+import os, os.path
+
 # Global DEBUG setting
 from django.conf import settings
 # Home settings
@@ -19,6 +21,8 @@ from blogger.models import wp_blog
 from projects.models import wp_project
 # Local tools
 from wp_main.utilities.wp_logging import logger
+from wp_main.utilities import utilities
+
 _log = logger("home.tools").log
 
 
@@ -53,3 +57,29 @@ def get_featured_project():
         proj_ = get_latest_project()
         
     return proj_
+
+
+def get_scriptkid_image():
+    """ returns a random image filename from /images/scriptkid """
+    
+    import random
+    image_dir = utilities.get_absolute_path("images/scriptkids")
+    try:
+        images = os.listdir(image_dir)
+    except Exception as ex:
+        _log.error("can't do listdir() on: " + image_dir + '\n' + str(ex))
+        return None
+    if len(images) == 0:
+        _log.error("images was empty!")
+        return None
+    
+    goodexts = ("jpeg", ".jpg", ".png", ".gif", ".bmp")
+    for imagename in [i for i in images]:
+        if  not imagename[-4:].lower() in goodexts:
+            images.remove(imagename)
+    
+    randomindex = random.randint(0, len(images) - 1)
+    return os.path.join(image_dir, images[randomindex])
+
+        
+        

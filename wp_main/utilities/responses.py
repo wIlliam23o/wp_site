@@ -24,7 +24,7 @@ from django.template import Context, loader
 from django.utils.safestring import mark_safe
 
 def clean_template(template_, context_, force_ = False):
-    """ renders a template with context and 
+    """ renders a template with context and
         applies the cleaning functions.
         
         Email addresses are hidden with hide_email(),
@@ -40,11 +40,11 @@ def clean_template(template_, context_, force_ = False):
                         htmltools.remove_comments(
                         htmltools.hide_email(template_.render(context_))))
 
-    if ((not settings.DEBUG) or (force_)):
-        # minify (removes newlines except in certain tags [pre, script, etc.])
-        # fixes <p> linebreak spaces before, making sure &nbsp; is there.
-        clean_output = htmltools.remove_newlines(
-                                htmltools.fix_p_spaces(clean_output))
+    #if ((not settings.DEBUG) or (force_)):
+    #    # minify (removes newlines except in certain tags [pre, script, etc.])
+    #    # fixes <p> linebreak spaces before, making sure &nbsp; is there.
+    #    clean_output = htmltools.remove_newlines(
+    #                            htmltools.fix_p_spaces(clean_output))
     return clean_output
 
 

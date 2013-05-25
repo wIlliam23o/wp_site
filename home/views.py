@@ -49,7 +49,33 @@ def view_debug(request):
                                                                "/static/css/highlighter.css"],
                                      })
 
+def view_scriptkids(request):
+    """ return my script kiddie view 
+        (for people trying to access wordpress-login pages and stuff like that.)
+    """
+    
+    # get ip if possible.
+    ip_address = request.META.get("HTTP_X_FORWARDED_FOR", None)
+    if ip_address is None: ip_address = request.META.get("REMOTE_ADDR", None)
+    use_ip = (ip_address is not None)
 
+    # get insulting image to display
+    scriptkid_img = htools.get_scriptkid_image()
+    if scriptkid_img is not None: 
+        scriptkid_img = utilities.get_relative_path(scriptkid_img)
+    use_img = (scriptkid_img is not None)
+    
+    # return formatted template.
+    return responses.clean_response("home/scriptkids.html",
+                                    {'request': request,
+                                     'extra_style_link_list': [utilities.get_browser_style(request),
+                                                               "/static/css/highlighter.css"],
+                                     'use_img': use_img,
+                                     'scriptkid_img': scriptkid_img,
+                                     'use_ip': use_ip,
+                                     'ip_address':ip_address,
+                                     })
+    
 def view_403(request):
     """ return the forbidden page. (403 template) """
     

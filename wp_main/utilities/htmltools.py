@@ -582,12 +582,12 @@ class html_content(object):
             for mailto_ in mailtos_:
                 b64_mailto = base64.encodestring(mailto_).replace('\n','')
                 sline = sline.replace(mailto_, b64_mailto )
-                _log.debug("mailto: replaced " + mailto_ +'\n    with: ' + b64_mailto)
+                #_log.debug("mailto: replaced " + mailto_ +'\n    with: ' + b64_mailto)
             emails_ = find_email_addresses(sline)
             for email_ in emails_:
                 b64_addr = base64.encodestring(email_).replace('\n','')
                 sline = sline.replace(email_, b64_addr )
-                _log.debug("email: replaced " + email_ +'\n    with: ' + b64_addr)
+                #_log.debug("email: replaced " + email_ +'\n    with: ' + b64_addr)
             # add line (encoded or not)
             final_output.append(sline)
         self.content = '\n'.join(final_output)

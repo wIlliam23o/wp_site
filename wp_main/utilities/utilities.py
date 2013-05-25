@@ -176,7 +176,7 @@ def get_absolute_path(relative_file_path):
     
     return sabsolutepath
 
-    
+
 def debug_allowed(request):
     """ returns True if the debug info is allowed for this ip/request.
         inspired by debug_toolbar's _show_toolbar() method.

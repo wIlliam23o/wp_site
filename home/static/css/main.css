@@ -127,6 +127,10 @@ h2.title {
 	display: none;
    }
 
+.centered {
+	text-align: center;
+}
+
 .viewer-filename {
 	font-size: 1em;
 	color: #585858;
@@ -269,6 +273,16 @@ h2.title {
 	-webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);	
 }
 
+.img-rounded {
+	border-style: solid;
+	border-width: 1px;
+	border-color: #dfdfdf;
+	border-radius: 5px;
+	padding: 5px;
+	background: #ffffff;
+	height: auto;
+	width: auto;
+}
 /* Jump-To Styles */
 .jumpto {
 	margin-left: 40px;

@@ -213,7 +213,7 @@ def get_withmatches(_identifier):
             _search = str(_word).lower()
             _strim = _search.replace(' ', '')
             # still no project, look for close matches...
-            for project in wp_project.objects.all():
+            for project in wp_project.objects.order_by('name'):
                 _name = project.name.lower()
                 _nametrim = _name.replace(' ', '')
                 _alias = project.alias.lower()

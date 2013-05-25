@@ -75,3 +75,12 @@ urlpatterns += patterns('',
 handler404 = 'home.views.view_404'
 handler403 = 'home.views.view_403'
 handler500 = 'home.views.view_500'
+
+# Script Kiddie attempts 
+# (not sure what to do right now except show them a msg stating how dumb they are.)
+urlpatterns += patterns('',
+    # wordpress login
+    url(r'^wp\-login\.php$', homeviews.view_scriptkids),
+    url(r'^administrator/index\.php$', homeviews.view_scriptkids),
+    url(r'^admin\.php$', homeviews.view_scriptkids),
+    )
