@@ -24,8 +24,18 @@ def download(request, file_path):
         and then redirecting to the actual file.
     """
 
+    # File path may be an incomplete path to the actual location.
+    # /cedit/source is just as good as /static/files/cedit/source
+    # so we must grab the real (absolute) path, and then convert
+    # it to a valid static path.
+    
+    # location on disk
     absolute_path = utilities.get_absolute_path(file_path)
-    static_path = absolute_path.replace(settings.STATIC_PARENT, '/')
+    # location relative to site
+    static_path = absolute_path.replace(settings.STATIC_PARENT, '')
+    if (not static_path.startswith('/')): static_path = '/' + static_path
+    
+    
     if absolute_path == "":
         # File doesn't exist. Return an error.
         _log.debug("file doesn't exist: " + file_path)
