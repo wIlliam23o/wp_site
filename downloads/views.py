@@ -1,5 +1,8 @@
 # Mark generated Html as safe to view.
 from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
+# Gloval settings
+from django.conf import settings
+
 # Project Info
 from projects import tools
 # Local Tools
@@ -20,9 +23,9 @@ def download(request, file_path):
         by checking file's project owner, incrementing the count,
         and then redirecting to the actual file.
     """
-    
-    static_path = file_path if (file_path.startswith("/")) else ('/' + file_path)
+
     absolute_path = utilities.get_absolute_path(file_path)
+    static_path = absolute_path.replace(settings.STATIC_PARENT, '/')
     if absolute_path == "":
         # File doesn't exist. Return an error.
         _log.debug("file doesn't exist: " + file_path)
@@ -36,6 +39,7 @@ def download(request, file_path):
                                              })
     else:
         # redirect to actual file.
+        _log.debug("redirecting to: " + static_path)
         response = responses.redirect_response(static_path)
         # see if its a project file.
         proj = tools.get_project_from_path(absolute_path)
