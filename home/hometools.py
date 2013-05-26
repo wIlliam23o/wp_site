@@ -10,10 +10,10 @@
  
    start date: Apr 1, 2013
 '''
-import os, os.path
+import os, os.path #@UnusedImport: os is used.
 
 # Global DEBUG setting
-from django.conf import settings
+from django.conf import settings #@UnusedImport: settings
 # Home settings
 from home import homesettings as hsettings
 # Blog/Projects info
