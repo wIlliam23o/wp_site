@@ -741,8 +741,8 @@ table#change-history tbody th {
 #content-related {
     float: right;
     width: 18em;
-    position: relative;
-    margin-right: -19em;
+    position: absolute;
+    right: 20px;
 }
 
 #footer {

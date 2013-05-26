@@ -6,17 +6,25 @@ class file_tracker(models.Model):
     """ holds info about a single file, to better track downloads """
     
     # Filename info.
-    filename = models.CharField(max_length=1024, blank=False)
-    shortname = models.CharField(max_length=512, default="", blank=True)
-    location = models.CharField(max_length=1024, default="", blank=True)
-    notes = models.TextField(default="", blank=True)
+    filename = models.CharField(max_length=1024, blank=False,
+                                help_text="Filename for the file being tracked. (Absolute path)")
+    shortname = models.CharField(max_length=512, default="", blank=True,
+                                 help_text="Short filename for the file (without directory)")
+    location = models.CharField(max_length=1024, default="", blank=True,
+                                help_text="Convenience attribute, just the directory where the file is located.")
+    notes = models.TextField(default="", blank=True,
+                             help_text="Any notes about the file.")
     # File is related to projects or blog posts?
-    project = models.ManyToManyField('projects.wp_project', blank=True)
-    post = models.ManyToManyField('blogger.wp_blog', blank=True)
+    project = models.ManyToManyField('projects.wp_project', blank=True,
+                                     help_text="One or more wp_projects related to the file.")
+    post = models.ManyToManyField('blogger.wp_blog', blank=True,
+                                  help_text="One or more wp_blogs related to the file.")
     
     # General counts
-    download_count = models.BigIntegerField(default=0)
-    view_count = models.BigIntegerField(default=0)
+    download_count = models.BigIntegerField(default=0,
+                                            help_text="How many times the file has been downloaded. (Integer)")
+    view_count = models.BigIntegerField(default=0,
+                                        help_text="How many times the file has been viewed with 'viewer'. (Integer)")
     
     
     def __str__(self):
