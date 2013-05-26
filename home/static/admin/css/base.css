@@ -500,7 +500,8 @@ input[type=text], input[type=password], textarea, select, .vTextField {
     font-size: 11px;
     text-align: left;
     font-weight: bold;
-    background: #7CA0C7 url(../img/default-bg.gif) top left repeat-x;
+    background: #8F8F8F;
+    
     color: white;
 }
 
@@ -602,13 +603,16 @@ div.system-message p.system-message-title {
 /* BREADCRUMBS */
 
 div.breadcrumbs {
-    background: white url(../img/nav-bg-reverse.gif) 0 -10px repeat-x;
-    padding: 2px 8px 3px 8px;
-    font-size: 11px;
-    color: #999;
-    border-top: 1px solid white;
-    border-bottom: 1px solid #ccc;
-    text-align: left;
+	background: #FFF url(../img/nav-bg-reverse.gif) 0 -10px repeat-x;
+	border-radius: 10px;
+	margin-left: 20px;
+	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5);
+	padding: 2px 8px 3px 8px;
+	font-size: 11px;
+	color: #999;
+	border-top: 1px solid #FFF;
+	border-bottom: 1px solid #CCC;
+	text-align: left;
 }
 
 /* ACTION ICONS */
