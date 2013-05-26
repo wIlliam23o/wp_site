@@ -1,1 +1,1 @@
-../../../../../../../../../share/pyshared/django/contrib/admin/static/admin/js/jquery.js
+../../../../../../../javascript/jquery/jquery.js
