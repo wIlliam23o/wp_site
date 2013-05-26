@@ -500,8 +500,7 @@ input[type=text], input[type=password], textarea, select, .vTextField {
     font-size: 11px;
     text-align: left;
     font-weight: bold;
-    background: #8F8F8F;
-    
+    background: #7CA0C7 url(../img/default-bg.gif) top left repeat-x;
     color: white;
 }
 
@@ -789,7 +788,7 @@ table#change-history tbody th {
 
 #header {
     background: #CFCFCF;
-    color: #EEE;
+    color: #858585;
     overflow: hidden;
 }
 
