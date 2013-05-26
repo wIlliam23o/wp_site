@@ -7,7 +7,7 @@ body {
     padding: 0;
     font-size: 12px;
     font-family: "Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
-    color: #333;
+    color: #4E4E4E;
     background: #fff;
 }
 
@@ -320,6 +320,10 @@ thead th a:link, thead th a:visited {
 
 thead th.sorted {
     background: #c5c5c5 url(../img/nav-bg-selected.gif) top left repeat-x;
+}
+
+thead th.sorted .text {
+	padding-right: 42px;
 }
 
 table thead th .text span {
@@ -722,6 +726,8 @@ table#change-history tbody th {
 
 #header {
     width: 100%;
+    border-radius: 20px;
+    box-shadow: 4px 4px 5px rgba(5, 5, 5, 0.66);
 }
 
 #content-main {
@@ -778,8 +784,8 @@ table#change-history tbody th {
 /* HEADER */
 
 #header {
-    background: #002D42;
-    color: #ffc;
+    background: #CFCFCF;
+    color: #EEE;
     overflow: hidden;
 }
 
@@ -796,7 +802,8 @@ table#change-history tbody th {
     font-size: 18px;
     margin: 8px 0;
     font-weight: normal;
-    color: #f4f379;
+    color: #FFFCFC;
+    text-shadow: 2px 2px 3px rgba(0,0,0,0.13);
 }
 
 #branding h2 {
