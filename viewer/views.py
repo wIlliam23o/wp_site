@@ -3,6 +3,9 @@ import os.path
 # Mark generated html as safe to view.
 from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
 
+# Filetracker info
+from downloads import dltools
+
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
@@ -32,112 +35,98 @@ def viewer(request, file_path):
     
     static_path = file_path if (file_path.startswith("/")) else ('/' + file_path)
     absolute_path = utilities.get_absolute_path(file_path)
-    _log.debug("using absolute_path: " + absolute_path)
+    #_log.debug("using absolute_path: " + absolute_path)
     if absolute_path == "":
         # File doesn't exist. Return an alert.
-        response = responses.alert_message("Sorry, that file doesn't exist.")
+        return responses.alert_message("Sorry, that file doesn't exist.")
+
+    # see if its a project file.
+    proj = tools.get_project_from_path(absolute_path)
+   
+    # directory was passed?
+    if os.path.isdir(absolute_path):
+        paths = get_using_paths(file_path, absolute_path, proj)
+        if (paths is None):
+            # can't determine a good file to view from this dir, return an alert.
+            return responses.alert_message("Sorry, there was an error viewing that directory.")
+        else:
+            static_path, absolute_path = paths
+    # if a dir was passed, the absolute_path has changed, we need to update the file_tracker.
+    if os.path.isfile(absolute_path):
+        # update file_tracker info...
+        filetracker = dltools.get_file_tracker(absolute_path)
+        if filetracker is not None:
+            if proj is not None: dltools.update_tracker_projects(filetracker, proj)
+            filetracker.view_count += 1
+            filetracker.save()            
+    # load actual file.
+    if proj is None:
+        project_title = ""
+        # we're not letting you browse the /js dir that easily.
+        # not that I care, it's just code that is not needed.
+        # this site is about my projects, not my external libs.
+        vertical_menu = ""
     else:
-        # see if its a project file.
-        proj = tools.get_project_from_path(absolute_path)
-        
-        # directory was passed?
-        if os.path.isdir(absolute_path):
-            try:
-                files = os.listdir(absolute_path)
-            except:
-                files = []
-                _log.debug("unable to listdir: " + absolute_path)
-            # no files in this directory, or bad dir.
-            if len(files) == 0:
-                absolute_path = ""
-            else:
-                # dir has files, get most important to show.
-                if proj is None:
-                    # no project, try first file.
-                    static_path = utilities.append_path(file_path, files[0])
-                    absolute_path = utilities.get_absolute_path(static_path)
-                    _log.debug("dir passed: no project for file, using first file: " + absolute_path)
-                else:
-                    # has project, see if source_file is good. if so, use it.
-                    if proj.source_file == "":
-                        # just use first file found.
-                        static_path = utilities.append_path(file_path, files[0])
-                        absolute_path = utilities.get_absolute_path(static_path)
-                        _log.debug("dir passed: no source_file for project, using first file: " + absolute_path)
-                    else:
-                        static_path = proj.source_file
-                        absolute_path = utilities.get_absolute_path(static_path)
-                        _log.debug("dir passed: using source_file: " + absolute_path)
-                        
-                    
-        # load actual file.
-        if proj is None:
-            project_title = ""
-            # we're not letting you browse the /js dir that easily.
-            # not that I care, it's just code that is not needed.
-            # this site is about my projects, not my external libs.
-            vertical_menu = ""
+        project_title = proj.name
+        # increment views for this project.
+        proj.view_count += 1
+        proj.save()
+        # check for source files.
+        source_files = get_source_files(proj)
+        vertical_menu = get_source_files_menu(source_files)
+       
+    # get lexer name
+    lexer_ = get_lexer_name_fromfile(static_path)
+   
+    # get file content
+    alert_msg = ""
+    try:
+        with open(absolute_path) as fread:
+            scontent = fread.read()
+    except:
+        _log.error("unable to open file: " + absolute_path)
+        alert_msg = "There was an error opening the file."
+        lexer_ = ""
+        scontent = "<a href='/'><span>Sorry, click here to go home.</span></a>"
+
+    if lexer_ == "":
+        _log.debug("no suitable lexer found for: " + absolute_path)
+        # no suitable lexer found.
+        shtml = scontent
+    else:
+        # Build top of page
+        if project_title == "":
+            shtml = ""
         else:
-            project_title = proj.name
-            # increment views for this project.
-            proj.view_count += 1
-            proj.save()
-            # check for source files.
-            source_files = get_source_files(proj)
-            vertical_menu = get_source_files_menu(source_files)
-            
-        # get lexer name
-        lexer_ = get_lexer_name_fromfile(static_path)
-        
-        # get file content
-        alert_msg = ""
+            shtml = "<div class='title-box'><h3 class='title'>Source View</h3></div>"
+            shtml += "<a href='/projects/" + proj.alias + "'>" + \
+                     "<div class='project_title'><h1 class='project-header'>" + project_title + "</h1>" +\
+                     "</div></a>"
+        # Add short filename...
+        file_name = utilities.get_filename(static_path)
+        shtml += "<a href='" + utilities.append_path("/dl", static_path) + "'>" + \
+                 "<div class='viewer-filename-box'><span class='viewer-filename'>" + file_name + "</span></div>" + \
+                 "<div class='viewer-download-box'><span class='viewer-download-text'>download</span></div></a>"
+                
+        # highlight file content
+        highlighter = wp_highlighter(lexer_, "default", False)
+        highlighter.code = scontent
         try:
-            with open(absolute_path) as fread:
-                scontent = fread.read()
+            shtml += highlighter.highlight()
+            #_log.debug("Highlighted file: " + absolute_path)
         except:
-            _log.error("unable to open file: " + absolute_path)
-            alert_msg = "There was an error opening the file."
-            lexer_ = ""
-            scontent = "<a href='/'><span>Sorry, click here to go home.</span></a>"
- 
-        if lexer_ == "":
-            _log.debug("no suitable lexer found for: " + absolute_path)
-            # no suitable lexer found.
-            shtml = scontent
-        else:
-            # Build top of page
-            if project_title == "":
-                shtml = ""
-            else:
-                shtml = "<div class='title-box'><h3 class='title'>Source View</h3></div>"
-                shtml += "<a href='/projects/" + proj.alias + "'>" + \
-                            "<div class='project_title'><h1 class='project-header'>" + project_title + "</h1>" +\
-                            "</div></a>"
-            # Add short filename...
-            file_name = utilities.get_filename(static_path)
-            shtml += "<a href='" + utilities.append_path("/dl", static_path) + "'>" + \
-                     "<div class='viewer-filename-box'><span class='viewer-filename'>" + file_name + "</span></div>" + \
-                     "<div class='viewer-download-box'><span class='viewer-download-text'>download</span></div></a>"
-                     
-            # highlight file content
-            highlighter = wp_highlighter(lexer_, "default", False)
-            highlighter.code = scontent
-            try:
-                shtml += highlighter.highlight()
-                _log.debug("Highlighted file: " + absolute_path)
-            except:
-                alert_msg = "There was an error highlighting this file."
-                shtml = "<a href='/'><span>Sorry, click here to go home.</span></a>"
-        
-        # build template
-        response = responses.clean_response("home/main.html",
-                                            {'request': request,
-                                             'extra_style_link_list': ["/static/css/highlighter.css",
-                                                                       "/static/css/projects.css"],
-                                             'vertical_menu': mark_safe(vertical_menu),
-                                             'main_content': mark_safe(shtml),
-                                             'alert_message': mark_safe(alert_msg),
-                                             })
+            alert_msg = "There was an error highlighting this file."
+            shtml = "<a href='/'><span>Sorry, click here to go home.</span></a>"
+    
+    # build template (if an alert response wasn't returned already.)
+    response = responses.clean_response("home/main.html",
+                                        {'request': request,
+                                         'extra_style_link_list': ["/static/css/highlighter.css",
+                                                                   "/static/css/projects.css"],
+                                         'vertical_menu': mark_safe(vertical_menu),
+                                         'main_content': mark_safe(shtml),
+                                         'alert_message': mark_safe(alert_msg),
+                                         })
     return response
 
 
@@ -203,4 +192,42 @@ def get_source_files_menu(source_files, max_length = 25, max_text_length = 18):
         if icount > max_length:
             break
         
-    return shead + smenu + stail    
+    return shead + smenu + stail
+
+def get_using_paths(file_path, absolute_path=None, proj=None):
+    """ When given a dir as a path, find out which file is preferred to use first. """
+    
+    if absolute_path is None:
+        absolute_path = utilities.get_absolute_path(file_path)
+    if absolute_path == "":
+        return None
+    
+    try:
+        files = os.listdir(absolute_path)
+    except:
+        files = []
+        _log.debug("unable to listdir: " + absolute_path)
+        
+    # no files in this directory, or bad dir.
+    if len(files) == 0:
+        return None
+
+    # dir has files, get most important to show.
+    if proj is None:
+        # no project, try first file.
+        static_path = utilities.append_path(file_path, files[0])
+        absolute_path = utilities.get_absolute_path(static_path)
+        #_log.debug("dir passed: no project for file, using first file: " + absolute_path)
+    else:
+        # has project, see if source_file is good. if so, use it.
+        if proj.source_file == "":
+            # just use first file found.
+            static_path = utilities.append_path(file_path, files[0])
+            absolute_path = utilities.get_absolute_path(static_path)
+            #_log.debug("dir passed: no source_file for project, using first file: " + absolute_path)
+        else:
+            static_path = proj.source_file
+            absolute_path = utilities.get_absolute_path(static_path)
+            #_log.debug("dir passed: using source_file: " + absolute_path)
+    
+    return (static_path, absolute_path)

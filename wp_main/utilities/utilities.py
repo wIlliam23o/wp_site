@@ -198,5 +198,4 @@ def debug_allowed(request):
     ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
     
     return (ip_in_settings and bool(settings.DEBUG))
-       
-        
+      

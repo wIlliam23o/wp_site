@@ -1,5 +1,5 @@
 from django.db import models
-import django.utils
+import django.utils #@UnusedImport: utils
 import datetime
 
 # Module level functions...   
@@ -39,6 +39,10 @@ class wp_project(models.Model):
     view_count = models.IntegerField(default=0)
     download_count = models.IntegerField(default=0)
     
+    # admin stuff
+    date_hierarchy = 'publish_date'
+    get_latest_by = 'publish_date'
+    
     def __unicode__(self):
         """ returns string/unicode representation of project """
         s = self.name
@@ -46,7 +50,12 @@ class wp_project(models.Model):
             s = s + " v. " + self.version
         return s
 
-
+    # Meta info for the admin site
+    class Meta:
+        ordering = ['name']
+        verbose_name = "Project"
+        verbose_name_plural = "Projects"
+        
         
 
         

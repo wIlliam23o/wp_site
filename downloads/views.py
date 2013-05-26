@@ -3,6 +3,12 @@ from django.utils.safestring import mark_safe # don't escape html with strings m
 # Gloval settings
 from django.conf import settings
 
+# File tools
+import os.path
+
+# Download tools
+from downloads import dltools
+
 # Project Info
 from projects import tools
 # Local Tools
@@ -51,12 +57,23 @@ def download(request, file_path):
         # redirect to actual file.
         #_log.debug("redirecting to: " + static_path)
         response = responses.redirect_response(static_path)
-        # see if its a project file.
-        proj = tools.get_project_from_path(absolute_path)
-        if proj is not None:
-            # increment downloads for this project.
-            proj.download_count += 1
-            proj.save()
+        # File to track? (not a directory)
+        if os.path.isfile(absolute_path):
+            # see if its a project file.
+            proj = tools.get_project_from_path(absolute_path)
+            # update project's download count
+            if proj is not None:
+                # increment downloads for this project.
+                proj.download_count += 1
+                proj.save()
+            # update file tracker info    
+            filetracker = dltools.get_file_tracker(absolute_path)   
+            if filetracker is not None:
+                if proj is not None: dltools.update_tracker_projects(filetracker, proj)
+                
+                filetracker.download_count += 1
+                filetracker.save()
+                 
         
     return response
 

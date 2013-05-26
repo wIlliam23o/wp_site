@@ -50,25 +50,33 @@ possible_args = (('-a', '--all'),
                  ('-p', '--projects'),
                  ('-v', '--views'),
                  ('-d', '--downloads'),
+                 ('-o=', '--orderby'),
                  )
 # print formatting for print_block()
 printblock_args = {'prepend_text': '    ',
                    'append_key': ': ',
                    'prepend_val': None}
+
+# default orders
+orderby_projects = 'name'
+orderby_posts = '-posted'
+
 def main(args):
     if len(args) == 0:
         return print_all()
-    
+    ret = None
     argd = make_arg_dict(args, possible_args)
     
-    ret = None
+    orderby = argd['--orderby']
+    if orderby is not None: orderby = orderby.lower() # all my attr's are lowercase.
+    
     if argd['--all']:
         return print_all()
     
     if argd['--blog']:
-        ret = print_blogs_info()
+        ret = print_blogs_info(order=orderby)
     if argd['--projects']:
-        ret = print_projects_info()
+        ret = print_projects_info(order=orderby)
     if argd['--views']:
         ret = print_most_views()
     if argd['--downloads']:
@@ -86,8 +94,33 @@ def main(args):
 
 def make_arg_dict(args, arg_tuples):
     argdict = {}
+    def find_val(opt):
+        short_=opt[0].strip('=')
+        long_=opt[1]
+        for arg in args:
+            if arg.startswith(short_) or arg.startswith(long_):
+                if '=' in arg:
+                    try:
+                        opt,val = arg.split('=')
+                        return val
+                    except:
+                        # invalid option syntax (users fault)
+                        return None
+                else:
+                    # no '=' in option (users fault)
+                    return None
+        # option wasn't found in args
+        return None
+    
+    # parse args        
     for argoption in arg_tuples:
-        argdict[argoption[1]] = ((argoption[0] in args) or (argoption[1] in args))
+        if '=' in argoption[0]:
+            #this is a setting, we need to find its value (if any)
+            possibleval = find_val(argoption)
+            argdict[argoption[1]] = possibleval
+        else:
+            # regular flag, its either there or it isn't.
+            argdict[argoption[1]] = ((argoption[0] in args) or (argoption[1] in args))
     return argdict
 
 def get_object_byname(partialname):
@@ -122,19 +155,29 @@ def print_all():
 
     return (ret or ret2)
 
-def print_blogs_info():    
-    blog_info = get_blogs_info()
-
-    print "Blog Stats:"
+def print_blogs_info(order=None):    
+    blog_info = get_blogs_info(order)
+    if order is None:
+        order = orderby_posts
+    else:    
+        if not hasattr(wp_blog.objects.all()[0], order.strip('-')):
+            print "Posts don't have a '" + order + "' attribute, using the default: " + orderby_posts
+            order = orderby_posts
+    print "Blog Stats order by " + order + ":"
     blog_info.printblock(**printblock_args)
     print ' '
     return 0
 
 
-def print_projects_info():    
-    proj_info = get_projects_info()
-
-    print 'Project Stats:'
+def print_projects_info(order=None):    
+    proj_info = get_projects_info(order)
+    if order is None:
+        order = orderby_projects
+    else:
+        if not hasattr(wp_project.objects.all()[0], order.strip('-')):
+            print "Projects don't have a '" + order + "' attribute, using the default: " + orderby_projects
+            order = orderby_projects
+    print 'Project Stats ordered by ' + order + ':'
     proj_info.printblock(**printblock_args)
     print ' '
     
@@ -176,9 +219,13 @@ def print_most_downloads():
         return 0
     
     
-def get_projects_info():
+def get_projects_info(orderby=None):
     pblock = print_block()
-    for proj in wp_project.objects.order_by('name'):
+    if orderby is None:
+        orderby = orderby_projects
+    if not hasattr(wp_project.objects.all()[0], orderby.strip('-')):
+        orderby = orderby_projects
+    for proj in wp_project.objects.order_by(orderby):
         # intialize empty info for this project
         #pblock[proj.name] = [" "] # blank item on top...
         newpblock = get_project_info(proj, pblock)
@@ -190,8 +237,13 @@ def get_projects_info():
     
     return pblock
 
-def get_blogs_info():
+def get_blogs_info(orderby=None):
     pblock = print_block()
+    if orderby is None:
+        orderby = orderby_posts
+    if not hasattr(wp_blog.objects.all()[0], orderby.strip('-')):
+        orderby = orderby_posts
+        
     for post in wp_blog.objects.order_by('-posted'):
         newpblock = get_post_info(post, pblock)
         if newpblock is not None: pblock = newpblock

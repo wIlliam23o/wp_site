@@ -19,9 +19,20 @@ class wp_blog(models.Model):
     tags = models.CharField(max_length=512, blank=False)
     view_count = models.IntegerField(default=0, blank=False)
     
+    # admin stuff
+    date_hierarchy = 'posted_datetime'
+    get_latest_by = 'posted_datetime'
+    
     def __unicode__(self):
         return '%s' % self.title
     
     @permalink
     def get_absolute_url(self):
         return ('view_post', None, { 'slug': self.slug })
+
+    # Meta info for the admin site
+    class Meta:
+        ordering = ['-posted']
+        verbose_name = "Blog Post"
+        verbose_name_plural = "Blog Posts"
+        
