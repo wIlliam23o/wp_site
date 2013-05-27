@@ -1,10 +1,13 @@
 # safe html in responses.
 from django.utils.safestring import mark_safe, mark_for_escaping
-
+# authentication
+from django.contrib import auth
+from django.contrib.auth.decorators import login_required
 # various welbornprod tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
 from wp_main.utilities import htmltools
+import wpstats
 
 # logging
 from wp_main.utilities.wp_logging import logger
@@ -14,12 +17,9 @@ _log = logger("home").log
 from home import hometools as htools
 
 def index(request):
-    """ serve up main site """
-    
-    # setup logging
-    #_log = logger("welbornprod.home.index", use_file=True)
+    """ serve up main page (home, index, landing) """
 
-    # render final page
+    # render main page
     return responses.clean_response("home/index.html",
                                     {'request': request,
                                      'blog_post': htools.get_latest_blog(),
@@ -39,7 +39,7 @@ def view_about(request):
                                      'about_content': mark_safe(about_content),
                                      })
 
-
+@login_required(login_url='/login')
 def view_debug(request):
     """ return the django debug info page. """
     
@@ -48,6 +48,85 @@ def view_debug(request):
                                      'extra_style_link_list': [utilities.get_browser_style(request),
                                                                "/static/css/highlighter.css"],
                                      })
+
+def view_login(request):
+    """ processes login attempts ## NOT BEING USED RIGHT NOW ##"""
+    
+    # My first attempt at a login page, not very good.
+    # I am using Django's auth.views with modified css right now.
+    # maybe in the future I can do this right.
+    
+    username = request.REQUEST.get('user', None)
+    pw = request.REQUEST.get('pw', None)
+    
+    _log.debug("username: " + str(username) + ", pw: " + str(pw))
+    
+    response = responses.redirect_response("/badlogin.html")
+    if (username is not None) and (pw is not None):
+        
+        user = auth.authenticate(user=username, password=pw)
+       
+        _log.debug("USER=" + str(user))
+        
+        if user is not None:
+            if user.is_active():
+                auth.login(request, user)
+                referer_view = responses.get_referer_view(request, default=None)
+                
+                _log.debug("referer_view: " + str(referer_view))
+                
+                # Change response based on whether or not previous view was given.
+                if referer_view is None:
+                    # Success
+                    response = responses.redirect_response("/")
+                else:
+                    # Previous view
+                    response = responses.redirect_response(referer_view)
+
+    return response
+    
+
+def view_badlogin(request):
+    """ show the bad login message """
+    
+    return responses.clean_response("home/badlogin.html",
+                                    {'request': request,
+                                     'extra_style_link_list': [utilities.get_browser_style(request)]})
+
+@login_required(login_url="/login")
+def view_stats(request):
+    """ return stats info for projects, blog posts, and file trackers.
+        should require admin permissions.
+    """
+    
+    def convert_line(line):
+        return mark_safe(line.replace(' ', '&nbsp;') + '\n<br/>\n')
+    def convert_pblock(pblock):
+        if pblock is None: return []
+        pblock_args = {'append_key': ': '}
+        return [convert_line(line) for line in pblock.iterblock(**pblock_args)]
+    # gather print_block stats from wpstats and convert to lists of strings.
+    # for projects, blog posts, and file trackers...
+    projectlines = convert_pblock(wpstats.get_projects_info(orderby='-download_count'))
+    postlines = convert_pblock(wpstats.get_blogs_info(orderby='-view_count'))
+    filelines = convert_pblock(wpstats.get_files_info(orderby='-download_count'))
+    
+    if request.user.is_authenticated():
+        response = responses.clean_response("home/stats.html",
+                                            {'request': request,
+                                             'extra_style_link_list': [utilities.get_browser_style(request),
+                                                                       "/static/css/stats.css"],
+                                             'projects': projectlines,
+                                             'posts': postlines,
+                                             'files': filelines,
+                                             })
+    else:
+        response = responses.clean_response("home/badlogin.html",
+                                            {'request': request,
+                                             'extra_style_link_list': [utilities.get_browser_style(request)]})
+    
+    return response
+
 
 def view_scriptkids(request):
     """ return my script kiddie view 
@@ -78,19 +157,16 @@ def view_scriptkids(request):
     
 def view_403(request):
     """ return the forbidden page. (403 template) """
-    
     return view_error(request, 403)
     
     
 def view_404(request):
     """ return the page not found view (404 template) """
-    
     return view_error(request, 404)
     
 
 def view_500(request):
     """ return the internal server error page. """
-    
     return view_error(request, 500)
 
     

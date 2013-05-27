@@ -119,6 +119,9 @@ def is_test_site(request_object):
         looks for 'test.welbornprod' domains.
         returns True/False.
     """
+    if request_object is None or request_object.META is None:
+        # happens on template errors, which hopefully don't make it to production.
+        return True
     
     server_name = request_object.META['SERVER_NAME']
     return (server_name.startswith('test.') or

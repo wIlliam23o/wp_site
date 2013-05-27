@@ -15,13 +15,19 @@ admin.autodiscover()
 # Main Site (home)
 urlpatterns = patterns('',
     # 404 tester
-    url(r'^404\-test\.html$', homeviews.view_404),
+    url(r'^404\.html$', homeviews.view_404),
     # 403 tester
-    url(r'^403\-test\.html$', homeviews.view_403),
+    url(r'^403\.html$', homeviews.view_403),
     # 500 tester
-    url(r'^500\-test\.html$', homeviews.view_500),
+    url(r'^500\.html$', homeviews.view_500),
     # debug info
     url(r'^debug\.html$', homeviews.view_debug),
+    # stats info
+    url(r'^stats\.html$', homeviews.view_stats),
+    # login processor
+    url(r'^login/?.+', 'django.contrib.auth.views.login'),
+    # bad login message
+    url(r'^badlogin\.html$', homeviews.view_badlogin),
     # robots.txt server
     url(r'^robots\.txt$', robots.view_byserver),
     # sitemap server

@@ -21,14 +21,17 @@
     
     Debug button/box toggle added.
     	shows/hides the django debug info box (for use with test site)
-    	
 */
 
 var wpTools = {
-        wpreveal : function () {
+        wpreveal : function (selector) {
         	/* Reveals all base64 encoded mailto: and 
-        	 * email addresses with wp-address classes */
-        	var elems = document.querySelectorAll('.wp-address');
+        	 * email addresses with selector */
+        	if (!selector) {
+        		// use default welbornprod class if no selector is passed.
+        		selector = typeof selector !== 'undefined' ? selector: '.wp-address';
+        	}
+        	var elems = document.querySelectorAll(selector);
                         
             var length = elems.length
             if (length > 0) {
@@ -103,6 +106,15 @@ var wpTools = {
         	this.set_display('.debug-box', 'none');
         	this.set_innerhtml('.debug-button-text', 'show debug');
         },
+        
+        toggle_element : function (selector) {
+        	/* hides elements that are shown and vice-versa by selector */
+        	if (this.elem_is_hidden(selector)) {
+        		$(selector).show();
+        	} else {
+        		$(selector).hide();
+        	}
+        },
             
         elem_is_hidden : function(selector_) {
         	/* determines if element is hidden 
@@ -120,6 +132,13 @@ var wpTools = {
             	this.hide_debug();
         	}
         },
+        
+        center_element : function (selector) {
+        	var screen_width = $(document).width()
+        	var elem_width = $(selector).width()
+        	$(selector).css({"right": ((screen_width - elem_width) / 2).toString() + "px"})
+        },
+        
         }
         
 /**

@@ -169,11 +169,27 @@
 	   		</div>
 	   	{% endif %}
 	{% endblock %}
+	
 	<!-- Whole Page Container (Background and everything inside) -->
 	<div id='bg-surround'>
 	    <div id='bg-pattern' class='main-pattern'>
 	    	<div class='pattern-gradient'></div>
 		</div>
+		<!-- Login Box -->
+		<!-- {% block login %} -->
+		<!-- <div class='login-box' id="login"> -->
+		<!-- 	<span class='login-label'>Please login to continue:</span> -->
+		<!-- 	<form action="/login"> -->
+		<!-- 		<span class='login-label'>User: </span> -->
+		<!-- 		<input id="login-user" type='text' name='user' class='input-text' required=True> -->
+		<!-- 		<br> -->
+		<!-- 		<span class='login-label'>Password:</span> -->
+		<!-- 		<input id="login-pw" type='password' name='pw' class='input-text' required=True> -->
+		<!-- 	<br> -->
+		<!-- 		<input type='submit' title='ok' class='submit-button' onclick="javascript: wpTools.hide_element('#login');"> -->
+		<!-- 	</form> -->
+		<!-- </div> -->
+		<!-- {% endblock %} -->
 		
 		<!-- Alert Area -->
 		{% block alert %}
@@ -328,7 +344,7 @@
 
 	<!-- Email protection (reveal base64 encoded addresses with the wp-address class.)-->
 	<script type="text/javascript">
-		wpTools.wpreveal();
+		wpTools.wpreveal(".wp-address");
 	</script>
 </body>
 </html>

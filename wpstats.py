@@ -303,7 +303,7 @@ def get_blogs_info(orderby=None):
     if not hasattr(wp_blog.objects.all()[0], orderby.strip('-')):
         orderby = orderby_posts
         
-    for post in wp_blog.objects.order_by('-posted'):
+    for post in wp_blog.objects.order_by(orderby):
         newpblock = get_post_info(post, pblock)
         if newpblock is not None: pblock = newpblock
         # get view count
@@ -313,12 +313,18 @@ def get_blogs_info(orderby=None):
 
 def get_files_info(orderby=None):
     pblock = print_block()
+    filetrackers = file_tracker.objects.all()
+    if filetrackers is None:
+        return pblock
+    elif filetrackers == []:
+        return pblock
+    
     if orderby is None:
         orderby = orderby_files
-    if not hasattr(file_tracker.objects.all()[0], orderby.strip('-')):
+    if not hasattr(filetrackers[0], orderby.strip('-')):
         orderby = orderby_files
     
-    for filetracker in file_tracker.objects.order_by(orderby):
+    for filetracker in filetrackers.order_by(orderby):
         newpblock = get_file_info(filetracker, pblock)
         if newpblock is not None: pblock = newpblock
     

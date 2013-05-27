@@ -139,6 +139,10 @@ def is_mobile(request):
         actually, determine if its not a pc.
     """
     
+    if request is None:
+        # happens on template errors, which hopefully never make it to production.
+        return False
+    
     return (not get_user_agent(request).is_pc)
 
 
