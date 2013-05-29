@@ -7,7 +7,7 @@
 {% block extrastylelink %}
 	<link rel="stylesheet" href="static/css/home.css" type="text/css"/>
 	<link rel="stylesheet"href="static/css/highlighter.css"type="text/css"/>
-	
+	<link rel="stylesheet" href="static/css/blogger.css" type="text/css"/>
 {% endblock %}
 
 {% block extrahead %}
@@ -101,6 +101,21 @@
 						{{ blog_post|get_body_short }}
 					</span>
 				</div>
+				<!-- Related Projects -->
+				{% if blog_post|get_projects %}
+					<div class="blog-related-projects-box-index">
+						<span class="blog-related-projects-label">related projects:&nbsp;</span>
+						<div class="blog-related-projects-list">
+							{% for project in blog_post|get_projects %}
+								<div class="blog-related-project">
+									<a href="/projects/{{ project.alias }}">
+										<span>{{ project.name }}</span>
+									</a>
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				{% endif %}
 			</div>
 		</div>
 	{% endif %}

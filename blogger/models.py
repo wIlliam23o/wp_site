@@ -15,7 +15,9 @@ class wp_blog(models.Model):
                             help_text="Optional external html file to override the .body.")
     enable_comments = models.BooleanField(default=True,
                             help_text="If False, no comments will be loaded/shown for this post.")
-    
+    disabled = models.BooleanField(default=False,
+                            help_text="If True, this post will not be displayed. (as opposed to just deleting it)")
+
     # tracking/sorting info.
     project = models.ManyToManyField('projects.wp_project', blank=True,
                                      help_text="One or more wp_projects related to this post.")
@@ -35,12 +37,25 @@ class wp_blog(models.Model):
     get_latest_by = 'posted_datetime'
     
     def __unicode__(self):
+        """ returns title """
+
         return '%s' % self.title
+    
+    def __str__(self):
+        """ same as unicode, but str() """
+        return str(self.__unicode__())
+    
+    def __repr__(self):
+        """ same as unicode """
+        return self.__unicode__()
     
     @permalink
     def get_absolute_url(self):
         return ('view_post', None, { 'slug': self.slug })
 
+    def get_projects(self):
+        return self.project.all()
+        
     # Meta info for the admin site
     class Meta:
         ordering = ['-posted']

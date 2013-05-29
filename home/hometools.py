@@ -29,7 +29,11 @@ _log = logger("home.tools").log
 def get_latest_blog():
     """ retrieve the last posted blog entry (wp_blog object)"""
     
-    return wp_blog.objects.order_by("-posted")[0]
+    posts = utilities.get_objects_if(wp_blog.objects, 'disabled', False, orderby='-posted_datetime')
+    if posts is not None:
+        return posts[0]
+    else:
+        return None
 
 
 def get_latest_project():

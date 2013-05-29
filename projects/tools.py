@@ -33,7 +33,7 @@ def sorted_projects(sort_method = "-publish_date"):
     if sort_method.startswith("date") or sort_method.startswith("-date"):
         sort_method = "-publish_date"
         
-    return wp_project.objects.all().order_by(sort_method)
+    return [p for p in wp_project.objects.all().order_by(sort_method) if not p.disabled]
 
      
 def get_matches_html(project, requested_page):
@@ -236,7 +236,7 @@ def get_projects_menu(max_length = 25, max_text_length = 14):
     """
 
     icount = 0
-    for proj in wp_project.objects.all().order_by('name'):
+    for proj in [p for p in wp_project.objects.all().order_by('name') if not p.disabled]:
         stext = proj.name
         if len(stext) > max_text_length:
             if len(proj.alias) > max_text_length:
@@ -303,7 +303,7 @@ def get_project_from_path(file_path):
     """
     
     # check all project names
-    for proj in wp_project.objects.all():
+    for proj in [p for p in wp_project.objects.all() if not p.disabled]:
         if proj.alias in str(file_path):
             return proj
     return None

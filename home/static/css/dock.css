@@ -2,6 +2,7 @@
 	position: relative; 
 	top: -8px; 
 	height: 50px;
+	left: 0;
 	/* padding-left: 20px;  <-disabled for left-align, getting rid of center. */*/
 	}
 a.dock-item { 
@@ -26,7 +27,7 @@ a.dock-item {
 	width: 100%; 
 	}
 #dock {
-	margin-left: 60px;
+	/*margin-left: 60px;*/
 	display: inline-block;
 	
 }

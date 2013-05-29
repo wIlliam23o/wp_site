@@ -26,6 +26,8 @@ def slice_list(list_, starting_index=0, max_items=-1):
         if max_items > 0 then only that length of items is returned.
         otherwise, all items are returned.
     """
+    if list_ is None: return []
+    if len(list_) == 0: return []
     
     sliced_ = list_[starting_index:]
     if ((max_items > 0) and
@@ -202,4 +204,41 @@ def debug_allowed(request):
     ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
     
     return (ip_in_settings and bool(settings.DEBUG))
-      
+
+
+def get_object_safe(objects_, **kwargs):
+    """ does a mymodel.objects.get(kwargs),
+        returns None on error.
+    """
+    try:
+        obj = objects_.get(**kwargs)
+    except:
+        obj = None
+    return obj
+
+
+def get_objects_if(objects_, attribute, equals, orderby=None):
+    results = None
+    if orderby is None:
+        if hasattr(objects_, 'all'):
+            fetched = objects_.all()
+            try:
+                results = [obj for obj in fetched if getattr(obj, attribute) == equals]
+            except Exception as ex:
+                _log.error("error retrieving results: \n" + str(ex))
+                results = None
+        else:
+            _log.debug(str(objects_) + " has no all()!")
+    else:
+        if hasattr(objects_, 'order_by'):
+            fetched = objects_.order_by(orderby)
+            try:
+                results = [obj for obj in fetched if getattr(obj, attribute) == equals]
+            except Exception as ex:
+                _log.error("error retrieving results: \n" + str(ex))
+                results = None
+        else:
+            _log.debug(str(objects_) + " has no order_by()!")
+    return results
+
+            

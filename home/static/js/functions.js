@@ -38,11 +38,11 @@ $(function () {
 			items: 'a',
 			itemsText: 'span',
 			container: '.dock-container',
-			itemWidth: 50,
+			itemWidth: 60,
 			proximity: 60,
 			alignment : 'left',
-			valign: 'bottom',
-			halign : 'center'
+			valign: 'top',
+			halign : 'left'
 		}
 	);
 });

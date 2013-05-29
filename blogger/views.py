@@ -11,6 +11,8 @@ from wp_main.utilities import responses
 from wp_main.utilities.wp_logging import logger
 _log = logger("blog").log
 
+DEFAULT_MAXPOSTS = 25
+DEFAULT_MAXLINES = 16
 def index(request):
     """ index list of all blog posts """
 
@@ -19,8 +21,8 @@ def index(request):
         raw_posts = wp_blog.objects.order_by('-posted')
         post_count = len(raw_posts)
         blog_posts = blogtools.fix_post_list(raw_posts,
-                                             max_posts=25,
-                                             max_text_lines=16)
+                                             max_posts=DEFAULT_MAXPOSTS,
+                                             max_text_lines=DEFAULT_MAXLINES)
     except:
         _log.error("No blog posts found!")
         blog_posts = False
@@ -43,10 +45,10 @@ def index_page(request):
     page_args = responses.get_paged_args(request, post_count)
     # retrieve blog posts slice
     post_slice = blogtools.get_post_list(starting_index=page_args['start_id'],
-                                         max_posts=page_args['max_items'],
-                                         _order_by=page_args['order_by'])
+                                         max_posts=page_args.get('max_items', DEFAULT_MAXPOSTS),
+                                         _order_by=page_args.get('order_by', None))
     # fix posts for listing.
-    blog_posts = blogtools.fix_post_list(post_slice, max_text_lines=16)
+    blog_posts = blogtools.fix_post_list(post_slice, max_text_lines=DEFAULT_MAXLINES)
     # get last index.     
     end_id = str(page_args['start_id'] + len(post_slice))
     return responses.clean_response("blogger/index_paged.html",
@@ -95,6 +97,9 @@ def view_post(request, _identifier):
             post_.save()
             # enable comments.
             enable_comments = post_.enable_comments
+            # grab related projects
+            related_projects = post_.get_projects()
+            
             # Build clean HttpResponse with post template...
             response = responses.clean_response("blogger/post.html",
                                                 {'request': request,
@@ -102,8 +107,9 @@ def view_post(request, _identifier):
                                                  'post_title_short': post_title_short,
                                                  'enable_comments': enable_comments,
                                                  'blog_post': post_,
+                                                 'related_projects': related_projects,
                                                  })
-        return response
+    return response
 
 def view_tags(request):
     """ list all posts by tags (categories) """
@@ -134,7 +140,9 @@ def view_tag(request, _tag):
     found_posts = blogtools.get_posts_by_tag(tag_name, starting_index=0, max_posts=-1)
     post_count = len(found_posts)
     
-    blog_posts = blogtools.fix_post_list(found_posts, max_posts=25, max_text_lines=16)
+    blog_posts = blogtools.fix_post_list(found_posts, 
+                                         max_posts=DEFAULT_MAXPOSTS, 
+                                         max_text_lines=DEFAULT_MAXLINES)
     item_count = len(blog_posts)
     return responses.clean_response("blogger/tag.html",
                                     {'request': request,
@@ -161,10 +169,10 @@ def tag_page(request, _tag):
     post_slice = blogtools.get_posts_by_tag(tag_name, 
                                             starting_index=page_args['start_id'],
                                             max_posts=page_args['max_items'],
-                                            _order_by=page_args['order_by'])
+                                            _order_by=page_args.get('order_by', None))
         
     # fix posts for listing.
-    blog_posts = blogtools.fix_post_list(post_slice, max_text_lines=16)
+    blog_posts = blogtools.fix_post_list(post_slice, max_text_lines=DEFAULT_MAXLINES)
     # number of items in this slice (to get the last index)
     end_id = str(page_args['start_id'] + len(blog_posts))
     # build page.

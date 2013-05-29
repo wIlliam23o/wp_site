@@ -16,11 +16,7 @@ BASE_DIR = os.path.split(SCRIPT_PARENT)[0]
 # get parent of application
 BASE_PARENT = os.path.split(BASE_DIR)[0]
 
-# automatic settings for debug mode.
-#import socket
-#shostname = socket.gethostname()
-#del socket
-
+# test or live?
 if "webapps" in BASE_PARENT:
     # live site directories
     STATIC_PARENT = BASE_PARENT
@@ -247,4 +243,10 @@ LOGGING = {
 
 DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
 
+# default login url (regex for wp_main.urls, put here to avoid future mismatches)
+LOGIN_URL = "/login"
+LOGIN_URL_REGEX = "^login/?.+"
+
+# default page to visit after login (if 'next url' is not specified)
+LOGIN_REDIRECT_URL = "/"
 

@@ -43,26 +43,42 @@
 	<div class="blog-posts">
 			{% if blog_posts %}
 				{% for post in blog_posts %}
-					<div class="blog-listing">
-						<div class='blog-post-title-box'>
-							<a href="/blog/view/{{ post.slug }}">
-								<span class="blog-listing-title">{{ post.title }}</span>
-							</a>
+					{% if not post.disabled %}
+						<div class="blog-listing">
+							<div class='blog-post-title-box'>
+								<a href="/blog/view/{{ post.slug }}">
+									<span class="blog-listing-title">{{ post.title }}</span>
+								</a>
+							</div>
+							{% if post.enable_comments %}
+								{{ post|comments_button }}
+							{% endif %}						
+							<div class="blog-post-date-box">
+								<span class="blog-post-date">{{ post.posted }}</span>
+							</div>
+							<div class="blog-post-tags-box">
+								{{ post|tag_links }}
+							</div>			
+							<div class="blog-listing-body">
+								{{ post|get_body_short }}
+							</div>
+							<!-- Related Projects links (if any) -->
+							{% if post|get_projects %}
+								<div class="blog-related-projects-box-index">
+									<span class="blog-related-projects-label">related projects:&nbsp;</span>
+									<div class="blog-related-projects-list">
+										{% for project in post|get_projects %}
+											<div class="blog-related-project">
+												<a href="/projects/{{ project.alias }}">
+													<span>{{ project.name }}</span>
+												</a>
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+							{% endif %}
 						</div>
-						{% if post.enable_comments %}
-							{{ post|comments_button }}
-						{% endif %}						
-						<div class="blog-post-date-box">
-							<span class="blog-post-date">{{ post.posted }}</span>
-						</div>
-						<div class="blog-post-tags-box">
-							{{ post|tag_links }}
-						</div>			
-						<div class="blog-listing-body">
-							{{ post|get_body_short }}
-						</div>
-						<!-- TODO: RELATED PROJECTS -->
-					</div>
+					{% endif %}
 				{% endfor %}
 			{% else %}
 				<span style="font-style: italic;">Sorry, no blog posts found.</span>

@@ -64,13 +64,8 @@
 			a.dock-item:active { color: #9c9c9c; }
 			.dock-item span { display: block; }
 			
-			.vertical-menu {
-				top: 200px;
-			}
-			
-			.menubar {
-				margin-top: 0px;
-			}
+			.vertical-menu { top: 200px; }
+			.menubar { margin-top: 0px; }
 			
 		</style>
 	{% else %}		
@@ -91,10 +86,10 @@
 	
 	<!-- Javascript: Fisheye Dock -->
 	{% if request|is_mobile %}
-		<!-- No dock js loaded on mobile site. It looks funny -->
+		<!-- No dock js loaded on mobile site. It doesn't work well with touch screens. -->
 	{% else %}
-		<script type="text/javascript" src="/static/js/fisheye-iutil.js"></script>
 		<script type="text/javascript" src="/static/js/dock.js"></script>
+		<script type="text/javascript" src="/static/js/fisheye-iutil.js"></script>
 	{% endif %}
 	
 	<!-- Javascript: Image Rotator -->
@@ -212,15 +207,16 @@
 		{% endblock %}
 		<div class='wp-container'>
 			<!-- LOGO -->
-	    	<div class='wp-block'>
-	        	<a href='/' id='wp-logo'></a>
-	    	</div>
+			<a href='/'>
+				<div class='wp-block' id='wp-logo'></div>
+			</a>
+
 	    	
 	        <!-- Navigation -->
 	        <div class="wp-block navigation">
 	        	<div class="menubar">
 					<div id="dock">
-						<div class="dock-container">
+						<div class="dock-container" id="dock-box" style="left: 0px;">
 								<a class="dock-item" id='dock-home' href="/">
 									<span>Home</span>
 									<img src="/static/images/dock/wp-home.png" alt="home" />
@@ -344,7 +340,11 @@
 
 	<!-- Email protection (reveal base64 encoded addresses with the wp-address class.)-->
 	<script type="text/javascript">
-		wpTools.wpreveal(".wp-address");
+		$(document).ready( function () {
+			wptools.wpreveal(".wp-address");
+			/* fix iFisheye's weird dock positioning. */
+			wptools.getid('dock-box').style.left = '0px';
+		});
 	</script>
 </body>
 </html>

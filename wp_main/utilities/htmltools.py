@@ -239,17 +239,7 @@ class html_content(object):
     def wrap_link(self, link_url = '', alt_text = ''):
         """ wrap content in an <a href=link_url> """
         
-        if link_url == '':
-            s_start = ''
-            s_end = ''
-        else:
-            s_start = "<a href='" + link_url + "'"
-            if alt_text == '':
-                s_start += '>'
-            else:
-                s_start += " alt='" + alt_text + "'" + ">"
-            s_end = '</a>'
-        self.content = s_start + self.content + s_end
+        self.content = wrap_link(self.content, link_url, alt_text)
         return self
     
     
@@ -263,212 +253,45 @@ class html_content(object):
             so use [if check_replacement()], not [if check_replacement() in source_string].
         """
         
-        # fix replacement if {{}} was omitted.
-        if not target_replacement.startswith("{{"):
-            target_replacement = "{{" + target_replacement
-        if not target_replacement.endswith("}}"):
-            target_replacement = target_replacement + "}}"
-            
-        # this will look for '{{ target }}' and '{{target}}'...
-        if target_replacement.replace(' ', '') in self.content:
-            target_replacement = target_replacement.replace(' ', '')
-            
-        if target_replacement in self.content:
-            return target_replacement
-        else:
-            _log.debug("target not found: " + target_replacement)
-            return False
+        return check_replacement(self.content, target_replacement)
         
 
     def inject_article_ad(self, target_replacement = "{{ article_ad }}"):
         """ basically does a text replacement, 
-            replaces 'target_replacement' with the code for article ads.
-            returns finished html string.
+            see: htmltools.inject_article_ad()
         """
         
-        # fail check.
-        target = self.check_replacement(target_replacement)
-        if not target:
-            return self
-            
-        article_ad = """
-            <div class='article-ad'>
-                <script type='text/javascript'>
-                    <!--
-                    google_ad_client = 'ca-pub-0811371441457236';
-                    /* LeaderBoard-InsideArticles */
-                    google_ad_slot = '7930726415';
-                    google_ad_width = 728;
-                    google_ad_height = 90;
-                    //-->
-                </script>
-                <script type='text/javascript'
-                         src='http://pagead2.googlesyndication.com/pagead/show_ads.js'>
-                </script>
-            </div>"""
-            
-        self.content = self.content.replace(target, article_ad)
+        self.content = inject_article_ad(self.content, target_replacement)
         return self
     
 
-    def inject_screenshots(self, images_dir, target_replacement = "{{ screenshots_code }}", 
-                           noscript_image = None):
+    def inject_screenshots(self, images_dir, **kwargs):
         """ inject code for screenshots box.
-            walks image directory, building html for the image rotator box.
-            examples:
-                shtml = inject_screenshots(shtml, "static/images/myapp")
-                shtml = inject_screenshots(shtml, "images/myapp/", noscript_image="sorry_no_javascript.png")
-                shtml = inject_screenshots(shtml, "images/myapp", "{{ replace_with_screenshots }}", "noscript.png")
+            see: htmltools.inject_screenshots()
         """
-        
-        # fail checks, make sure target exists in source_string
-        target_replacement = self.check_replacement(target_replacement)
-        if not target_replacement:
-            return self
-        # get absolute path for images dir, if none exists then quit.
-        images_dir = utilities.get_absolute_path(images_dir)
-        if images_dir == "":
-            self.content = self.content.replace(target_replacement, "")
-            return self
-        
-        # directory exists, now make it relative.
-        relative_dir = utilities.get_relative_path(images_dir)
-            
-        # start of rotator box
-        sbase = """
-        <div class="screenshots_box">
-            <div class="wt-rotator">
-                <div class="screen">
-                    <noscript>
-                        <!-- placeholder 1st image when javascript is off -->
-                        <img src="{{noscript_image}}"/>
-                    </noscript>
-                  </div>
-                <div class="c-panel">
-                      <div class="thumbnails">
-                        <ul>
-        """
-        # end of rotator box
-        stail = """                      </ul>
-                     </div>     
-                      <div class="buttons">
-                        <div class="prev-btn"></div>
-                        <div class="play-btn"></div>    
-                        <div class="next-btn"></div>               
-                    </div>
-                </div>
-            </div>    
-        </div>
-        """
-        
-        # template for injecting image files
-        stemplate = """
-                            <li>
-                                <a href="{{image_file}}" title="screen shots">
-                                    <img class="screenshot" src="{{image_file}}"/>
-                                </a>
-                                <a href="{{image_file}}" target="_blank"></a>                        
-                            </li>
-                    """
-        
-        # accceptable image formats
-        formats = ["png", "jpg", "gif", "bmp"]
-        # find acceptable pics
-        good_pics = []
-        for sfile in os.listdir(images_dir):
-            if sfile[-3:].lower() in formats:
-                good_pics.append(os.path.join(relative_dir, sfile))
-        # no good pictures found?
-        if len(good_pics) == 0:
-            self.content = self.content.replace(target_replacement, '')
-            return self
-        else:
-            # found pics, process them.
-            spics = ""
-            for sfile in good_pics:
-                spics += stemplate.replace('{{image_file}}', sfile)
-            if noscript_image is None:
-                noscript_image = good_pics[0]
-            sbase = sbase.replace("{{noscript_image}}", noscript_image)
-            self.content = self.content.replace(target_replacement, sbase + spics + stail)
-            return self
+        target_replacement = kwargs.get('target_replacement', "{{ screenshots_code }}")
+        noscript_image = kwargs.get('noscript_image', None)
+        self.content = inject_screenshots(self.content, images_dir, target_replacement, noscript_image)
+        return self
         
 
-    def inject_sourceview(self, project, link_text = None, desc_text = None, target_replacement = "{{ source_view }}"):
+    def inject_sourceview(self, project, **kwargs):
         """ injects code for source viewing.
-            needs wp_project (project) passed to gather info.
-            if target_replacement is not found, returns source_string.
-            ** this probably needs to be in projects.tools **
+            see: htmltools.inject_sourceview()
         """
-    
-        # fail check.
-        target = self.check_replacement(target_replacement)
-        if not target:
-            return self
-        
-        # has project info?
-        if project is None:
-            self.content = self.content.replace(target, "")
-            return self
-        
-        # use source_file if no source_dir was set.
-        if project.source_dir == "":
-            srelativepath = utilities.get_relative_path(project.source_file)
-        else:
-            srelativepath = utilities.get_relative_path(project.source_dir)
-        # get default filename to display in link.
-        if project.source_file == "":
-            file_name = project.name
-        else:
-            file_name = utilities.get_filename(project.source_file)
-                
-        # has good link?
-        if srelativepath == "":
-            _log.debug("missing source file/dir for: " + project.name)
-            self.content = self.content.replace(target, "<span>Sorry, local source not available for " + project.name + ".</span>")
-            return self
-        
-        # link href
-        slink = utilities.append_path("/view", srelativepath)
-        
-        # get link text
-        if link_text is None:
-            if project.source_file == "":
-                link_text = "View Source (Local)"
-            else:
-                link_text = file_name + " (View Source)"
-        # get description text
-        if desc_text is None:
-            desc_text = " - view source for " + project.name + " v." + project.version
-        
-        sbase = """<div class='source-view'>
-                       <a class='source-view-link' href='{{ link }}'>{{ link_text }}</a>&nbsp;
-                           <span class='source-view-text'>{{ desc_text }}</span>
-                   </div>
-            """
-        
-        source_view = sbase.replace("{{ link }}", 
-                                    slink).replace("{{ link_text }}", 
-                                                   link_text).replace("{{ desc_text }}", desc_text)
-        self.content = self.content.replace(target, source_view)
+        link_text = kwargs.get('link_text', None)
+        desc_text = kwargs.get('desc_text', None)
+        target_replacement = kwargs.get('target_replacement', '{{ source_view }}')
+        self.content = inject_sourceview(project, self.content, link_text, desc_text, target_replacement)
         return self
         
     def remove_comments(self):
-            """ splits source_string by newlines and 
-                removes any line starting with <!-- and ending with -->. 
-            """
+        """ splits source_string by newlines and 
+            removes any line starting with <!-- and ending with -->. 
+        """
                 
-            if ("<!--" in self.content) and ('\n' in self.content):
-                keeplines = []
-                
-                for sline in self.content.split('\n'):
-                    strim = sline.replace('\t', '').replace(' ','')
-                    if not (strim.startswith("<!--") and strim.endswith("-->")):
-                        keeplines.append(sline)
-    
-                self.content = '\n'.join(keeplines)
-            return self
-    
+        self.content = remove_comments(self.content)
+        return self
     
     def remove_newlines(self):
         """ remove all newlines from a string 
@@ -476,65 +299,15 @@ class html_content(object):
             formatting doesn't get messed up.
         """
             
-        # removes newlines, except for in pre blocks.
-        if '\n' in self.content:
-            in_skipped = False
-            final_output = []
-            for sline in self.content.split('\n'):
-                sline_lower = sline.lower()
-                # start of pre tag
-                if (("<pre" in sline_lower) or
-                    ("<script" in sline_lower)):
-                    in_skipped = True
-                # process line.  
-                if in_skipped:
-                    # add original line.
-                    final_output.append(sline + '\n')
-                else:
-                    # add trimmed line.
-                    final_output.append(sline.replace('\n', ''))
-                # end of tag
-                if (("</pre>" in sline_lower) or
-                    ("</script>" in sline_lower)):
-                    in_skipped = False
-        else:
-            final_output = [self.content]
-        self.content = "".join(final_output)
+        self.content = remove_newlines(self.content)
         return self
     
     def remove_whitespace(self):
         """ removes leading and trailing whitespace from lines,
             and removes blank lines.
-    
         """
-        
-        # removes newlines, except for in pre blocks.
-        if '\n' in self.content:
-            slines = self.content.split('\n')
-        else:
-            slines = [self.content]
-        # start processing    
-        in_skipped = False
-        final_output = []
-        for sline in slines:
-            sline_lower = sline.lower()
-            # start of skipped tag
-            if "<pre" in sline_lower:
-                in_skipped = True
-            # process line.   
-            if in_skipped:
-                # add original line.
-                final_output.append(sline)
-            else:
-                trimmed = trim_whitespace_line(sline)
-                # no blanks.
-                if trimmed != '\n' and trimmed != '':
-                    final_output.append(trimmed)
-            # end of tag
-            if "</pre>" in sline_lower:
-                in_skipped = False
-    
-        self.content = '\n'.join(final_output)
+
+        self.content = remove_whitespace(self.content)
         return self
 
     
@@ -626,8 +399,7 @@ class html_content(object):
 
 
     
-#######################################################################################################################
-############### anything below this line with 'source_string' in the parameters will be moved to html_content #########
+# Module Functions (not everything can be an html_content(), or should be.)
 def wrap_link(content_, link_url, alt_text = ""):
     """ wrap content in <a href> """
     s = ""
@@ -879,15 +651,19 @@ def remove_comments(source_string):
         """ splits source_string by newlines and 
             removes any line starting with <!-- and ending with -->. 
         """
-            
-        if ("<!--" in source_string) and ('\n' in source_string):
+        
+        def is_comment(line):
+            """ returns true if line is a single-line comment. (html or js) """
+            return ((line.startswith('<!--') and line.endswith('-->')) or
+                    (line.startswith('/*') and line.endswith('*/')))
+                
+        if ('\n' in source_string):
             keeplines = []
             
             for sline in source_string.split('\n'):
                 strim = sline.replace('\t', '').replace(' ','')
-                if not (strim.startswith("<!--") and strim.endswith("-->")):
+                if not is_comment(strim):
                     keeplines.append(sline)
-
             return '\n'.join(keeplines)
         else:
             return source_string

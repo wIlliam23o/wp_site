@@ -46,6 +46,9 @@ class wp_project(models.Model):
     publish_date = models.DateField(blank=False, default=get_date_today(),
                                     help_text="Date the project was published. (Automatically set to today.)")
     
+    # disables project (instead of deleting it, it simply won't be viewed)
+    disabled = models.BooleanField(default=False)
+    
     # count of views/downloads
     view_count = models.IntegerField(default=0,
                                      help_text="How many times this project has been viewed. (Integer)")
@@ -63,6 +66,14 @@ class wp_project(models.Model):
             s = s + " v. " + self.version
         return s
 
+    def __str__(self):
+        """ same as unicode() except str() """
+        return str(self.__unicode__())
+    
+    def __repr__(self):
+        """ same as unicode() """
+        return self.__unicode__()
+    
     # Meta info for the admin site
     class Meta:
         ordering = ['name']

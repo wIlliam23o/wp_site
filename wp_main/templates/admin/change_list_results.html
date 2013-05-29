@@ -1,4 +1,6 @@
 {% load i18n admin_static %}
+{% load wp_tags %}
+
 {% if result_hidden_fields %}
 <div class="hiddenfields">{# DIV for HTML validation #}
 {% for item in result_hidden_fields %}{{ item }}{% endfor %}
@@ -27,10 +29,14 @@
 </thead>
 <tbody>
 {% for result in results %}
-{% if result.form.non_field_errors %}
-    <tr><td colspan="{{ result|length }}">{{ result.form.non_field_errors }}</td></tr>
-{% endif %}
-<tr class="{% cycle 'row1' 'row2' %}">{% for item in result %}{{ item }}{% endfor %}</tr>
+	{% if result.form.non_field_errors %}
+    	<tr><td colspan="{{ result|length }}">{{ result.form.non_field_errors }}</td></tr>
+	{% endif %}
+	<tr class="{% cycle 'row1' 'row2' %}">
+		{% for item in result %}
+			{{ item|disabled_css }}
+		{% endfor %}
+	</tr>
 {% endfor %}
 </tbody>
 </table>

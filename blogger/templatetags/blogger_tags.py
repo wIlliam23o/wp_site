@@ -30,11 +30,20 @@ def get_body_short(value):
     
     return mark_safe(blogtools.prepare_content(blogtools.get_post_body_short(value)))
 
+def get_projects(post):
+    """ returns a list of all related projects for a post. """
+    try:
+        return post.project.all()
+    except:
+        return []
 
 
+# these can be used as tags.
+registered = (tag_links,
+              get_body,
+              get_body_short,
+              get_projects)
+# register all functions in the registered list.
+for func in registered:
+    register.filter(str(func.func_name), func)
 
-
-
-register.filter('tag_links', tag_links)
-register.filter('get_body', get_body)
-register.filter('get_body_short', get_body_short)

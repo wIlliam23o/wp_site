@@ -843,3 +843,9 @@ table#change-history tbody th {
     color: #666;
 }
 
+/* Custom items (from wp_tags filters or other) */
+a.item-disabled, .item-disabled {
+	color: #c5c5c5;
+	/*font-weight: normal;*/
+}
+

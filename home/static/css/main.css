@@ -103,26 +103,33 @@ ul.menu {padding-left: 0;}
 	text-transform: lowercase;
     }
 
-.title {
+.title, h3.title {
 	font-family: "Open Sans", "Century Gothic", "Arial Black", "Liberation Sans", sans-serif;
+	font-size: 1em;
 	margin-bottom: 2px;
 	color: #8A8A8A;
 	padding-left: 5px;
 	padding-top: 5px;
 	text-transform: lowercase;
 	}
-h2.title {
-	font-size: 1.1em;
+	
+/* These two should have the same style, different sizes. */
+h2.title, h1.title {
 	padding-left: 0px;
 	margin-left: 0px;
 	margin-bottom: 5px;
+	margin-top: 10px;
 	color: #BBB;
+	text-transform: lowercase;
 	}
-		
+h2.title { font-size: 1.2em; }
+h1.title { font-size: 1.5em; }
+
 .desc {
 	padding-left: 40px;
 	padding-right: 40px;
     }
+    
 .hidden {
 	display: none;
    }
@@ -373,7 +380,7 @@ a.jumpto-nav {
 	position: relative;
 	margin-top: 50px;
 	padding: 0;
-	left: -60px; /* fix for fisheye being slightly off (see dock.css #dock) */
+	/*left: -60px; */ /* fix for fisheye being slightly off (see dock.css #dock) */
 	width: auto; /* set to 100% for centered menu, see dock.css for padding-left: 20px  */
 	text-transform: lowercase;
 	text-align: left;

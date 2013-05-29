@@ -123,7 +123,7 @@ def clean_response(template_name, context_dict, request_ = None):
     try:
         tmp_ = loader.get_template(template_name)
     except Exception as ex:
-        _log.error("could not load template: " + template_name + '<br/>\n' + \
+        _log.error("could not load template: " + template_name + '\n' + \
                    str(ex))
         rendered = None
     else:
@@ -163,7 +163,7 @@ def redirect_response(redirect_to):
     return response
 
 
-def get_request_arg(request, arg_names, default_value=None, min_val=0, max_val=9999):
+def get_request_arg(request, arg_names, default=None, min_val=0, max_val=9999):
     """ return argument from request (GET or POST),
         arg_names can be a list of alias names like: ['q', 'query', 'search']
            and this will look for any of those args.
@@ -209,14 +209,11 @@ def get_request_arg(request, arg_names, default_value=None, min_val=0, max_val=9
             val = float_val
         except:
             pass
-    
-    # default value is empty string if none was passed.
-    if default_value is None:
-        default_value = ""    
+      
     # final return after processing,
     # will goto default value if val is empty.
     if val == "":
-        val = default_value
+        val = default
     return val
         
 
@@ -239,7 +236,7 @@ def get_paged_args(request, total_count):
     """
 
     # get order_by
-    order_by_ = get_request_arg(request, ['order_by','order'], '-posted')
+    order_by_ = get_request_arg(request, ['order_by','order'], None)
         
     # get max_posts
     max_ = get_request_arg(request, ['max_items','max'], 25, min_val=1, max_val=100)

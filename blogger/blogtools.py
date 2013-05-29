@@ -23,40 +23,43 @@ from wp_main.utilities.highlighter import highlight_inline, highlight_embedded
 # Blog Info
 from blogger.models import wp_blog
 
+DEFAULT_ORDERBY = '-posted_datetime'
 
 def get_post_byany(_identifier):
     """ retrieve blog post by any identifier, returns None on failure """
     
+    # by id
     try:
         id_ = int(_identifier)
-        post_ = wp_blog.objects.get(id=id_)
-    except:
+        post_ = utilities.get_object_safe(wp_blog.objects, id = id_)
+    except ValueError:
         post_ = None
-    
-    if post_ is None:
-        try:
-            post_ = wp_blog.objects.get(title=_identifier)
-        except:
-            post_ = None
+
+    # by title
+    if post_ is None: post_ = utilities.get_object_safe(wp_blog.objects, title = _identifier)
+ 
+    # by slug
     if post_ is None:
         # id and title failed, try slug.
         # remove html ending
-        if (_identifier.lower().endswith(".html") or
-            _identifier.lower().endswith(".htm")):
-            _identifier = _identifier[:_identifier.index(".")]
-        try:
-            post_ = wp_blog.objects.get(slug=_identifier)
-        except:
-            post_ = None
-    return post_
+        if _identifier.lower().endswith(".html"): _identifier = _identifier[:-5]
+        if _identifier.lower().endswith(".htm"): _identifier = _identifier[:-4]
+        
+        # try quick slug id. (Case-insensitive because all slugs are lowercase)
+        post_ = utilities.get_object_safe(wp_blog.objects, slug = _identifier.lower())
 
-def get_post_list(starting_index=0, max_posts=-1, _order_by="-posted"):
+    if post_ is None:
+        return post_
+    else:
+        return post_ if not post_.disabled else None
+
+def get_post_list(starting_index=0, max_posts=-1, _order_by=None):
     """ returns a list of posts, starting with starting_id,
         as long as max_posts. 
         this is for pageination.
     """
-    
-    all_posts = wp_blog.objects.order_by(_order_by)
+    if _order_by is None: _order_by = DEFAULT_ORDERBY
+    all_posts = [post for post in wp_blog.objects.order_by(_order_by) if not post.disabled]
     
     return utilities.slice_list(all_posts, starting_index, max_posts)
     
@@ -174,9 +177,10 @@ def prepare_content(body_content):
     return body_content
 
 
-def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, _order_by='-posted'):
+def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, _order_by=None):
     """ retrieve all posts with tag_ as a tag. """
     
+    if _order_by is None: _order_by = DEFAULT_ORDERBY
     if ',' in _tag:
         _tag = _tag.replace(',', ' ')
         
@@ -190,7 +194,7 @@ def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, _order_by='-posted'):
     
     # get all posts with these tags.
     found = []
-    for post_ in wp_blog.objects.order_by(_order_by):
+    for post_ in [p for p in wp_blog.objects.order_by(_order_by) if not p.disabled]:
         post_tags = post_.tags.replace(',', ' ')
         # get list of post tags
         if ' ' in post_tags:
@@ -245,7 +249,7 @@ def get_all_tags():
     
     all_tags = []
     # add up all tags.
-    for post_ in wp_blog.objects.all():
+    for post_ in [p for p in wp_blog.objects.all() if not p.disabled]:
         all_tags += get_tag_list(post_)
     # remove duplicates and return.
     return utilities.remove_list_dupes(all_tags)

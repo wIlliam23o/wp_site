@@ -9,8 +9,8 @@ $(function () {
 			itemWidth: 60, /* 50 */
 			proximity: 60, /* 60 */
 			alignment : 'left',
-			valign: 'top',
-			halign : 'left'
+			valign: 'bottom',
+			halign : 'center'
 		}
 	);
 });

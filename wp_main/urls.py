@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from django.conf.urls import patterns, include, url
-
+# login url is set in settings
+from django.conf import settings
 # main views
 from home import views as homeviews
 # get sitemaps
@@ -25,7 +26,7 @@ urlpatterns = patterns('',
     # stats info
     url(r'^stats\.html$', homeviews.view_stats),
     # login processor
-    url(r'^login/?.+', 'django.contrib.auth.views.login'),
+    url(settings.LOGIN_URL_REGEX, 'django.contrib.auth.views.login'),
     # bad login message
     url(r'^badlogin\.html$', homeviews.view_badlogin),
     # robots.txt server

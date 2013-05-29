@@ -27,7 +27,7 @@ def index(request):
     else:
         # list all projects...
         projects_content = "<div class='project_listing'>\n"
-        for proj in wp_project.objects.all().order_by('name'):
+        for proj in [p for p in wp_project.objects.all().order_by('name') if not p.disabled]:
             projects_content += project_listing(request, proj)
         projects_content += "</div>\n"
     # get vertical projects menu
@@ -71,11 +71,25 @@ def project_page(request, project, requested_page, source=""):
     # default extra style needed
     extra_style_link_list = [utilities.get_browser_style(request)]
 
+    # default content if project is found, but has no content
+    no_content = """<div class='project_container'>
+                    <div class='project_title'>
+                        <h1 class='project-header'>%s</h1>
+                    </div>
+                    <span>No information found for: %s</span>
+                    </div>"""
+    # initialize response (if it changes before the return then something went wrong.)
+    response = None
+    
     # if project matches list was sent, use it.
     if isinstance(project, (list, tuple)):
-        _log.debug("Found project matches: " + '\n    '.join([p.name for p in project]))
+        #_log.debug("Found project matches: " + '\n    '.join([p.name for p in project]))
         shtml = tools.get_matches_html(project, requested_page)
         project_title = False
+    elif project is None:
+        # No project returned (probably accessing a disabled project)
+        response = responses.alert_message("Sorry, I can't find that project.",
+                                           "<a href='/projects'><span>Click here to go back to the projects listing.</span></a>")
     else:
         # Found Project, build page.
         project_title = project.name
@@ -84,11 +98,7 @@ def project_page(request, project, requested_page, source=""):
         
         if scontent == "":
             # default response unless more information is loaded.
-            shtml = "<div class='project_container'>\n" + \
-                "    <div class='project_title'>\n" + \
-                "        <h1 class='project-header'>" + project_title + "</h1>\n" + \
-                "    </div>\n" + \
-                "<span>No information found for: " + project_title + "</span>\n</div>"
+            shtml = no_content % (project_title, project_title)
         else:
             # prepare extra content from html file, adding screenshots/ads/downloads
             shtml = tools.prepare_content(project, scontent) + '\n</div>'
@@ -102,19 +112,19 @@ def project_page(request, project, requested_page, source=""):
         project.view_count += 1
         project.save()
 
-
-        
     # build vertical projects menu
     projects_menu = tools.get_projects_menu()                  
-
-    return responses.clean_response("projects/project.html",
-                                    {'request': request,
-                                     'project_content': mark_safe(shtml),
-                                     'project_title': project_title,
-                                     'projects_menu': mark_safe(projects_menu),
-                                     'extra_style_link_list': extra_style_link_list,
-                                     'use_screenshots': use_screenshots,
-                                     })
+    if response is None:
+        return responses.clean_response("projects/project.html",
+                                        {'request': request,
+                                         'project_content': mark_safe(shtml),
+                                         'project_title': project_title,
+                                         'projects_menu': mark_safe(projects_menu),
+                                         'extra_style_link_list': extra_style_link_list,
+                                         'use_screenshots': use_screenshots,
+                                         })
+    else:
+        return response
 
 
 def request_any(request, _identifier):
@@ -154,7 +164,7 @@ def get_byname(_name):
         
     try:
         proj = wp_project.objects.get(name=_name)
-        return proj
+        return proj if not proj.disabled else None
     except wp_project.DoesNotExist:
         for proj in wp_project.objects.all():
             if proj.name.lower().replace(' ', '') == _name.lower().replace(' ',''):
@@ -170,7 +180,7 @@ def get_byalias(_alias):
         
     try:
         proj = wp_project.objects.get(alias=_alias)
-        return proj
+        return proj if not proj.disabled else None
     except wp_project.DoesNotExist:
         return None
     except:
@@ -183,7 +193,7 @@ def get_byid(_id):
         
     try:
         proj = wp_project.objects.get(id=_id)
-        return proj
+        return proj if not proj.disabled else None
     except:
         return None
 
@@ -213,7 +223,7 @@ def get_withmatches(_identifier):
             _search = str(_word).lower()
             _strim = _search.replace(' ', '')
             # still no project, look for close matches...
-            for project in wp_project.objects.order_by('name'):
+            for project in [p for p in wp_project.objects.order_by('name') if not p.disabled]:
                 _name = project.name.lower()
                 _nametrim = _name.replace(' ', '')
                 _alias = project.alias.lower()
@@ -232,7 +242,7 @@ def get_withmatches(_identifier):
         # return list of matching projects
         return lst_matches
     else:
-        # project was found
-        return proj
+        # project was found (only show if its not disabled)
+        return proj if not proj.disabled else None
     
     
