@@ -15,8 +15,12 @@
 import sys, os, os.path
 
 # Append project's settings.py dir.
-settings_dir = os.path.join(sys.path[0], "wp_main/")
-#sys.path.insert(0, settings_dir)
+scriptpath = sys.path[0]
+project_dir = os.path.split(scriptpath)[0]
+settings_dir = os.path.join(project_dir, "wp_main/")
+if not settings_dir in sys.path: sys.path.insert(0, settings_dir)
+if not project_dir in sys.path: sys.path.insert(0, project_dir)
+
 
 # Set django environment variable (if not set yet)
 if not os.environ.has_key("DJANGO_SETTINGS_MODULE"):

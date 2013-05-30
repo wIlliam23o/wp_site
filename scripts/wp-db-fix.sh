@@ -8,7 +8,12 @@
 # (Basically it increments the nextval() to the TABLE's max id + 1.)
 
 # Tables to modify
-tables=("blogger_wp_blog" "projects_wp_project" "django_admin_log" "downloads_file_tracker" "auth_permission" "django_content_type")
+tables=("blogger_wp_blog" 
+		"projects_wp_project" 
+		"django_admin_log" 
+		"downloads_file_tracker" 
+		"auth_permission" 
+		"django_content_type")
 
 # FUNCTIONS -------------------------------------------------------------------
 function print_usage () {

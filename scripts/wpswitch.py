@@ -28,7 +28,8 @@ usage_str = """
             status : list all switch names and state
             values : list all switch names and actual values
               full : list all switch names and actual lines
-
+             files : list file names for targets and switches using them.
+             
     switch operations:
                 on : turn this switch on
                off : turn this switch off
@@ -135,8 +136,11 @@ help_str = """
             running something like 'wpswitch testdatabase off' seems a lot better to me.
     """
              
-        
-        
+# Fix path.
+project_dir = os.path.split(sys.path[0])[0]
+       
+CHECK_DIRS = (sys.path[0],
+              project_dir)       
         
 # Switch Class
 class switch(object):
@@ -492,10 +496,13 @@ class switch(object):
         
         if os.path.isfile(self.filename):
             return self.filename
-        elif os.path.isfile(os.path.join(sys.path[0], self.filename)):
-            return os.path.join(sys.path[0]. self.filename)
         else:
-            return None
+            for checkpath in CHECK_DIRS:
+                filename = os.path.join(checkpath, self.filename)
+                if os.path.isfile(filename):
+                    self.filename = filename
+                    return filename
+        return None
 
 class cmdlineExit(Exception):
     """ Error to raise when interactive cmd-line stuff is exited by user,
@@ -515,7 +522,8 @@ DEFAULT_SWITCHES_FILE = "switches.conf"
 # possible command-line switches for setting/getting switch values.
 good_switch_args = ("on", "off", "-", "?", "!", "@")
 # possible commands
-good_commands = ("help", "names", "status", "values", "full", "groups", "build")
+good_commands = ("help", "names", "status", "values", 
+                 "full", "groups", "build", "files")
 
 def main(args):
     """ main entry-point for wpswitches.
@@ -632,6 +640,11 @@ def do_command(name, val, dryrun=False):
     elif name == "build":
         # start interactive switch builder
         cmdline_build_switch(val, dryrun)
+    elif name == 'files':
+        if val is None:
+            list_files()
+        else:
+            list_files(group_members)
         
     sys.exit(0)
 
@@ -731,6 +744,43 @@ def list_groups():
             contents = sw.get_file_contents()
             print '        ' + sw.name + " : " + sw.get_state(False, contents) + ' (' + sw.get_state(True, contents) + ')'
             
+def list_files():
+    """ print all filenames for switches. """
+    
+    filemembers = get_file_members()
+    
+    print "file members:"
+    if len(filemembers) == 0:
+        print "    (no switches)\n"
+    else:
+        for filename in filemembers.keys():
+            print '    ' + filename + ":"
+            print '        ' + '\n        '.join(filemembers[filename]) + '\n'
+
+
+def get_files(switch_list=None):
+    """ returns a list of filenames belonging to switches. """
+    
+    if switch_list is None: switch_list = switches
+    
+    files = []
+    for sw in switch_list:
+        if not sw.filename in files: files.append(sw.filename)
+    return files
+
+
+def get_file_members(switch_list=None):
+    """ returns all switches that use this filename as their target """
+    
+    if switch_list is None: switch_list = switches
+    if switch_list is None: return {}
+    results = {}
+    for sw in switch_list:
+        if results.has_key(sw.filename):
+            results[sw.filename].append(sw.name)
+        else:
+            results[sw.filename] = [sw.name]
+    return results
 
 def get_groups(switch_list=None):
     """ returns a list of group names """
@@ -811,12 +861,16 @@ def get_toggle_value(name_or_switch):
 
 def file_exists(filename="switches.conf"):
     """ checks filepath, or current directory for file. """
-    
-    if not os.path.isfile(filename):
-        filename = os.path.join(sys.path[0], filename)
-        if not os.path.isfile(filename):
-            return False
-    return filename
+
+    if os.path.isfile(filename):
+        return filename
+    else:
+        for checkpath in CHECK_DIRS:
+            filename = os.path.join(checkpath, filename)
+            if os.path.isfile(filename):
+                return filename
+    return False
+
 
 def read_file(filename="switches.conf"):
     """ reads a set of switches from a file. """
