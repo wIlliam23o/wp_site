@@ -83,7 +83,7 @@ def main(args):
    
     # RESTART APACHE
     print "\nRestarting apache... (" + apachecmd + 'restart)'
-    if os.path.isfile(apachecmd.strip(' ')) or os.path.isdir(apachecmd.strip('/')):
+    if os.path.isfile(apachecmd.strip(' ')) or os.path.isdir(apachecmd.strip('/').strip('.')):
         try:
             if use_elevation: apachecmd = 'sudo ' + apachecmd
             os.system(apachecmd + 'restart')
