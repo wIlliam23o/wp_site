@@ -40,7 +40,7 @@ manage_py = os.path.join(settings.BASE_DIR, "manage.py")
 # apache restart locations.
 remote_apache_path = os.path.join(settings.STATIC_PARENT, 'apache2', 'bin')
 if os.path.isdir(remote_apache_path):
-    apachecmd = ''.join(['.', remote_apache_path]) + '/'
+    apachecmd = ''.join(['. ', remote_apache_path]) + '/'
     use_elevation = False
 else:
     apachecmd = os.path.join('/etc', 'init.d','apache2') + ' '
@@ -83,7 +83,7 @@ def main(args):
    
     # RESTART APACHE
     print "\nRestarting apache... (" + apachecmd + 'restart)'
-    if os.path.isfile(apachecmd.strip(' ')) or os.path.isdir(apachecmd.strip('/').strip('.')):
+    if os.path.isfile(apachecmd.strip(' ')) or os.path.isdir(apachecmd.strip('/').strip('. ')):
         try:
             if use_elevation: apachecmd = 'sudo ' + apachecmd
             os.system(apachecmd + 'restart')
