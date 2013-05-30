@@ -40,7 +40,7 @@ manage_py = os.path.join(settings.BASE_DIR, "manage.py")
 # apache restart locations.
 remote_apache_path = os.path.join(settings.STATIC_PARENT, 'apache2', 'bin')
 if os.path.isdir(remote_apache_path):
-    apachecmd = ''.join(['.', remote_apache_path])
+    apachecmd = ''.join(['.', remote_apache_path]) + '/'
     use_elevation = False
 else:
     apachecmd = os.path.join('/etc', 'init.d','apache2') + ' '
@@ -50,12 +50,9 @@ def main(args):
     global apachecmd
     
     # if test is passed we will work on the test site, otherwise it will be live.
-    TEST_SITE = ("test" in args) or ("-t" in args) or ("--test" in args)
-    # explicitly passing these disables the warning about refreshing a LIVE site.
-    WARN_LIVE = (not "live" in args) and (not "-l" in args) and (not "--live" in args)
-    # say yes automatically to collectstatic if 'yes' is passed.
+    TEST_SITE = ('wp_test' in project_dir)
+    WARN_LIVE = (not 'live' in args) and (not '-l' in args) and (not '--live' in args)
     AUTO_COLLECT = ('yes' in args) or ('-y' in args) or ('--yes' in args)
-    
     # WARN LIVE SITE
     if (not TEST_SITE) and WARN_LIVE:
         print "\nYou are refreshing the ** LIVE SITE ** !"
@@ -76,7 +73,8 @@ def main(args):
     # COLLECT ADMIN CSS
     if os.path.isdir(admin_css) and os.path.isdir(admin_css_static):
         print "\nCopying admin css..."
-        css_cmd = ('sudo', 'cp', os.path.join(admin_css, '*'), admin_css_static)
+        css_cmd = ['sudo'] if use_elevation else []
+        css_cmd += ['cp', os.path.join(admin_css, '*'), admin_css_static]
         os.system(' '.join(css_cmd))
     else:
         print "\nadmin css directories not found:\n    source: " + admin_css + \
@@ -85,7 +83,7 @@ def main(args):
    
     # RESTART APACHE
     print "\nRestarting apache... (" + apachecmd + 'restart)'
-    if os.path.isfile(apachecmd.strip(' ')):
+    if os.path.isfile(apachecmd.strip(' ')) or os.path.isdir(apachecmd.strip('/')):
         try:
             if use_elevation: apachecmd = 'sudo ' + apachecmd
             os.system(apachecmd + 'restart')
