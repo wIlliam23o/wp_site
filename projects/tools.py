@@ -79,7 +79,9 @@ def get_screenshots_dir(project):
 
 
 def get_html_file(project):
-    """ finds html file to use for project content, if any """
+    """ finds html file to use for project content, if any 
+        returns empty string on failure.
+    """
     
     if project.html_url == "":
         # use default location if no manual override is set.
@@ -221,6 +223,7 @@ def get_download_dir_content(project, surl):
 
 def get_projects_menu(max_length = 25, max_text_length = 14):
     """ build a vertical projects menu from all wp_projects """
+    #@attention: THIS WILL BE DELETED AS SOON AS VIEWER GETS TEMPLATIZED!!!!! ####
     
     if wp_project.objects.count() == 0:
         return ""

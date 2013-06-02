@@ -1,0 +1,26 @@
+<!-- Template for injecting "Source View" code on project pages -->
+<!-- Expects:  project object: 'project'    -->
+<!--           link url: 'link'             -->
+<!--           optional: 'link_text' string -->
+<!--           optional: 'desc_text' string -->
+{% if project and link %}
+	<!-- SourceView link container -->
+	<div class='source-view'>
+		<!-- Link URL and Text -->
+		<a class='source-view-link' href='{{ link }}'>
+			{% if link_text %}
+				{{ link_text }}
+			{% else %}
+				View Source (local)
+			{% endif %}
+		</a>
+		<!-- Description Text -->
+		<span class='source-view-text'>
+			{% if desc_text %}
+				{{ desc_text }}
+			{% else %}
+				- view source for {{ project.name }} v. {{ project.version }}
+			{% endif %}
+		</span>
+	</div>
+{% endif %}

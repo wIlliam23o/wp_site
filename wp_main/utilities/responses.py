@@ -26,7 +26,7 @@ from django.utils.safestring import mark_safe
 import re
 
 
-def clean_template(template_, context_, force_ = False):
+def clean_template(template_, context_ = None, force_ = False):
     """ renders a template with context and
         applies the cleaning functions.
         
@@ -34,21 +34,18 @@ def clean_template(template_, context_, force_ = False):
         then fixed on document load with wptools.js.
         
         Blank Lines, Whitespace, Comments are removed if DEBUG = True.
-        if DEBUG = False then New Lines are removed also (to minify)
+        see: htmltools.render_clean() or htmltools.clean_html()
     """
+    if context_ is None: context_ = {}
     
-    # these things have to be done in a certain order to work correctly.
-    # hide_email, fix p spaces, remove_comments, remove_whitespace, remove_newlines
-    clean_output = htmltools.remove_whitespace(
-                        htmltools.remove_comments(
-                        htmltools.hide_email(template_.render(context_))))
-
-    #if ((not settings.DEBUG) or (force_)):
-    #    # minify (removes newlines except in certain tags [pre, script, etc.])
-    #    # fixes <p> linebreak spaces before, making sure &nbsp; is there.
-    #    clean_output = htmltools.remove_newlines(
-    #                            htmltools.fix_p_spaces(clean_output))
-    return clean_output
+    if isinstance(template_, (str, unicode)):
+        # render template and then clean.
+        return htmltools.render_clean(template_, context_)
+    elif hasattr(template_, 'render'):
+        # already loaded template.
+        return htmltools.clean_html(template_.render(context_))
+    else:
+        return None
 
 
 def alert_message(alert_msg, body_message="<a href='/'><span>Click here to go home</span></a>", noblock=False):
@@ -59,17 +56,13 @@ def alert_message(alert_msg, body_message="<a href='/'><span>Click here to go ho
         noblock: Don't wrap in wp-block div if True.
     
     """
-    
-    if noblock:
-        main_content = body_message
-    else:
-        main_content = "<div class='wp-block'>" + body_message + "</div>"
-    tmp_notfound = loader.get_template('home/main.html')
-    cont_notfound = Context({'main_content': mark_safe(main_content),
-                             'alert_message': mark_safe(alert_msg),
-                             })
-    rendered = clean_template(tmp_notfound, cont_notfound, (not settings.DEBUG))
-    return HttpResponse(rendered)
+    # passes the body message to the generic 'main_content' block of the main template
+    main_content = body_message if noblock else "<div class='wp-block'>" + body_message + "</div>"
+    # alert_message will display at the top of the page, per the main templates 'alert_message' block.
+    return clean_response("home/main.html",
+                          {'main_content': mark_safe(main_content),
+                           'alert_message': mark_safe(alert_msg),
+                           })
 
 
 def basic_response(scontent='', *args, **kwargs):
@@ -107,63 +100,45 @@ def render_response(template_name, context_dict):
     """
     
     try:
-        tmp_ = loader.get_template(template_name)
-        cont_ = Context(context_dict)
-        rendered = tmp_.render(cont_)
+        rendered = htmltools.render_clean(template_name, context_dict)
+        return HttpResponse(rendered)
     except:
-        rendered = alert_message("Sorry, there was an error loading this page.")
-    return HttpResponse(rendered)
+        return alert_message("Sorry, there was an error loading this page.")
 
 def clean_response(template_name, context_dict, request_ = None):
-    """ same as render_response, except does code minifying/compression 
-        (compresses only if settings.DEBUG=False)
+    """ same as render_response, except does code cleanup (no comments, etc.)
         returns cleaned HttpResponse.
     """
     
+    # Add request to context if available.
+    if request_ is not None: context_dict['meta'] = request_.META
+
     try:
-        tmp_ = loader.get_template(template_name)
+        rendered = htmltools.render_clean(template_name, context_dict)
     except Exception as ex:
-        _log.error("could not load template: " + template_name + '\n' + \
-                   str(ex))
-        rendered = None
-    else:
-        try:
-            # Add request to context if available.
-            if request_ is not None:
-                # some views already pass the request, we'll use the views.
-                # this was an idea from earlier, this could probably be removed.
-                if not context_dict.has_key('request'):
-                    context_dict['request'] = request_
-                context_dict['meta'] = request_.META
-                
-            cont_ = Context(context_dict)
-        except Exception as ex:
-            _log.error("could not load context: " + str(context_dict) + str(ex))
-            rendered = None
-        else:
-            try:
-                # Clean the template using clean_template() methods...
-                rendered = clean_template(tmp_, cont_, (not settings.DEBUG))
-            except Exception as ex:
-                _log.error("could not clean_template!: " + str(ex))
-                rendered = None
-    if rendered is None:
+        _log.error("Unable to render template: " + template_name + '\n' + str(ex))
         return alert_message("Sorry, there was an error loading this page.")
     else:
         return HttpResponse(rendered)
 
 
-def redirect_response(redirect_to):
+def redirect_response(redirect_to, status_code=302):
     """ returns redirect response.
         redirects user to redirect_to.
     """
     
-    response = HttpResponse(redirect_to, status=302)
+    response = HttpResponse(redirect_to, status=status_code)
     response['Location'] = redirect_to
     return response
 
 
-def get_request_arg(request, arg_names, default=None, min_val=0, max_val=9999):
+def redirect_perm_response(redirect_to):
+    """ returns a permanently moved response. """
+
+    return redirect_response(redirect_to, status_code=301)
+
+
+def get_request_arg(request, arg_names, default=None, min_val=0, max_val=999999):
     """ return argument from request (GET or POST),
         arg_names can be a list of alias names like: ['q', 'query', 'search']
            and this will look for any of those args.

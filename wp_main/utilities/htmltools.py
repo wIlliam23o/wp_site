@@ -21,7 +21,10 @@ import os.path
 import re 
 import base64
 
-# Basic utilities for strings/files/paths/whatever.
+# Django template loaders
+from django.template import Context, loader
+
+# Basic utilities
 from wp_main.utilities import utilities
 # Code highlighting
 from wp_main.utilities import highlighter
@@ -474,19 +477,15 @@ def check_replacement(source_string, target_replacement):
     
     # fix replacement if {{}} was omitted.
     if not target_replacement.startswith("{{"):
-        target_replacement = "{{" + target_replacement
+        target_replacement = "{{ " + target_replacement
     if not target_replacement.endswith("}}"):
-        target_replacement = target_replacement + "}}"
+        target_replacement = target_replacement + " }}"
         
     # this will look for '{{ target }}' and '{{target}}'...
     if target_replacement.replace(' ', '') in source_string:
         target_replacement = target_replacement.replace(' ', '')
-        
-    if target_replacement in source_string:
-        return target_replacement
-    else:
-        _log.debug("target not found in source string: " + target_replacement)
-        return False
+    
+    return target_replacement if (target_replacement in source_string) else False  
     
 
 def inject_article_ad(source_string, target_replacement = "{{ article_ad }}"):
@@ -497,32 +496,20 @@ def inject_article_ad(source_string, target_replacement = "{{ article_ad }}"):
     
     # fail check.
     target = check_replacement(source_string, target_replacement)
-    if not target:
-        return source_string
-        
-    article_ad = """
-        <div class='article-ad'>
-            <script type='text/javascript'>
-                <!--
-                google_ad_client = 'ca-pub-0811371441457236';
-                /* LeaderBoard-InsideArticles */
-                google_ad_slot = '7930726415';
-                google_ad_width = 728;
-                google_ad_height = 90;
-                //-->
-            </script>
-            <script type='text/javascript'
-                     src='http://pagead2.googlesyndication.com/pagead/show_ads.js'>
-            </script>
-        </div>"""
-        
-    return source_string.replace(target, article_ad)
+    if target:
+        # at this moment article ad needs no Context.
+        article_ad = render_clean("home/articlead.html")
+        return source_string.replace(target, article_ad)  
+    
+    # target not found.
+    return source_string
 
 
 def inject_screenshots(source_string, images_dir, target_replacement = "{{ screenshots_code }}", 
                        noscript_image = None):
     """ inject code for screenshots box.
-        walks image directory, building html for the image rotator box.
+        walks image directory, grabbing images for the image rotator box.
+        uses screenshots.html template to display them.
         examples:
             shtml = inject_screenshots(shtml, "static/images/myapp")
             shtml = inject_screenshots(shtml, "images/myapp/", noscript_image="sorry_no_javascript.png")
@@ -530,80 +517,62 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     """
     
     # fail checks, make sure target exists in source_string
-    target_replacement = check_replacement(source_string, target_replacement)
-    if not target_replacement:
+    target = check_replacement(source_string, target_replacement)
+    if not target:
         return source_string
-    # get absolute path for images dir, if none exists then quit.
-    images_dir = utilities.get_absolute_path(images_dir)
-    if images_dir == "":
-        return source_string.replace(target_replacement, "")
     
-    # directory exists, now make it relative.
+    # accceptable image formats (last 4 chars)
+    formats = [".png", ".jpg", ".gif", ".bmp", "jpeg"]
+    
+    # Make sure we are using the right dir.
+    # get absolute path for images dir, if none exists then delete the target_replacement.
+    images_dir = utilities.get_absolute_path(images_dir)
+    if images_dir == "": return source_string.replace(target, "")
+    
+    # Get useable relative dir (user-passed may be wrong format)
     relative_dir = utilities.get_relative_path(images_dir)
         
-    # start of rotator box
-    sbase = """
-    <div class="screenshots_box">
-        <div class="wt-rotator">
-            <div class="screen">
-                <noscript>
-                    <!-- placeholder 1st image when javascript is off -->
-                    <img src="{{noscript_image}}"/>
-                </noscript>
-              </div>
-            <div class="c-panel">
-                  <div class="thumbnails">
-                    <ul>
-    """
-    # end of rotator box
-    stail = """                      </ul>
-                 </div>     
-                  <div class="buttons">
-                    <div class="prev-btn"></div>
-                    <div class="play-btn"></div>    
-                    <div class="next-btn"></div>               
-                </div>
-            </div>
-        </div>    
-    </div>
-    """
-    
-    # template for injecting image files
-    stemplate = """
-                        <li>
-                            <a href="{{image_file}}" title="screen shots">
-                                <img class="screenshot" src="{{image_file}}"/>
-                            </a>
-                            <a href="{{image_file}}" target="_blank"></a>                        
-                        </li>
-                """
-    
-    # accceptable image formats
-    formats = ["png", "jpg", "gif", "bmp"]
     # find acceptable pics
-    good_pics = []
-    for sfile in os.listdir(images_dir):
-        if sfile[-3:].lower() in formats:
-            good_pics.append(os.path.join(relative_dir, sfile))
-    # no good pictures found?
-    if len(good_pics) == 0:
-        return source_string.replace(target_replacement, '')
+    try:
+        all_files = os.listdir(images_dir)
+    except Exception as ex:
+        _log.debug("Can't list dir: " + images_dir + '\n' + str(ex))
+        all_files = []
+    
+    def relative_img(filename):
+        """ shortcut for os.path.join in the good_pics list comprehension """
+        return os.path.join(relative_dir, filename)
+    
+    def good_format(filename):
+        """ shortcut for file extension test in good_pics list comprehension """
+        return (filename[-4:] in formats)
+
+    # Build acceptable pics list   
+    good_pics = [relative_img(f) for f in all_files if good_format(f)]
+
+    # auto-pick noscript image if needed
+    if (len(good_pics) > 0) and (noscript_image is None):
+        noscript_image = good_pics[0]
     else:
-        # found pics, process them.
-        spics = ""
-        for sfile in good_pics:
-            spics += stemplate.replace('{{image_file}}', sfile)
-        if noscript_image is None:
-            noscript_image = good_pics[0]
-        sbase = sbase.replace("{{noscript_image}}", noscript_image)
-        return source_string.replace(target_replacement, sbase + spics + stail)
+        # no good pics.
+        noscript_image = None
+ 
+    # Render from template.
+    screenshots = render_clean("home/screenshots.html",
+                               {'images': good_pics,
+                                'noscript_image': noscript_image,
+                                })
+    return source_string.replace(target, screenshots)
 
 
 def inject_sourceview(project, source_string, link_text = None, desc_text = None, target_replacement = "{{ source_view }}"):
     """ injects code for source viewing.
         needs wp_project (project) passed to gather info.
         if target_replacement is not found, returns source_string.
-        ** this probably needs to be in projects.tools **
+        
+        uses sourceview.html template to display. the template handles
+        missing information.
+        returns rendered source_string.
     """
 
     # fail check.
@@ -616,42 +585,29 @@ def inject_sourceview(project, source_string, link_text = None, desc_text = None
         return source_string.replace(target, "")
     
     # use source_file if no source_dir was set.
-    if project.source_dir == "":
-        srelativepath = utilities.get_relative_path(project.source_file)
-    else:
-        srelativepath = utilities.get_relative_path(project.source_dir)
-    # get default filename to display in link.
-    if project.source_file == "":
-        file_name = project.name
-    else:
-        file_name = utilities.get_filename(project.source_file)
-            
+    relativefile = utilities.get_relative_path(project.source_file)
+    relativedir = utilities.get_relative_path(project.source_dir)
+    relativepath = relativedir if relativedir else relativefile
     # has good link?
-    if srelativepath == "":
-        _log.debug("missing source file/dir for: " + project.name)
-        return source_string.replace(target, "<span>Sorry, local source not available for " + project.name + ".</span>")
+    if relativepath == "": _log.debug("missing source file/dir for: " + project.name)
+
+    # get default filename to display in link.
+    file_name = utilities.get_filename(project.source_file) if project.source_file else project.name        
     
     # link href
-    slink = utilities.append_path("/view", srelativepath)
+    link_ = utilities.append_path("/view", relativepath) if relativepath else ""
     
     # get link text
     if link_text is None:
-        if project.source_file == "":
-            link_text = "View Source (Local)"
-        else:
-            link_text = file_name + " (View Source)"
-    # get description text
-    if desc_text is None:
-        desc_text = " - view source for " + project.name + " v." + project.version
-    
-    sbase = """<div class='source-view'>
-                   <a class='source-view-link' href='{{ link }}'>{{ link_text }}</a>&nbsp;
-                       <span class='source-view-text'>{{ desc_text }}</span>
-               </div>
-        """
-    
-    source_view = sbase.replace("{{ link }}", slink).replace("{{ link_text }}", link_text).replace("{{ desc_text }}", desc_text)
-    return source_string.replace(target, source_view)
+        link_text = file_name + " (local)"
+
+    sourceview = render_clean("home/sourceview.html",
+                              {'project': project,
+                               'link': link_,
+                               'link_text': link_text,
+                               'desc_text': desc_text,
+                               })
+    return source_string.replace(target, sourceview)
     
         
 def remove_comments(source_string):
@@ -820,12 +776,12 @@ def hide_email(source_string):
         for mailto_ in mailtos_:
             b64_mailto = base64.encodestring(mailto_).replace('\n','')
             sline = sline.replace(mailto_, b64_mailto )
-            _log.debug("mailto: replaced " + mailto_ +'\n    with: ' + b64_mailto)
+            #_log.debug("mailto: replaced " + mailto_ +'\n    with: ' + b64_mailto)
         emails_ = find_email_addresses(sline)
         for email_ in emails_:
             b64_addr = base64.encodestring(email_).replace('\n','')
             sline = sline.replace(email_, b64_addr )
-            _log.debug("email: replaced " + email_ +'\n    with: ' + b64_addr)
+            #_log.debug("email: replaced " + email_ +'\n    with: ' + b64_addr)
         # add line (encoded or not)
         final_output.append(sline)
     return '\n'.join(final_output)
@@ -958,5 +914,37 @@ def fix_open_tags(source):
     else:
         return joiner.join(fixed_lines)
     
+
+def clean_html(source_string):
+    """ runs the proper remove_ functions. on the source string """
+
+    # these things have to be done in a certain order to work correctly.
+    # hide_email, fix p spaces, remove_comments, remove_whitespace, remove_newlines
+    return remove_whitespace(
+                remove_comments(
+                    hide_email(source_string)))
     
     
+def render_html(template_name, context_dict=None):
+    """ renders template by name and context dict,
+        returns the resulting html.
+    """
+    
+    if context_dict is None: context_dict = {}
+    try:
+        tmplate = loader.get_template(template_name)
+        rendered = tmplate.render(Context(context_dict))
+        return rendered
+    except Exception as ex:
+        _log.error("Unable to render html template: " + template_name + '\n' + str(ex))
+        return None
+
+
+def render_clean(template_name, context_dict=None):
+    """ runs render_html() through clean_html().
+        renders template by name and context dict,
+        passes resulting html through clean_html(),
+        returns resulting html string.
+    """
+    
+    return clean_html(render_html(template_name, context_dict))

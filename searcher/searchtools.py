@@ -207,10 +207,10 @@ def valid_query(query_):
 def has_illegal_chars(query_):
     """ check for illegal characters in query """
     
-    illegal_ = (':', '<', '>', ';', 'javascript:', '{', '}')
+    illegal_ = (':', '<', '>', ';', 'javascript:', '{', '}', '[', ']')
     invalid_ = False
     for char_ in illegal_:
-        _log.debug("checking " + char_ + " in " + query_.replace(' ', ''))
+        #_log.debug("checking " + char_ + " in " + query_.replace(' ', ''))
         if char_ in query_.replace(' ', ''):
             invalid_ = True
             break
