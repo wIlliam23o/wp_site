@@ -65,7 +65,10 @@ def main(args):
     if os.path.isfile(manage_py):
         print "\nRunning collectstatic..."
         collect_cmd = ['echo', '"yes"', '|'] if AUTO_COLLECT else []
+        if use_elevation:
+            collect_cmd += ['sudo']
         collect_cmd += ['python', manage_py, 'collectstatic']
+        print "running: " + ' '.join(collect_cmd)
         os.system(' '.join(collect_cmd))
     else:
         print "\nmanage.py not found!: " + manage_py + '\n'

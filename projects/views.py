@@ -1,5 +1,5 @@
 # Mark generated Html as safe to view.
-from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
+#from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
 
 # Project Info
 from projects.models import wp_project
@@ -7,155 +7,110 @@ from projects.models import wp_project
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
-from wp_main.utilities import htmltools
-from projects import tools
-
+#from wp_main.utilities import htmltools
+#from projects import tools
 
 # logging
 from wp_main.utilities.wp_logging import logger
 _log = logger('projects').log
 
 
-
-
-def index(request):
-    """ Main Project Page (index/listing) """
+def view_index(request):
+    """ Main Project Page (index/listing) [using template instead of hard-coded html] """
     
-    # get projects
-    if wp_project.objects.count() == 0:
-        projects_content = "<span>Sorry, no projects available yet.</span>"
+    # If i can fix the template properly this will be much shorter
+    # and probably faster. The old way was my very first Django view ever.
+    # Hince the complication and mess.
+    
+    # get all projects if project is not disabled
+    all_projects = [p for p in wp_project.objects.order_by('name') if not p.disabled]
+    
+    if len(all_projects) == 0:
+        response = responses.alert_message(alert_msg="Sorry, no projects found!")
     else:
-        # list all projects...
-        projects_content = "<div class='project_listing'>\n"
-        for proj in [p for p in wp_project.objects.all().order_by('name') if not p.disabled]:
-            projects_content += project_listing(request, proj)
-        projects_content += "</div>\n"
-    # get vertical projects menu
-    projects_menu = tools.get_projects_menu()                  
-  
-    # render final page
-    return responses.clean_response("projects/index.html",
+        response = responses.clean_response("projects/index.html",
+                                            {'request': request,
+                                             'extra_style_link_list': [utilities.get_browser_style(request),
+                                                                       "/static/css/projects.css"],
+                                             'projects': all_projects,})
+    return response
+
+
+def view_project(request, project, requested_page, source=None):
+    """ Returns project page for individual project. Project object
+        must be passed (usually from request_any() which retrieves projects by name,alias,id)
+        If a list/tuple of projects is passed as 'project' then it will
+        be used as 'possible matches' for bad project name.
+    """
+    
+    # default flags
+    use_screenshots = False
+    extra_style_link_list = [utilities.get_browser_style(request),
+                             "/static/css/projects.css",
+                             "/static/css/highlighter.css"]
+    
+    # no project, no matches found (or error retrieving).
+    if project is None:
+        notfound_msg = "<a href='/projects'>Click here to visit a listing of my projects.</a><br/>\n" + \
+                       "<span>Or you could try <a href='/search?q={{PAGE}}'>searching</a>...</span>"
+        return responses.alert_message(alert_msg="Sorry, I can't find that project.",
+                                       body_message=notfound_msg.replace('{{PAGE}}', str(requested_page)))
+    
+    # possible matches passed?
+    matches = project if isinstance(project, (list,tuple)) else None
+    if matches: project = None
+    
+    # Grab project info
+    if project:
+        # this will tell the template to add screenshots javascript.
+        use_screenshots = project.screenshot_dir != ''
+        # keep track of how many times this has been viewed.
+        project.view_count +=1
+        project.save()
+    
+    # Grab projects list for vertical menu
+    all_projects = [p for p in wp_project.objects.order_by('name') if not p.disabled]
+
+    return responses.clean_response("projects/project.html",
                                     {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
-                                     'projects_content': mark_safe(projects_content),
-                                     'projects_menu': mark_safe(projects_menu),
+                                     'requested_page': requested_page,
+                                     'extra_style_link_list': extra_style_link_list,
+                                     'projects': all_projects,
+                                     'project': project,
+                                     'matches': matches,
+                                     'use_screenshots': use_screenshots,
                                      })
 
 
-def project_listing(request, project):
-    """ Returns a single project listing for when building the projects index """
-    
-    # Build project name/link
-    p_namelink = htmltools.wrap_link("<span class='header project_name'>" + project.name + "</span>", 
-                       "/projects/" + project.alias)
-    
-    # Build project listing module
-    _content = "<div class='wp-block project_container'>\n" + \
-                "<div class='project_header'>\n" + \
-                p_namelink + \
-                "<br/>\n" + \
-                "<span class='version'>version " + project.version + "</span>\n" + \
-                "<br/>\n" + \
-                "</div>\n" + \
-                "<div class='project_desc'>\n" + \
-                "<span class='desc'>" + project.description + "</span>\n" + \
-                "</div></div>\n"   
-    return _content
-
-
-def project_page(request, project, requested_page, source=""):
-    """ Project Page (for individual project) """
-    
-    # Set default flags
-    use_screenshots = False
-    # default extra style needed
-    extra_style_link_list = [utilities.get_browser_style(request)]
-
-    # default content if project is found, but has no content
-    no_content = """<div class='project_container'>
-                    <div class='project_title'>
-                        <h1 class='project-header'>%s</h1>
-                    </div>
-                    <span>No information found for: %s</span>
-                    </div>"""
-    # initialize response (if it changes before the return then something went wrong.)
-    response = None
-    
-    # if project matches list was sent, use it.
-    if isinstance(project, (list, tuple)):
-        #_log.debug("Found project matches: " + '\n    '.join([p.name for p in project]))
-        shtml = tools.get_matches_html(project, requested_page)
-        project_title = False
-    elif project is None:
-        # No project returned (probably accessing a disabled project)
-        response = responses.alert_message("Sorry, I can't find that project.",
-                                           "<a href='/projects'><span>Click here to go back to the projects listing.</span></a>")
-    else:
-        # Found Project, build page.
-        project_title = project.name
-        # extra html content, if any.
-        scontent = tools.get_html_content(project)
-        
-        if scontent == "":
-            # default response unless more information is loaded.
-            shtml = no_content % (project_title, project_title)
-        else:
-            # prepare extra content from html file, adding screenshots/ads/downloads
-            shtml = tools.prepare_content(project, scontent) + '\n</div>'
-            # tell the template whether or not to use the screenshots box.
-            use_screenshots = ("screenshots_box" in shtml)
-            # gather extra style needed
-            if ('<div class="highlight"' in shtml):
-                extra_style_link_list.append("/static/css/highlighter.css")
-           
-        # track project views
-        project.view_count += 1
-        project.save()
-
-    # build vertical projects menu
-    projects_menu = tools.get_projects_menu()                  
-    if response is None:
-        return responses.clean_response("projects/project.html",
-                                        {'request': request,
-                                         'project_content': mark_safe(shtml),
-                                         'project_title': project_title,
-                                         'projects_menu': mark_safe(projects_menu),
-                                         'extra_style_link_list': extra_style_link_list,
-                                         'use_screenshots': use_screenshots,
-                                         })
-    else:
-        return response
-
-
-def request_any(request, _identifier):
+def request_any(request, identifier):
     """ returns project by name, alias, or id 
         returns list of possible matches on failure.
         returns project on success
     """
     
-    proj = get_withmatches(utilities.safe_arg(_identifier))
-    return project_page(request, proj, _identifier, source="by_any")
+    proj = get_withmatches(utilities.safe_arg(identifier))
+    return view_project(request, proj, identifier, source="by_any")
    
    
 def request_id(request, _id):
     """ returns project by id """
     
     proj = get_byid(utilities.safe_arg(_id))
-    return project_page(request, proj, str(_id), source="by_id")
+    return view_project(request, proj, str(_id), source="by_id")
 
 
 def request_alias(request, _alias):
     """ returns project by alias """
     
     proj = get_byalias(utilities.safe_arg(_alias))
-    return project_page(request, proj, _alias, source="by_alias")
+    return view_project(request, proj, _alias, source="by_alias")
 
 
 def request_name(request, _name):
     """ returns project by name """
     
     proj = get_byname(utilities.safe_arg(_name))
-    return project_page(request, proj, _name, source="by_name")
+    return view_project(request, proj, _name, source="by_name")
 
 
 def get_byname(_name):

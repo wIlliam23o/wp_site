@@ -23,7 +23,8 @@
 		<p class="home-welcome-text">
 			<!-- Test-Site warning -->
 			{% if request|is_test_site %}
-				<div style="text-align: center; border-style: solid; border-color: #B90000; border-width: 2px; border-radius: 15px; margin-bottom: 20px">
+				<!-- test box is initially hidden, JS below will show it. -->
+				<div id="test-site-box">
 					<span style="color: #B90000; font-size: 1.2em;">
 						You are viewing the test-site!
 						<br/> 
@@ -119,5 +120,14 @@
 			</div>
 		</div>
 	{% endif %}
-	
+{% endblock %}
+
+<!-- Insert before closing BODY -->
+{% block bodyend %}
+	{% if request|is_test_site %}
+		<script src="static/js/jqueryui/jquery-ui.min" type="text/css"></script>
+		<script type="text/javascript">
+			setTimeout( function () { $("#test-site-box").fadeOut(500); }, 7000);
+		</script>
+	{% endif %}
 {% endblock %}

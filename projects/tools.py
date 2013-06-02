@@ -96,6 +96,7 @@ def get_html_file(project):
             html_file = utilities.get_absolute_path(project.html_url)
     return html_file
 
+
 def get_html_content(project):
     """ retrieves extra html content for project, if any """
     
@@ -296,6 +297,52 @@ def prepare_content(project, scontent):
     return html_.tostring()
 
 
+def process_injections(project):
+    """ Replaces target strings {{ article_ad }}, {{ source_view }}, etc.
+        with the proper code per project.
+        Returns projects description (string) in html format.
+    """
+    
+    try:
+        html_ = htmltools.html_content(get_html_content(project))
+    except Exception as ex:
+        _log.debug("Error getting html content:\n" + str(ex))
+        return ""
+    
+    try:
+        html_.inject_article_ad()
+        html_.inject_sourceview(project)
+    except Exception as ex:
+        _log.debug("Error injecting article_ad/sourceview:\n" + str(ex))
+        return ""
+    
+    try:
+        download_code = get_download_content(project)
+        if download_code:
+            target = html_.check_replacement("{{ download_code }}")
+            html_.replace_if(target, download_code)
+    except Exception as ex:
+        _log.debug("Error injecting download code:\n" + str(ex))
+        return ""
+    
+    try:
+        screenshots_dir = get_screenshots_dir(project)
+        if os.path.isdir(screenshots_dir):
+            html_.inject_screenshots(screenshots_dir)
+    except Exception as ex:
+        _log.debug("Error injecting screenshots code:\n" + str(ex))
+        return ""
+    
+    try:
+        html_.highlight()
+    except Exception as ex:
+        _log.debug("Error injecting highlights:\n" + str(ex))
+        return ""
+    
+    return html_.tostring()
+
+
+    
 def get_project_from_path(file_path):
     """ determines if this file is from a project. 
         returns project object if it is.

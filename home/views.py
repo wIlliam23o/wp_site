@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
 from wp_main.utilities import htmltools
-import wpstats
+from scripts import wpstats
 
 # logging
 from wp_main.utilities.wp_logging import logger
@@ -39,6 +39,7 @@ def view_about(request):
                                      'about_content': mark_safe(about_content),
                                      })
 
+
 @login_required(login_url='/login')
 def view_debug(request):
     """ return the django debug info page. """
@@ -48,6 +49,17 @@ def view_debug(request):
                                      'extra_style_link_list': [utilities.get_browser_style(request),
                                                                "/static/css/highlighter.css"],
                                      })
+
+
+@login_required(login_url='/login')
+def view_test(request):
+    """ returns whatever tests are being conducted in test.html template. """
+    
+    return responses.clean_response("home/test.html",
+                                    {'request': request,
+                                     'extra_style_link_list': [utilities.get_browser_style(request)],
+                                     })
+
 
 def view_login(request):
     """ processes login attempts ## NOT BEING USED RIGHT NOW ##"""

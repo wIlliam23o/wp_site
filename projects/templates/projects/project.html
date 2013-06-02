@@ -1,84 +1,73 @@
 {% extends "projects/index.html" %}
+{% load wp_tags %}
+{% load projects_tags %}
 
-{% block title %}{% if project_title %}- {{ project_title }}{% endif %}{% endblock %}
+{% block title %}{% if project %}- {{ project.name }}{% endif %}{% endblock %}
 
-
-<!-- Projects Style -->
-{% block extrastylelink %}
-		{{ block.super }}
-{% endblock %}
-
+<!-- Screenshots Javascript -->
 {% block extrahead %}
-{% if use_screenshots %}
-	<!-- Optional Screenshots, -->
-	<!-- 	 This won't be used if use_screenshots = False in views.py -->
-	<!-- 	 Option is there to cut down on overhead. If no screenshots were detected, -->
-	<!-- 	 	or if use_screenshots is explicitly set to False, we won't need all -->
-	<!-- 	 	of this code. -->
-	<script type="text/javascript">
-	
-		var rotator_settings = {
-						width:'100%',
-						height:300,
-						thumb_width:24,
-	            		thumb_height:24,
-						button_width:24,
-						button_height:24,
-						button_margin:5,
-						auto_start:true,
-						delay:5000,
-						play_once:false,
-						transition:"fade",
-						transition_speed:1000,
-						auto_center:true,
-						easing:"easeInBack",
-						cpanel_position:"inside",
-						cpanel_align:"BL",
-						timer_align:"top",
-						display_thumbs:true,
-						display_dbuttons:true,
-						display_playbutton:true,
-						display_thumbimg:false,
-	           			display_side_buttons:false,
-						display_numbers:true,
-						display_timer:true,
-						mouseover_select:false,
-						mouseover_pause:true,
-						cpanel_mouseover:true,
-						text_mouseover:false,
-						text_effect:"fade",
-						text_sync:false,
-						tooltip_type:"none",
-						shuffle:false,
-						block_size:75,
-						vert_size:55,
-						horz_size:50,
-						block_delay:25,
-						vstripe_delay:75,
-						hstripe_delay:180			
-				};
-				
-		//$(document).resize(
-		//		function() {
-		//		$(".screenshots_box").wtRotator(rotator_settings);
-		//			$(".wt-rotator").width("100%");
-		//			$(".screen").width("100%");
-		//		}
-		//);
-		$(document).ready(	
-				function() {
-					$(".screenshots_box").wtRotator(rotator_settings);
-					$(".wt-rotator").width("100%");
-					$(".screen").width("100%");
-				}
-			);
-	</script>
-{% endif %}
+	{% if use_screenshots %}
+		<script type="text/javascript">
+			$(document).ready(
+					function() {
+						$(".screenshots_box").wtRotator(wprotator_settings);
+						$(".wt-rotator").width("100%");
+						$(".screen").width("100%");
+					}
+				);
+		</script>
+	{% endif %}
 {% endblock %}
 
 <!-- Main Projects Page -->
-<!-- @TODO: Make better use if templates instead of just passing in a huge HTML string.
-			(This was the first page I made, hince the bad practices.) -->
 {% block content %}
-	{{ project_content }}
+	{% if project %}
+		<div class="project-container">
+			<!-- Project Header -->
+			<div class="project-title">
+				<h1 class="project-header">{{ project.name }}</h1>
+			</div>
+			<!-- Project Body -->
+			<div class="project-content">
+				{% if project|has_project_html %}
+					<!-- Process project content and display it. -->
+					{{ project|process_project_html }}
+				{% else %}
+					<!-- No content -->
+					<span>Sorry, no information found for this project: {{ requested_page }}</span>
+				{% endif %}
+			</div>
+		</div>
+	{% elif matches %}
+		<!-- Possible Project Matches -->
+		<div class="project-matches-box">
+			<p>
+				{% if requested_page %}
+					Sorry, I can't find a project at: <span class='B'>{{ requested_page }}</span>
+				{% else %}
+					Sorry, I can't find a project by that name.
+				{% endif %}
+			</p>
+			<br/>
+			<p>
+				Maybe try <a href="/search{% if requested_page %}?q={{ requested_page }}{% endif %}">searching</a>,
+				<br/>
+				Or try one of these possible matches:
+			</p>
+			<!-- Matches -->
+			<div class="project-matches">
+				{% for project in matches %}
+					<div class="project-match">
+						<!-- single matched project -->
+						<a href="/projects/{{ project.alias }}">
+							<span class="project-match-name">{{ project.name }}</span>&nbsp;
+						</a>
+						<span class="version">version {{ project.version }}</span>
+					</div>
+				{% endfor %}
+			</div>
+			
+		</div>
+		
+	{% endif %}
 {% endblock %}

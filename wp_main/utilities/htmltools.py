@@ -30,7 +30,14 @@ from wp_main.utilities.wp_logging import logger
 _log = logger("utilities.htmltools").log
 
 # RegEx for finding an email address
+# (not compiled, because it gets compiled with additional regex in some functions)
 re_email_address = r'[\d\w\-\.]+@[\d\w\-\.]+\.[\w\d\-\.]+'
+# RegEx for fixing open tags (fix_open_tags())
+re_closing_complete = re.compile('[\074]/\w+[\076]{1}')
+re_closing_incomplete = re.compile(r'[\074]/\w+')
+re_opening_complete = re.compile(r'[\074][\w "\'=\-]+[\076]{1}')
+re_opening_incomplete = re.compile(r'[\074][\w "\'=\-]+')
+re_start_tag = re.compile(r'[\074]\w+')
 
 class html_content(object):
     """ class to hold html content, and perform various operations on it. 
@@ -854,3 +861,102 @@ def find_email_addresses(source_string):
         # the last item is the address we want
         addresses_.append(groups_[-1])
     return addresses_
+
+
+def fix_open_tags(source):
+    """ scans string, or list of strings for 
+        open <tags> without their </closing> tag.
+        adds the closing tags to the end (in order)
+        (ignores certain tags like <br> and <img>) 
+        
+        if you put a list in, you get a list back.
+        if you put a string in, you get a string back.
+    
+    """
+    try:
+        if isinstance(source, (str, unicode)):
+            if '\n' in source:
+                source = source.split('\n')
+                joiner = '\n'
+            elif '<br>' in source:
+                source = source.split('<br>')
+                joiner = '<br>'
+            else:
+                # single line of text to scan.
+                source = [source]
+                joiner = ''
+                
+        elif isinstance(source, (list, tuple)):
+            joiner = None
+        else:
+            _log.debug("Unknown type passed: " + str(type(source)))
+            joiner = None
+    except Exception as ex:
+        # error splitting text?
+        _log.error("Error splitting text:\n" + str(ex))
+        return source
+      
+    # keeps track of tags opened so far,
+    opening_tags = []
+    #incomplete_tags = []
+    # list to hold good and 'fixed' lines.
+    fixed_lines = []
+    def find_opening(closing):
+        if '/' in closing: closing = closing.replace('/', '')
+        if closing.endswith('>'): closing = closing[:-1]
+
+        for starts in opening_tags:
+            if closing in starts:
+                return starts
+        return False
+        
+    for line in source:
+        opening = re_opening_complete.search(line)
+        incomplete = re_opening_incomplete.search(line)
+        closing = re_closing_complete.search(line)
+        closing_inc = re_closing_incomplete.search(line)
+
+        # Incomplete start tag (no '>')
+        if incomplete and not opening:
+            # try fixing the opening tag.
+            line = line.replace(incomplete.group(), incomplete.group() + '>')
+            opening_tags.append(incomplete.group())
+        # Good tag
+        elif incomplete and opening:
+            # add to the list of known good tags.
+            opening_tag = re_start_tag.search(opening.group()).group()
+            opening_tags.append(opening_tag)
+
+        # Incomplete closing tag (no '>')
+        if closing_inc and not closing:
+            # find it's start tag, and use it to build a 'fixed' end tag.
+            expecting = opening_tags[len(opening_tags) -1].replace('<', '</') + '>'
+            line = line.replace(closing_inc.group(), expecting)
+            tag_opening = find_opening(expecting)
+            if tag_opening:
+                opening_tags.remove(tag_opening)
+        # Good closing tag...
+        elif closing_inc and closing:
+            # remove it's start tag from the list.
+            has_start = find_opening(closing.group())
+            if has_start:
+                opening_tags.remove(has_start)
+
+        fixed_lines.append(line)
+
+    # Add left over tags (last open tag gets first closing tag.)...
+    ignore_tags = ('<img', '<br')
+
+    if len(opening_tags) > 0:
+        for i in range(len(opening_tags), 0, -1):
+            left_over = opening_tags[i-1]
+            if not left_over in ignore_tags:
+                fixed_lines.append(left_over.replace('<', '</') + '>')
+
+    if joiner is None:
+        return fixed_lines
+    else:
+        return joiner.join(fixed_lines)
+    
+    
+    

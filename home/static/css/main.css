@@ -102,6 +102,9 @@ ul.menu {padding-left: 0;}
 	color: #26A1F4;
 	text-transform: lowercase;
     }
+a .header:hover, a .header.featured-name:hover {
+	color: #41C2FF;
+}
 
 .title, h3.title {
 	font-family: "Open Sans", "Century Gothic", "Arial Black", "Liberation Sans", sans-serif;
@@ -246,6 +249,7 @@ h1.title { font-size: 1.5em; }
 	border-radius: 5px 5px 5px 5px;
 	box-shadow: 0px 0px 20px #EEE;
 	margin-bottom: 20px;
+	min-height: 240px; /* helps with short pages that have a vertical menu */
 	}
 
 .title-box {
@@ -361,6 +365,12 @@ a.jumpto-nav {
 .comments-button {
 	display: inline;
 	margin-left: 20px;
+}
+
+.continued {
+	font-size: .8em;
+	font-style: italic;
+	color: #adadad;
 }
 
 /* In-Article Ads */
@@ -854,4 +864,14 @@ code, samp {
 	font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
 	padding: 20px;
 	border-radius: 5px;
+}
+
+/* Test-site only stuff */
+#test-site-box {
+	text-align: center; 
+	border-style: solid; 
+	border-color: #B90000; 
+	border-width: 2px; 
+	border-radius: 15px; 
+	margin-bottom: 20px;
 }

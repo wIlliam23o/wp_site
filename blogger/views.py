@@ -11,20 +11,16 @@ from wp_main.utilities import responses
 from wp_main.utilities.wp_logging import logger
 _log = logger("blog").log
 
-DEFAULT_MAXPOSTS = 25
-DEFAULT_MAXLINES = 16
 def index(request):
     """ index list of all blog posts """
 
     # load blog posts...
     try:
-        raw_posts = wp_blog.objects.order_by('-posted')
+        raw_posts = wp_blog.objects.order_by('-posted_datetime')
         post_count = len(raw_posts)
-        blog_posts = blogtools.fix_post_list(raw_posts,
-                                             max_posts=DEFAULT_MAXPOSTS,
-                                             max_text_lines=DEFAULT_MAXLINES)
-    except:
-        _log.error("No blog posts found!")
+        blog_posts = blogtools.fix_post_list(raw_posts)
+    except Exception as ex:
+        _log.error("Error getting blog posts!:\n" + str(ex))
         blog_posts = False
         
     return responses.clean_response("blogger/index.html",
@@ -44,13 +40,19 @@ def index_page(request):
     # get request args.
     page_args = responses.get_paged_args(request, post_count)
     # retrieve blog posts slice
-    post_slice = blogtools.get_post_list(starting_index=page_args['start_id'],
-                                         max_posts=page_args.get('max_items', DEFAULT_MAXPOSTS),
-                                         _order_by=page_args.get('order_by', None))
-    # fix posts for listing.
-    blog_posts = blogtools.fix_post_list(post_slice, max_text_lines=DEFAULT_MAXLINES)
-    # get last index.     
-    end_id = str(page_args['start_id'] + len(post_slice))
+    try:
+        post_slice = blogtools.get_post_list(starting_index=page_args['start_id'],
+                                             max_posts=page_args.get('max_items', blogtools.DEFAULT_MAXPOSTS),
+                                             _order_by=page_args.get('order_by', None))
+    except Exception as ex:
+        _log.debug("Error getting blog posts slice:\n" + str(ex))
+        blog_posts = post_slice = end_id = False
+    else:
+        # fix posts for listing.
+        blog_posts = blogtools.fix_post_list(post_slice)
+        # get last index.     
+        end_id = str(page_args['start_id'] + len(post_slice))
+        
     return responses.clean_response("blogger/index_paged.html",
                                     {'request': request,
                                      "blog_posts": blog_posts,
@@ -140,9 +142,7 @@ def view_tag(request, _tag):
     found_posts = blogtools.get_posts_by_tag(tag_name, starting_index=0, max_posts=-1)
     post_count = len(found_posts)
     
-    blog_posts = blogtools.fix_post_list(found_posts, 
-                                         max_posts=DEFAULT_MAXPOSTS, 
-                                         max_text_lines=DEFAULT_MAXLINES)
+    blog_posts = blogtools.fix_post_list(found_posts)
     item_count = len(blog_posts)
     return responses.clean_response("blogger/tag.html",
                                     {'request': request,
@@ -159,7 +159,7 @@ def tag_page(request, _tag):
     # fix tag name
     tag_name = utilities.trim_special(_tag).replace(',', ' ')
     # get all found posts. no slice.
-    all_posts = blogtools.get_posts_by_tag(tag_name, starting_index=0, max_posts=-1)
+    all_posts = blogtools.get_posts_by_tag(tag_name, starting_index=0)
 
     # overall total of all blog posts with this tag.
     post_count = len(all_posts)
@@ -172,7 +172,7 @@ def tag_page(request, _tag):
                                             _order_by=page_args.get('order_by', None))
         
     # fix posts for listing.
-    blog_posts = blogtools.fix_post_list(post_slice, max_text_lines=DEFAULT_MAXLINES)
+    blog_posts = blogtools.fix_post_list(post_slice)
     # number of items in this slice (to get the last index)
     end_id = str(page_args['start_id'] + len(blog_posts))
     # build page.

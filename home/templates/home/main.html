@@ -101,7 +101,7 @@
 	<script type="text/javascript" src="/static/js/wptools.js"></script>
 
 
-<!-- JAVASCRIPT -->
+<!-- EXTRA JAVASCRIPT (per page) -->
 {% block javascript %}
 {% endblock %}
 
@@ -142,7 +142,7 @@
 	   	{% if request|debug_allowed and request|is_test_site %}
 	   		<!-- show/hide debug btn (top button) -->
 	   		<div class="debug-button" id="debug-button-top">
-	   			<a href="javascript: wpTools.toggle_debug();">
+	   			<a href="javascript: wptools.toggle_debug();">
 	   				<span class="debug-button-text">
 	   					show debug
 	   				</span>
@@ -155,7 +155,7 @@
 	   			{% endfilter %}
 	   			<!-- hide debug btn -->
 	   			<div class="debug-button" id="debug-button-bottom">
-	   				<a href="javascript: wpTools.toggle_debug();">
+	   				<a href="javascript: wptools.toggle_debug();">
 	   					<span class="debug-button-text">
 	   						hide debug
 	   					</span>
@@ -181,7 +181,7 @@
 		<!-- 		<span class='login-label'>Password:</span> -->
 		<!-- 		<input id="login-pw" type='password' name='pw' class='input-text' required=True> -->
 		<!-- 	<br> -->
-		<!-- 		<input type='submit' title='ok' class='submit-button' onclick="javascript: wpTools.hide_element('#login');"> -->
+		<!-- 		<input type='submit' title='ok' class='submit-button' onclick="javascript: wptools.hide_element('#login');"> -->
 		<!-- 	</form> -->
 		<!-- </div> -->
 		<!-- {% endblock %} -->
@@ -346,5 +346,9 @@
 			wptools.getid('dock-box').style.left = '0px';
 		});
 	</script>
+	
+	<!-- For inserting JS before closing BODY tag -->
+	{% block bodyend %}
+	{% endblock %}
 </body>
 </html>
