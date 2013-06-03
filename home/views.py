@@ -24,7 +24,7 @@ def index(request):
                                     {'request': request,
                                      'blog_post': htools.get_latest_blog(),
                                      'featured_project': htools.get_featured_project(),
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
+                                     'extra_style_link_list': [utilities.get_browser_style(request),],
                                      })
     
 
@@ -198,6 +198,6 @@ def view_error(request, error_number):
     return responses.clean_response("home/" + serror + ".html",
                                     {"request": request,
                                      "request_path": mark_for_escaping(request_path),
-                                     "extra_style_link_list": utilities.get_browser_style(request),
+                                     "extra_style_link_list": [utilities.get_browser_style(request)],
                                      })
     
