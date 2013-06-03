@@ -531,7 +531,7 @@ def main(args):
                         "on" | "off" | etc..., 
                         possible other flags...]
     """
-    global switches
+    global switches, DEFAULT_SWITCHES_FILE
     
     # help comes first.
     if args[0].lower() == "help":
@@ -542,13 +542,14 @@ def main(args):
         sys.exit(0)
     
     # Read switches file.
-    if os.path.isfile(DEFAULT_SWITCHES_FILE):
+    DEFAULT_SWITCHES_FILE = find_file(DEFAULT_SWITCHES_FILE)
+    if DEFAULT_SWITCHES_FILE:
         switches = read_file(DEFAULT_SWITCHES_FILE)
         if len(switches) == 0:
             print_fail("no switches are configured!\nrun 'wpswitch help' for more info...")
     else:
-        print "using default built-in switches."
-    
+        print_fail("no switches file found,\nplease put your switches in a local switches.conf...")
+        
     # Check switches
     validate_switches()
        
@@ -859,23 +860,10 @@ def get_toggle_value(name_or_switch):
     return "off" if oldval == "on" else "on"
 
 
-def file_exists(filename="switches.conf"):
-    """ checks filepath, or current directory for file. """
-
-    if os.path.isfile(filename):
-        return filename
-    else:
-        for checkpath in CHECK_DIRS:
-            filename = os.path.join(checkpath, filename)
-            if os.path.isfile(filename):
-                return filename
-    return False
-
-
 def read_file(filename="switches.conf"):
     """ reads a set of switches from a file. """
     
-    filepath = file_exists(filename)
+    filepath = find_file(filename)
     if not filepath:
         print_fail("switches file does not exist!: " + filename)
     
@@ -1102,9 +1090,12 @@ def write_file(filename = 'switches.conf', dryrun = False):
                  re-ordered (groups will be correct).
     """
     
-    filepath = file_exists(filename)
+    filepath = find_file(filename)
     if not filepath:
-        print_fail("switches file not found!: " + filename)
+        filepath = filename
+        print "\nfile not found, trying to create a new one: " + filepath
+        #("switches file not found!: " + filename)
+        
     newcontents = []
     for groupname in get_groups():
         newcontents.append('[' + groupname + ']\n')
@@ -1113,18 +1104,18 @@ def write_file(filename = 'switches.conf', dryrun = False):
         newcontents.append('\n[\\' + groupname + ']\n')
     
     if dryrun:
-        print "\nwriting file: " + filename + '\n\n'
+        print "\nwriting file: " + filepath + '\n\n'
         print ''.join(newcontents)
         return True
     else:
         try:
-            with open(filename, 'w') as fwrite:
+            with open(filepath, 'w') as fwrite:
                 fwrite.writelines(newcontents)
                 return True
         except (OSError, IOError) as exio:
-            print_fail("unable to write switches file: " + filename + '\n' + str(exio))
+            print_fail("unable to write switches file: " + filepath + '\n' + str(exio))
         except Exception as ex:
-            print_fail("error writing switches file: " + filename + '\n' + str(ex))
+            print_fail("error writing switches file: " + filepath + '\n' + str(ex))
     return False
         
 def write_switch_line(switch_, prev_switch=None, filename='switches.conf', dryrun = False):
@@ -1134,7 +1125,7 @@ def write_switch_line(switch_, prev_switch=None, filename='switches.conf', dryru
     """
     #@todo: Add Group Handling! (groups would be nice.)
     
-    filepath = file_exists(filename)
+    filepath = find_file(filename)
     if not filepath:
         print_fail("switches file does not exist!: " + filename)
     
@@ -1259,7 +1250,7 @@ def validate_args(args):
 
 
 def find_unique_item(items):
-    """ finds the unique list/tuple item """
+    """ finds the first unique list/tuple item """
     
     trimmed_list = [i.replace(' ', '') for i in items]
     for i in range(0, len(trimmed_list)):
@@ -1267,6 +1258,21 @@ def find_unique_item(items):
         if trimmed_list.count(item) == 1:
             # return original item, not trimmed.
             return items[i]
+
+
+def find_file(filename):
+    """ checks a couple of directories for a filename,
+        returns the full path on success.
+        returns False on failure.
+    """
+    
+    if os.path.isfile(filename): return filename
+    # check some directories for the file.
+    for checkdir in CHECK_DIRS:
+        possiblename = os.path.join(checkdir, filename)
+        if os.path.isfile(possiblename):
+            return possiblename
+    return False
 
 def cmdline_build_switch(initial_name=None, dryrun = False, filename = 'switches.conf'):
     """ interactive 'switch builder/editor' in the console, 

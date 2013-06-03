@@ -197,9 +197,9 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     
-    # django debug tools
+    # django debug tools (for test-site and local development)
     'debug_toolbar',
-    # special user-agent middleware
+    # for making get_user_agent(request) available.
     'django_user_agents',
     # local apps
     'wp_main', # contains global template tags (wp_tags)

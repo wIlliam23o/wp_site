@@ -10,7 +10,7 @@
 """
 
 import os.path
-from os import walk #@UnusedImport: os.walk is used, aptana is stupid.
+from os import walk #@UnusedImport: walk is used, pydev...really?
 # global settings
 from django.conf import settings
 # User-Agent helper...

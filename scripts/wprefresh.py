@@ -12,8 +12,8 @@
    start date: May 29, 2013
 '''
 
-import sys, os, os.path, commands
-
+import sys, os, os.path #@UnusedImport: os is used, dont know why pydev trips on this.
+#dont-be-a-dick-pydev, #yolo
 script_dir = sys.path[0]
 project_dir = os.path.split(script_dir)[0]
 settings_dir = os.path.join(project_dir, 'wp_main/')

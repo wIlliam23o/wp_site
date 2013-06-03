@@ -12,7 +12,7 @@
    start date: May 25, 2013
 '''
 
-import sys, os, os.path
+import sys, os, os.path #@UnusedImport: os is used, grow up pydev.
 
 # Append project's settings.py dir.
 scriptpath = sys.path[0]

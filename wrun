@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# hopefully this saves some typing, instead of writing:
+# python scripts/wprefresh.py arg1 arg2
+# I can write: wprun wprefresh arg1 arg2
+scriptdir="scripts/"
+
+function print_usage () {
+    printf "\nusage: %s <scriptname> [arguments]..." "${0}"
+    printf "\n runs: python ${scriptdir}scriptname.py [arguments]...\n"
+    exit 0
+    }
+
+# test scriptdir
+if [ ! -d "${scriptdir}" ]; then
+    printf "\nscript dir not found!: %s\n" "${scriptdir}"
+    exit 1
+fi
+
+# save original scriptname passed for later
+scriptarg="${1}"
+if  [ -z $scriptarg ] || [ "${scriptarg}" == "-h" ] || [ "${scriptarg}" == "--help" ]; then
+    print_usage
+fi
+
+scriptname=$scriptarg
+# fix scriptname extension if needed.
+if [ "${scriptname#*.}" != "py" ]; then
+    # add extension
+    scriptname="${scriptname}.py"
+fi
+# fix script dir if needed
+if [ "${scriptname%$scriptdir*}" != "" ]; then
+    # add script dir
+    scriptname="${scriptdir}${scriptname}"
+fi
+
+# TEST filename
+if [ ! -f "${scriptname}" ]; then
+    printf "\ncan't find the script: ${scriptname}\n"
+    exit 1
+fi
+
+# Build argument string (remove previous scriptname)
+args=""
+for argument
+do
+    if [ "$argument" != "$scriptarg" ] && [ "$argument" != "${0}" ]; then
+        if [ "${args}" == "" ]; then
+            args="${argument}"
+        else
+            args="${args} ${argument}"
+        fi
+    fi
+done
+if [ "${args}" != "" ]; then
+    scriptcmd="${scriptname} ${args}"
+else
+    scriptcmd="${scriptname}"
+fi
+
+# Run it
+printf "running script: %s\n" "${scriptcmd}"
+python ${scriptcmd}
