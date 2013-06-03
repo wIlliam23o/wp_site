@@ -71,7 +71,8 @@ def view_loader(request):
         return responses.clean_response_req("viewer/loader.html",
                                             {'file': file_path,
                                              'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                       '/static/css/projects.css' ]
+                                                                       '/static/css/projects.css',
+                                                                       '/static/css/highlighter.css'],
                                              },
                                             request)
     else:
