@@ -67,7 +67,7 @@ INTERNAL_IPS = tuple(_internal_ips)
 # Admin info
 ADMINS = ( ('Christopher Welborn', 'cj@welbornprod.com'), )
 MANAGERS = ADMINS
-SERVER_EMAIL = 'cj@welbornprod.com'
+
 
 # Database info (filled in with settings_local)
 DATABASES = {
