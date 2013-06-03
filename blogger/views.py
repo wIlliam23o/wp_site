@@ -3,7 +3,7 @@ from blogger.models import wp_blog
 from blogger import blogtools
 
 # Global settings (for getting absolute path)
-from django.conf import settings
+from django.conf import settings #@UnusedImport: settings
 
 # Local tools
 from wp_main.utilities import utilities

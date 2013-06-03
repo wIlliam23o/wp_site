@@ -22,7 +22,7 @@ import re
 import base64
 
 # Django template loaders
-from django.template import Context, loader
+from django.template import RequestContext, Context, loader
 
 # Basic utilities
 from wp_main.utilities import utilities
@@ -289,10 +289,12 @@ class html_content(object):
         """ injects code for source viewing.
             see: htmltools.inject_sourceview()
         """
+        request = kwargs.get('request', None)
         link_text = kwargs.get('link_text', None)
         desc_text = kwargs.get('desc_text', None)
         target_replacement = kwargs.get('target_replacement', '{{ source_view }}')
-        self.content = inject_sourceview(project, self.content, link_text, desc_text, target_replacement)
+        self.content = inject_sourceview(project, self.content, request, 
+                                         link_text, desc_text, target_replacement)
         return self
         
     def remove_comments(self):
@@ -527,6 +529,7 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     # Make sure we are using the right dir.
     # get absolute path for images dir, if none exists then delete the target_replacement.
     images_dir = utilities.get_absolute_path(images_dir)
+    
     if images_dir == "": return source_string.replace(target, "")
     
     # Get useable relative dir (user-passed may be wrong format)
@@ -565,7 +568,7 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     return source_string.replace(target, screenshots)
 
 
-def inject_sourceview(project, source_string, link_text = None, desc_text = None, target_replacement = "{{ source_view }}"):
+def inject_sourceview(project, source_string, request=None, link_text = None, desc_text = None, target_replacement = "{{ source_view }}"):
     """ injects code for source viewing.
         needs wp_project (project) passed to gather info.
         if target_replacement is not found, returns source_string.
@@ -594,19 +597,16 @@ def inject_sourceview(project, source_string, link_text = None, desc_text = None
     # get default filename to display in link.
     file_name = utilities.get_filename(project.source_file) if project.source_file else project.name        
     
-    # link href
-    link_ = utilities.append_path("/view", relativepath) if relativepath else ""
-    
     # get link text
     if link_text is None:
         link_text = file_name + " (local)"
 
     sourceview = render_clean("home/sourceview.html",
                               {'project': project,
-                               'link': link_,
+                               'file_path': relativepath,
                                'link_text': link_text,
                                'desc_text': desc_text,
-                               })
+                               }, request)
     return source_string.replace(target, sourceview)
     
         
@@ -920,12 +920,16 @@ def clean_html(source_string):
 
     # these things have to be done in a certain order to work correctly.
     # hide_email, fix p spaces, remove_comments, remove_whitespace, remove_newlines
+    if source_string is None: 
+        _log.debug("None object passed as source_string!")
+        return ""
+    
     return remove_whitespace(
                 remove_comments(
                     hide_email(source_string)))
     
     
-def render_html(template_name, context_dict=None):
+def render_html(template_name, context_dict=None, with_request=False):
     """ renders template by name and context dict,
         returns the resulting html.
     """
@@ -933,18 +937,29 @@ def render_html(template_name, context_dict=None):
     if context_dict is None: context_dict = {}
     try:
         tmplate = loader.get_template(template_name)
-        rendered = tmplate.render(Context(context_dict))
+        if isinstance(context_dict, dict):
+            context_ = RequestContext(with_request, context_dict) if with_request else Context(context_dict)
+        else:
+            # whole Context was passed
+            context_ = context_dict
+            
+        rendered = tmplate.render(context_)
         return rendered
     except Exception as ex:
-        _log.error("Unable to render html template: " + template_name + '\n' + str(ex))
+        errstr = "Unable to render html template"
+        if with_request: errstr += " with request context"
+
+        _log.error(errstr + ': ' + template_name + '\n' + str(ex))
         return None
 
-
-def render_clean(template_name, context_dict=None):
+def render_clean(template_name, context_dict=None, with_request=False):
     """ runs render_html() through clean_html().
         renders template by name and context dict,
+        RequestContext is used if with_request is True.
+        
         passes resulting html through clean_html(),
         returns resulting html string.
     """
-    
-    return clean_html(render_html(template_name, context_dict))
+    return clean_html(render_html(template_name, context_dict, with_request))
+
+

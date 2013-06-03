@@ -83,6 +83,7 @@
 	
 	<!-- Javascript: jQuery -->
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script type="text/javascript" src="/static/js/jquery.cookie.js"></script>
 	
 	<!-- Javascript: Fisheye Dock -->
 	{% if request|is_mobile %}
@@ -197,6 +198,10 @@
 					<span class='alert-message'>{{ alert_message }}</span>
 				</div>
 			{% endif %}
+		{% endblock %}
+		
+		<!-- Floating Box placeholder -->
+		{% block floater %}
 		{% endblock %}
 		
 		<!-- Vertical menu placeholder -->

@@ -172,9 +172,13 @@ def get_absolute_path(relative_file_path):
     if relative_file_path == "":
         return ""
     
+
+    #if relative_file_path.startswith('/'): relative_file_path = relative_file_path[1:]
+    
     sabsolutepath = ""
     for root, dirs, files in os.walk(settings.STATIC_PARENT): #@UnusedVariable: dirs, files
         spossible = os.path.join(root, relative_file_path)
+
         # dirs allowed
         if os.path.isfile(spossible) or os.path.isdir(spossible):
             sabsolutepath = spossible

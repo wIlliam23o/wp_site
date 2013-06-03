@@ -21,7 +21,7 @@ _log = logger("projects.tags").log
 
 register = template.Library()
 
-def process_project_html(project):
+def process_project_html(project, request=None):
     """ runs the project through some html processing
         for screenshots, article ads, download code, sourceview code, etc.
         works on project.get_html_content() through projects.tools.process_injections()
@@ -31,7 +31,7 @@ def process_project_html(project):
         return ""
     
     try:
-        proj_html = ptools.process_injections(project)
+        proj_html = ptools.process_injections(project, request)
     except Exception as ex:
         _log.debug("Error processing injections:\n" + str(ex))
         return ""

@@ -31,7 +31,7 @@
 			<div class="project-content">
 				{% if project|has_project_html %}
 					<!-- Process project content and display it. -->
-					{{ project|process_project_html }}
+					{{ project|process_project_html:request }}
 				{% else %}
 					<!-- No content -->
 					<span>Sorry, no information found for this project: {{ requested_page }}</span>

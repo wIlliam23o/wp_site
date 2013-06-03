@@ -29,10 +29,11 @@ def view_index(request):
         response = responses.alert_message(alert_msg="Sorry, no projects found!")
     else:
         response = responses.clean_response("projects/index.html",
-                                            {'request': request,
-                                             'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                       "/static/css/projects.css"],
-                                             'projects': all_projects,})
+                                                {'request': request,
+                                                 'extra_style_link_list': [utilities.get_browser_style(request),
+                                                                           "/static/css/projects.css"],
+                                                 'projects': all_projects,
+                                                 })
     return response
 
 
@@ -71,15 +72,16 @@ def view_project(request, project, requested_page, source=None):
     # Grab projects list for vertical menu
     all_projects = [p for p in wp_project.objects.order_by('name') if not p.disabled]
 
-    return responses.clean_response("projects/project.html",
-                                    {'request': request,
-                                     'requested_page': requested_page,
-                                     'extra_style_link_list': extra_style_link_list,
-                                     'projects': all_projects,
-                                     'project': project,
-                                     'matches': matches,
-                                     'use_screenshots': use_screenshots,
-                                     })
+    return responses.clean_response_req("projects/project.html",
+                                        {'request': request,
+                                         'requested_page': requested_page,
+                                         'extra_style_link_list': extra_style_link_list,
+                                         'projects': all_projects,
+                                         'project': project,
+                                         'matches': matches,
+                                         'use_screenshots': use_screenshots,
+                                         }, 
+                                        request)
 
 
 def request_any(request, identifier):

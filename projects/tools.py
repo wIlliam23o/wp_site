@@ -35,33 +35,6 @@ def sorted_projects(sort_method = "-publish_date"):
         
     return [p for p in wp_project.objects.all().order_by(sort_method) if not p.disabled]
 
-     
-def get_matches_html(project, requested_page):
-    """ returns Html code for project matches, or 'sorry' html if no matches """
-
-    # initial html, no project found, not a list.
-    html_ = htmltools.html_content("<span>Sorry, no matching projects found for: " + requested_page + "</span>")
-    # found matches, build html content
-    if isinstance(project, (list, tuple)):
-        if len(project) > 0:
-            # build possible matches..
-            html_ = htmltools.html_content("<div class='surround_matches'>" + \
-                "<span>Sorry, I can't find a project at '" + requested_page + "'. Were you " + \
-                "looking for one of these?</span><br/>" + \
-                "<div class='project_matches'>")
-            for proj in project:
-                # build project match
-                html_.append_line("<div class='project_match'>")
-                p_name = "<span class='match_result'>" + \
-                         proj.name + "</span>"
-                p_link = "/projects/" + proj.alias
-                # add project name link
-                html_.append_line(htmltools.wrap_link(p_name, p_link) + '\n</div>')
-            # add div tails
-            html_.append_lines(("</div>", "</div>"))
-
-    return html_.tostring()
-
 
 def get_screenshots_dir(project):
     """ determine screenshots directory for project """
@@ -221,42 +194,6 @@ def get_download_dir_content(project, surl):
     return html_.tostring()
     
 
-def get_projects_menu(max_length = 25, max_text_length = 14):
-    """ build a vertical projects menu from all wp_projects """
-    #@attention: THIS WILL BE DELETED AS SOON AS VIEWER GETS TEMPLATIZED!!!!! ####
-    
-    if wp_project.objects.count() == 0:
-        return ""
-    # intialize with head of menu
-    html_ = htmltools.html_content("<div class='vertical-menu'>\n" + \
-                                   "<ul class='vertical-menu-main'>\n")
-    # project menu item template
-    stemplate = """
-                    <li class='vertical-menu-item'>
-                        <a class='vertical-menu-link' href='/projects/{{ alias }}'>
-                            <span class='vertical-menu-text'>{{ name }}</span>
-                        </a>
-                    </li>
-    """
-
-    icount = 0
-    for proj in [p for p in wp_project.objects.all().order_by('name') if not p.disabled]:
-        stext = proj.name
-        if len(stext) > max_text_length:
-            if len(proj.alias) > max_text_length:
-                stext = proj.alias[:max_text_length - 3] + "..."
-            else:
-                stext = proj.alias
-        # add menu item for this project
-        html_.append_line(stemplate.replace("{{ alias }}", proj.alias).replace("{{ name }}", stext))
-        icount += 1
-        if icount > max_length:
-            break
-        
-    # add tail of menu
-    html_.append_lines(("</ul>", "</div>"))
-    return html_.tostring()
-
 def prepare_content(project, scontent):
     """ prepares project content for final view.
         adds screenshots, downloads, ads, etc.
@@ -300,7 +237,7 @@ def prepare_content(project, scontent):
     return html_.tostring()
 
 
-def process_injections(project):
+def process_injections(project, request=None):
     """ Replaces target strings {{ article_ad }}, {{ source_view }}, etc.
         with the proper code per project.
         Returns projects description (string) in html format.
@@ -314,7 +251,7 @@ def process_injections(project):
     
     try:
         html_.inject_article_ad()
-        html_.inject_sourceview(project)
+        html_.inject_sourceview(project, request=request)
     except Exception as ex:
         _log.debug("Error injecting article_ad/sourceview:\n" + str(ex))
         return ""

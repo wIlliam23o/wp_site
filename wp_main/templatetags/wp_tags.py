@@ -229,7 +229,7 @@ def disabled_css(item):
         # grab object.
         if len(obj_match.groups()) == 4:
             # beginning of a tag (<a href)
-            tag = obj_match.groups()[0]
+            tag = obj_match.groups()[0] #@UnusedVariable: tag
             # type of object (wp_blog/1)
             otype = obj_match.groups()[2].strip('/')
             # name/title of object (My Blog Post)
@@ -266,6 +266,12 @@ def disabled_css(item):
         return item
     
 
+def get_filename(filename):
+    """ uses utilities and os.path to return only the short filename (no path) """
+    
+    return utilities.get_filename(filename)
+
+
 # tuple of filters to register.
 registered_filters = (comments_button,
                       is_false,
@@ -285,7 +291,8 @@ registered_filters = (comments_button,
                       log_debug,
                       str_,
                       repr_,
-                      disabled_css)
+                      disabled_css,
+                      get_filename)
 
 # register all filters in the registered tuple.
 for filter_ in registered_filters:

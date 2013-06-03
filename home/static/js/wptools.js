@@ -118,7 +118,8 @@ var wptools = {
         , elem_is_hidden : function(selector_) {
               /* determines if element is hidden 
                * by checking the display property */
-              var box_ = $(selector_)[0];
+              var box_ = $(selector_);
+              if (box_.length > 1) { box_ = box_[0]; }
               var box_display = box_.style.display;
               return (box_display == '' || box_display == 'none');
           }
@@ -142,6 +143,69 @@ var wptools = {
         	/* convenience function (shorter than the document method.) */
         	return document.getElementById(id_);
         }
+        
+        , strdup : function (char_, count_ ) {
+        	var s = ""
+        	if (count_ && count_ > 0) {
+        		for (i=0; i < count_; i++) {
+        			s = s + char_;
+        		}
+        	}
+        	return s
+        }
+        , csrf_safe_method : function (method) {
+    		// these HTTP methods do not require CSRF protection
+    		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+		}
+		, pre_ajax : function () {
+			// setup ajax
+			$.ajaxSettings.traditional = true;
+			$.ajaxSetup(wptools.pre_ajax_setup());
+    	}
+    	, send_post : function (url, data_dict, done_func) {
+    		// setup ajax
+    		$.ajaxSetup(wptools.pre_ajax_setup());
+			// Submit data to url, invoke done_func() on done.
+			$.post(url, data_dict).done(done_func);
+		}
+		, pre_ajax_setup : function () { 
+			// info dict needed for .ajaxSetup()
+			var csrftoken = $.cookie('csrftoken');
+			data = {crossDomain: false,
+					beforeSend: function(xhr, settings) {
+						if (!wptools.csrf_safe_method(settings.type)) {
+							 xhr.setRequestHeader("X-CSRFToken", csrftoken);
+						}
+					}
+			}
+			
+			return data
+		}
+		, navigateto : function (url) {
+			window.location.href = url;
+		}
+		
+		, scroll_element : function (selector, toppos) {
+			if (!toppos) { toppos = 0; }
+			var el=$(selector);
+			var elpos=el.offset().top;
+			$(window).scroll(function () {
+				if (!wptools.element_is_hidden(selector)) {
+    				var y=$(this).scrollTop();
+    				if(y<elpos){el.stop().animate({'top': toppos},500);}
+    				else{el.stop().animate({'top':y-elpos},500);}
+    			}
+			});
+		}
+		
+		, vertical_element : function (selector, toppos) {
+			if (!toppos) { toppos = 0; }
+			var elem = $(selector);
+			if (elem.length > 1) { elem = elem[0]; }
+			var y = $(this).scrollTop();
+			elem.css({'top': y + toppos + 'px' });
+		}
+		
         
 };
         

@@ -294,6 +294,23 @@ h1.title { font-size: 1.5em; }
 	height: auto;
 	width: auto;
 }
+
+#floater {
+	position: absolute;
+	width: 45%;
+	height: auto;
+	font-size: 1em;
+	text-align: center;
+	color: #4e4e4e;
+	background: white;
+	border: 2px solid #d7d7d7;
+	border-radius: 10px;
+	z-index: 99999;
+	display: none;
+	box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+	top: 20px;	
+}
+
 /* Jump-To Styles */
 .jumpto {
 	margin-left: 40px;
