@@ -17,10 +17,10 @@ def view_index(request):
     """ displays search form for welbornprod search queries """
     
     # get search query, if any.
-    query = responses.get_request_arg(request, ['q', 'query', 'search'])
+    query = responses.get_request_arg(request, ['q', 'query', 'search'], default="")
 
     # no query, show search form.
-    if query == "":
+    if (query is None) or (query == ""):
         return responses.clean_response("searcher/searchform.html",
                                         {'request': request,
                                          'extra_style_link_list': [utilities.get_browser_style(request),
@@ -63,7 +63,7 @@ def view_paged(request):
     results_list, results_slice = ([], [])
     
     # get query
-    _query = responses.get_request_arg(request, ['q', 'query', 'search'])
+    _query = responses.get_request_arg(request, ['q', 'query', 'search'], default="")
     query_safe = mark_for_escaping(_query)
     
     # check query

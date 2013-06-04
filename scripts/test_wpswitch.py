@@ -102,7 +102,7 @@ class test_wpswitch(unittest.TestCase):
 
         
     def testParseDataEqualsSwitchStr(self):
-        """ parse_switchdata() should create a valid switch from a get_switch_str() """
+        """ ....parse_switchdata() should create a valid switch from a get_switch_str() """
         switch2 = wpswitch.parse_switchdata(switch1.get_switch_str())
         self.assertIsNotNone(switch2, 
                              msg="parse_switchdata() failed parsing get_switch_str()")
@@ -113,7 +113,7 @@ class test_wpswitch(unittest.TestCase):
 
 
     def testCanLoadList(self):
-        """ load switches from lines of strings. """
+        """ ....load switches from lines of strings. """
         
         self.switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
@@ -124,7 +124,7 @@ class test_wpswitch(unittest.TestCase):
     
     @unittest.skipIf (not USE_TEST_CONF, "no test file to use")
     def testCanLoadFile(self):
-        """ loads switches from a file """
+        """ ....loads switches from a file """
         
         self.assertEqual(self.created_test_conf, True,
                          msg="testCanLoadFile: setUp did not create test switches.conf")
@@ -137,7 +137,7 @@ class test_wpswitch(unittest.TestCase):
 
          
     def testFindSwitchIsRegEx(self):
-        """ find regex test switch by name, is_regex() should return True """
+        """ ....find regex test switch by name, is_regex() should return True """
         
         #switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
@@ -152,7 +152,7 @@ class test_wpswitch(unittest.TestCase):
 
 
     def testCanHandleGroups(self):
-        """ retrieves all group names """
+        """ ....retrieves all group names """
         
         #switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
@@ -186,7 +186,7 @@ class test_wpswitch(unittest.TestCase):
         
     
     def testCanGetGroupNameByList(self):
-        """ retrieves a group name from a list of switches """
+        """ ....retrieves a group name from a list of switches """
         
         #switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
@@ -212,7 +212,7 @@ class test_wpswitch(unittest.TestCase):
         
 
     def testBadSwitchDataCaught(self):
-        """ bad switch data returns None, empty desc is not bad data. """
+        """ ....bad switch data returns None, empty desc is not bad data. """
         
         # incomplete
         baddata = "filename|name|"
