@@ -109,16 +109,18 @@ def render_response(template_name, context_dict):
     except:
         return alert_message("Sorry, there was an error loading this page.")
 
-def clean_response(template_name, context_dict, request_ = None):
+def clean_response(template_name, context_dict, **kwargs):
     """ same as render_response, except does code cleanup (no comments, etc.)
         returns cleaned HttpResponse.
     """
-    
+    if context_dict is None: context_dict = {}
+    request_ = kwargs.get('request_', None)
     # Add request to context if available.
-    if request_ is not None: context_dict['meta'] = request_.META
-
+    if request_: context_dict['meta'] = request_.META
+    kwargs['context_dict'] = context_dict
+    
     try:
-        rendered = htmltools.render_clean(template_name, context_dict)
+        rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception as ex:
         _log.error("Unable to render template: " + template_name + '\n' + str(ex))
         return alert_message("Sorry, there was an error loading this page.")

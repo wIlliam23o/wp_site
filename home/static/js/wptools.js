@@ -44,7 +44,8 @@ var wptools = {
                           }
                       }
                       // fix inner html..
-                      elems[i].innerHTML = this.wpaddress(elems[i].innerHTML);
+                      //elems[i].innerHTML = this.wpaddress(elems[i].innerHTML);
+                  	  $(elems[i]).html(this.wpaddress($(elems[i]).html()));
                   }
               }
               return true;
@@ -76,51 +77,25 @@ var wptools = {
         , set_display : function (selector_, display_property) {
               /* sets display property for element */
               // uses first element in query, so choose selectors wisely.
-              var elem_ = $(selector_)[0];
-              elem_.style.display = display_property;
-          }
-        
-        , set_innertext : function (selector_, text_) {
-              /* sets innerText property for element */
-              // uses first element in query, so choose selectors wisely.
-              var elem_ = $(selector_)[0];
-              elem_.innerText = text_;
-          }
-        
-        , set_innerhtml : function (selector_, html_) {
-              /* sets innerHTML property for element */
-              // uses first element in query, so choose selectors wisely.
-              var elem_ = $(selector_)[0];
-              elem_.innerHTML = html_;
+              $(selector_).css("display", display_property);
           }
                     
         , show_debug : function () {
                  /* displays the debug box */
               this.set_display('.debug-box', 'block');
-              this.set_innerhtml('.debug-button-text', 'hide debug');
+              $('.debug-button-text').text('hide debug');
           }
             
         , hide_debug : function () {
               /* hides the debug box */
               this.set_display('.debug-box', 'none');
-              this.set_innerhtml('.debug-button-text', 'show debug');
-          }
-        
-        , toggle_element : function (selector) {
-              /* hides elements that are shown and vice-versa by selector */
-              if (this.elem_is_hidden(selector)) {
-                  $(selector).show();
-              } else {
-                  $(selector).hide();
-              }
+              $('.debug-button-text').text('show debug');
           }
             
         , elem_is_hidden : function(selector_) {
               /* determines if element is hidden 
                * by checking the display property */
-              var box_ = $(selector_);
-              if (box_.length > 1) { box_ = box_[0]; }
-              var box_display = box_.style.display;
+              var box_display = $(selector_).css("display");
               return (box_display == '' || box_display == 'none');
           }
                             
@@ -131,6 +106,7 @@ var wptools = {
             } else {
                 this.hide_debug();
             }
+
         }
         
         , center_element : function (selector) {

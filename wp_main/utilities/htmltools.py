@@ -253,6 +253,15 @@ class html_content(object):
         return self
     
     
+    def auto_link(self, link_list, **kwargs):
+        """ auto link specific words in the content.
+            see: htmltools.auto_link()
+        """
+        
+        self.content = auto_link(self.content, link_list, **kwargs)
+        return self
+    
+    
     def check_replacement(self, target_replacement):
         """ fixes target replacement string in inject functions.
             if {{ }} was ommitted, it adds it.
@@ -410,6 +419,26 @@ class html_content(object):
         return addresses_
 
 
+# Module Variables (for accessing from anywhere)
+auto_link_list = (("Windows", "http://www.windows.com"),
+                  ("Mint", "http://linuxmint.com"),
+                  ("Linux", "http://linux.org"),
+                  ("Python", "http://www.python.org"),
+                  ("Django", "http://djangoproject.com"),
+                  ("Visual Basic .Net", "http://msdn.microsoft.com/en-us/vstudio/"),
+                  ("VB", "http://msdn.microsoft.com/en-us/vstudio/"),
+                  ("Ubuntu", "http://ubuntu.com"),
+                  ("Arduino", "http://arduino.cc"),
+                  ("RaspberryPi", "http://raspberrypi.org"),
+                  ("Raspberry Pi", "http://raspberrypi.org"),
+                  ("HTML", "http://en.wikipedia.org/wiki/HTML"),
+                  ("JavaScript", "http://en.wikipedia.org/wiki/JavaScript"),
+                  ("PostgreSQL", "http://www.postgresql.org"),
+                  ("Puppy", "http://puppylinux.org"),
+                  ("BASIC", "http://en.wikipedia.org/wiki/BASIC"),
+                  ("ATTiny", "http://www.atmel.com/products/microcontrollers/avr/tinyavr.aspx"),
+                  ("(?P<CGROUP>C language)", "http://en.wikipedia.org/wiki/C_(programming_language)"),
+                 )
     
 # Module Functions (not everything can be an html_content(), or should be.)
 def wrap_link(content_, link_url, alt_text = ""):
@@ -424,6 +453,95 @@ def wrap_link(content_, link_url, alt_text = ""):
         s_end = "</a>"
     
     return s + content_ + s_end
+
+def auto_link(str_, link_list, **kwargs):
+    """ Grabs words from HTML content and makes them links.
+        see: auto_link_line()
+        Only replaces lines inside certain tags.
+    """
+    
+    if isinstance(str_, (str, unicode)):
+        lines = str_.split('\n')
+        joiner = '\n'
+    else:
+        joiner = None
+        lines = str_
+    inside_p = False
+    inside_span = False
+    new_lines = []
+    for line in iter(lines):
+        linetrim = line.replace(' ', '').replace('\t', '')
+        # start of tags
+        if "<p" in linetrim: inside_p = True
+        if "<span" in linetrim: inside_span = True
+        
+        # deal with good tags
+        if inside_p or inside_span:
+            line = auto_link_line(line, link_list, **kwargs)
+        new_lines.append(line)
+        
+        # end of tags
+        if "</p>" in linetrim: inside_p = False
+        if "</span>" in linetrim: inside_span = False
+    # end of content
+    if joiner is None:
+        return new_lines
+    else:
+        return joiner.join(new_lines)
+
+
+def auto_link_line(str_, link_list, **kwargs):
+    """ Grabs words from HTML content and makes them links.
+        Pass in a list of 2-tuples with [("Word", "Link Target"),]
+        ex:
+            link_list = (("WelbornProd", "http://welbornprod.com"),
+                         ("Django", "http://djangoproject.com"))
+            new_html = auto_link(old_html, link_list)
+        
+        Attributes can be added with keyword arguments
+            new_html = auto_link(old_html, link_list, target="_blank", _class="link-class")
+        * Notice the _ in front of 'class', because class is a python keyword.
+        * All _'s are stripped from the keys before using them, so '_class' becomes
+        * a 'class' attribute.
+    """
+    
+    try:
+        if len(link_list) == 0: return str_
+        if len(link_list[0]) < 2: return str_
+    except:
+        _log.error("Invalid input to auto_link()!, expecting a list/tuple of 2-tuple/lists")
+        return str_
+    # build attributes
+    def parse_key(k):
+        # for passing keys like "class", you can do "_class"
+        return k.strip('_')
+    attr_strings = [' ' + parse_key(k) + '="' + v + '"' for k,v in kwargs.items()]
+    attr_string = ''.join(attr_strings) if len(attr_strings) > 0 else ''
+    # replace text with links
+    for link_pat, link_href in link_list:
+        try:
+            link_pat = r'[^\>]' + link_pat + r'[^\<]'
+            re_pat = re.compile(link_pat)
+            re_match = re_pat.search(str_)
+            if re_match:
+                if len(re_match.groups()) == 0:
+                    # use only 1 group
+                    link_text = strip_all(re_match.group(), ' .,\'";:?/\\`~!@#$%^&*()_+-={}[]|')
+                else:
+                    # use first group dict key if found
+                    if len(re_match.groupdict().keys()) > 0:
+                        first_key = re_match.groupdict().keys()[0]
+                        link_text = re_match.groupdict()[first_key]
+                    else:
+                        # use first non-named group
+                        link_text = re_match.groups()[0]
+                # Replace the text with a link
+                new_link = '<a href="' + link_href + '" title="' + link_text + '"' + attr_string + '>' + link_text + '</a>'
+                str_ = str_.replace(link_text, new_link)
+        except Exception as ex:
+            _log.error("Error in auto_link_line(): (" + link_pat + ")" + repr(ex))
+            return str_
+    return str_
 
 
 def readmore_box(link_href):
@@ -819,6 +937,26 @@ def find_email_addresses(source_string):
     return addresses_
 
 
+def strip_all(s, strip_chars):
+    """ runs s.strip() for every char in strip_chars.
+        if strip_chars is a list/tuple, then it strips
+        every character of every item in the list.
+    """
+    
+    if s is None: return s
+    if isinstance(strip_chars, (list, tuple)):
+        strip_chars = ''.join(strip_chars)
+    
+    if isinstance(s, str):
+        strip_ = str.strip
+    elif isinstance(s, unicode):
+        strip_ = unicode.strip
+    
+    for c in strip_chars:
+        s = strip_(s, c)
+    return s
+
+
 def fix_open_tags(source):
     """ scans string, or list of strings for 
         open <tags> without their </closing> tag.
@@ -929,12 +1067,30 @@ def clean_html(source_string):
                     hide_email(source_string)))
     
     
-def render_html(template_name, context_dict=None, with_request=False):
+def render_html(template_name, **kwargs):
     """ renders template by name and context dict,
         returns the resulting html.
+        Keyword arguments are:
+            context_dict : Context or RequestContext dict to be used
+                           RequestContext is used if a request is passed into 'with_request'
+                           Default: {}
+            with_request : HttpRequest object to pass on to RequestContext
+                           Default: False (causes Context to be used)
+               link_list : A link list in auto_link() format to be used
+                           with auto_link() before returning content.
+                           see: htmltools.auto_link()
+                           Default: False (disables auto_link())
+          auto_link_args : dict containing arguments for auto_link()
+                           ex: render_html("mytemplate", 
+                                           link_list = my_link_list, 
+                                           auto_link_args = {"target":"_blank", "class":"my-link-class"})
+                           Default: {}
     """
+    context_dict = kwargs.get('context_dict', {})
+    with_request = kwargs.get('with_request', False)
+    link_list = kwargs.get('link_list', False)
+    auto_link_args = kwargs.get('auto_link_args', {})
     
-    if context_dict is None: context_dict = {}
     try:
         tmplate = loader.get_template(template_name)
         if isinstance(context_dict, dict):
@@ -944,6 +1100,7 @@ def render_html(template_name, context_dict=None, with_request=False):
             context_ = context_dict
             
         rendered = tmplate.render(context_)
+        if link_list: rendered = auto_link(rendered, link_list, **auto_link_args)
         return rendered
     except Exception as ex:
         errstr = "Unable to render html template"
@@ -952,14 +1109,23 @@ def render_html(template_name, context_dict=None, with_request=False):
         _log.error(errstr + ': ' + template_name + '\n' + str(ex))
         return None
 
-def render_clean(template_name, context_dict=None, with_request=False):
+def render_clean(template_name, **kwargs):
     """ runs render_html() through clean_html().
         renders template by name and context dict,
         RequestContext is used if with_request is True.
-        
+        Keyword Arguments:
+              context_dict : dict to be used by Context() or RequestContext()
+              with_request : HttpRequest() object to pass on to RequestContext()
+                 link_list : link_list to be used with htmltools.auto_link()
+                             Default: False
+            auto_link_args : A dict containing keyword arguments for auto_link()
+                             Default: {}
+            For these arguments, see: htmltools.render_html()
         passes resulting html through clean_html(),
         returns resulting html string.
+        
     """
-    return clean_html(render_html(template_name, context_dict, with_request))
+
+    return clean_html(render_html(template_name, **kwargs))
 
 

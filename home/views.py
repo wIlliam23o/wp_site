@@ -31,13 +31,16 @@ def index(request):
 def view_about(request):
     """ return the about page for welbornproductions. """
     
-    about_content = htmltools.load_html_file("static/html/about.html")
+    # Pass link list for the about page
+
     return responses.clean_response("home/about.html",
                                     {'request': request,
                                      'extra_style_link_list': ["/static/css/about.css",
                                                                utilities.get_browser_style(request)],
-                                     'about_content': mark_safe(about_content),
-                                     })
+                                     },
+                                    link_list=htmltools.auto_link_list,
+                                    auto_link_args={"target": "_blank"}
+                                    )
 
 
 @login_required(login_url='/login')
