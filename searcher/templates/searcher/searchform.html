@@ -17,13 +17,25 @@
 {% block content %}
 	<div class="search-form" style="top: 50px;">
 		<span class="search-label">Enter something to search for: </span>
-		<form>
+		<form id="search-form">
 			<!-- Search query (3 char minimum) -->
 			<input type="search" name="q" id="searchbox" class="search-textbox" required=True></input>
 			<!-- Search Button -->
-			<input type="submit" id="search-button" class="submit-button" title="Search"></input>
+			<a href="javascript: void(0);" onclick="javascript: do_search();">
+				<div class="submit-button">
+					<span>search</span>
+				</div>
+			</a>
+			<!--<input type="submit" id="search-button" class="submit-button" title="Search"></input>-->
 			
 		</form>
 	</div>
 {% endblock %}
 
+{% block bodyend %}
+	<script type="text/javascript">
+		function do_search() {
+			$("#search-form").submit();
+		}
+	</script>
+{% endblock %}

@@ -637,16 +637,22 @@ a.jumpto-nav {
 /* Form Styles */
 
 .submit-button {
+	display: inline-block;
 	background: white;
 	color: #008FFF;
 	font-family: "Open Sans", "Arial Black";
 	font-weight: bold;
-	border-color: #919191;
+	border: 1px solid #919191;
 	border-radius: 5px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
-	border-width: 1px;
+	padding: 2px;
+	
 }	   
+
+.submit-button:hover {
+	color: #666666;
+}
 
 .input-text {
 	background: white;
