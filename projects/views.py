@@ -81,7 +81,7 @@ def view_project(request, project, requested_page, source=None):
                                          'matches': matches,
                                          'use_screenshots': use_screenshots,
                                          }, 
-                                        request)
+                                        with_request=request)
 
 
 def request_any(request, identifier):

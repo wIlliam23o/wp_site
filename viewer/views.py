@@ -69,12 +69,12 @@ def view_loader(request):
     if request.REQUEST.get('file', False):
         file_path = request.REQUEST['file'].strip("'").strip('"')
         return responses.clean_response_req("viewer/loader.html",
-                                            {'file': file_path,
-                                             'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                       '/static/css/projects.css',
-                                                                       '/static/css/highlighter.css'],
-                                             },
-                                            request)
+                                            context_dict = {'file': file_path,
+                                                            'extra_style_link_list': [utilities.get_browser_style(request),
+                                                                                      '/static/css/projects.css',
+                                                                                      '/static/css/highlighter.css'],
+                                                            },
+                                            with_request = request)
     else:
         raise Http404("No file passed to request.")
 

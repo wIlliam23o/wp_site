@@ -458,6 +458,14 @@ def auto_link(str_, link_list, **kwargs):
     """ Grabs words from HTML content and makes them links.
         see: auto_link_line()
         Only replaces lines inside certain tags.
+        
+        Keyword Arguments:
+            All keyword arguments are added as attributes to the link.
+            For python keywords like 'class', just put a _ in front or behind it.
+            So _class="my-link-class" becomes <a href="" class="my-link-class">
+            You can also just pass a dict as keyword args like this:
+                my_attrs = {"target": "_blank", "class": "my-class"}
+                auto_link(mycontent, my_link_list, **my_attrs)s
     """
     
     if isinstance(str_, (str, unicode)):
@@ -493,11 +501,14 @@ def auto_link(str_, link_list, **kwargs):
 def auto_link_line(str_, link_list, **kwargs):
     """ Grabs words from HTML content and makes them links.
         Pass in a list of 2-tuples with [("Word", "Link Target"),]
-        ex:
+        ex: (with auto_link())
             link_list = (("WelbornProd", "http://welbornprod.com"),
                          ("Django", "http://djangoproject.com"))
             new_html = auto_link(old_html, link_list)
-        
+        ex: (with auto_link_line())
+            myline = "Testing auto_link_line() for WelbornProd."
+            newline = auto_link_line(myline, link_list)
+            
         Attributes can be added with keyword arguments
             new_html = auto_link(old_html, link_list, target="_blank", _class="link-class")
         * Notice the _ in front of 'class', because class is a python keyword.
@@ -680,9 +691,9 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
  
     # Render from template.
     screenshots = render_clean("home/screenshots.html",
-                               {'images': good_pics,
-                                'noscript_image': noscript_image,
-                                })
+                               context_dict={'images': good_pics,
+                                             'noscript_image': noscript_image,
+                                             })
     return source_string.replace(target, screenshots)
 
 
@@ -720,11 +731,13 @@ def inject_sourceview(project, source_string, request=None, link_text = None, de
         link_text = file_name + " (local)"
 
     sourceview = render_clean("home/sourceview.html",
-                              {'project': project,
-                               'file_path': relativepath,
-                               'link_text': link_text,
-                               'desc_text': desc_text,
-                               }, request)
+                              context_dict = {'project': project,
+                                              'file_path': relativepath,
+                                              'link_text': link_text,
+                                              'desc_text': desc_text,
+                                              },
+                              with_request = request,
+                              )
     return source_string.replace(target, sourceview)
     
         

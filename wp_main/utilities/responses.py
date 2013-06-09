@@ -128,13 +128,20 @@ def clean_response(template_name, context_dict, **kwargs):
         return HttpResponse(rendered)
 
 
-def clean_response_req(template_name, context_dict, request):
+def clean_response_req(template_name, context_dict, **kwargs):
     """ handles responses with RequestContext instead of Context,
         otherwise it's the same as clean_response
     """
     
+    
+    if context_dict is None: context_dict = {}
+    kwargs['context_dict'] = context_dict
+    
+    with_request = kwargs.get('with_request', False)
+    
+    
     try:
-        rendered = htmltools.render_clean(template_name, context_dict, request)
+        rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception as ex:
         _log.error("Unable to render template with request context: " + template_name + \
                    '\n' + str(ex))
