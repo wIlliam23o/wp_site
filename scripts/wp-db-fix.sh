@@ -8,7 +8,12 @@
 # (Basically it increments the nextval() to the TABLE's max id + 1.)
 
 # Tables to modify
-tables=("blogger_wp_blog" "projects_wp_project" "django_admin_log")
+tables=("blogger_wp_blog" 
+		"projects_wp_project" 
+		"django_admin_log" 
+		"downloads_file_tracker" 
+		"auth_permission" 
+		"django_content_type")
 
 # FUNCTIONS -------------------------------------------------------------------
 function print_usage () {
@@ -99,7 +104,12 @@ else
         if [ "$results" == "" ]; then
             printf "    No response returned!\n"
         else
-            printf "    Success for: ${tablename}\n"
+            if [ "${results:0:6}" == "SELECT" ]; then
+            	printf "    Success for: %s\n" "$tablename"
+            else
+            	printf "    Weird response for: %s\n" "$tablename"
+            	printf "        %s" "$results"
+            fi
         fi
     done
 

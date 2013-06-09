@@ -45,7 +45,7 @@ class wp_highlighter(object):
         """
         
         try:
-            highlighted = "<div class='highlighted'>" + pygments.highlight(self.code, self.lexer, self.formatter) + "</div>"
+            highlighted = "<div class='highlighted'>\n" + pygments.highlight(self.code, self.lexer, self.formatter) + "\n</div>"
         except:
             highlighted = ""
         return highlighted

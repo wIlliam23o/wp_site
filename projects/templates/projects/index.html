@@ -1,24 +1,50 @@
 {% extends "home/main.html" %}
+{% load wp_tags %}
 
 {% block title %}- Projects{% endblock %}
 
 
-<!-- Projects Style -->
-{% block extrastylelink %}
-		<link rel="stylesheet" href="/static/css/projects.css" type="text/css"/>
-		{{ block.super }}
-{% endblock %}
-
-{% block extrahead %}
-{% endblock %}
-
+<!-- Build projects menu -->
 {% block verticalmenu %}
-	{% if projects_menu %}
-		{{ projects_menu }}
+	{% if projects %}
+		<div class="vertical-menu">
+			<ul class="vertical-menu-main">
+				{% for project in projects %}
+					<li class="vertical-menu-item">
+						<a class="vertical-menu-link" href="/projects/{{ project.alias }}">
+							<span class="vertical-menu-text">{{ project.name }}</span>
+						</a>
+					</li>
+				{% endfor %}
+			</ul>
+		</div>
 	{% endif %}
 {% endblock %}
 
-<!-- Main Projects Page -->
+<!-- Build Project Listing -->
 {% block content %}
-	{{ projects_content }}
+	{% if projects %}
+		<div class="wp-block project-listing">
+			{% for project in projects %}
+				<!-- Single project listing. -->
+				<div class="wp-block project-container">
+					<!-- Header (Name/Link/Version) -->
+					<div class='project-header-box'>
+						<a href="/projects/{{ project.alias }}">
+							<span class="header project-name">{{ project.name }}</span>
+						</a>
+						<br/>
+						<span class="version">version {{ project.version }}</span>
+						<br/>
+					</div>
+				
+					<!-- Description -->
+					<div class="project-desc">
+						<span class="desc">{{ project.description|safe }}</span>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	{% endif %}
 {% endblock %}
+

@@ -1,10 +1,13 @@
 /* Styles for projects listing/pages */
 
-/* Project Listings */
-.project_listing {
+/* Current moving to new naming style, hince the double-names with _ and -.
+ */
+
+/* Project Listings */ 
+.project_listing, .project-listing {
 	text-align: center;
 }
-.project_container {
+.project_container, .project-container {
 	margin: 15px;
 	padding: 10px;
 	background-color: #FAFAFA;
@@ -14,7 +17,7 @@
 
 }
 
-.project_header {
+.project_header, .project-header-box {
 	text-align: left;
 	width: 100%
 }
@@ -27,7 +30,7 @@
 	text-transform: lowercase;
     }
     
-.project_name {
+.project_name, .project-name {
 	font-size: 2em;
 }
 
@@ -40,7 +43,7 @@
 	padding-left: 0%;
 }
 
-.project_desc {
+.project_desc, .project-desc {
 	margin-top: 10px;
 	padding: 5px;
 	border-radius: 10px;
@@ -49,20 +52,23 @@
 	border-width: 2px;
 }
 
-.project_matches {
+.project_matches, .project-matches {
 	border-radius: 5px;
 }
-.project_match {
+.project_match, .project-match {
 	font-family: "Open Sans", "Century Gothic", "Arial Black", "Arial", "sans-serif";
 	padding: 5px;
 }
 
-.surround_matches {
+.surround_matches, .project-matches-box {
 	padding-top: 10px;
 }
 
+.match_result, .project-match-name {
+	/* nothing yet. */
+}
 /* Project Page */
-.project_title {
+.project_title, .project-title {
 	margin-bottom: 15px;
 }
 

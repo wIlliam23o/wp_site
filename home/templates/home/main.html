@@ -11,6 +11,10 @@
 		{% endblock %}
 	</title>
 	
+	<!-- Meta Info -->
+	{% block metainfo %}
+	{% endblock %}
+	
 	<!-- FavIcon -->
 	<link rel="icon" href="/static/images/favicon.ico" type="image/x-icon"/>
     <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon"/> <!-- vnd.microsoft.icon"-->
@@ -60,13 +64,8 @@
 			a.dock-item:active { color: #9c9c9c; }
 			.dock-item span { display: block; }
 			
-			.vertical-menu {
-				top: 200px;
-			}
-			
-			.menubar {
-				margin-top: 0px;
-			}
+			.vertical-menu { top: 200px; }
+			.menubar { margin-top: 0px; }
 			
 		</style>
 	{% else %}		
@@ -84,13 +83,14 @@
 	
 	<!-- Javascript: jQuery -->
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script type="text/javascript" src="/static/js/jquery.cookie.js"></script>
 	
 	<!-- Javascript: Fisheye Dock -->
 	{% if request|is_mobile %}
-		<!-- No dock js loaded on mobile site. It looks funny -->
+		<!-- No dock js loaded on mobile site. It doesn't work well with touch screens. -->
 	{% else %}
-		<script type="text/javascript" src="/static/js/fisheye-iutil.js"></script>
 		<script type="text/javascript" src="/static/js/dock.js"></script>
+		<script type="text/javascript" src="/static/js/fisheye-iutil.js"></script>
 	{% endif %}
 	
 	<!-- Javascript: Image Rotator -->
@@ -102,7 +102,7 @@
 	<script type="text/javascript" src="/static/js/wptools.js"></script>
 
 
-<!-- JAVASCRIPT -->
+<!-- EXTRA JAVASCRIPT (per page) -->
 {% block javascript %}
 {% endblock %}
 
@@ -143,7 +143,7 @@
 	   	{% if request|debug_allowed and request|is_test_site %}
 	   		<!-- show/hide debug btn (top button) -->
 	   		<div class="debug-button" id="debug-button-top">
-	   			<a href="javascript: wpTools.toggle_debug();">
+	   			<a href="javascript: wptools.toggle_debug();">
 	   				<span class="debug-button-text">
 	   					show debug
 	   				</span>
@@ -156,7 +156,7 @@
 	   			{% endfilter %}
 	   			<!-- hide debug btn -->
 	   			<div class="debug-button" id="debug-button-bottom">
-	   				<a href="javascript: wpTools.toggle_debug();">
+	   				<a href="javascript: wptools.toggle_debug();">
 	   					<span class="debug-button-text">
 	   						hide debug
 	   					</span>
@@ -165,11 +165,27 @@
 	   		</div>
 	   	{% endif %}
 	{% endblock %}
+	
 	<!-- Whole Page Container (Background and everything inside) -->
 	<div id='bg-surround'>
 	    <div id='bg-pattern' class='main-pattern'>
 	    	<div class='pattern-gradient'></div>
 		</div>
+		<!-- Login Box -->
+		<!-- {% block login %} -->
+		<!-- <div class='login-box' id="login"> -->
+		<!-- 	<span class='login-label'>Please login to continue:</span> -->
+		<!-- 	<form action="/login"> -->
+		<!-- 		<span class='login-label'>User: </span> -->
+		<!-- 		<input id="login-user" type='text' name='user' class='input-text' required=True> -->
+		<!-- 		<br> -->
+		<!-- 		<span class='login-label'>Password:</span> -->
+		<!-- 		<input id="login-pw" type='password' name='pw' class='input-text' required=True> -->
+		<!-- 	<br> -->
+		<!-- 		<input type='submit' title='ok' class='submit-button' onclick="javascript: wptools.hide_element('#login');"> -->
+		<!-- 	</form> -->
+		<!-- </div> -->
+		<!-- {% endblock %} -->
 		
 		<!-- Alert Area -->
 		{% block alert %}
@@ -184,6 +200,10 @@
 			{% endif %}
 		{% endblock %}
 		
+		<!-- Floating Box placeholder -->
+		{% block floater %}
+		{% endblock %}
+		
 		<!-- Vertical menu placeholder -->
 		{% block verticalmenu %}
 			{% if vertical_menu %}
@@ -192,15 +212,16 @@
 		{% endblock %}
 		<div class='wp-container'>
 			<!-- LOGO -->
-	    	<div class='wp-block'>
-	        	<a href='/' id='wp-logo'></a>
-	    	</div>
+			<a href='/'>
+				<div class='wp-block' id='wp-logo'></div>
+			</a>
+
 	    	
 	        <!-- Navigation -->
 	        <div class="wp-block navigation">
 	        	<div class="menubar">
 					<div id="dock">
-						<div class="dock-container">
+						<div class="dock-container" id="dock-box" style="left: 0px;">
 								<a class="dock-item" id='dock-home' href="/">
 									<span>Home</span>
 									<img src="/static/images/dock/wp-home.png" alt="home" />
@@ -282,7 +303,7 @@
 	    </div>
 
 		<!-- Google Ads -->
-		<div class="wp-block google-ads">
+		<div id="google-ads-bottom" class="wp-block google-ads">
 			<script type="text/javascript"><!--
 				google_ad_client = "ca-pub-0811371441457236";
 				/* Leaderboard - Grey */
@@ -297,8 +318,7 @@
 			<!-- Paypal donation form -->
 			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="blank">
 				<input type="hidden" name="cmd" value="_s-xclick">
-				<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
-				">
+				<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----">
 	
 				<!-- Description -->
 				<span class="donations-desc">
@@ -306,7 +326,7 @@
 				</span>
 
 				<!-- Button -->
-				<input type="image" style='margin-bottom: -5px; margin-left: 5px;' src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+				<input type="image" style="margin-bottom: -5px; margin-left: 5px;" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
 				<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
 			</form>
 		</div>
@@ -324,7 +344,15 @@
 
 	<!-- Email protection (reveal base64 encoded addresses with the wp-address class.)-->
 	<script type="text/javascript">
-		wpTools.wpreveal();
+		$(document).ready( function () {
+			wptools.wpreveal(".wp-address");
+			/* fix iFisheye's weird dock positioning. */
+			wptools.getid('dock-box').style.left = '0px';
+		});
 	</script>
+	
+	<!-- For inserting JS before closing BODY tag -->
+	{% block bodyend %}
+	{% endblock %}
 </body>
 </html>

@@ -16,10 +16,14 @@
 		<!-- Search Box -->
 		<div class="search-form">
 			<span class="search-label">Enter something to search for: </span>
-			<form>
+			<form id="search-form">
 				<input type="search" name="q" id="searchbox" class="search-textbox" required=True></input>
-				<input type="submit" id="search-button" class="submit-button" title="Search"></input>
-			
+				<!-- Search Button -->
+				<a href="javascript: void(0);" onclick="javascript: do_search();">
+					<div class="submit-button">
+						<span>search</span>
+					</div>
+				</a>			
 			</form>
 		</div>
 
@@ -74,4 +78,10 @@
 			<span>{{ "[RANDOM MSG]"|random_result_msg }}</span>
 		{% endif %}
 	{% endif %}
+{% endblock %}
+
+{% block bodyend %}
+	<script type="text/javascript">
+		function do_search() { $("#search-form").submit(); }
+	</script>
 {% endblock %}

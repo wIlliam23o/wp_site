@@ -15,9 +15,18 @@ from django import template
 from wp_main.utilities import htmltools
 from wp_main.utilities import utilities
 from wp_main.utilities.highlighter import wp_highlighter
+from wp_main.utilities.wp_logging import logger
+# for admin site filtering
+from blogger.models import wp_blog
+from projects.models import wp_project
+
+_log = logger("wp_tags").log
+
 from django.utils.safestring import mark_safe
 register = template.Library()
 
+# for admin change_list filtering.
+import re
 
 def comments_button(value):
     """ returns comments button for this blog post. """
@@ -119,6 +128,9 @@ def is_test_site(request_object):
         looks for 'test.welbornprod' domains.
         returns True/False.
     """
+    if request_object is None or request_object.META is None:
+        # happens on template errors, which hopefully don't make it to production.
+        return True
     
     server_name = request_object.META['SERVER_NAME']
     return (server_name.startswith('test.') or
@@ -170,6 +182,96 @@ def debug_allowed(request_object):
     return utilities.debug_allowed(request_object)
 
 
+def is_disabled(model_obj):
+    """ if object has .disabled attribute, returns it,
+        if not, returns False.
+    """
+    
+    if hasattr(model_obj, 'disabled'):
+        return model_obj.disabled
+    else:
+        return False
+
+def log_debug(data):
+    """ writes something to the log. str(data) is used on objects,
+        returns original object.
+    """
+    
+    if isinstance(data, (str, unicode)):
+        s = data
+    elif isinstance(data, (list, tuple)):
+        s = '\n'.join(data)
+    else:
+        s = str(data)
+    _log.debug(s)
+    return data
+
+def str_(object_):
+    """ returns str(object_) to the template. """
+    return str(object_)
+
+def repr_(object_):
+    """ returns repr(object_) to the template """
+    return repr(object_)
+
+
+def disabled_css(item):
+    """ applies class='item-disabled' to admin change_list.results.item
+        if the object has .disabled attribute and it is set to True.
+        This is used in change_list_results.html template for admin.
+    """
+    #                           tag         adminpage   object  name/title
+    obj_pattern = re.compile(r'(<a href).+("/admin\w+)/(.+)/">([\(\)\!\-\w\d\. ]+)</a>')
+    obj_match = obj_pattern.search(item)
+    if obj_match is None:
+        return item
+    else:
+        # grab object.
+        if len(obj_match.groups()) == 4:
+            # beginning of a tag (<a href)
+            tag = obj_match.groups()[0] #@UnusedVariable: tag
+            # type of object (wp_blog/1)
+            otype = obj_match.groups()[2].strip('/')
+            # name/title of object (My Blog Post)
+            name = obj_match.groups()[3]
+        else:
+            # failed to match our pattern exactly.
+            _log.debug("Incorrect number of items in match: " + str(item))
+            return item
+    # tag, type, & name should be set now, parse them
+    if name.startswith('(!)'): name = name[3:]
+    if 'v. ' in name: name = name[:name.index('v. ')]
+    name = name.strip(' ')
+    # parse type
+    if '/' in otype: otype = otype[:otype.index('/')]
+    
+    # convert to object
+    if 'wp_blog' in otype:
+        obj = utilities.get_object_safe(wp_blog.objects, title=name)
+    elif 'wp_project' in otype:
+        obj = utilities.get_object_safe(wp_project.objects, name=name)
+    else:
+        _log.debug("Object type not filtered yet: " + otype)
+        obj = None
+    # no object found
+    if obj is None:
+        _log.debug("No object found for: " + name + " [" + otype + "]")
+        return item
+    
+    # item is disabled?
+    if is_disabled(obj):
+        return mark_safe(item.replace('<a href', '<a class="item-disabled" href'))
+    else:
+        # item was not disabled.
+        return item
+    
+
+def get_filename(filename):
+    """ uses utilities and os.path to return only the short filename (no path) """
+    
+    return utilities.get_filename(filename)
+
+
 # tuple of filters to register.
 registered_filters = (comments_button,
                       is_false,
@@ -184,7 +286,13 @@ registered_filters = (comments_button,
                       starts,
                       ends,
                       highlight_python,
-                      debug_allowed)
+                      debug_allowed,
+                      is_disabled,
+                      log_debug,
+                      str_,
+                      repr_,
+                      disabled_css,
+                      get_filename)
 
 # register all filters in the registered tuple.
 for filter_ in registered_filters:

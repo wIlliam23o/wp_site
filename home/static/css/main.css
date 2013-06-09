@@ -102,30 +102,44 @@ ul.menu {padding-left: 0;}
 	color: #26A1F4;
 	text-transform: lowercase;
     }
+a .header:hover, a .header.featured-name:hover {
+	color: #41C2FF;
+}
 
-.title {
+.title, h3.title {
 	font-family: "Open Sans", "Century Gothic", "Arial Black", "Liberation Sans", sans-serif;
+	font-size: 1em;
 	margin-bottom: 2px;
 	color: #8A8A8A;
 	padding-left: 5px;
 	padding-top: 5px;
 	text-transform: lowercase;
 	}
-h2.title {
-	font-size: 1.1em;
+	
+/* These two should have the same style, different sizes. */
+h2.title, h1.title {
 	padding-left: 0px;
 	margin-left: 0px;
 	margin-bottom: 5px;
+	margin-top: 10px;
 	color: #BBB;
+	text-transform: lowercase;
 	}
-		
+h2.title { font-size: 1.2em; }
+h1.title { font-size: 1.5em; }
+
 .desc {
 	padding-left: 40px;
 	padding-right: 40px;
     }
+    
 .hidden {
 	display: none;
    }
+
+.centered {
+	text-align: center;
+}
 
 .viewer-filename {
 	font-size: 1em;
@@ -235,6 +249,7 @@ h2.title {
 	border-radius: 5px 5px 5px 5px;
 	box-shadow: 0px 0px 20px #EEE;
 	margin-bottom: 20px;
+	min-height: 240px; /* helps with short pages that have a vertical menu */
 	}
 
 .title-box {
@@ -267,6 +282,33 @@ h2.title {
 	box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
 	-moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
 	-webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);	
+}
+
+.img-rounded {
+	border-style: solid;
+	border-width: 1px;
+	border-color: #dfdfdf;
+	border-radius: 5px;
+	padding: 5px;
+	background: #ffffff;
+	height: auto;
+	width: auto;
+}
+
+#floater {
+	position: absolute;
+	width: 45%;
+	height: auto;
+	font-size: 1em;
+	text-align: center;
+	color: #4e4e4e;
+	background: white;
+	border: 2px solid #d7d7d7;
+	border-radius: 10px;
+	z-index: 99999;
+	display: none;
+	box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+	top: 20px;	
 }
 
 /* Jump-To Styles */
@@ -342,6 +384,12 @@ a.jumpto-nav {
 	margin-left: 20px;
 }
 
+.continued {
+	font-size: .8em;
+	font-style: italic;
+	color: #adadad;
+}
+
 /* In-Article Ads */
 .article-ad {
 	text-align: center;
@@ -359,7 +407,7 @@ a.jumpto-nav {
 	position: relative;
 	margin-top: 50px;
 	padding: 0;
-	left: -60px; /* fix for fisheye being slightly off (see dock.css #dock) */
+	/*left: -60px; */ /* fix for fisheye being slightly off (see dock.css #dock) */
 	width: auto; /* set to 100% for centered menu, see dock.css for padding-left: 20px  */
 	text-transform: lowercase;
 	text-align: left;
@@ -589,16 +637,32 @@ a.jumpto-nav {
 /* Form Styles */
 
 .submit-button {
+	display: inline-block;
 	background: white;
 	color: #008FFF;
 	font-family: "Open Sans", "Arial Black";
 	font-weight: bold;
-	border-color: #919191;
+	border: 1px solid #919191;
 	border-radius: 5px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
-	border-width: 1px;
+	padding: 2px;
+	
 }	   
+
+.submit-button:hover {
+	color: #666666;
+}
+
+.input-text {
+	background: white;
+	color: #919191;
+	font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", sans-serif;
+	border-color: #919191;
+	border-radius: 5px;
+	border-width: 1px;
+	width: 200px;
+}
 
 /* Inset Styles */
 span.inset-left {float: left;margin-right: 20px;}
@@ -786,3 +850,51 @@ code, samp {
 	font-size:  0.75em;
 }
 	
+
+/* Login Box Styles */
+.login-box {
+	position: absolute;
+	top: 100px;
+	right: 33%; /* positioned by wpTools.js */
+	z-index: 99999;
+	border-radius: 5px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #D7D7D7;
+	background: #ffffff;
+	color: #000000;
+	padding: 10px;
+	display: none;
+}
+
+.login-label {
+	color: #777777;
+	font-size: .85em;
+}
+
+#login-user, #login-pw {
+	display: block;
+}
+
+/* Stats page */
+.stats-block {
+	display: block;
+	
+}
+
+.stats-lines {
+	background: white;
+	font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+	padding: 20px;
+	border-radius: 5px;
+}
+
+/* Test-site only stuff */
+#test-site-box {
+	text-align: center; 
+	border-style: solid; 
+	border-color: #B90000; 
+	border-width: 2px; 
+	border-radius: 15px; 
+	margin-bottom: 20px;
+}

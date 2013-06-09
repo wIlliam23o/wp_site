@@ -76,6 +76,7 @@ jQuery.iFisheye = {
 						'mouseover',
 						function()
 						{
+							/* Displays text on mouseover */
 							jQuery(el.fisheyeCfg.itemsText, this).get(0).style.display = 'block';
 						}
 					)
@@ -83,6 +84,7 @@ jQuery.iFisheye = {
 						'mouseout',
 						function()
 						{
+							/* Hides text on mouseout. */
 							jQuery(el.fisheyeCfg.itemsText, this).get(0).style.display = 'none';
 						}
 					);
@@ -90,8 +92,12 @@ jQuery.iFisheye = {
 					'mousemove',
 					function(e)
 					{
+						/* The 'money shot', grows images as mouse moves according to proximity -Cj
+						 	(apparently height/y-position has nothing to do with it.)
+						 */
 						var pointer = jQuery.iUtil.getPointer(e);
 						var toAdd = 0;
+
 						if (el.fisheyeCfg.halign && el.fisheyeCfg.halign == 'center')
 							var posx = pointer.x - el.fisheyeCfg.pos.x - (el.offsetWidth - el.fisheyeCfg.itemWidth * el.fisheyeCfg.items.size())/2 - el.fisheyeCfg.itemWidth/2;
 						else if (el.fisheyeCfg.halign && el.fisheyeCfg.halign == 'right')
@@ -99,6 +105,7 @@ jQuery.iFisheye = {
 						else 
 							var posx = pointer.x - el.fisheyeCfg.pos.x;
 						var posy = Math.pow(pointer.y - el.fisheyeCfg.pos.y - el.offsetHeight/2,2);
+						
 						el.fisheyeCfg.items.each(
 							function(nr)
 							{

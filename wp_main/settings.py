@@ -16,11 +16,7 @@ BASE_DIR = os.path.split(SCRIPT_PARENT)[0]
 # get parent of application
 BASE_PARENT = os.path.split(BASE_DIR)[0]
 
-# automatic settings for debug mode.
-#import socket
-#shostname = socket.gethostname()
-#del socket
-
+# test or live?
 if "webapps" in BASE_PARENT:
     # live site directories
     STATIC_PARENT = BASE_PARENT
@@ -71,7 +67,7 @@ INTERNAL_IPS = tuple(_internal_ips)
 # Admin info
 ADMINS = ( ('Christopher Welborn', 'cj@welbornprod.com'), )
 MANAGERS = ADMINS
-SERVER_EMAIL = 'cj@welbornprod.com'
+
 
 # Database info (filled in with settings_local)
 DATABASES = {
@@ -201,9 +197,9 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     
-    # django debug tools
+    # django debug tools (for test-site and local development)
     'debug_toolbar',
-    # special user-agent middleware
+    # for making get_user_agent(request) available.
     'django_user_agents',
     # local apps
     'wp_main', # contains global template tags (wp_tags)
@@ -247,4 +243,10 @@ LOGGING = {
 
 DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
 
+# default login url (regex for wp_main.urls, put here to avoid future mismatches)
+LOGIN_URL = "/login"
+LOGIN_URL_REGEX = "^login/?.+"
+
+# default page to visit after login (if 'next url' is not specified)
+LOGIN_REDIRECT_URL = "/"
 

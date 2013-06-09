@@ -1,0 +1,49 @@
+{% extends "home/main.html" %}
+{% load wp_tags %}
+
+<!-- CSS Style (this page only) -->
+{% block extrastyle %}
+	<style type="text/css">
+		.div-changed {
+			opacity: 1;
+		}
+		.div-initial {
+			display: none;
+		}
+		#div-main {
+			border: 2px solid #000000;
+			border-radius: 5px;
+		}
+		
+		
+	</style>
+{% endblock %}
+<!-- Insert test js here (including <script></script>) -->
+{% block javascript %}
+	<script src="static/js/jqueryui/jquery-ui.min.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		// function that carries out effects.
+		function doChange(selector) {
+			//$(selector).removeClass("div-initial", 0);
+			//$(selector).addClass("div-changed", 2000);
+			$(selector).show('slide', {}, 500);
+			$(selector).fadeOut(500);
+		}
+		
+		// things to do on document load.
+		$(document).ready( function () {
+			setTimeout( function() { doChange("#div-main"); }, 2000);
+		});
+		
+	</script>
+{% endblock %}
+
+<!-- BODY -->
+{% block content %}
+	<div id="div-main" class="div-initial">
+		<p>
+			This is a test div, it should change size on load.
+		</p>
+	</div>
+{% endblock %}
+

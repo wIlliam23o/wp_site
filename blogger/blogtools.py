@@ -23,40 +23,47 @@ from wp_main.utilities.highlighter import highlight_inline, highlight_embedded
 # Blog Info
 from blogger.models import wp_blog
 
-
+# Defaults (if nothing is passed to these functions)
+DEFAULT_ORDERBY = '-posted_datetime'
+DEFAULT_MAXPOSTS = 25    # number of posts per page.
+DEFAULT_MAXLINES = 17    # number of lines before adding 'more..' button on previews.
+DEFAULT_MAXLENGTH = 2000 # number of characters before adding 'more..' button on previews.
 def get_post_byany(_identifier):
     """ retrieve blog post by any identifier, returns None on failure """
     
+    # by id
     try:
         id_ = int(_identifier)
-        post_ = wp_blog.objects.get(id=id_)
-    except:
+        post_ = utilities.get_object_safe(wp_blog.objects, id = id_)
+    except ValueError:
         post_ = None
-    
-    if post_ is None:
-        try:
-            post_ = wp_blog.objects.get(title=_identifier)
-        except:
-            post_ = None
+
+    # by title
+    if post_ is None: post_ = utilities.get_object_safe(wp_blog.objects, title = _identifier)
+ 
+    # by slug
     if post_ is None:
         # id and title failed, try slug.
         # remove html ending
-        if (_identifier.lower().endswith(".html") or
-            _identifier.lower().endswith(".htm")):
-            _identifier = _identifier[:_identifier.index(".")]
-        try:
-            post_ = wp_blog.objects.get(slug=_identifier)
-        except:
-            post_ = None
-    return post_
+        if _identifier.lower().endswith(".html"): _identifier = _identifier[:-5]
+        if _identifier.lower().endswith(".htm"): _identifier = _identifier[:-4]
+        
+        # try quick slug id. (Case-insensitive because all slugs are lowercase)
+        post_ = utilities.get_object_safe(wp_blog.objects, slug = _identifier.lower())
 
-def get_post_list(starting_index=0, max_posts=-1, _order_by="-posted"):
+    if post_ is None:
+        return post_
+    else:
+        return post_ if not post_.disabled else None
+
+def get_post_list(starting_index=0, max_posts=None, _order_by=None):
     """ returns a list of posts, starting with starting_id,
         as long as max_posts. 
         this is for pageination.
     """
-    
-    all_posts = wp_blog.objects.order_by(_order_by)
+    if _order_by is None: _order_by = DEFAULT_ORDERBY
+    if max_posts is None: max_posts = DEFAULT_MAXPOSTS
+    all_posts = [post for post in wp_blog.objects.order_by(_order_by) if not post.disabled]
     
     return utilities.slice_list(all_posts, starting_index, max_posts)
     
@@ -81,10 +88,12 @@ def get_post_body(post_):
     return scontent
 
 
-def get_post_body_short(post_, max_text_length=0, max_text_lines=17):
+def get_post_body_short(post_, max_text_length=None, max_text_lines=None):
     """ retrieves body for post, timming if needed.
         uses get_post_body to retrieve the initial body. """
 
+    if max_text_length is None: max_text_length = DEFAULT_MAXLENGTH
+    if max_text_lines is None: max_text_lines = DEFAULT_MAXLINES
     new_body = get_post_body(post_)
     trimmed = False
     
@@ -95,23 +104,32 @@ def get_post_body_short(post_, max_text_length=0, max_text_lines=17):
         trimmed = True
         
     # trim by maximum lines
-    if ((max_text_lines > 0) and 
-        ('\n' in new_body)):
-        lines_ = new_body.split('\n')
+    if ((max_text_lines > 0) and (new_body.count('\n') > max_text_lines)):
         # needs trimming.
-        if len(lines_) > max_text_lines:
-            lines_ = lines_[:max_text_lines + 1]
-            new_body = '\n'.join(lines_)
-            trimmed = True
-    # post was trimmed? add readmore box.
+        lines_ = new_body.split('\n')[:max_text_lines + 1]
+        new_body = '\n'.join(lines_)
+        trimmed = True
+            
+    # trim by <br>'s
+    if ((max_text_lines > 0) and (new_body.count('<br') > max_text_lines)):
+        # needs trimming
+        lines_ = new_body.split('<br')[:max_text_lines + 1]
+        new_body = '<br'.join(lines_)
+        trimmed = True
+    
+    # Fix open tags
+    new_body = htmltools.fix_open_tags(new_body)
+    
+    # post was trimmed? add "...continued" and readmore box.
     if trimmed:
-        new_body += htmltools.readmore_box('/blog/view/' + post_.slug)
+        new_body += "<span class='continued'> ...(continued)</span>" + \
+                    htmltools.readmore_box('/blog/view/' + post_.slug)
 
     
     return new_body
 
 
-def fix_post_list(blog_posts, max_posts=25, max_text_length=0, max_text_lines=17):
+def fix_post_list(blog_posts, max_posts=None, max_text_length=None, max_text_lines=None):
     """ fixes all post.body in a list of posts.
         uses get_post_body to return the correct body to use.
         trims body length to fit maximum allowed for listing.
@@ -121,8 +139,12 @@ def fix_post_list(blog_posts, max_posts=25, max_text_length=0, max_text_lines=17
         returns list of blog_posts.
     """
     
+    
     if blog_posts is None:
         return []
+    if max_posts is None: max_posts = DEFAULT_MAXPOSTS
+    if max_text_length is None: max_text_length = DEFAULT_MAXLENGTH
+    if max_text_lines is None: max_text_lines = DEFAULT_MAXLINES
     
     for post_ in [post_copy for post_copy in blog_posts]:
         new_body = get_post_body_short(post_, max_text_length, max_text_lines)
@@ -174,9 +196,10 @@ def prepare_content(body_content):
     return body_content
 
 
-def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, _order_by='-posted'):
+def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, _order_by=None):
     """ retrieve all posts with tag_ as a tag. """
     
+    if _order_by is None: _order_by = DEFAULT_ORDERBY
     if ',' in _tag:
         _tag = _tag.replace(',', ' ')
         
@@ -190,7 +213,7 @@ def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, _order_by='-posted'):
     
     # get all posts with these tags.
     found = []
-    for post_ in wp_blog.objects.order_by(_order_by):
+    for post_ in [p for p in wp_blog.objects.order_by(_order_by) if not p.disabled]:
         post_tags = post_.tags.replace(',', ' ')
         # get list of post tags
         if ' ' in post_tags:
@@ -245,7 +268,7 @@ def get_all_tags():
     
     all_tags = []
     # add up all tags.
-    for post_ in wp_blog.objects.all():
+    for post_ in [p for p in wp_blog.objects.all() if not p.disabled]:
         all_tags += get_tag_list(post_)
     # remove duplicates and return.
     return utilities.remove_list_dupes(all_tags)
@@ -258,7 +281,7 @@ def get_tags_post_count():
     
     tag_counts = {}
     
-    for post_ in wp_blog.objects.all():
+    for post_ in [p for p in wp_blog.objects.all() if not p.disabled]:
         tags = get_tag_list(post_)
         for tag_ in tags:
             if tag_counts.has_key(tag_):

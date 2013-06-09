@@ -191,3 +191,39 @@ a.blog-listing-title {
 .blog-nav-button-text-disabled:hover {
 	color: #74AFEE;
 }
+
+/* Related Projects Stuff */
+.blog-related-projects-box, .blog-related-projects-box-index {
+	/* index and post page share these */
+	display: block;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	border-top: 1px solid #D7D7D7;
+	padding-top: 5px;
+}
+.blog-related-projects-box {
+	/* for actual post only */
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+.blog-related-projects-label {
+	font-size: .8em;
+}
+
+.blog-related-projects-list {
+	position: relative;
+	display: inline;
+}
+
+.blog-related-project {
+	display: inline;
+	border: 1px solid #D7D7D7;
+	border-radius: 3px;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-bottom: 2px;
+	margin-right: 2px;
+	font-size: .7em;
+}
+

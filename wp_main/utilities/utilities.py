@@ -10,7 +10,7 @@
 """
 
 import os.path
-from os import walk #@UnusedImport: os.walk is used, aptana is stupid.
+from os import walk #@UnusedImport: walk is used, pydev...really?
 # global settings
 from django.conf import settings
 # User-Agent helper...
@@ -26,6 +26,8 @@ def slice_list(list_, starting_index=0, max_items=-1):
         if max_items > 0 then only that length of items is returned.
         otherwise, all items are returned.
     """
+    if list_ is None: return []
+    if len(list_) == 0: return []
     
     sliced_ = list_[starting_index:]
     if ((max_items > 0) and
@@ -139,6 +141,10 @@ def is_mobile(request):
         actually, determine if its not a pc.
     """
     
+    if request is None:
+        # happens on template errors, which hopefully never make it to production.
+        return False
+    
     return (not get_user_agent(request).is_pc)
 
 
@@ -166,9 +172,13 @@ def get_absolute_path(relative_file_path):
     if relative_file_path == "":
         return ""
     
+
+    #if relative_file_path.startswith('/'): relative_file_path = relative_file_path[1:]
+    
     sabsolutepath = ""
     for root, dirs, files in os.walk(settings.STATIC_PARENT): #@UnusedVariable: dirs, files
         spossible = os.path.join(root, relative_file_path)
+
         # dirs allowed
         if os.path.isfile(spossible) or os.path.isdir(spossible):
             sabsolutepath = spossible
@@ -176,7 +186,7 @@ def get_absolute_path(relative_file_path):
     
     return sabsolutepath
 
-    
+
 def debug_allowed(request):
     """ returns True if the debug info is allowed for this ip/request.
         inspired by debug_toolbar's _show_toolbar() method.
@@ -198,5 +208,41 @@ def debug_allowed(request):
     ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
     
     return (ip_in_settings and bool(settings.DEBUG))
-       
-        
+
+
+def get_object_safe(objects_, **kwargs):
+    """ does a mymodel.objects.get(kwargs),
+        returns None on error.
+    """
+    try:
+        obj = objects_.get(**kwargs)
+    except:
+        obj = None
+    return obj
+
+
+def get_objects_if(objects_, attribute, equals, orderby=None):
+    results = None
+    if orderby is None:
+        if hasattr(objects_, 'all'):
+            fetched = objects_.all()
+            try:
+                results = [obj for obj in fetched if getattr(obj, attribute) == equals]
+            except Exception as ex:
+                _log.error("error retrieving results: \n" + str(ex))
+                results = None
+        else:
+            _log.debug(str(objects_) + " has no all()!")
+    else:
+        if hasattr(objects_, 'order_by'):
+            fetched = objects_.order_by(orderby)
+            try:
+                results = [obj for obj in fetched if getattr(obj, attribute) == equals]
+            except Exception as ex:
+                _log.error("error retrieving results: \n" + str(ex))
+                results = None
+        else:
+            _log.debug(str(objects_) + " has no order_by()!")
+    return results
+
+            

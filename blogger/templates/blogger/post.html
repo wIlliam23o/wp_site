@@ -25,10 +25,24 @@
 			<div class="blog-post-tags-box">
 				<span class="blog-post-tags">tags:</span> {{ blog_post|tag_links }}
 			</div>
-		<div class="blog-post-body">
-			{{ blog_post|get_body }}
-		</div>
-		<!-- TODO: RELATED PROJECTS -->
+			<div class="blog-post-body">
+				{{ blog_post|get_body }}
+			</div>
+			<!-- Related Projects links (if any) -->
+			{% if related_projects %}
+				<div class="blog-related-projects-box">
+					<span class="blog-related-projects-label">related projects:&nbsp;</span>
+					<div class="blog-related-projects-list">
+						{% for project in related_projects %}
+							<div class="blog-related-project">
+								<a href="/projects/{{ project.alias }}">
+									<span>{{ project.name }}</span>
+								</a>
+							</div>
+						{% endfor %}
+					</div>
+				</div>
+			{% endif %}
 		{% endif %}
 	</div>
 

@@ -1,0 +1,86 @@
+{% extends "home/main.html" %}
+{% load wp_tags %}
+
+<!-- Initial CSS to use -->
+{% block extrastyle %}
+	<style type="text/css">
+		#file-menu { display: none; }
+		#file-info { display: none; }
+		#project-info { display: none; }
+	</style>
+{% endblock %}
+
+<!-- Viewer JS -->
+{% block javascript %}
+	<script type="text/javascript" src="/static/js/wpviewer.js"></script>
+{% endblock %}
+
+<!-- Floating message -->
+{% block floater %}
+	<div id="floater">
+		<p id="loading-msg">
+			Loading file: {{ file }}
+		</p>
+	</div>
+{% endblock %}
+<!-- File browser menu -->
+{% block verticalmenu %}
+	<div id="file-menu" class="vertical-menu">
+		<ul id="file-menu-items" class="vertical-menu-main">
+			<!-- Items will be added dynamically -->
+		</ul>
+	</div>
+{% endblock %}
+
+<!-- File content, dynamically loaded with AJAX (because big files may take too long) -->
+{% block content %}
+	<!-- Header/Title -->
+	<div id="title-header" class='title-box'>
+		<h3 class='title'>Source View</h3>
+	</div>
+	
+	<!-- Project Info -->
+	<div id="project-info">
+	    <a id="project-link" href='javascript: void(0);' onclick='javascript: void(0);'>
+	        <div id="project-title" class='project-title'>
+	            <h1 id="project-title-name" class='project-header'> </h1>
+	            <br/>
+	            
+	        </div>
+	    </a>
+	</div>
+	
+	<!-- File Info -->
+	<div id="file-info">
+	    <a id="file-link" href='javascript: void(0);' onclick='javascript: void(0);'>
+        	<div id="viewer-filename-box" class='viewer-filename-box'>
+        		<span id="viewer-filename" class='viewer-filename'> </span>
+        	</div>
+        	<div class='viewer-download-box'>
+            	<span class='viewer-download-text'>download</span>
+        	</div>
+    	</a>
+    </div>
+
+	<!-- File Content -->
+	<div id="file-content">
+		
+	</div>
+{% endblock %}
+
+{% block bodyend %}
+	<script type="text/javascript">
+		$(document).ready( function () {
+			
+			// position floater
+			wptools.center_element("#floater");
+			wptools.vertical_element("#floater", 200);
+		
+			// setup ajax
+			wptools.pre_ajax();
+
+			// Load initial file
+			view_file("{{ file }}");
+		});
+	</script>
+{% endblock %}

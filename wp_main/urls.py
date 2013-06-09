@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from django.conf.urls import patterns, include, url
-
+# login url is set in settings
+from django.conf import settings
 # main views
 from home import views as homeviews
 # get sitemaps
@@ -15,13 +16,21 @@ admin.autodiscover()
 # Main Site (home)
 urlpatterns = patterns('',
     # 404 tester
-    url(r'^404\-test\.html$', homeviews.view_404),
+    url(r'^404\.html$', homeviews.view_404),
     # 403 tester
-    url(r'^403\-test\.html$', homeviews.view_403),
+    url(r'^403\.html$', homeviews.view_403),
     # 500 tester
-    url(r'^500\-test\.html$', homeviews.view_500),
+    url(r'^500\.html$', homeviews.view_500),
     # debug info
     url(r'^debug\.html$', homeviews.view_debug),
+    # stats info
+    url(r'^stats\.html$', homeviews.view_stats),
+    # test page (random code snippet tests for actual server)
+    url(r'^test\.html$', homeviews.view_test),
+    # login processor
+    url(settings.LOGIN_URL_REGEX, 'django.contrib.auth.views.login'),
+    # bad login message
+    url(r'^badlogin\.html$', homeviews.view_badlogin),
     # robots.txt server
     url(r'^robots\.txt$', robots.view_byserver),
     # sitemap server
@@ -75,3 +84,12 @@ urlpatterns += patterns('',
 handler404 = 'home.views.view_404'
 handler403 = 'home.views.view_403'
 handler500 = 'home.views.view_500'
+
+# Script Kiddie attempts 
+# (not sure what to do right now except show them a msg stating how dumb they are.)
+urlpatterns += patterns('',
+    # wordpress login
+    url(r'^wp\-login\.php$', homeviews.view_scriptkids),
+    url(r'^administrator/index\.php$', homeviews.view_scriptkids),
+    url(r'^admin\.php$', homeviews.view_scriptkids),
+    )

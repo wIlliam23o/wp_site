@@ -1,0 +1,37 @@
+<!-- Template for screenshots box -->
+<!-- Expects: list of relative image paths called 'images' -->
+<!-- 		  single image for noscript tag call noscript_image -->
+{% if images %}
+	<div class="screenshots_box">
+		<div class="wt-rotator">
+	    	<div class="screen">
+	       		{% if noscript_image %}
+	       			<noscript>
+	           			<!-- placeholder 1st image when javascript is off -->
+	            		<img src="{{ noscript_image }}"/>
+	        		</noscript>
+	        	{% endif %}
+	    	</div>
+	        <div class="c-panel">
+	            <div class="thumbnails">
+	                <ul>
+					<!-- Each Image -->
+					{% for image in images %}
+						<li>
+                            <a href="{{ image }}" title="screen shots">
+                                <img class="screenshot" src="{{ image }}"/>
+                            </a>
+                            <a href="{{ image }}" target="_blank"> </a>                        
+                        </li>
+					{% endfor %}
+					</ul>
+	            </div>     
+	            <div class="buttons">
+	                <div class="prev-btn"> </div>
+	                <div class="play-btn"> </div>    
+	                <div class="next-btn"> </div>               
+	            </div>
+	        </div>
+	    </div>    
+	</div>
+{% endif %}
