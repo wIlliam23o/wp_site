@@ -60,7 +60,7 @@ Gantry was loading browser-specific css files, and then [Joomla] would load its 
 So my first step was to condense everything I actually used into a reasonable length
 of files.
 ...Now that my site has more functionality and options, I too have quite a few code files, but the difference is
-*I* put them there. So I know exactly where everything is and what it's for. The files are also separated by
+**I** put them there. So I know exactly where everything is and what it's for. The files are also separated by
 which app they are for (Home (Global), Projects, Searcher, Blogger, Viewer, etc.).
 
 The css menu, and menu-editing, from within [Joomla] was okay, but I really wanted more, and I'd rather edit an HTML file
