@@ -1,4 +1,4 @@
-![welborn prod.](http://welbornproductions.net/images/welbornprod-logo.png)
+![welborn prod.](http://welbornprod.com/static/images/welbornprod-logo.png)
 
 [Django] site for [welbornprod.com]...
 
@@ -7,10 +7,15 @@ Currently moving away from [Joomla], converting site to [Django] in the hopes of
 
 I am not a professional [Django] developer, nor am I really a web developer. Just a programmer trying to learn while
 creating a web site that I can be proud of, and use the way I want to. This is the first [Django] project I have attempted,
-so I'm sure there are things that I'm doing wrong. Still, I'm really enjoying it and I look forward to the things I can achieve with this setup.
+so I'm sure there are things that I'm doing wrong. Still, I'm really enjoying it and I look forward to the things I can achieve 
+with this setup.
 
 [Joomla] is great for most people, especially people that don't want to learn to code. For me its a crutch, and I don't like
-using crutches. I want to learn as much as I can about web development, [Django], and python at the same time. So while some of this might sound like a hate-filled rant, it's really just my own frustration shining through after dealing with [Joomla] for a year. It was built in a language I don't care to learn right now (php), which made it harder for me to tweak the core. It also had a lot of overhead and features that I didn't even use because I didn't need them. I'm a huge [Python] fan, so it makes sense that I would lean towards a web framework built around it.
+using crutches. I want to learn as much as I can about web development, [Django], and python at the same time. So while some of 
+this might sound like a hate-filled rant, it's really just my own frustration shining through after dealing with [Joomla] for 
+a year. It was built in a language I don't care to learn right now (php), which made it harder for me to tweak the core. 
+It also had a lot of overhead and features that I didn't even use because I didn't need them. I'm a huge [Python] fan, so 
+it makes sense that I would lean towards a web framework built around it.
 
 ------------------
 
@@ -40,7 +45,7 @@ _*Language/Libraries*_:
   <small>...used for source code highlighting</small>
 
 
-...various other standard libraries.
+**...various other standard libraries.**
 
 
 _*Looks:*_
@@ -51,10 +56,12 @@ css settings overriding each other (template overrides joomla, joomla override g
 When I gathered all the css/js/other files that I actually needed and wanted, it turned out to be not that many.
 Those few files had way too many selectors in them, that I wasn't even using and never plan to use.
 Gantry was loading browser-specific css files, and then [Joomla] would load its own, and then my template.
-That's just too much for me. 
 
 So my first step was to condense everything I actually used into a reasonable length
 of files.
+...Now that my site has more functionality and options, I too have quite a few code files, but the difference is
+*I* put them there. So I know exactly where everything is and what it's for. The files are also separated by
+which app they are for (Home (Global), Projects, Searcher, Blogger, Viewer, etc.).
 
 The css menu, and menu-editing, from within [Joomla] was okay, but I really wanted more, and I'd rather edit an HTML file
 than use [Joomla]'s menu editing system. So using [Django]'s template system, I was able to put my main background, main menu, and
@@ -89,6 +96,8 @@ of person that will write my own whenever I'm not happy with something, or don't
 The download_code tag tells my view to look for the projects download_url. If its a directory it will use all files in that directory, and if
 its a single file it will use that instead. This info is HTML formatted exactly how I want it, and then returned to the view to use. There
 are a few other tags, they basically do the same thing. They gather info about the project, and return an HTML formatted string to display it.
+These 'code snippets' are now template-based, instead of hard-coding html into my views. This allows me to easily change a 'snippet'
+and possibly send more 'context variables' in the future.
 
 
 _*Source/File Viewer:*_
@@ -97,13 +106,19 @@ _*Source/File Viewer:*_
 The source viewer just loads the contents of any file, keeping the format of my site (logo, background, menu, etc.). If it's a source code file,
 it will try to determine the pygments lexer needed (if any), and use it to highlight the file. If the file belongs to a project,
 It will also look at the projects source_dir property and generate a css vertical menu of all files in that directory if any exist. 
-This way, you can browse all source files within a project without leaving the source viewer. 
+This way, you can browse all source files within a project without leaving the source viewer.
 
+I have recently changed the functionality of the 'viewer', it is now AJAX-based. While highlighting a larger file it appeared
+that my site was 'stuck', though it was really just working hard. I'm not sure why the load time was so large, but since I 
+changed the view to load the background first, and then send the highlighted content with AJAX, everything is much faster. 
+It also makes 'file-browsing' seem much faster, since it only needs to send the new content (keeping the main page content the same.)
+A little "file is loading" message is displayed while the new content is downloaded, in case someone has a slow connection. This
+way the site doesn't look 'stuck' anymore.
 
 _*Downloads:*_
 --------------
 
-I use Google analytics, Adsense, and even my shared hosting provider's own analytics feature on my site, so tracking downloads isn't that hard.
+I use Google analytics, Adsense,  so tracking downloads isn't that hard.
 My project views already increment the project's view_count whenever the page is loaded, but still,
 I wanted to keep my own record of downloads. So each project has a download_count. To track the downloads, 
 anytime I want to offer a download I make sure to start the url with "/dl/". This tells [Django] to send this file through my Download app. 
@@ -114,39 +129,76 @@ utilities.get_absolute_path() returns an empty string if it can't locate the fil
 functions/code to abort gracefully with "This file doesn't exist.".
 I don't want anyone downloading files from the root directory through some malformed url.
 
+I recently added a "file tracker". It tracks the download count for any file (not just project files). If someone is only downloading
+a 'piece' of my project, like one module, I can track that too. Since my site doesn't get a lot of traffic this doesn't really
+affect performance. If it does somehow change the performance of my site in the future, it can be easily disabled.
+
 
 _*Blog:*_
 ---------
 
-I wrote a basic blog app with tags, tag view, tag 'cloud', and pagination. The blog never has been the main feature on my site, so I didn't go too big with it. Just a place for my to jot down quick entries through django admin, or write up an HTML file (if the file is linked to an entry, its used instead of the TextField). It also has a 'projects' many-to-many field so I can link and projects the blog post might be related to. This is really for a future feature where a 'related projects' sidebar is automatically generated for the entry. I haven't started work on that yet. The blog listing and view has code-highlighting just like the projects section.
+I wrote a basic blog app with tags, tag view, tag 'cloud', and pagination. The blog never has been the main feature on my site, 
+so I didn't go too big with it. Just a place for my to jot down quick entries through django admin, or write up an HTML file 
+(if the file is linked to an entry, its used instead of the TextField). It also has a 'projects' many-to-many field so I can 
+link and projects the blog post might be related to. The blog listing and view has code-highlighting just 
+like the projects section.
 
-You can browse all posts containing a certain tag (tag-view, i'm calling it), or view all tags (with a link to the tag-view). If the post count, or tag-view results reaches my default 'max_items' setting, the pagination will kick in. A navigation bar is drawn by the template with first, last, prev, next links. These links pass GET arguments that tell my view where to start 'slicing' my posts with 'start_index' and 'max_items'. All of this works together so my view can generate a 'page' of posts/tag listings complete with navigation.
+You can browse all posts containing a certain tag (tag-view, i'm calling it), or view all tags (with a link to the tag-view). 
+If the post count, or tag-view results reaches my default 'max_items' setting, the pagination will kick in. A navigation bar is 
+drawn by the template with first, last, prev, next links. These links pass GET arguments that tell my view where to start 'slicing' 
+my posts with 'start_index' and 'max_items'. All of this works together so my view can generate a 'page' of posts/tag listings 
+complete with navigation.
+
+I recently added the 'related projects' feature to my blog posts, it's just a couple small links at the bottom of a post or
+post-preview that shows which project or projects a particular post is related to. So if you are reading about a project,
+a link to it is close by.
 
 
 _*Search:*_
 -----------
 
-The search feature is very basic, but it works perfectly for what I need right now. I used an HTML form and POST arguments to pass a search query to my search view. It searches for a term (or space-separated terms) in the title, name, slug, alias, description, body, or externally linked html file. If anything is found, a results listing is built by my results.html template. If the results count reaches my max_items setting, the  pagination kicks in the same way as the blog pagination.
+The search feature is very basic, but it works perfectly for what I need right now. I used an HTML form and request arguments 
+to pass a search query to my search view. It searches for a term (or space-separated terms) in the title, name, slug, 
+alias, description, body, or externally linked html file. If anything is found, a results listing is built by my 
+results.html template. If the results count reaches my max_items setting, the  pagination kicks in the same way as 
+the blog pagination. I've added a few filters to the search box that limits the search to a 3 character minimum 
+(for all space-separated terms). The query can't contain certain illegal characters, and can't be just a bunch of spaces.
+In fact, just adding too many spaces to an already valid query will kick it out. I'm not sure why people do stuff like that,
+probably looking for exploits, but either way the query has to be some kind of valid search.
 
 
 _*Sitemap/Robots.txt*_:
 -----------------------
 
-I looked into the django sitemaps library, but unfortunately it wasn't what I needed. Right now I'm hosting the same site at 2 different domains, so the sitemap that is generated by my view needs to reflect the domain name it's being accessed from. I built a very simple xml template that loops through a list of sitemap_url() items (a class I made especially for this feature) and builds the sitemap.xml. The list is built by my view_sitemap() view. It grabs the server name from the request, adds URLs for the main sections on my site, and then loops through my projects and blog entries building url links to them. On my test-server, a blank sitemap is served up because I don't need robots crawling a site that could possibly contain errors. On the production site, a nice and clean sitemap is served up for whatever domain it's being accessed through (welbornprod.com, or welbornprod.info).
+I looked into the django sitemaps library, but unfortunately it wasn't what I needed. Right now I'm hosting the same 
+site at 2 different domains, plus a test server that isn't really supposed to be public (although it wouldn't hurt anything).
+The sitemap that is generated by my view needs to reflect the domain name 
+it's being accessed from. I built a very simple xml template that loops through a list of sitemap_url() items 
+(a class I made especially for this feature) and builds the sitemap.xml. The list is built by my view_sitemap() view. 
+It grabs the server name from the request, adds URLs for the main sections on my site, and then loops through my projects 
+and blog entries building url links to them. On my test-server, a blank sitemap is served up because I don't need robots 
+crawling a site that could possibly contain errors. On the production site, a nice and clean sitemap is served up for 
+whatever domain it's being accessed through (welbornprod.com, or welbornprod.info).
 
 
-The robots.txt is served up kinda the same way, except I only needed to return a one line HttpResponse() (if you don't count the \n char.). On the test-server, "Disallow: /" is returned in "text/plain" so any honest robots won't crawl it. On the production site, "Allow: /" is returned. I'm not sure if I even need that much, a blank one would probably suffice, this is one of those things I plan on looking in to. But for now, it works.
+The robots.txt is served up kinda the same way, except I only needed to return a one line HttpResponse() (if you don't 
+count the \n char.). On the test-server, "Disallow: /" is returned in "text/plain" so any honest robots won't crawl it. 
+On the production site, "Allow: /" is returned. I'm not sure if I even need that much, a blank one would probably suffice, 
+this is one of those things I plan on looking in to. But for now, it works.
 
 
 _*Future:*_
 -----------
 
-Now that I have a basic working site I plan on refining it and adding more features as I go. I'm looking forward to building web apps that actually 'do something', as opposed to just showing information about my projects and blog. 
+Now that I have a basic working site I plan on refining it and adding more features as I go. 
+I'm looking forward to building web apps that actually 'do something', as opposed to just showing information 
+about my projects and blog. 
  
 
 _*Note:*_
 ---------
-The site is live now, I'm hosting at 2 new domains while my old one is redirecting. Finally, the [Joomla] site is dead. If you'd like to see what I have so far you can do so here:
+The site is live now, I'm hosting at 2 new domains while my old one is redirecting. 
+Finally, the [Joomla] site is dead. If you'd like to see what I have so far you can do so here:
 
 [welbornprod.com]
 
