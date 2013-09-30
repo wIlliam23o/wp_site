@@ -1,2 +1,4 @@
 internal*
 *local*.py*
+*secret*
+*test*wp*switch*
