@@ -1,0 +1,122 @@
+{% extends "searcher/results.html" %}
+{% load wp_tags %}
+{% block contentabove %}
+	<div class="search-header">
+		<!-- Header/Title -->
+		<div class="search-header-title">
+				<h3 class='header'>Results</h3>
+		</div>
+		
+		<div class="search-header-text">
+				<div class='search-header'>
+					{% if search_warning %}
+						<span class="search-header-text" style="color: darkred; font-weight: bold;">
+							{{ search_warning }}
+						</span>
+					{% else %}
+						<span class="search-header-text">Viewing results </span>
+						  <span class="search-header-count">{{ start_id }}</span>
+						    <span class="search-header-text"> through </span>
+						      <span class="search-header-count">{{ end_id }}</span>
+						        <span class="search-header-text"> of </span>
+						          <span class="search-header-count">{{ results_count }}</span>
+						            <span class="search-header-text"> for: </span>
+						              <span class="search-header-query">{{ query_text }}</span>
+					{% endif %}  
+				</div>
+				<!-- Search Box -->
+				<div class="search-form" style="top: 50px;">
+					<span class="search-label">Enter something to search for: </span>
+					<form>
+						<input type="search" name="q" id="searchbox" class="search-textbox" required=True></input>
+						<input type="submit" id="search-button" class="submit-button" title="Search"></input>
+			
+					</form>
+				</div>
+
+				{% if results_list %}
+					{% if results_count|exceeds_max:"25" %}
+						<!-- NAVIGATION -->
+						<div class='search-nav-box'>
+							<span class='search-nav-label'>Navigation:</span>
+							<!-- START -->
+							<div class='search-nav-button'>
+								<a href='/search/page/?q={{ query_safe }}&start_id=first'>
+									<span class='search-nav-button-text'>first</span>
+								</a>
+							</div>
+							<!-- PREV -->
+							<div class='search-nav-button'>
+								{% if has_prev|is_true %}
+									<a href='/search/page/?q={{ query_safe }}&start_id={{ prev_page }}'>
+										<span class='search-nav-button-text'>previous</span>
+									</a>
+								{% else %}
+									<span class='search-nav-button-text-disabled'>previous</span>
+								{% endif %}
+							</div>
+							<!-- NEXT -->
+							<div class='search-nav-button'>
+								{% if has_next|is_true %}
+									<a href='/search/page/?q={{ query_safe }}&start_id={{ next_page }}'>
+										<span class='search-nav-button-text'>next</span>
+									</a>
+								{% else %}
+									<span class='search-nav-button-text-disabled'>next</span>
+								{% endif %}
+							</div>
+							<!-- END -->
+							<div class='search-nav-button'>
+								<a href='/search/page/?q={{ query_safe }}&start_id=last'>
+									<span class='search-nav-button-text'>last</span>
+								</a>
+							</div>
+						</div>
+					{% endif %}
+				{% endif %}
+		</div>
+	</div>
+{% endblock %}
+{% block content %}
+	{{ block.super }}
+	{% if results_list %}
+		{% if results_count|exceeds_max:"25" %}
+			<!-- NAVIGATION -->
+			<div class='search-nav-box'>
+				<span class='search-nav-label'>Navigation:</span>
+				<!-- START -->
+				<div class='search-nav-button'>
+					<a href='/search/page/?q={{ query_safe }}&start_id=first'>
+						<span class='search-nav-button-text'>first</span>
+					</a>
+				</div>
+				<!-- PREV -->
+				<div class='search-nav-button'>
+					{% if has_prev|is_true %}
+						<a href='/search/page/?q={{ query_safe }}&start_id={{ prev_page }}'>
+							<span class='search-nav-button-text'>previous</span>
+						</a>
+					{% else %}
+						<span class='search-nav-button-text-disabled'>previous</span>
+					{% endif %}
+				</div>
+				<!-- NEXT -->
+				<div class='search-nav-button'>
+					{% if has_next|is_true %}
+						<a href='/search/page/?q={{ query_safe }}&start_id={{ next_page }}'>
+							<span class='search-nav-button-text'>next</span>
+						</a>
+					{% else %}
+						<span class='search-nav-button-text-disabled'>next</span>
+					{% endif %}
+				</div>
+				<!-- END -->
+				<div class='search-nav-button'>
+					<a href='/search/page/?q={{ query_safe }}&start_id=last'>
+						<span class='search-nav-button-text'>last</span>
+					</a>
+				</div>
+			</div>
+		{% endif %}
+	{% endif %}
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "blogger/index.html" %}
+{% load blogger_tags %}
+{% load wp_tags %}
+{% block title %}- Blog{% if post_title_short %} - {{ post_title_short }}{% endif %}{% endblock %}
+
+
+{% block extrastylelink %}
+	{{ block.super }}
+{% endblock %}
+
+{% block contentabove %}
+	{{ block.super }}
+	{% block blogcontentabove %}
+	{% endblock %}
+{% endblock %}
+{% block content %}
+	<div class="blog-post">
+		{% if blog_post %}
+			<div class="blog-post-title-box">
+				<span class="blog-post-title">{{ blog_post.title }}</span>
+			</div>
+			<div class="blog-post-date-box">
+				<span class="blog-post-date">{{ blog_post.posted }}</span>
+			</div>
+			<div class="blog-post-tags-box">
+				<span class="blog-post-tags">tags:</span> {{ blog_post|tag_links }}
+			</div>
+			<div class="blog-post-body">
+				{{ blog_post|get_body }}
+			</div>
+			<!-- Related Projects links (if any) -->
+			{% if related_projects %}
+				<div class="blog-related-projects-box">
+					<span class="blog-related-projects-label">related projects:&nbsp;</span>
+					<div class="blog-related-projects-list">
+						{% for project in related_projects %}
+							<div class="blog-related-project">
+								<a href="/projects/{{ project.alias }}">
+									<span>{{ project.name }}</span>
+								</a>
+							</div>
+						{% endfor %}
+					</div>
+				</div>
+			{% endif %}
+		{% endif %}
+	</div>
+
+{% endblock %}
+
+{% if blog_post %}
+	{% block disqusvariables %}
+		var disqus_identifier = '{{ blog_post.slug }}';
+		var disqus_title = '{{ blog_post.title }}';
+	{% endblock %}
+{% endif %}
