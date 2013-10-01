@@ -118,6 +118,8 @@ def view_stats(request):
         return mark_safe(line.replace(' ', '&nbsp;') + '\n<br/>\n')
     def convert_pblock(pblock):
         if pblock is None: return []
+        if not pblock.keys(): return []
+    
         pblock_args = {'append_key': ': '}
         return [convert_line(line) for line in pblock.iterblock(**pblock_args)]
     # gather print_block stats from wpstats and convert to lists of strings.

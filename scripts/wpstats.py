@@ -299,6 +299,9 @@ def print_most_downloads():
     
 def get_projects_info(orderby=None):
     pblock = print_block()
+    if wp_project.objects.count() == 0:
+        return pblock
+    
     if orderby is None:
         orderby = orderby_projects
     if not hasattr(wp_project.objects.all()[0], orderby.strip('-')):
@@ -318,6 +321,9 @@ def get_projects_info(orderby=None):
 
 def get_blogs_info(orderby=None):
     pblock = print_block()
+    if wp_blog.objects.count() == 0:
+        return pblock
+    
     if orderby is None:
         orderby = orderby_posts
     if not hasattr(wp_blog.objects.all()[0], orderby.strip('-')):
@@ -333,6 +339,9 @@ def get_blogs_info(orderby=None):
 
 def get_files_info(orderby=None):
     pblock = print_block()
+    if file_tracker.objects.count() == 0:
+        return pblock
+    
     filetrackers = file_tracker.objects.all()
     if filetrackers is None:
         return pblock
