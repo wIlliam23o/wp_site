@@ -2,3 +2,8 @@ internal*
 *local*.py*
 *secret*
 *test*wp*switch*
+.project
+.pydevproject
+
+.settings*
+*.pyc

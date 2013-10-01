@@ -1,112 +1,266 @@
-#!/bin/bash
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-# hopefully this saves some typing, instead of writing:
-# python scripts/wprefresh.py arg1 arg2
-# I can write: ./wrun wprefresh arg1 arg2
-#     or just: ./wrun wpstats
-#
+"""wrun.py
+
+    Runs scripts found in ./scripts directory,
+    saves from typing some, and ensures that scripts are executed properly.
+"""
+
+import os
+import re
+import sys
+import subprocess
+
+# Usage String for help
+USAGE = """wrun.py
+    Usage:
+        wrun.py -l
+        wrun.py scriptname [scriptargs]
+    
+    Options:
+        scriptname  : Name of script to run, or part of the name.
+                      * Matches first script starting with 'scriptname'
+        scriptargs  : One, or many, arguments to pass to the script.
+        
+        -h,--help   : Show this message.
+        -l,--list   : Lists all scripts found in script directory.
+"""
+# Debug mode flag.
+DEBUG = True
+# Where all scripts can be found.
+SCRIPTSDIR = os.path.join(os.getcwd(), 'scripts')
+# Executables and acceptable file extensions
+EXECS = {'.py': 'python',
+         '.sh': 'bash',
+         '.pl': 'perl'}
+
+def main(args):
+    """ main entry point, parses args to run scripts.
+        expects args = sys.argv[1:], or ['scriptfiletorun.py', 'scriptarg1', 'arg2', ..]
+    """
+    
+    # Get additional args for the script
+    if len(args) > 1:
+        scriptargs = args[1:]
+    else:
+        scriptargs = None
+    
+    scriptname = find_script(args[0])
+    
+    if not scriptname:
+        print('\nCannot find that script!: {}'.format(args[0]))
+        return 1
+    
+    # Get full scriptname
+    scriptfull = os.path.join(SCRIPTSDIR, scriptname)
+    
+    # Shell script..
+    shellret = shell_script(scriptfull, scriptargs)
+    if shellret:
+        print('\nScript returned non-zero!: {}'.format(str(shellret)))
+    
+    return shellret
 
 
-# script directory to use
-scriptdir="scripts/"
+def do_list():
+    """ List all script files found. """
+    
+    scripts = get_scripts()
+    print('\nFound {} scripts in: {}\n    {}'.format(str(len(scripts)), SCRIPTSDIR, '\n    '.join(scripts)))
+    
+    
+def get_scripts():
+    try:
+        # retrieve scripts with matching extensions in EXTENSIONS
+        scripts = [fname for fname in os.listdir(SCRIPTSDIR) if fname[-3:] in EXECS.keys()]
+    except (IOError, OSError) as exio:
+        print_fail('Cannot list scripts dir: {}'.format(SCRIPTSDIR), exc = exio)
 
-function print_usage () {
-    printf "\nusage: %s <scriptname> [arguments]..." "${0}"
-    printf "\n runs: python ${scriptdir}scriptname.py [arguments]...\n"
-    exit 0
-    }
-
-function print_fail () {
-	# prints a message and fails with exit code 1
-	printf "$*"
-	exit 1
-	}
-
-function list_script_type () {
-	# list a certain file extension in the scripts dir.
-	# ex: list_script_type ".py"
-	for scriptname in ${scriptdir}*$1
-	do
-		if [ "${scriptname%__init__*}" != "${scriptdir}" ]; then
-			scriptname="${scriptname#$scriptdir*}"
-			printf "    %s\n" "$scriptname"
-		fi
-	done
-}
-
-function list_python_scripts () {
-	printf "\ncurrent python scripts:\n"
-	list_script_type ".py"
-}
-
-function list_bash_scripts () {
-	printf "\ncurrent bash scripts:\n    (..incompatible with ${0})\n"
-	list_script_type ".sh"
-}
-
-function list_scripts () {
-	# list command. shows python and bash scripts in scripts dir.
-	list_python_scripts
-	echo
-	list_bash_scripts
-	echo
-	exit 0
-}
+    # trim __init__.py (no use for it in this case, and it looks ugly.)
+    if '__init__.py' in scripts:
+        scripts.remove('__init__.py')
+    
+    return sorted(scripts)
 
 
-# test scriptdir
-if [ ! -d "${scriptdir}" ]; then
-    print_fail "\nscript dir not found!: ${scriptdir}\n"
-fi
+def find_script(partname, scriptlist = None):
+    """ Finds a script file based on part of a name (regex),
+        Returns 'scriptname' on success, or None on failure/no match.
+    """
+    
+    # compile search pattern into regex
+    try:
+        # only match switches beginning with partname.
+        if not partname.startswith('^'):
+            partname = '^{}'.format(partname)
+        repat = re.compile(partname)
+    except Exception as expat:
+        print_fail('Invalid name given!: {}'.format(partname), exc = expat)
+    
+    # Load scripts if needed
+    if scriptlist is None:
+        scriptlist = get_scripts()
+    
+    # Search scripts
+    for script in scriptlist:
+        rematch = repat.search(script)
+        if rematch:
+            return script
+    
+    # No match
+    return None
+    
+    
+def shell_script(scriptfile, args = None):
+    """ Shell a script, including script args.
+        Determines which interpreter to use based on file extension.
+    """
+    # retrieve executable for this script.
+    try:
+        cmd = EXECS[scriptfile[-3:]]
+    except Exception as ex:
+        print_fail('Cannot locate executable for this script: {}'.format(scriptfile), exc = ex)
+    # build command list for subprocess
+    cmdlst = [cmd, scriptfile] + args if args else [cmd, scriptfile]
+    
+    # run/create process
+    print('\nRunning: {}'.format(' '.join(cmdlst)))
+    output, errout = run_process(cmdlst)
+    retcode = 0
+    
+    # print output
+    if output:
+        print('\n{}'.format(output))
+    else:
+        print('\nNo output from script!\n')
+    
+    # print any errors
+    if errout:
+        print('\nstderr output:\n{}'.format(errout))
+        retcode = 1
+    return retcode
 
-# save original scriptname passed for later
-scriptarg="${1}"
-if  [ -z $scriptarg ] || [ "${scriptarg}" == "-h" ] || [ "${scriptarg}" == "--help" ]; then
-    print_usage
-fi
 
-# test for list command
-if [ "${scriptarg}" == "list" ] || [ "${scriptarg}" == "-l" ] || [ "${scriptarg}" == "--list" ]; then
-	list_scripts
-fi
+def run_process(cmdlist):
+    """ Wraps subprocess.Popen to print output from a process,
+        cmdlist = command list that Popen() expects.
+    """
+    
+    try:
+        proc = subprocess.Popen(cmdlist, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        pout, perr = proc.communicate()
+    except Exception as exproc:
+        print_fail('Error opening process!: {} ...'.format(' '.join(cmdlist[:3])), exc = exproc)
+        
+    return pout, perr
 
-scriptname=$scriptarg
-# fix scriptname extension if needed.
-if [ "${scriptname#*.}" != "py" ]; then
-    # add extension
-    scriptname="${scriptname}.py"
-fi
-# fix script dir if needed
-if [ "${scriptname%$scriptdir*}" != "" ]; then
-    # add script dir
-    scriptname="${scriptdir}${scriptname}"
-fi
+def parse_commands(args):
+     """ Parse the arg list, run any commands before looking up a script name """
+     
+     # command flags, mapped to their function.
+     commands = {'-l': {'aliases': ['--list'],
+                        'func': do_list, 
+                        'kwargs': None,
+                        },
+                 '-h': {'aliases': ['--help'],
+                        'func': print_usage, 
+                        'kwargs': {'retcode': 0},
+                        },
+                 }
+     
+     # Setup list of known flags...
+     commandflags = commands.keys()
+     for cmdaliases in [commands[cmdflag]['aliases'] for cmdflag in commands.keys()]:
+         commandflags += cmdaliases
+     commandflags.sort()
+     
+     # Function to retrive a flag by its name, or alias.
+     def get_flag(flagname):
+         """ Retrieve a flag function by name, or alias. """
+         if flagname in commands.keys():
+             return commands[flagname]
+         else:
+             for cmdflag in commands.keys():
+                 if flagname in commands[cmdflag]['aliases']:
+                     return commands[cmdflag]
+     
+     # wrun commands must come before any script file.
+     commandargs = []
+     while ((args) and (args[0].startswith('-'))):
+         commandargs.append(args.pop(0))
+     
+     # Retrieve functions for flags, and call them..
+     for cmdarg in commandargs:
+         if cmdarg in commandflags:
+             # known flag, retrieve the function for it and call it.
+             command = get_flag(cmdarg)
+             commandkw = command['kwargs']
+             commandfunc = command['func']
+             if commandkw:
+                 commandfunc(**commandkw)
+             else:
+                 commandfunc()
+         else:
+             # unknown flag!
+             print_fail('Unknown flag given!: {}\nRun with --help for usage instructions.'.format(cmdarg))
+             
+     # Return args without any 'wrun command flags'.    
+     return args
 
-# TEST filename
-if [ ! -f "${scriptname}" ]; then
-    print_fail "\ncan't find the script: ${scriptname}\n"
-fi
+ 
+def print_debug(obj):
+    """ Prints a message, or if list of strings is passed it formats the output better """
+    
+    if not DEBUG: return False
 
-# Build argument string (remove previous scriptname)
-args=""
-for argument
-do
-    if [ "$argument" != "$scriptarg" ] && [ "$argument" != "${0}" ]; then
-        if [ "${args}" == "" ]; then
-            args="${argument}"
-        else
-            args="${args} ${argument}"
-        fi
-    fi
-done
+    if hasattr(obj, 'lower'):
+        # string/unicode... just print it.
+        print('Debug: {}'.format(obj))
+    elif isinstance(obj, (list, tuple)):
+        # list/tuple, format it...
+        header = 'Debug: '
+        spaces = (' ' * len(header))
+        if len(obj):
+            print('{}{}'.format(header, obj[0]))
+        if len(obj) > 1:
+            otherlines = '\n{}'.format(spaces).join(obj[1:])
+            print('\n{}{}'.format(spaces, otherlines))
+    else:
+        # different type of object
+        print('Debug: {}'.format(repr(obj)))
 
-# run with or without args (dont add extra space with no args)
-if [ "${args}" != "" ]; then
-    scriptcmd="${scriptname} ${args}"
-else
-    scriptcmd="${scriptname}"
-fi
+    return True
 
-# Run it
-printf "running script: %s\n" "${scriptcmd}"
-python ${scriptcmd}
+def print_fail(msg, exc=None, retcode=1):
+    """ prints a message and exits
+        Keyword Args:
+            exc     = an optional  Exception to print before exiting
+            retcode = Return code to return, default: 1
+    """
+    
+    print('\n{}'.format(msg))
+    if exc:
+        print('\n{}'.format(str(exc)))
+    sys.exit(retcode)
+    
+
+def print_usage(retcode=None):
+    """ Print the usage string. """
+    
+    print(USAGE)
+
+    if retcode is not None:
+        sys.exit(retcode)
+
+        
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print_usage(retcode = 1)       
+    # Run any commands before looking up a script name.
+    parsedargs = parse_commands(sys.argv[1:])
+    if not parsedargs:
+        sys.exit(0)
+    
+    ret = main(parsedargs)
+    sys.exit(ret)

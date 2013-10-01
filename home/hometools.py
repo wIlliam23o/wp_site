@@ -30,7 +30,7 @@ def get_latest_blog():
     """ retrieve the last posted blog entry (wp_blog object)"""
     
     posts = utilities.get_objects_if(wp_blog.objects, 'disabled', False, orderby='-posted_datetime')
-    if posts is not None:
+    if posts:
         return posts[0]
     else:
         return None
@@ -39,8 +39,11 @@ def get_latest_blog():
 def get_latest_project():
     """ retrieve the last published project (wp_project object) """
     
-    return wp_project.objects.order_by("-publish_date")[0]
-
+    allprojs = wp_project.objects.all()
+    if allprojs:
+        return allprojs.order_by("-publish_date")[0]
+    else:
+        return None
 
 def get_featured_project():
     """ retrieve the featured project from homesettings 
@@ -68,8 +71,9 @@ def get_scriptkid_image():
     
     import random
     image_dir = utilities.get_absolute_path("images/scriptkids")
+    goodexts = ("jpeg", ".jpg", ".png", ".gif", ".bmp")
     try:
-        images = os.listdir(image_dir)
+        images = [img for img in os.listdir(image_dir) if img[-4:].lower() in goodexts]
     except Exception as ex:
         _log.error("can't do listdir() on: " + image_dir + '\n' + str(ex))
         return None
@@ -77,10 +81,7 @@ def get_scriptkid_image():
         _log.error("images was empty!")
         return None
     
-    goodexts = ("jpeg", ".jpg", ".png", ".gif", ".bmp")
-    for imagename in [i for i in images]:
-        if  not imagename[-4:].lower() in goodexts:
-            images.remove(imagename)
+
     
     randomindex = random.randint(0, len(images) - 1)
     return os.path.join(image_dir, images[randomindex])

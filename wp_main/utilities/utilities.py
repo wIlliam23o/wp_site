@@ -222,6 +222,15 @@ def get_object_safe(objects_, **kwargs):
 
 
 def get_objects_if(objects_, attribute, equals, orderby=None):
+    """ Filters objects, returns only objects with 'attribute' == equals.
+        Arguments:
+            objects_  : A query set, or my_Model.objects
+            attribute : Name of an attribute to check (string to be used with getattr())
+            equals    : What the attribute should be to get included.
+                        if getattr(object, attribute) == equals: results.append(object)
+            orderby   : orderby for django's queryset. all() is used if orderby is None
+    """
+    
     results = None
     if orderby is None:
         if hasattr(objects_, 'all'):

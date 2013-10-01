@@ -38,7 +38,7 @@ except ImportError as eximp:
     sys.exit(1)
 
 # everything from welborn prod was imported correctly.
-print "django environment ready..."
+#print "django environment ready..."
 
 # import local tools
 try:
@@ -48,7 +48,7 @@ except ImportError as eximp:
           "is it in the same directory as this script?\n\n" + str(eximp)
           
 # local tools were imported correctly.
-print "local tools imported...\n"
+#print "local tools imported...\n"
 
 # possible argument flags/options
 possible_args = (('-a', '--all'),
@@ -200,7 +200,12 @@ def print_all(order=None):
     ret = print_files_info(order)
     return ret
 
-def print_blogs_info(order=None):    
+def print_blogs_info(order=None):
+    """ Print all info gathered with get_blogs_info(), formatted with a print_block() """
+    if wp_blog.objects.count() == 0:
+        print('\nNo blog posts to gather info for!')
+        return 1
+    
     if order is None:
         order = orderby_posts
     else:    
@@ -214,7 +219,12 @@ def print_blogs_info(order=None):
     return 0
 
 
-def print_projects_info(order=None):    
+def print_projects_info(order=None):
+    """ Print all info gathered with get_projects_info(), formatted with a print_block() """
+    if wp_project.objects.count() == 0:
+        print('\nNo projects to gather info for!')
+        return 1
+    
     if order is None:
         order = orderby_projects
     else:
@@ -230,6 +240,12 @@ def print_projects_info(order=None):
 
 
 def print_files_info(order=None):
+    """ Print all info gathered with get_files_info(), formatted with a print block. """
+    
+    if file_tracker.objects.count() == 0:
+        print('\nNo file-trackers to gather info for.')
+        return 1
+    
     if order is None:
         order = orderby_files
     else:
