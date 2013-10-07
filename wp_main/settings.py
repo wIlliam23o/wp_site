@@ -17,15 +17,17 @@ BASE_DIR = os.path.split(SCRIPT_PARENT)[0]
 BASE_PARENT = os.path.split(BASE_DIR)[0]
 
 # test or live?
-if "webapps" in BASE_PARENT:
+if 'webapps' in BASE_PARENT:
     # live site directories
     STATIC_PARENT = BASE_PARENT
-    MEDIA_URL = "http://welbornprod.com/media/"
+    MEDIA_URL = 'http://welbornprod.com/media/'
+    SERVER_LOC = 'remote'
 else:
     # local development directories
-    STATIC_PARENT= "/var/www/"
-    MEDIA_URL = "http://127.0.0.1/media/"
-
+    STATIC_PARENT= '/var/www/'
+    MEDIA_URL = 'http://127.0.0.1/media/'
+    SERVER_LOC = 'local'
+    
 # Static/Media directories. 
 STATIC_ROOT = os.path.join(STATIC_PARENT, "static")
 MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
@@ -224,22 +226,27 @@ LOGGING = {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
         }
-    },
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },           
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
     }
 }
+    
+
+
+# Only turn error emails on with the remote server
+# They are driving me nuts when I'm expirimenting locally and DEBUG == False.
+if SERVER_LOC == 'remote':
+    LOGGING['handlers'] = { 'mail_admins': {
+                                            'level': 'ERROR',
+                                            'filters': ['require_debug_false'],
+                                            'class': 'django.utils.log.AdminEmailHandler'
+                                            }
+                           }
+    LOGGING['loggers'] = { 'django.request': {
+                                              'handlers': ['mail_admins'],
+                                              'level': 'ERROR',
+                                              'propagate': True,
+                                              }
+                          }
+
 
 DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
 

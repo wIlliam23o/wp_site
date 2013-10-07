@@ -204,9 +204,12 @@ def debug_allowed(request):
         remote_addr = request.META.get('REMOTE_ADDR', None)
 
     # run address through our quick debug security check (settings.INTERNAL_IPS and settings.DEBUG)
-    # future settings may have a different or seperate list of debug-allowed ip's.
     ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
-    
+    # log all invalid ips that try to access debug
+    if not ip_in_settings:
+        ipwarnmsg = 'Debug not allowed for ip: {}'.format(str(remote_addr))
+        ipwarnmsg += '\n    ...DEBUG is {}.'.format(str(settings.DEBUG))
+        _log.warn(ipwarnmsg)
     return (ip_in_settings and bool(settings.DEBUG))
 
 

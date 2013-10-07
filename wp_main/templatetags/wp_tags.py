@@ -12,6 +12,7 @@
 '''
 
 from django import template
+from django.conf import settings
 from wp_main.utilities import htmltools
 from wp_main.utilities import utilities
 from wp_main.utilities.highlighter import wp_highlighter
@@ -131,10 +132,13 @@ def is_test_site(request_object):
     if request_object is None or request_object.META is None:
         # happens on template errors, which hopefully don't make it to production.
         return True
-    
+    # Get current server name for this instance.
+    # Could be the live server, test server, or local server 
+    # the local server_name changes depending on where it's accessed from.
     server_name = request_object.META['SERVER_NAME']
-    return (server_name.startswith('test.') or
-            server_name == '127.0.0.1')
+    
+    return (server_name.startswith('test.') or      # remote test site
+            (server_name in settings.INTERNAL_IPS)) # local dev
 
 
 def contains(str_or_list, val_to_find):
