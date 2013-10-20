@@ -1,5 +1,5 @@
 from django.db import models
-from misc.tools import MiscType, Lang
+from misc.types import MiscType, Lang
 from datetime import date
 
 # Module level functions...   
@@ -91,5 +91,7 @@ class wp_misc(models.Model):
         ordering = ['name']
         verbose_name = "Misc. Object"
         verbose_name_plural = "Misc. Objects"
+
+
 
     

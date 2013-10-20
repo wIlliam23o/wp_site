@@ -211,6 +211,7 @@ INSTALLED_APPS = (
     'downloads',
     'blogger',
     'searcher',
+    'misc',
     
 )
 

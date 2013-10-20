@@ -39,23 +39,27 @@ urlpatterns = patterns('',
     url(r'^$', homeviews.index),
     # about page
     url(r'^[Aa]bout/?$', homeviews.view_about),
-    )
+       )
 
 # Projects view (projects)
 urlpatterns += patterns('',
     url(r'^[Pp]rojects/?', include('projects.urls'))
-    )
+       )
 
+# Misc view (misc)
+urlpatterns += patterns('',
+    url(r'^[Mm]isc/?', include('misc.urls'))
+       )
 # Download view (downloads)
 urlpatterns += patterns('',
     # /dl/
     url(r'^[Dd][Ll]/?', include('downloads.urls'))
-    )
+       )
 
 # Viewer view (viewer)
 urlpatterns += patterns('',
     url(r'^[Vv]iew/?', include('viewer.urls'))
-    )
+       )
 
 # Blogger views (blogger)
 urlpatterns += patterns('',

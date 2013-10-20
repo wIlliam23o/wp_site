@@ -11,56 +11,9 @@ from misc.models import wp_misc
 from wp_main.utilities import htmltools, utilities
 from wp_main.utilities.wp_logging import logger
 
-_log = logger('misc').log
+_log = logger('misc.tools').log
 
-class MiscType:
-    code = 'Code'
-    snippet = 'Snippet'
-    script = 'Script'
-    text = 'Text'
-    txt = 'Text'
-    none = 'None'
-    executable = 'Executable'
-    exe = 'Executable'
-    archive = 'Archive'
-    arc = 'Archive'
-    # Choices for Django admin
-    fieldchoices = (('Code', 'Code File'),
-                    ('Snippet', 'Code Snippet'),
-                    ('Script', 'Script File'),
-                    ('Text', 'Text File'),
-                    ('None', 'None'),
-                    ('Executable', 'Executable File'),
-                    ('Archive', 'Archive File'),
-                    )
-class Lang:
-    python = 'Python'
-    py = 'Python'
-    python2 = 'Python 2'
-    py2 = 'Python 2'
-    python3 = 'Python 3'
-    py3 = 'Python 3'
-    bash = 'Bash'
-    c = 'C'
-    cpp = 'C++'
-    cplusplus = 'C++'
-    perl = 'Perl'
-    pl = 'Perl'
-    visualbasic = 'Visual Basic'
-    vb = 'Visual Basic'
-    none = 'None'
 
-    # Choices for Django admin
-    fieldchoices = (('Python', 'Python (any)'),
-                    ('Python 2', 'Python 2+'),
-                    ('Python 3', 'Python 3+'),
-                    ('Bash', 'Bash'),
-                    ('C', 'C'),
-                    ('C++', 'C++'),
-                    ('Perl', 'Perl'),
-                    ('Visual Basic', 'Visual Basic'),
-                    ('None', 'None'),
-                    )
 
 def get_long_desc(miscobj):
     """ Gets the long description to use for this wp_misc,
@@ -85,20 +38,29 @@ def get_long_desc(miscobj):
 
 def get_visible_objects():
     """ Get all objects that aren't disabled. """
-    
-    objs = wp_misc.objects.get(disabled=False)
-    return objs
+    try:
+        objs = wp_misc.objects.get(disabled=False)
+        return objs
+    except wp_misc.DoesNotExist:
+        return None
 
 def get_by_identifier(ident):
     """ Retrieve a misc object by Name, Alias, or ID. """
     
+    def safe_int(i):
+        try:
+            intval = int(i)
+            return intval
+        except:
+            return i
+        
     #  Methods to try with utilities.get_object_safe
-    tryargs = ({'id': ident},
+    tryargs = ({'id': safe_int(ident)},
                {'name': ident},
                {'alias': ident})
     
     for argset in tryargs:
-        obj = utilities.get_object_safe(**argset)
+        obj = utilities.get_object_safe(wp_misc, **argset)
         if obj:
             return obj
     

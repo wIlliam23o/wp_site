@@ -7,3 +7,6 @@ internal*
 
 .settings*
 *.pyc
+clsCj*
+files/pi
+misc/static/files/pi*
