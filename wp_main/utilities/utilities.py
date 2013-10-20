@@ -215,11 +215,14 @@ def debug_allowed(request):
 
 def get_object_safe(objects_, **kwargs):
     """ does a mymodel.objects.get(kwargs),
+        Other Keyword Arguments:
+
         returns None on error.
     """
     try:
         obj = objects_.get(**kwargs)
     except:
+        # No Error is raised, just return None
         obj = None
     return obj
 

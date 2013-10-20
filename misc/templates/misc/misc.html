@@ -1,0 +1,31 @@
+{% extends "misc/index.html" %}
+{% load wp_tags %}
+{% load misc_tags %}
+
+{% block title %}{% if misc %}- {{ misc.name }}{% endif %}{% endblock %}
+
+<!-- Main Misc Page -->
+{% block content %}
+    {% if misc %}
+        <div class="project-container">
+            <!-- Project Header -->
+            <div class="project-title">
+                <h1 class="project-header">{{ misc.name }}</h1>
+            </div>
+            <!-- Project Body -->
+            <div class="project-content">
+                <!-- Content -->
+                {% if misc|has_html_content %}
+                    <!-- Process project content and display it. -->
+                    {{ misc|processed_content }}
+                {% else %}
+                    <!-- No content -->
+                    <span>Sorry, no information found for this item: {{ requested_page }}</span>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <!-- No Misc Object Found! -->
+        
+    {% endif %}
+{% endblock %}
