@@ -219,6 +219,10 @@ def get_object_safe(objects_, **kwargs):
 
         returns None on error.
     """
+    if hasattr(objects_, 'objects'):
+        # Main Model passed instead of Model.objects.
+        objects_ = getattr(objects_, 'objects')
+        
     try:
         obj = objects_.get(**kwargs)
     except:

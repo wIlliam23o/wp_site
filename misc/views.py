@@ -11,27 +11,25 @@ def view_index(request):
     """ Main index for Misc objects. """
     
     miscobjs = misctools.get_visible_objects()
-    _log.debug("GOT {} misc objects: {}".format(str(len(miscobjs)), repr(miscobjs)))
     return responses.clean_response("misc/index.html",
                                     {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
+                                     'extra_style_link_list': [utilities.get_browser_style(request),
+                                                               '/static/css/misc.css'],
                                      'miscobjects': miscobjs,
                                     })
     
 
 def view_misc_any(request, identifier):
     """ View a specific misc item. """
-    
-    if identifier.endswith('/'):
-        identifier = identifier[:-1]
-        
+            
     misc = misctools.get_by_identifier(identifier)
-    _log.debug("GOT Object: {}".format(repr(misc)))
     if not misc:
+        # No misc item found by that identifier
         raise Http404()
     
     return responses.clean_response('misc/misc.html',
                                     {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
+                                     'extra_style_link_list': [utilities.get_browser_style(request),
+                                                               '/static/css/misc.css'],
                                      'misc': misc,
                                      })

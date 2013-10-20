@@ -16,6 +16,7 @@ from wp_main.utilities.htmltools import html_content
 from misc.tools import get_long_desc
 
 
+register = template.Library()
 
 _log = logger('misc_tags').log
 
@@ -44,4 +45,14 @@ def process_highlighting(htmlcontent):
     html_con.highlight()
     return mark_safe(html_con.tostring())
 
+
+# List of registered functions for use with templates
+registered = (has_html_content,
+              load_html_content,
+              processed_content,
+              process_highlighting,
+              )
+# Register them
+for registerfunc in registered:
+    register.filter(registerfunc.__name__, registerfunc)
     

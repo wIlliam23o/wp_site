@@ -7,17 +7,30 @@
 <!-- Main Misc Page -->
 {% block content %}
     {% if misc %}
-        <div class="project-container">
-            <!-- Project Header -->
-            <div class="project-title">
-                <h1 class="project-header">{{ misc.name }}</h1>
+        <div class="misc-container">
+            <!-- misc Header -->
+            <div class="misc-title">
+                <h1 class="misc-header">{{ misc.name }}</h1>
             </div>
-            <!-- Project Body -->
-            <div class="project-content">
+            <!-- misc Body -->
+            <div class="misc-content">
                 <!-- Content -->
                 {% if misc|has_html_content %}
-                    <!-- Process project content and display it. -->
+                    <!-- Process misc content and display it. -->
                     {{ misc|processed_content }}
+                    
+                    <!-- Misc object download box -->
+                    <br>
+                    <div class='misc-download-box-wrapper'>
+                        <div class='misc-download-box'>
+                            <div class='misc-download-button'>
+                                <a href='/dl/{{ misc.filename }}'>Download {{ misc.name }}</a>
+                            </div>
+                            <div class='misc-download-button'>
+                                <a href='/view/{{ misc.filename }}'>View {{ misc.name }} (local)</a>                      
+                            </div>
+                        </div>
+                    </div>
                 {% else %}
                     <!-- No content -->
                     <span>Sorry, no information found for this item: {{ requested_page }}</span>

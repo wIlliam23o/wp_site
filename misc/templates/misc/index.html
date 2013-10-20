@@ -4,7 +4,7 @@
 {% block title %}- Miscellaneous{% endblock %}
 
 
-<!-- Build projects menu -->
+<!-- Build misc objects menu -->
 {% block verticalmenu %}
     {% if miscobjects %}
         <div class="vertical-menu">
@@ -21,17 +21,17 @@
     {% endif %}
 {% endblock %}
 
-<!-- Build Project Listing -->
+<!-- Build misc Listing -->
 {% block content %}
     {% if miscobjects %}
-        <div class="wp-block project-listing">
+        <div class="wp-block misc-listing">
             {% for misc in miscobjects %}
-                <!-- Single project listing. -->
-                <div class="wp-block project-container">
+                <!-- Single misc listing. -->
+                <div class="wp-block misc-container">
                     <!-- Header (Name/Link/Version) -->
-                    <div class='project-header-box'>
+                    <div class='misc-header-box'>
                         <a href="/misc/{{ misc.alias }}">
-                            <span class="header project-name">{{ misc.name }}</span>
+                            <span class="header misc-name">{{ misc.name }}</span>
                         </a>
                         <br/>
                         {% if misc.version %}
@@ -42,7 +42,7 @@
                 
                     <!-- Description -->
                     {% if misc.description %}
-                        <div class="project-desc">
+                        <div class="misc-desc">
                             <span class="desc">{{ misc.description|safe }}</span>
                         </div>
                     {% endif %}

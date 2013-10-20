@@ -39,13 +39,15 @@ def get_long_desc(miscobj):
 def get_visible_objects():
     """ Get all objects that aren't disabled. """
     try:
-        objs = wp_misc.objects.get(disabled=False)
+        objs = [o for o in wp_misc.objects.all() if not o.disabled]
         return objs
     except wp_misc.DoesNotExist:
         return None
 
 def get_by_identifier(ident):
     """ Retrieve a misc object by Name, Alias, or ID. """
+    if not isinstance(ident, (int, float)):
+        ident = ident.strip('/')
     
     def safe_int(i):
         try:
@@ -60,8 +62,9 @@ def get_by_identifier(ident):
                {'alias': ident})
     
     for argset in tryargs:
+        _log.debug("Trying to get by id: {}".format(repr(argset)))
         obj = utilities.get_object_safe(wp_misc, **argset)
-        if obj:
+        if obj is not None:
             return obj
     
     # No object found.
