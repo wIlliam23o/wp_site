@@ -1,8 +1,51 @@
 {% extends "home/main.html" %}
 {% load wp_tags %}
+{% load misc_tags %}
 
 {% block title %}- Miscellaneous{% endblock %}
+{% block extrastyle %}
+    <style type="text/css">
+        .misc-download-box {
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        .misc-download-button {
+            font-size: 0.8em;
+            margin-bottom: 1px;
+        }
+        .misc-desc {
+            font-size: .9em;
+        }
+    </style>
+{% endblock %}
 
+{% block javascript %}
+    <script type="text/javascript">
+        function fixLongDescBtn(alias) {
+            var miscbtnid = '#misclongdescbtn-' + alias;
+            var longdescbtn = $(miscbtnid);
+
+            if (longdescbtn.text() == 'Show Less') {
+                // element is hidden
+                longdescbtn.text('Show More');
+            } else {
+                longdescbtn.text('Show Less');
+            }
+        }
+        
+        function toggleLongDesc(alias) {
+            var longdescid = "#misclongdesc-" + alias;
+            var longdesc = $(longdescid);
+            longdesc.slideToggle();
+            fixLongDescBtn(alias);
+        }
+        
+        $(document).ready( function () {
+            // hide long descriptions on load.
+            $(".misclongdesc").hide();
+        });
+    </script>
+{% endblock %}
 
 <!-- Build misc objects menu -->
 {% block verticalmenu %}
@@ -11,7 +54,7 @@
             <ul class="vertical-menu-main">
                 {% for misc in miscobjects %}
                     <li class="vertical-menu-item">
-                        <a class="vertical-menu-link" href="/misc/{{ misc.alias }}">
+                        <a class="vertical-menu-link" href="#{{ misc.alias }}">
                             <span class="vertical-menu-text">{{ misc.name }}</span>
                         </a>
                     </li>
@@ -27,7 +70,7 @@
         <div class="wp-block misc-listing">
             {% for misc in miscobjects %}
                 <!-- Single misc listing. -->
-                <div class="wp-block misc-container">
+                <div id='{{ misc.alias }}' class="wp-block misc-container">
                     <!-- Header (Name/Link/Version) -->
                     <div class='misc-header-box'>
                         <a href="/misc/{{ misc.alias }}">
@@ -38,12 +81,58 @@
                             <span class="version">version {{ misc.version }}</span>
                             <br/>
                         {% endif %}
+                        <!-- Misc Type Info -->
+                        <div class='misc-type-info-box'>
+                            <div class='misc-type-info-item'>
+                                <span class='misc-type-label'>Type:&nbsp;</span>
+                                <span class='misc-type-value'>{{ misc.filetype }}</span>
+                            </div>
+                            <div class='misc-type-info-item'>
+                                <span class='misc-type-label'>Language:&nbsp;</span>
+                                <span class='misc-type-value'>{{ misc.language }}</span>
+                            </div>
+                        </div>
                     </div>
                 
-                    <!-- Description -->
+                    <!-- Short Description -->
                     {% if misc.description %}
-                        <div class="misc-desc">
+                        <div id="miscdesc" class="misc-desc">
                             <span class="desc">{{ misc.description|safe }}</span>
+                        </div>
+                    {% endif %}
+                    <!-- Misc object download box -->
+                    <!--<div class='misc-download-box-wrapper'>-->
+                        <div class='misc-download-box'>
+                            <div class='misc-download-button'>
+                                <a href='/dl/{{ misc.filename }}'>Download {{ misc.name }}</a>
+                            </div>
+                            <div class='misc-download-button'>
+                                <!-- Form for submitting file names to the /viewer -->
+                                <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
+                                    <!-- Includes Token for Django's CSRF handling. -->
+                                    <input name="file" type="hidden" value="{{ misc.filename }}">
+                                </form>                            
+                                <a href='javascript: void(0);' onclick="javascript: $('#file-viewer').submit();">
+                                    View {{ misc.name }} (local)
+                                </a>                      
+                            </div>
+                    <!-- Long Description Button-->
+                    {% if misc|has_html_content %}
+                        <div class="misc-download-button">
+                            <a href='javascript: void(0);' onclick="javascript:toggleLongDesc('{{ misc.alias }}');">
+                                <div>
+                                    <span id="misclongdescbtn-{{ misc.alias }}">Show More</span>
+                                </div>
+                            </a>
+                        </div>
+                    {% endif %}                            
+                            
+                        </div>
+                    <!--</div>-->
+                    {% if misc|has_html_content %}
+                        <!-- Long Description -->
+                        <div id="misclongdesc-{{ misc.alias }}" class="misclongdesc">
+                            {{ misc|processed_content}}
                         </div>
                     {% endif %}
                 </div>

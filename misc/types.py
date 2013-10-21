@@ -40,6 +40,7 @@ class Lang:
     py2 = 'Python 2'
     python3 = 'Python 3'
     py3 = 'Python 3'
+    pypy = 'PyPy'
     bash = 'Bash'
     c = 'C'
     cpp = 'C++'
@@ -49,7 +50,7 @@ class Lang:
     visualbasic = 'Visual Basic'
     vb = 'Visual Basic'
     none = 'None'
-
+    stackless = 'Stackless Python'
     @staticmethod
     def combine(*args):
         """ Combine 2 or more Lang aattributes. """
@@ -64,5 +65,7 @@ class Lang:
                     ('C++', 'C++'),
                     ('Perl', 'Perl'),
                     ('Visual Basic', 'Visual Basic'),
+                    ('Stackless Python', 'Stackless Python'),
+                    ('PyPy', 'PyPy'),
                     ('None', 'None'),
                     )

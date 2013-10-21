@@ -4,6 +4,10 @@
 
 {% block title %}{% if misc %}- {{ misc.name }}{% endif %}{% endblock %}
 
+<!-- Cancel out index.html blocks -->
+{% block extrastyle %}{% endblock %}
+{% block javascript %}{% endblock %}
+
 <!-- Main Misc Page -->
 {% block content %}
     {% if misc %}
@@ -17,8 +21,9 @@
                 <!-- Content -->
                 {% if misc|has_html_content %}
                     <!-- Process misc content and display it. -->
-                    {{ misc|processed_content }}
-                    
+                    <div class='misc-desc'>
+                        {{ misc|processed_content }}
+                    </div>
                     <!-- Misc object download box -->
                     <br>
                     <div class='misc-download-box-wrapper'>
@@ -27,7 +32,14 @@
                                 <a href='/dl/{{ misc.filename }}'>Download {{ misc.name }}</a>
                             </div>
                             <div class='misc-download-button'>
-                                <a href='/view/{{ misc.filename }}'>View {{ misc.name }} (local)</a>                      
+                                <!-- Form for submitting file names to the /viewer -->
+                                <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
+                                    <!-- Includes Token for Django's CSRF handling. -->
+                                    <input name="file" type="hidden" value="{{ misc.filename }}">
+                                </form>                            
+                                <a href='javascript: void(0);' onclick="javascript: $('#file-viewer').submit();">
+                                    View {{ misc.name }} (local)
+                                </a>                      
                             </div>
                         </div>
                     </div>

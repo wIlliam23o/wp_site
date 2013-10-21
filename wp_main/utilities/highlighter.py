@@ -13,6 +13,7 @@ import pygments
 from pygments import formatters
 from pygments import lexers
 from wp_main.utilities.wp_logging import logger
+
 # for embedded highlighting
 import re
 
@@ -187,6 +188,32 @@ def get_lexer_byname(sname):
     
     return lexers.get_lexer_by_name(sname, stripall=True,)
 
+
+def get_lexer_name_fromcontent(content):
+    """ determine lexer from shebang line if any is present. """
+    
+    if isinstance(content, (list,tuple)):
+        # readlines() was passed.
+        firstline = content[0]
+    else:
+        if '\n' in content:
+            # not calling split() here.
+            firstline = content[:content.index('\n')]
+        else:
+            # Can't determine usable first line.
+            return ''
+    # Got usable first line, look for shebang.    
+    if firstline.startswith('#!'):
+        # get interpreter from shebang line.
+        shebanglang = firstline.split('/')[-1]
+        # check for env use ('env python')
+        if ' ' in shebanglang:
+            # interpreter name should be last thing
+            shebanglang = shebanglang.split()[-1]
+        return shebanglang.strip()
+    # didn't work, no language found.
+    return ''
+        
 def get_lexer_name_fromfile(sfilename):
     """ determine which lexer to use by file extension """
     
@@ -194,8 +221,8 @@ def get_lexer_name_fromfile(sfilename):
         lexer_ = lexers.get_lexer_for_filename(sfilename)
         lexer_name = lexer_.aliases[0]
     except:
-        # no lexer found.
-        lexer_name = ""           
+        # no lexer found
+        lexer_name = ''           
     return lexer_name
 
 

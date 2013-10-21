@@ -2,6 +2,7 @@
 import os.path
 # Mark generated html as safe to view.
 from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
+from django.utils.html import escape
 
 # Standard Errors
 from django.http import Http404
@@ -12,11 +13,14 @@ from django.views.decorators.csrf import csrf_protect
 # Filetracker info
 from downloads import dltools
 
+# Misc object info
+from misc import tools as misctools
+
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
 # For source highlighting
-from wp_main.utilities.highlighter import wp_highlighter, get_lexer_name_fromfile
+from wp_main.utilities.highlighter import wp_highlighter, get_lexer_name_fromfile, get_lexer_name_fromcontent
 # Logging
 from wp_main.utilities.wp_logging import logger
 _log = logger('viewer').log
@@ -36,21 +40,34 @@ def ajax_contents(request):
     
     file_info = {}
     if get_data.get('file', False):
-        file_info = get_file_content(get_data['file'])
+        file_info = get_file_info(get_data['file'])
         # highlight file
         file_info['file_content'] = highlight_file(file_info['static_path'], file_info['file_content'])
         
         # override non-serializable project
         project = file_info['project']
         file_info.pop('project')
-        # account for missing info now that project is gone.
-        file_info['project_name'] = project.name
-        file_info['project_alias'] = project.alias
-        file_info['project_version'] = project.version
+        # override non-serializable miscobj
+        miscobj = file_info['miscobj']
+        file_info.pop('miscobj')
+        
+        # Fill in info for project/miscobj so it can be serialized
+        for infoattr in ('name', 'alias', 'version'):
+            # Key name for attributes (misc_name, project_version, etc.)
+            projkey = 'project_' + infoattr
+            misckey = 'misc_' + infoattr
+            # Set info if its there, otherwise set None
+            file_info[projkey] = getattr(project, infoattr) if project else None
+            file_info[misckey] = getattr(miscobj, infoattr) if miscobj else None
+
         # get a short file name that we can use without shortening it in javascript.
         file_info['file_short'] = utilities.get_filename(file_info['static_path'])
         # get all project related files (if any, otherwise an empty list)
-        file_info['menu_items'] = [(n, utilities.get_filename(n)) for n in get_source_files(project)]
+        if project:
+            file_info['menu_items'] = [(n, utilities.get_filename(n)) for n in get_source_files(project)]
+        else:
+            # Misc objects need no menu (False is sent to wpviewer.js:load_file_content())
+            file_info['menu_items'] = False
         # send json encoded data.
         return responses.json_response(file_info)
     else:
@@ -141,12 +158,14 @@ def get_using_paths(dir_path, absolute_path=None, proj=None):
     
     return (static_path, absolute_path)
 
-def get_file_content(file_path):
+def get_file_info(file_path):
     """ retrieves actual file content for viewer. """
     absolute_path = utilities.get_absolute_path(file_path)
     static_path = utilities.get_relative_path(file_path)
     # no file to load.
-    if not absolute_path: raise Http404("Sorry, that file doesn't exist.")
+    if not absolute_path: 
+        _log.error('Invalid file path for viewer.get_file_content(): {}'.format(file_path))
+        raise Http404("Sorry, that file doesn't exist.")
         
     project = ptools.get_project_from_path(absolute_path)
     
@@ -157,16 +176,27 @@ def get_file_content(file_path):
             #return responses.alert_message("Sorry, there was an error viewing that file.", body_message=alertmsg)
             raise Http404("Sorry, there was an error viewing that file.")
         
-    # Update project tracker
+    # Update project view count tracker
+    miscobj = None
     if project:
         project.view_count +=1
         project.save()
-        
+    else:
+        # Not a project, may be a Misc Object.
+        miscobj = misctools.get_by_filename(file_path)
+        # Update misc view count tracker
+        if miscobj:
+            miscobj.view_count += 1
+            miscobj.save()
+        else:
+            _log.debug('get_file_content: not a project or misc object: {}'.format(file_path))
+            
     # Update file tracker
     if os.path.isfile(absolute_path):
         filetracker = dltools.get_file_tracker(absolute_path)
         if filetracker is not None:
-            if project is not None: dltools.update_tracker_projects(filetracker, project, dosave=False)
+            if project is not None: 
+                dltools.update_tracker_projects(filetracker, project, dosave=False)
             filetracker.view_count +=1
             filetracker.save()
     
@@ -179,10 +209,12 @@ def get_file_content(file_path):
         _log.error("Error loading file: " + absolute_path + '\n' + str(ex))
         raise Http404("Sorry, I can't load that file right now.")
     
-    return {'project': project,
-            'static_path': static_path,
-            'absolute_path': absolute_path,
-            'file_content': file_content}
+    fileinfo = {'project': project,
+                'miscobj': miscobj,
+                'static_path': static_path,
+                'absolute_path': absolute_path,
+                'file_content': file_content,}
+    return fileinfo
     
 
 def highlight_file(static_path, file_content):
@@ -190,7 +222,10 @@ def highlight_file(static_path, file_content):
     
     # Get pygments lexer
     lexername = get_lexer_name_fromfile(static_path)
- 
+    if not lexername:
+        # Try getting lexer from first line in file.
+        lexername = get_lexer_name_fromcontent(file_content)
+    
     # Highlight the file (if needed)
     if lexername:
         try:
@@ -199,6 +234,10 @@ def highlight_file(static_path, file_content):
             file_content = highlighter.highlight()
         except Exception as ex:
             _log.error("Error highlighting file: " + static_path + '\n' + str(ex))
-    return file_content
+    else:
+        # No lexer, so no highlighting, still need to format it a bit.
+        file_content = escape(file_content).replace('\n', '<br>')
+        
+    return mark_safe(file_content)
 
     

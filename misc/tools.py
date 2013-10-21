@@ -62,10 +62,18 @@ def get_by_identifier(ident):
                {'alias': ident})
     
     for argset in tryargs:
-        _log.debug("Trying to get by id: {}".format(repr(argset)))
         obj = utilities.get_object_safe(wp_misc, **argset)
         if obj is not None:
             return obj
     
     # No object found.
+    return None
+
+def get_by_filename(filename):
+    """ Retrieve a misc object by its file. """
+    
+    if filename:
+        obj = utilities.get_object_safe(wp_misc, filename=filename)
+        if obj:
+            return obj
     return None

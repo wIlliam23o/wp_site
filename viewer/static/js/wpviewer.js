@@ -59,11 +59,16 @@ function load_file_data (xhrdata) {
 	else {
 		$("#file-content").html("<span>Sorry, no content in this file...</span>");
 	}
-	// Header
+	// Header for projects
 	if (file_info.project_alias != "" && file_info.project_name != "") {
 		$("#project-title-name").html(file_info.project_name);
 		$("#project-link").click( function () { wptools.navigateto("/projects/" + file_info.project_alias); });
 		if (file_info.project_alias) { $("#project-info").fadeIn(); }
+	// Header for miscobj.
+	} else if (file_info.misc_alias != "" && file_info.misc_name != "") {
+	    $("#project-title-name").html(file_info.misc_name);
+	    $("#project-link").click( function () { wptools.navigateto("/misc/" + file_info.misc_alias); });
+	    if (file_info.misc_alias) { $("#project-info").fadeIn(); }
 	}	
 	// File info
 	if (file_info.file_short != "" && file_info.static_path != "") {
