@@ -20,6 +20,7 @@ from wp_main.utilities.wp_logging import logger
 # for admin site filtering
 from blogger.models import wp_blog
 from projects.models import wp_project
+from misc.models import wp_misc
 
 _log = logger("wp_tags").log
 
@@ -254,6 +255,8 @@ def disabled_css(item):
         obj = utilities.get_object_safe(wp_blog.objects, title=name)
     elif 'wp_project' in otype:
         obj = utilities.get_object_safe(wp_project.objects, name=name)
+    elif 'wp_misc' in otype:
+        obj = utilities.get_object_safe(wp_misc.objects, name=name)
     else:
         _log.debug("Object type not filtered yet: " + otype)
         obj = None

@@ -20,26 +20,7 @@
 {% endblock %}
 
 {% block javascript %}
-    <script type="text/javascript">
-        function fixLongDescBtn(alias) {
-            var miscbtnid = '#misclongdescbtn-' + alias;
-            var longdescbtn = $(miscbtnid);
-
-            if (longdescbtn.text() == 'Show Less') {
-                // element is hidden
-                longdescbtn.text('Show More');
-            } else {
-                longdescbtn.text('Show Less');
-            }
-        }
-        
-        function toggleLongDesc(alias) {
-            var longdescid = "#misclongdesc-" + alias;
-            var longdesc = $(longdescid);
-            longdesc.slideToggle();
-            fixLongDescBtn(alias);
-        }
-        
+    <script type="text/javascript">        
         $(document).ready( function () {
             // hide long descriptions on load.
             $(".misclongdesc").hide();
@@ -68,6 +49,12 @@
 {% block content %}
     {% if miscobjects %}
         <div class="wp-block misc-listing">
+             <!-- Form for submitting file names to the /viewer -->
+             <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
+                  <!-- Includes Token for Django's CSRF handling. -->
+                  <input id="viewer-filename" name="file" type="hidden" value="none">
+             </form>                            
+            
             {% for misc in miscobjects %}
                 <!-- Single misc listing. -->
                 <div id='{{ misc.alias }}' class="wp-block misc-container">
@@ -106,20 +93,17 @@
                             <div class='misc-download-button'>
                                 <a href='/dl/{{ misc.filename }}'>Download {{ misc.name }}</a>
                             </div>
-                            <div class='misc-download-button'>
-                                <!-- Form for submitting file names to the /viewer -->
-                                <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
-                                    <!-- Includes Token for Django's CSRF handling. -->
-                                    <input name="file" type="hidden" value="{{ misc.filename }}">
-                                </form>                            
-                                <a href='javascript: void(0);' onclick="javascript: $('#file-viewer').submit();">
-                                    View {{ misc.name }} (local)
-                                </a>                      
-                            </div>
+                            {% if misc|is_viewable %}
+                                <div class='misc-download-button'>
+                                    <a href='javascript: void(0);' onclick="javascript: misctools.submitMisc('{{ misc.filename }}');">
+                                        View {{ misc.name }} (local)
+                                    </a>                      
+                                </div>
+                            {% endif %}
                     <!-- Long Description Button-->
                     {% if misc|has_html_content %}
                         <div class="misc-download-button">
-                            <a href='javascript: void(0);' onclick="javascript:toggleLongDesc('{{ misc.alias }}');">
+                            <a href='javascript: void(0);' onclick="javascript: misctools.toggleLongDesc('{{ misc.alias }}');">
                                 <div>
                                     <span id="misclongdescbtn-{{ misc.alias }}">Show More</span>
                                 </div>

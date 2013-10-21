@@ -86,5 +86,20 @@ def get_scriptkid_image():
     randomindex = random.randint(0, len(images) - 1)
     return os.path.join(image_dir, images[randomindex])
 
-        
+class StatsInfo(object):
+    """ Holds info for stats.html template and home.view_stats() view. """
+    def __init__(self, title=None, statlines=None):
+        self.title = title
+        self.statlines = statlines
+class StatsCollection(object):
+    """ Holds a collection of StatsInfo objects. """
+    def __init__(self, *args):
+        """ Adds a list of StatsInfo()'s on intialization """
+        self.stats = []
+        for arg in args:
+            if arg is not None:
+                self.stats.append(arg)
+    def add(self, statsinfo):
+        self.stats.append(statsinfo)
+    
         

@@ -8,6 +8,12 @@
 '''
 
 class MiscType:
+    """ Kindof an ENUM with helper functions. Instances should not be created.
+        Ex:
+            m = wp_misc.objects.create(filetype=MiscType.script, language=Lang.python)
+            if MiscType.is_viewable(m.filetype):
+                print('You can view this misc object.')
+    """
     code = 'Code'
     snippet = 'Snippet'
     script = 'Script'
@@ -24,6 +30,16 @@ class MiscType:
         """ Combine 2 or more MiscType attributes """
         return ','.join(args)
     
+    @staticmethod
+    def is_viewable(misctype):
+        # Snippets should not need a whole new viewable file,
+        # they should be in the .content or .contentfile.
+        # Archives, and Executables are not viewable for obvious reasons.
+        # None-types just mean no type was set, they are probably viewable.
+        viewabletypes = (MiscType.script, MiscType.snippet, 
+                         MiscType.code, MiscType.none)
+        return (misctype in viewabletypes)
+            
     # Choices for Django admin
     fieldchoices = (('Code', 'Code File'),
                     ('Snippet', 'Code Snippet'),
@@ -34,6 +50,13 @@ class MiscType:
                     ('Archive', 'Archive File'),
                     )
 class Lang:
+    """ Kindof an ENUM with helper functions. Instances should not be created.
+        Example:
+            m = wp_misc.objects.create(filetype=MiscType.script, language=Lang.python)
+            if m.language in (Lang.python, Lang.py2, Lang.py3):
+                print('This is file was written in Python.')
+                print('Specifically: {}'.format(m.language))
+    """
     python = 'Python'
     py = 'Python'
     python2 = 'Python 2'
@@ -53,7 +76,7 @@ class Lang:
     stackless = 'Stackless Python'
     @staticmethod
     def combine(*args):
-        """ Combine 2 or more Lang aattributes. """
+        """ Combine 2 or more Lang attributes. """
         return ','.join(args)
     
     # Choices for Django admin

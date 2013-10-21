@@ -7,6 +7,10 @@ from django.utils.html import escape
 # Standard Errors
 from django.http import Http404
 
+# DEBUG?
+from django.conf import settings
+
+
 # Django decorators
 from django.views.decorators.csrf import csrf_protect
 
@@ -28,7 +32,11 @@ _log = logger('viewer').log
 # For retrieving project information (source viewing)
 from projects import tools as ptools
 
- 
+def logdebug(s):
+    """ Write log message only if settings.DEBUG. """
+    if settings.DEBUG:
+        _log.debug(s)
+         
 @csrf_protect
 def ajax_contents(request):
     """ retrieves file contents per an ajax request. """
@@ -40,7 +48,12 @@ def ajax_contents(request):
     
     file_info = {}
     if get_data.get('file', False):
+        logdebug('Loading info for file: {}'.format(get_data['file']))
+        
         file_info = get_file_info(get_data['file'])
+        # Grab DEBUG and send it.
+        file_info['debug'] = settings.DEBUG
+        
         # highlight file
         file_info['file_content'] = highlight_file(file_info['static_path'], file_info['file_content'])
         
@@ -184,6 +197,8 @@ def get_file_info(file_path):
     else:
         # Not a project, may be a Misc Object.
         miscobj = misctools.get_by_filename(file_path)
+        logdebug('Found Misc Object: {}'.format(repr(miscobj)))
+        
         # Update misc view count tracker
         if miscobj:
             miscobj.view_count += 1

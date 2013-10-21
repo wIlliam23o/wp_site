@@ -31,16 +31,18 @@
                             <div class='misc-download-button'>
                                 <a href='/dl/{{ misc.filename }}'>Download {{ misc.name }}</a>
                             </div>
-                            <div class='misc-download-button'>
-                                <!-- Form for submitting file names to the /viewer -->
-                                <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
-                                    <!-- Includes Token for Django's CSRF handling. -->
-                                    <input name="file" type="hidden" value="{{ misc.filename }}">
-                                </form>                            
-                                <a href='javascript: void(0);' onclick="javascript: $('#file-viewer').submit();">
-                                    View {{ misc.name }} (local)
-                                </a>                      
-                            </div>
+                            {% if misc|is_viewable %}
+                                <div class='misc-download-button'>
+                                    <!-- Form for submitting file names to the /viewer -->
+                                    <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
+                                        <!-- Includes Token for Django's CSRF handling. -->
+                                        <input id="viewer-filename" name="file" type="hidden" value="{{ misc.filename }}">
+                                    </form>                            
+                                    <a href='javascript: void(0);' onclick="javascript: $('#file-viewer').submit();">
+                                        View {{ misc.name }} (local)
+                                    </a>                      
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                 {% else %}

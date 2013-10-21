@@ -123,19 +123,20 @@ def view_stats(request):
         pblock_args = {'append_key': ': '}
         return [convert_line(line) for line in pblock.iterblock(**pblock_args)]
     # gather print_block stats from wpstats and convert to lists of strings.
-    # for projects, blog posts, and file trackers...
-    projectlines = convert_pblock(wpstats.get_projects_info(orderby='-download_count'))
-    postlines = convert_pblock(wpstats.get_blogs_info(orderby='-view_count'))
-    filelines = convert_pblock(wpstats.get_files_info(orderby='-download_count'))
+    # for projects, misc objects, blog posts, and file trackers...
+    projectinfo = htools.StatsInfo('Projects', convert_pblock(wpstats.get_projects_info(orderby='-download_count')))
+    miscinfo = htools.StatsInfo('Misc', convert_pblock(wpstats.get_misc_info(orderby='-download_count')))
+    postinfo = htools.StatsInfo('Posts', convert_pblock(wpstats.get_blogs_info(orderby='-view_count')))
+    fileinfo = htools.StatsInfo('File Trackers', convert_pblock(wpstats.get_files_info(orderby='-download_count')))
+    # Add them to a collection.
+    stats = htools.StatsCollection(projectinfo, miscinfo, postinfo, fileinfo)
     
     if request.user.is_authenticated():
         response = responses.clean_response("home/stats.html",
                                             {'request': request,
                                              'extra_style_link_list': [utilities.get_browser_style(request),
                                                                        "/static/css/stats.css"],
-                                             'projects': projectlines,
-                                             'posts': postlines,
-                                             'files': filelines,
+                                             'stats': stats,
                                              })
     else:
         response = responses.clean_response("home/badlogin.html",
