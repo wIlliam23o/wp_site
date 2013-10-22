@@ -38,7 +38,7 @@ re_email_address = r'[\d\w\-\.]+@[\d\w\-\.]+\.[\w\d\-\.]+'
 # RegEx for fixing open tags (fix_open_tags())
 re_closing_complete = re.compile('[\074]/\w+[\076]{1}')
 re_closing_incomplete = re.compile(r'[\074]/\w+')
-re_opening_complete = re.compile(r'[\074][\w "\'=\-]+[\076]{1}')
+re_opening_complete = re.compile(r'[\074][\w "\'=\-\/]+[\076]{1}')
 re_opening_incomplete = re.compile(r'[\074][\w "\'=\-]+')
 re_start_tag = re.compile(r'[\074]\w+')
 
