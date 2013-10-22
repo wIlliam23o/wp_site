@@ -34,7 +34,7 @@ SCRIPTSDIR = os.path.join(os.getcwd(), 'scripts')
 EXECS = {'.py': 'python',
          '.sh': 'bash',
          '.pl': 'perl'}
-
+                                   
 def main(args):
     """ main entry point, parses args to run scripts.
         expects args = sys.argv[1:], or ['scriptfiletorun.py', 'scriptarg1', 'arg2', ..]
@@ -55,6 +55,10 @@ def main(args):
     # Get full scriptname
     scriptfull = os.path.join(SCRIPTSDIR, scriptname)
     
+    # Check for extra input needed.
+    forgotargs = check_input(scriptname, scriptargs)
+    if forgotargs:
+        scriptargs = forgotargs if (not scriptargs) else (scriptargs + forgotargs)
     # Shell script..
     shellret = shell_script(scriptfull, scriptargs)
     if shellret:
@@ -62,6 +66,30 @@ def main(args):
     
     return shellret
 
+
+def check_input(cmdname, cmdargs):
+    if cmdname.startswith('wprefresh'):
+        print('\nwprefresh may require more input...')
+        flags = []
+        # Collect Static for wprefresh
+        needcollect = (cmdargs is None) or ((not '-y' in cmdargs) and (not 'yes' in cmdargs) and (not '--yes' in cmdargs))
+        if needcollect:
+            collectstatic = raw_input('Would you like to collect static files? (yes/no): ')
+            if collectstatic.lower().startswith('y'):
+                flags.append('yes')
+            else:
+                flags.append('no')
+        # Live site warning for wprefresh
+        needlive = (cmdargs is None) or ((not '-l' in cmdargs) and (not 'live' in cmdargs) and (not '--live' in cmdargs))
+        if (not is_test_site()) and (needlive):
+            livesite = raw_input('*** This is the LIVE site! ***\nWould you like to refresh apache? (yes/no): ')
+            if livesite.lower().startswith('y'):
+                flags.append('live')
+            else:
+                flags.append('skip')
+        return flags
+    # No extra args needed
+    return []
 
 def do_list():
     """ List all script files found. """
@@ -88,12 +116,14 @@ def find_script(partname, scriptlist = None):
     """ Finds a script file based on part of a name (regex),
         Returns 'scriptname' on success, or None on failure/no match.
     """
-    
+            
     # compile search pattern into regex
+    wpname = None if (partname.startswith('wp') or partname.startswith('^')) else 'wp{}'.format(partname)
+    # only match switches beginning with partname.
+    if not partname.startswith('^'):
+        partname = '^{}'.format(partname)
     try:
-        # only match switches beginning with partname.
-        if not partname.startswith('^'):
-            partname = '^{}'.format(partname)
+        repatwp = re.compile('^{}'.format(wpname)) if wpname else None
         repat = re.compile(partname)
     except Exception as expat:
         print_fail('Invalid name given!: {}'.format(partname), exc = expat)
@@ -104,13 +134,22 @@ def find_script(partname, scriptlist = None):
     
     # Search scripts
     for script in scriptlist:
+        # Match with or without wp
         rematch = repat.search(script)
         if rematch:
             return script
+        elif repatwp:
+            # try wpname
+            rematch = repatwp.search(script)
+            if rematch:
+                return script
     
     # No match
     return None
     
+
+def is_test_site():
+    return ('test' in os.getcwd())
     
 def shell_script(scriptfile, args = None):
     """ Shell a script, including script args.
@@ -123,9 +162,9 @@ def shell_script(scriptfile, args = None):
         print_fail('Cannot locate executable for this script: {}'.format(scriptfile), exc = ex)
     # build command list for subprocess
     cmdlst = [cmd, scriptfile] + args if args else [cmd, scriptfile]
-    
     # run/create process
     print('\nRunning: {}'.format(' '.join(cmdlst)))
+    print('\nPlease wait for output...')
     output, errout = run_process(cmdlst)
     retcode = 0
     
@@ -156,57 +195,57 @@ def run_process(cmdlist):
     return pout, perr
 
 def parse_commands(args):
-     """ Parse the arg list, run any commands before looking up a script name """
+    """ Parse the arg list, run any commands before looking up a script name """
+    
+    # command flags, mapped to their function.
+    commands = {'-l': {'aliases': ['--list'],
+                       'func': do_list, 
+                       'kwargs': None,
+                       },
+                '-h': {'aliases': ['--help'],
+                       'func': print_usage, 
+                       'kwargs': {'retcode': 0},
+                       },
+               }
      
-     # command flags, mapped to their function.
-     commands = {'-l': {'aliases': ['--list'],
-                        'func': do_list, 
-                        'kwargs': None,
-                        },
-                 '-h': {'aliases': ['--help'],
-                        'func': print_usage, 
-                        'kwargs': {'retcode': 0},
-                        },
-                 }
+    # Setup list of known flags...
+    commandflags = commands.keys()
+    for cmdaliases in [commands[cmdflag]['aliases'] for cmdflag in commands.keys()]:
+        commandflags += cmdaliases
+    commandflags.sort()
+   
+    # Function to retrive a flag by its name, or alias.
+    def get_flag(flagname):
+        """ Retrieve a flag function by name, or alias. """
+        if flagname in commands.keys():
+            return commands[flagname]
+        else:
+            for cmdflag in commands.keys():
+                if flagname in commands[cmdflag]['aliases']:
+                    return commands[cmdflag]
+    
+    # wrun commands must come before any script file.
+    commandargs = []
+    while ((args) and (args[0].startswith('-'))):
+        commandargs.append(args.pop(0))
      
-     # Setup list of known flags...
-     commandflags = commands.keys()
-     for cmdaliases in [commands[cmdflag]['aliases'] for cmdflag in commands.keys()]:
-         commandflags += cmdaliases
-     commandflags.sort()
-     
-     # Function to retrive a flag by its name, or alias.
-     def get_flag(flagname):
-         """ Retrieve a flag function by name, or alias. """
-         if flagname in commands.keys():
-             return commands[flagname]
-         else:
-             for cmdflag in commands.keys():
-                 if flagname in commands[cmdflag]['aliases']:
-                     return commands[cmdflag]
-     
-     # wrun commands must come before any script file.
-     commandargs = []
-     while ((args) and (args[0].startswith('-'))):
-         commandargs.append(args.pop(0))
-     
-     # Retrieve functions for flags, and call them..
-     for cmdarg in commandargs:
-         if cmdarg in commandflags:
-             # known flag, retrieve the function for it and call it.
-             command = get_flag(cmdarg)
-             commandkw = command['kwargs']
-             commandfunc = command['func']
-             if commandkw:
-                 commandfunc(**commandkw)
-             else:
-                 commandfunc()
-         else:
-             # unknown flag!
-             print_fail('Unknown flag given!: {}\nRun with --help for usage instructions.'.format(cmdarg))
+    # Retrieve functions for flags, and call them..
+    for cmdarg in commandargs:
+        if cmdarg in commandflags:
+            # known flag, retrieve the function for it and call it.
+            command = get_flag(cmdarg)
+            commandkw = command['kwargs']
+            commandfunc = command['func']
+            if commandkw:
+                commandfunc(**commandkw)
+            else:
+                commandfunc()
+        else:
+            # unknown flag!
+            print_fail('Unknown flag given!: {}\nRun with --help for usage instructions.'.format(cmdarg))
              
-     # Return args without any 'wrun command flags'.    
-     return args
+    # Return args without any 'wrun command flags'.    
+    return args
 
  
 def print_debug(obj):
