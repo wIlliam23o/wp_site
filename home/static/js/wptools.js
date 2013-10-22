@@ -203,7 +203,7 @@ var misctools = {
             var longdescid = "#misclongdesc-" + alias;
             var longdesc = $(longdescid);
             longdesc.slideToggle();
-            fixLongDescBtn(alias);
+            this.fixLongDescBtn(alias);
     },
         
     submitMisc: function (f) {
