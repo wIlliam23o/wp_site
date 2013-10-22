@@ -51,13 +51,27 @@ def main(args):
     
     # if test is passed we will work on the test site, otherwise it will be live.
     TEST_SITE = ('wp_test' in project_dir)
-    WARN_LIVE = (not 'live' in args) and (not '-l' in args) and (not '--live' in args)
+    # refreshes can be forced
+    AUTO_LIVE = ('live' in args) or ('-l' in args) or ('--live' in args)
     AUTO_COLLECT = ('yes' in args) or ('-y' in args) or ('--yes' in args)
-    SKIP_COLLECT = ('no' in args) or ('-n' in args) or ('--nocollect' in args)
+    # refreshes can be skipped
+    SKIP_COLLECT = ('no' in args) or ('-n' in args) or ('--nocollect' in args) or ('--nostatic' in args)
     SKIP_REFRESH = ('skip' in args) or ('-s' in args) or ('--skiprefresh' in args) or ('--norefresh' in args) or ('--noapache' in args)
     SKIP_ALL = (SKIP_COLLECT and SKIP_REFRESH)
+    WARN_LIVE = False if TEST_SITE else (not (AUTO_LIVE or SKIP_REFRESH))
+    
+    # Ambiguous args
+    if SKIP_COLLECT and AUTO_COLLECT:
+        print('\nBoth \'yes\' and \'no\' args used, this won\'t work.')
+        sys.exit(1)
+    if AUTO_LIVE and SKIP_REFRESH:
+        print('\nBoth \'live\' and \'skip\' args used, this won\'t work.')
+        sys.exit(1)
+    if SKIP_ALL:
+        print('\nSkipping collectstatic and apache refresh...')
+        sys.exit(0)
     # WARN LIVE SITE
-    if (not TEST_SITE) and WARN_LIVE and (not SKIP_ALL):
+    if WARN_LIVE:
         print "\nYou are refreshing the ** LIVE SITE ** !"
         warn_response = raw_input("\n    Continue anyway? (y|n): ")
         if not warn_response.lower().startswith('y'):

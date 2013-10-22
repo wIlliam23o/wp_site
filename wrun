@@ -72,15 +72,45 @@ def check_input(cmdname, cmdargs):
         print('\nwprefresh may require more input...')
         flags = []
         # Collect Static for wprefresh
-        needcollect = (cmdargs is None) or ((not '-y' in cmdargs) and (not 'yes' in cmdargs) and (not '--yes' in cmdargs))
-        if needcollect:
+        yesforced = False
+        noforced = False
+        if cmdargs:
+            for yesarg in ('-y', 'yes', '--yes'):
+                if yesarg in cmdargs:
+                    yesforced = True
+                    break
+            for noarg in ('-n', 'no', '--nostatic', '--nocollect'):
+                if noarg in cmdargs:
+                    noforced = True
+                    break
+            if yesforced and noforced:
+                print('\nBoth \'yes\' and \'no\' args used, this won\'t work.')
+                sys.exit(1)
+        if (not yesforced) and (not noforced):
             collectstatic = raw_input('Would you like to collect static files? (yes/no): ')
             if collectstatic.lower().startswith('y'):
                 flags.append('yes')
             else:
                 flags.append('no')
-        # Live site warning for wprefresh
-        needlive = (cmdargs is None) or ((not '-l' in cmdargs) and (not 'live' in cmdargs) and (not '--live' in cmdargs))
+        # Get live/skip args
+        liveforced = False
+        skipforced = False
+        if cmdargs:
+            # live args used?
+            for livearg in ('-l', 'live', '--live'):
+                if livearg in cmdargs:
+                    liveforced = True
+                    break
+            # skip args used?
+            for skiparg in ('skip', '-s', '--skiprefresh', '--norefresh', '--noapache'):
+                if skiparg in cmdargs:
+                    skipforced = True
+                    break
+        if skipforced and liveforced:
+            print('\nBoth \'skip\' and \'live\' args used, this won\'t work.')
+            sys.exit(1)
+            
+        needlive = (not liveforced) and (not skipforced)
         if (not is_test_site()) and (needlive):
             livesite = raw_input('*** This is the LIVE site! ***\nWould you like to refresh apache? (yes/no): ')
             if livesite.lower().startswith('y'):
