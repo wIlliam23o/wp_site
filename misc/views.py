@@ -16,7 +16,8 @@ def view_index(request):
     return responses.clean_response_req("misc/index.html",
                                         {'request': request,
                                          'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                   '/static/css/misc.css'],
+                                                                   '/static/css/misc.css',
+                                                                   '/static/css/highlighter.css'],
                                          'miscobjects': miscobjs,
                                          },
                                         with_request=request)
@@ -33,7 +34,8 @@ def view_misc_any(request, identifier):
     return responses.clean_response_req('misc/misc.html',
                                         {'request': request,
                                          'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                   '/static/css/misc.css'],
+                                                                   '/static/css/misc.css',
+                                                                   '/static/css/highlighter.css'],
                                          'misc': misc,
                                          },
                                         with_request=request)
