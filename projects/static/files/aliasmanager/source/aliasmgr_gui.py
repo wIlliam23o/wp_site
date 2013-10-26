@@ -237,14 +237,10 @@ class winMain():
     def chkAutosave_toggled_cb(self, widget, data=None):
         # Save setting to file
         if widget.get_active():
-            # with open(os.path.join(sys.path[0], "autosave.conf"), 'w') as fset:
-            #     fset.write("1")
             if settings.setsave("autosave", "true"):
                 self.stat_settext("Alias file will be saved on command save.")
 
         else:
-            #with open(os.path.join(sys.path[0], "autosave.conf"), 'w') as fset:
-            #    fset.write("0")
             if settings.setsave("autosave", "false"):
                 self.stat_settext("Alias file will not be saved on command save.")
     
@@ -502,9 +498,9 @@ class winMain():
             # Save command on [ENTER]
             scmd = self.buf_gettext(self.bufCommand)
             
-            # Two newlines at end? must have wanted to save
-            if scmd.endswith('\n\n'):
-                scmd = scmd[: len(scmd) - 2]
+            # Three newlines at end? Do a save. 
+            if scmd.endswith('\n\n\n'):
+                scmd = scmd[:-3]
                 self.txtCommand_settext(scmd)
                 
                 # Call save button
@@ -1143,12 +1139,10 @@ class winMain():
         
         # Get file contents aliases/functions, fix Export info
         if from_file:
-            self.lst_data = amutil.fixexports(amutil.readfile())
-        else:
-            self.lst_data = amutil.fixexports(self.lst_data)
+            self.lst_data = amutil.readfile()
             
         # failed to load list
-        if self.lst_data == False:
+        if not self.lst_data:
             # Items couldn't be loaded!
             dlg.msgbox("Items could not be loaded!", dlg.error)
             self.printlog("Items could no be loaded!") 
@@ -1176,17 +1170,16 @@ class winMain():
             for itmname in lst_names:
                 # Actual item
                 itm = self.get_item(itmname)
-                # Base for adding markup
-                smarkup = "$_ITEM_$"
+                itemname = '{}'
                 # markup for functions
                 if itm.isfunction():
-                    smarkup = "<i>" + smarkup + "</i>"
+                    itemname = '<i>{}</i>'
                     # Function is exported?
                     if not itm.isexported():
-                        smarkup = "<b>" + smarkup + "</b>"            
+                        itemname = '<b>{}</b>'            
                     
                 # append item with or without markup
-                self.listAliases.append([smarkup.replace("$_ITEM_$", itm.name)])
+                self.listAliases.append([itemname.format(itm.name)])
                 
             
             self.printlog("Finished loading aliases...")
@@ -1215,20 +1208,13 @@ class winMain():
         return False
     
     def item_badname(self, sname):
-        """ Make sure item has a valid name. Does not exist, no $_ITEM_$. """
+        """ Make sure item has a valid name. Not: None, Empty String, or Exists """
                 # No text entered?
-        if sname == None:
-            return True
-        if sname.replace(' ', '') == "":
-            return True
-        
-        if sname == "$_ITEM_$":
-            self.stat_settext("Bad name for item: $_ITEM_$")
-            self.printlog("Bad name for item: $_ITEM_$")
-            dlg.msgbox("Sorry, you can't use this name. I'm using it internally.")
-            return True
-        # exists?
-        return self.item_exists(sname)
+        badname = (sname is None or
+                   self.item_exists(sname) or
+                   (not sname.replace(' ', '')))
+        # none, empty, or exists?
+        return badname
              
                                 
     def get_item(self, sname):

@@ -9,7 +9,7 @@ Created on Jan 16, 2013
 from __future__ import print_function
 # file related imports
 import sys, os.path
-__VERSION__ = "1.7.2"
+__VERSION__ = "1.7.5"
 
 class am_settings():
     ''' helper for saving/retrieving alias manager settings
