@@ -128,6 +128,10 @@ h2.title, h1.title {
 h2.title { font-size: 1.2em; }
 h1.title { font-size: 1.5em; }
 
+p.indented { margin-left: 15px;}
+p.subtext { font-size: 0.85em; }
+
+
 .desc {
 	padding-left: 40px;
 	padding-right: 40px;
