@@ -11,10 +11,9 @@
  
    start date: May 25, 2013
 '''
-#@todo: GET STATS FROM MISC.MODELS.WP_MISC 
-###TODO: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-import sys, os, os.path #@UnusedImport: os is used, grow up pydev.
+import sys
+import os
 
 __VERSION__= '1.5.0'
 # Append project's settings.py dir.
