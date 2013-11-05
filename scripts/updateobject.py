@@ -31,7 +31,7 @@
     All basic python types work, plus datetime.date.
 
     See: objectupdater.py for the internal workings, 
-         this script (updatobject.py) is only the loader.
+         this script (updateobject.py) is only the loader.
 
 Created on Nov 1, 2013
 
