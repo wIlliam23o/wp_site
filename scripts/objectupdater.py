@@ -7,6 +7,7 @@
 """
 
 import datetime
+import os
 import re
 
 # Base usage string to build per-model usage strings from.
@@ -19,11 +20,11 @@ base_usage_str = """{name} v. {ver}
         {script} -f | -l
         
     Options:
-        <identifier>           : Object identifier (name, alias, title, etc.).
+        <identifier>           : {properid} identifier ({attrstr}).
         -f,--fields            : List model fields.
         -h,--help              : Show this message.
-        -l,--list              : List detailed object info, or summary if no args were given.
-        -u data,--update data  : Update object info with attribute:value or "attribute:spaced value"
+        -l,--list              : List detailed {lowerid} info, or summary if no args were given.
+        -u data,--update data  : Update {lowerid} info with attribute:value or "attribute:spaced value"
         -v,--version           : Show version.     
 """
 
@@ -382,6 +383,17 @@ def get_object_info(obj, includefunctions=True):
         info[aname]['function'] = isfunction
         
     return info
+
+
+def get_scriptname(argv0):
+    """ Retrieve the short name that a script was called by.
+        No .py, no /path.
+        Arguments:
+            argv0  :  the sys.argv[0] for whatever script you are using.
+    """
+
+    shortname = os.path.split(argv0)[1]
+    return shortname[:-3] if shortname.endswith('.py') else shortname
 
 
 def parse_update_data(data):

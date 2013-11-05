@@ -72,14 +72,15 @@ except ImportError as eximp:
 is_updatealias = lambda f: f.startswith('update') and (not 'updateobject' in f)
 # Helper for trimming .py from a filename (for aliases, and _SCRIPT)
 trim_pyext = lambda f: f[:-3] if f.endswith('.py') else f
+# Directory where the alias scripts for updateobject.py can be found.
+SCRIPTSDIR = sys.path[0] if sys.path[0].endswith('/scripts') else os.path.join(sys.path[0], 'scripts')
 
 try:
-    SCRIPTSDIR = sys.path[0] if sys.path[0].endswith('/scripts') else os.path.join(sys.path[0], 'scripts')
     # Grab all updateobject aliases (but not updateobject).
     available_aliases = [trim_pyext(f) for f in os.listdir(SCRIPTSDIR) if is_updatealias(f)]
 except Exception as ex:
-    print('\nUnable to list available aliases, this may or may not work!')
-    available_aliases = ['Unable to locate script aliases!']
+    print('\nUnable to list available aliases, this may or may not work!\n{}'.format(ex))
+    available_aliases = None
 
 # Info used to decide which model we're working on based on what the script name is.
 modelinfo = {'project': {'name': 'Project',
@@ -116,8 +117,12 @@ for modelkey in modelinfo.keys():
         break
 if not modelname:
     print('\nThis script is not designed to be ran directly!\n' +
-          'It is meant to be called by one of its aliases:\n' + 
-          '{}\n'.format(', '.join(available_aliases)))
+          'It is meant to be called by one of its aliases:')
+    if available_aliases:
+        print('{}'.format(', '.join(available_aliases)))
+        print('\nFor example, you could type: {} --help\n'.format(available_aliases[0]))
+    else:
+        print('Unable to locate aliases for updateobject.py!')
     sys.exit(1)
 
 modelused = modelinfo[modelname]
@@ -126,8 +131,13 @@ _NAME = 'Update{}'.format(modelused['name'])
 _VERSION = '1.1.0'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 
-base_usage = objectupdater.base_usage_str.format(name=_NAME, ver=_VERSION, script=_SCRIPT)
-usage_str = base_usage.replace('object', modelused['name'].lower()).replace('Object', modelused['name'])
+# Usage string to use with docopt.
+usage_str = objectupdater.base_usage_str.format(name=_NAME, 
+                                                ver=_VERSION,
+                                                script=_SCRIPT,
+                                                properid=modelused['name'],
+                                                lowerid=modelused['name'].lower(),
+                                                attrstr=', '.join(modelused['attrs']))
 
 
 def main(argd):
