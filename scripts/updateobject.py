@@ -42,7 +42,7 @@ Created on Nov 1, 2013
 import os
 import sys
 
-# Local helper models.
+# Local helper modules.
 try:
     import django_init
     import objectupdater
