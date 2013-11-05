@@ -1,11 +1,41 @@
 #!/usr/bin/env python
 
-'''updateproject.py
-    Updates and lists project info for welbornprod.
-    
+'''updateobject.py
+    Busybox-style command that updates various models depending on the name it is called by.
+    If it is called using a symlink named 'updateproject', the wp_project model will be used
+    to lookup objects. Same idea with 'updateblog', 'updatemisc', etc.
+    The name determines which model we will start with, and what the friendly names for objects
+    are ('Project', 'Blog Post', etc.). From there, its a matter of knowing what attributes
+    are available for the model and modifiying them (when --update is used).
+    So this single script takes on the form of multiple model viewers/editors.
+
+    Model fields can be listed (base model attributes and types.)
+    Objects can be listed (all attributes and values.)
+    Objects can be modified (sets attributes on objects and save()s them to the DB)
+    Objects can be looked up by ID, or their main identifiers.
+        name, alias for wp_project and wp_misc
+        title, slug for wp_blog
+        filename for file_tracker
+
+    Ex:
+        with a link named updateblog pointing to updateobject.py:
+            # Lists all info about this blog post object.
+            ./updateblog first-post -l (or --list)
+
+            # Updates view_count for this blog post object.
+            ./updateblog first-post --update view_count:21
+
+    Types are determined by examining the current value. If the current values type is int,
+    then int(newvalue) is tryed. If it is unicode, then unicode(newvalue).
+    If it fails to convert the type, the action is aborted.
+    All basic python types work, plus datetime.date.
+
+    See: objectupdater.py for the internal workings, 
+         this script (updatobject.py) is only the loader.
+
 Created on Nov 1, 2013
 
-@author: cj
+@author: Christopher Welborn (cj@welbornprod.com)
 '''
 
 # Standard modules
@@ -38,11 +68,14 @@ except ImportError as eximp:
     print('Unable to import docopt!,\n{}'.format(eximp))
     sys.exit(1)
 
+# Helpers for filtering/gathering alias names for updateobject.py
+is_updatealias = lambda f: f.startswith('update') and (not 'updateobject' in f)
+# Helper for trimming .py from a filename (for aliases, and _SCRIPT)
+trim_pyext = lambda f: f[:-3] if f.endswith('.py') else f
+
 try:
-    SCRIPTSDIR = os.path.join(sys.path[0], 'scripts')
+    SCRIPTSDIR = sys.path[0] if sys.path[0].endswith('/scripts') else os.path.join(sys.path[0], 'scripts')
     # Grab all updateobject aliases (but not updateobject).
-    is_updatealias = lambda f: f.startswith('update') and (not 'updateobject' in f)
-    trim_pyext = lambda f: f[:-3] if f.endswith('.py') else f
     available_aliases = [trim_pyext(f) for f in os.listdir(SCRIPTSDIR) if is_updatealias(f)]
 except Exception as ex:
     print('\nUnable to list available aliases, this may or may not work!')
@@ -71,8 +104,9 @@ modelinfo['proj'] = modelinfo['project']
 modelinfo['post'] = modelinfo['blog']
 modelinfo['tracker'] = modelinfo['file']
 
-# Get name that this script was called by (used in determining which model we're working with.)
-_SCRIPT = django_init.get_scriptfile(sys.argv[0])
+# Get the name that this script was called by
+# (used in determining which model we're going to be working with.)
+_SCRIPT = trim_pyext(os.path.split(sys.argv[0])[1])
 
 # Determine which model we are working with.
 modelname = None
@@ -82,7 +116,7 @@ for modelkey in modelinfo.keys():
         break
 if not modelname:
     print('\nThis script is not designed to be ran directly!\n' +
-          'It is meant to be called by one of its aliases,\n' + 
+          'It is meant to be called by one of its aliases:\n' + 
           '{}\n'.format(', '.join(available_aliases)))
     sys.exit(1)
 
