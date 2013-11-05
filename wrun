@@ -34,7 +34,8 @@ SCRIPTSDIR = os.path.join(os.getcwd(), 'scripts')
 EXECS = {'.py': 'python',
          '.sh': 'bash',
          '.pl': 'perl'}
-                                   
+
+                              
 def main(args):
     """ main entry point, parses args to run scripts.
         expects args = sys.argv[1:], or ['scriptfiletorun.py', 'scriptarg1', 'arg2', ..]
@@ -62,7 +63,7 @@ def main(args):
     # Shell script..
     shellret = shell_script(scriptfull, scriptargs)
     if shellret:
-        print('\nScript returned non-zero!: {}'.format(str(shellret)))
+        print('wrun: script returned non-zero!: {}'.format(str(shellret)))
     
     return shellret
 
@@ -121,6 +122,7 @@ def check_input(cmdname, cmdargs):
     # No extra args needed
     return []
 
+
 def do_list():
     """ List all script files found. """
     
@@ -133,7 +135,7 @@ def get_scripts():
         # retrieve scripts with matching extensions in EXTENSIONS
         scripts = [fname for fname in os.listdir(SCRIPTSDIR) if fname[-3:] in EXECS.keys()]
     except (IOError, OSError) as exio:
-        print_fail('Cannot list scripts dir: {}'.format(SCRIPTSDIR), exc = exio)
+        print_fail('Cannot list scripts dir: {}'.format(SCRIPTSDIR), exc=exio)
 
     # trim __init__.py (no use for it in this case, and it looks ugly.)
     if '__init__.py' in scripts:
@@ -142,7 +144,7 @@ def get_scripts():
     return sorted(scripts)
 
 
-def find_script(partname, scriptlist = None):
+def find_script(partname, scriptlist=None):
     """ Finds a script file based on part of a name (regex),
         Returns 'scriptname' on success, or None on failure/no match.
     """
@@ -156,7 +158,7 @@ def find_script(partname, scriptlist = None):
         repatwp = re.compile('^{}'.format(wpname)) if wpname else None
         repat = re.compile(partname)
     except Exception as expat:
-        print_fail('Invalid name given!: {}'.format(partname), exc = expat)
+        print_fail('Invalid name given!: {}'.format(partname), exc=expat)
     
     # Load scripts if needed
     if scriptlist is None:
@@ -180,8 +182,9 @@ def find_script(partname, scriptlist = None):
 
 def is_test_site():
     return ('test' in os.getcwd())
-    
-def shell_script(scriptfile, args = None):
+
+
+def shell_script(scriptfile, args=None):
     """ Shell a script, including script args.
         Determines which interpreter to use based on file extension.
     """
@@ -189,25 +192,16 @@ def shell_script(scriptfile, args = None):
     try:
         cmd = EXECS[scriptfile[-3:]]
     except Exception as ex:
-        print_fail('Cannot locate executable for this script: {}'.format(scriptfile), exc = ex)
+        print_fail('Cannot locate executable for this script: {}'.format(scriptfile), exc=ex)
     # build command list for subprocess
     cmdlst = [cmd, scriptfile] + args if args else [cmd, scriptfile]
     # run/create process
     print('\nRunning: {}'.format(' '.join(cmdlst)))
-    print('\nPlease wait for output...')
-    output, errout = run_process(cmdlst)
-    retcode = 0
-    
-    # print output
-    if output:
-        print('\n{}'.format(output))
-    else:
-        print('\nNo output from script!\n')
-    
-    # print any errors
-    if errout:
-        print('\nstderr output:\n{}'.format(errout))
-        retcode = 1
+    # Shell the process, returns the subprocess.Popen() proc object.
+    proc = run_process(cmdlst)
+    # Print stdout/stderr
+    retcode = print_proc_output(proc)
+
     return retcode
 
 
@@ -217,12 +211,12 @@ def run_process(cmdlist):
     """
     
     try:
-        proc = subprocess.Popen(cmdlist, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        pout, perr = proc.communicate()
+        proc = subprocess.Popen(cmdlist, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except Exception as exproc:
-        print_fail('Error opening process!: {} ...'.format(' '.join(cmdlist[:3])), exc = exproc)
-        
-    return pout, perr
+        print_fail('Error opening process!: {} ...'.format(' '.join(cmdlist[:3])), exc=exproc)
+        return None
+    return proc
+
 
 def parse_commands(args):
     """ Parse the arg list, run any commands before looking up a script name """
@@ -236,7 +230,7 @@ def parse_commands(args):
                        'func': print_usage, 
                        'kwargs': {'retcode': 0},
                        },
-               }
+                }
      
     # Setup list of known flags...
     commandflags = commands.keys()
@@ -281,7 +275,8 @@ def parse_commands(args):
 def print_debug(obj):
     """ Prints a message, or if list of strings is passed it formats the output better """
     
-    if not DEBUG: return False
+    if not DEBUG:
+        return False
 
     if hasattr(obj, 'lower'):
         # string/unicode... just print it.
@@ -301,6 +296,7 @@ def print_debug(obj):
 
     return True
 
+
 def print_fail(msg, exc=None, retcode=1):
     """ prints a message and exits
         Keyword Args:
@@ -314,6 +310,33 @@ def print_fail(msg, exc=None, retcode=1):
     sys.exit(retcode)
     
 
+def print_proc_output(proc):
+    """ Prints output from a subprocess.Popen() proc.
+    """
+    if not proc:
+        return 1
+
+    # .decode is needed for py3 compatibility (for the future.)
+    # Print any stdout.
+    for line in iter(proc.stdout.readline, ''):
+        if line:
+            print(line.decode('utf-8').strip('\n'))
+        else:
+            break
+    # Print any stderr.
+    haderr = False
+    for eline in iter(proc.stderr.readline, ''):
+        if eline:
+            haderr = True
+            print(eline.decode('utf-8').strip('\n'))
+        else:
+            break
+
+    if haderr:
+        return 1
+    return 0
+
+
 def print_usage(retcode=None):
     """ Print the usage string. """
     
@@ -325,7 +348,7 @@ def print_usage(retcode=None):
         
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print_usage(retcode = 1)       
+        print_usage(retcode=1)       
     # Run any commands before looking up a script name.
     parsedargs = parse_commands(sys.argv[1:])
     if not parsedargs:

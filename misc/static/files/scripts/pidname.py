@@ -9,13 +9,25 @@
     Christopher Welborn
 """
 
-usage_str = """pidname
+import os
+import re
+import sys
+
+from docopt import docopt
+
+_NAME = 'PidName'
+__VERSION__ = '1.1.0'
+_VERSIONSTR = '{} v. {}'.format(_NAME, __VERSION__)
+_FILE = os.path.split(sys.argv[0])[1] if '/' in sys.argv[0] else sys.argv[0]
+_SCRIPT = _FILE[:-3] if _FILE.endswith('.py') else _FILE
+
+usage_str = """{versionstr}
 
     Usage:
-        pidname.py -h
-        pidname.py -l
-        pidname.py <name> [options]
-        pidname.py <name> -e <excludename> [options]
+        {script} -h
+        {script} -l
+        {script} <name> [options]
+        {script} <name> -e <excludename> [options]
 
     Options:
         <name>                              : known process name, or name to search for (regex allowed).
@@ -23,17 +35,19 @@ usage_str = """pidname
         -a,--args                           : include command arguments in results when found.
         -A,--ARGS                           : always include command arguments in results.
         -e <excluded>,--exclude <excluded>  : exclude any process names matching this regex.
+                                              by default one process is always excluded, the 'pidname' process.
+                                              it would list false-positives when searching process args.
         -l,--list                           : list all running processes with arguments.
-        -p,--pidonly                        : same as --short.
+        -n,--noargsearch                    : don't search arguments for a match.
+        -p,--pidonly                        : searches only process names (no args),
+                                              prints only the first pid found.
         -s,--short                          : use short output suitable for chaining with another program.
-                                              (first if many are found).
+                                              multiple pids are comma-separated.
+        -v,--version                        : show {script} version.
         
 
-"""
+""".format(versionstr=_VERSIONSTR, script=_SCRIPT)
 
-from docopt import docopt
-import sys, os, commands, re
-import os.path
 
 def main(argd):
     """ Main entry point, receives args from docopt. """
@@ -50,23 +64,24 @@ def main(argd):
     try:
         pnamepat = re.compile(pname)
     except Exception as expat:
-        print_fail('Invalid name/search-term given!: ' + str(pname))
+        print_fail('Invalid name/search-term given!: {}\n{}'.format(str(pname), expat))
     
-    # use short format? (pids only)
-    pidonly = (argd['--pidonly'] or argd['--short'])
     # run search, certain cmdline options are passed to the search function.
     knownpids = get_searchpid(pnamepat, 
                               includeargs=argd['--args'],
                               forceargs=argd['--ARGS'],
+                              forceshort=argd['--short'],
                               excluded=argd['--exclude'],
-                              pidonly=pidonly
-                             )
+                              noargsearch=argd['--noargsearch'],
+                              pidonly=argd['--pidonly'],
+                              )
     
     # Finished retrieving/searching.
-    returnval = print_pids(knownpids, pidonly=pidonly)
+    shortoutput = argd['--pidonly'] or argd['--short']
+    returnval = print_pids(knownpids, pidonly=shortoutput)
     
     # Print notes
-    if (not pidonly) and (not argd['--args']) and (not argd['--ARGS']) and knownpids:
+    if (not shortoutput) and (not argd['--args']) and (not argd['--ARGS']) and knownpids:
         print('\nA * means the result was found in command arguments. Use -a, or -A to view them.')
     
     return returnval
@@ -82,15 +97,23 @@ def get_searchpid(pnamepat, **kwargs):
                           (boolean) - default: False
             forceargs   : always include arguments in results.
                           (boolean) - default: False
+            forceshort  : always use short output (pid only)
+                          (boolean) - default: False
+            noargsearch : don't search args at all if True.
+                          (boolean) - default: False
             pidonly     : only output pid, nothing else.
                           (boolean) - default: False
+
     """
     
     # parse keyword args
     includeargs = kwargs.get('includeargs', False)
     forceargs = kwargs.get('forceargs', False)
+    forceshort = kwargs.get('forceshort', False)
+    noargsearch = kwargs.get('noargsearch', False)
     pidonly = kwargs.get('pidonly', False)
     excluded = kwargs.get('excluded', None)
+
     try:
         excludepat = re.compile(excluded) if excluded else None
     except:
@@ -115,9 +138,10 @@ def get_searchpid(pnamepat, **kwargs):
         usedargs = False
         
         if namematch is None:
-            # try matching args.
-            namematch = pnamepat.search(pargs)
-            usedargs = True
+            # try matching args (unless --noargsearch is enabled)
+            namematch = None if noargsearch else pnamepat.search(pargs)
+            if namematch:
+                usedargs = True
             
         if namematch is not None:
             # found a match, return "pid : command name (possibly with args)"
@@ -132,14 +156,20 @@ def get_searchpid(pnamepat, **kwargs):
                 pname = pname + " *"
  
             # add this match
-            if pidonly and (not usedargs):
+            if pidonly:
                 # only list pids (args don't count for --pidonly, it includes pidname itself because of args.)
-                results.append(pid)
+                if not usedargs:
+                    results.append(pid)
+
             else:
                 # use pid and process name (args too if included above.)
-                results.append(pid + " : " + pname)
+                if forceshort:
+                    results.append(pid)
+                else:
+                    results.append(pid + " : " + pname)
     
     return results
+
 
 def try_fileread(filename):
     """ Returns data from a file, returns None on failure """
@@ -147,18 +177,17 @@ def try_fileread(filename):
     try:
         with open(filename, 'r') as fread:
             return fread.read().replace('\n', '')
-    except (IOError, OSError) as exread:
+    except (IOError, OSError):
         return None
     
 
-def get_processes(skipthisscript = True):
+def get_processes(skipthisscript=True):
     """ Returns all processes running from /proc,
         Returns Dict of {"pid": {"name": "blah", "args": "blah -a"}}
 
         If keyword 'skipthisscript' is True, the python process currently 
         running this script is omitted. [Default: True]
     """
-    
     
     # build list of running process ids using /proc
     thispid = str(os.getpid())
@@ -218,6 +247,7 @@ def print_allprocs():
     print('\nRunning processes: (' + proclen + ')')
     return 0
 
+
 def print_pids(pids, pidonly=False):
     """ prints results from pid getters. """
     
@@ -238,7 +268,7 @@ def print_pids(pids, pidonly=False):
     return 0
 
 
-def print_fail(reason, retcode = 1):
+def print_fail(reason, retcode=1):
     """ prints a message and exits with return code """
     
     print(reason)
@@ -248,7 +278,6 @@ def print_fail(reason, retcode = 1):
 # START OF SCRIPT
 if __name__ == '__main__':
     args = sys.argv[1:]
-    argd = docopt(usage_str, argv=args)
+    argd = docopt(usage_str, argv=args, version=_VERSIONSTR)
     ret = main(argd)
     sys.exit(ret)
-

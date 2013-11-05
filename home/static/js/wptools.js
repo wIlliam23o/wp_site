@@ -32,9 +32,9 @@ var wptools = {
               var elems = document.querySelectorAll(selector);
                         
               var length = elems.length;
-              var i=0;
+              //var i=0;
               if (length > 0) {
-                  for (i; i < length; i++) {
+                  for (var i=0; i < length; i++) {
                      // fix href target
                       var href_ = elems[i].getAttribute('href');
                       if (href_) {
