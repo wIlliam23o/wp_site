@@ -54,6 +54,15 @@ def view_debug(request):
                                      })
 
 
+def view_ip(request):
+    """  returns the remote ip page. """
+    
+    return responses.clean_response('home/ip.html',
+                                    {'request': request,
+                                     'extra_style_link_list': [utilities.get_browser_style(request)],
+                                     })
+
+
 @login_required(login_url='/login')
 def view_test(request):
     """ returns whatever tests are being conducted in test.html template. """
@@ -74,21 +83,21 @@ def view_login(request):
     username = request.REQUEST.get('user', None)
     pw = request.REQUEST.get('pw', None)
     
-    _log.debug("username: " + str(username) + ", pw: " + str(pw))
+    #_log.debug("username: " + str(username) + ", pw: " + str(pw))
     
     response = responses.redirect_response("/badlogin.html")
     if (username is not None) and (pw is not None):
         
         user = auth.authenticate(user=username, password=pw)
        
-        _log.debug("USER=" + str(user))
+        #_log.debug("USER=" + str(user))
         
         if user is not None:
             if user.is_active():
                 auth.login(request, user)
                 referer_view = responses.get_referer_view(request, default=None)
                 
-                _log.debug("referer_view: " + str(referer_view))
+                #_log.debug("referer_view: " + str(referer_view))
                 
                 # Change response based on whether or not previous view was given.
                 if referer_view is None:
@@ -106,7 +115,8 @@ def view_badlogin(request):
     
     return responses.clean_response("home/badlogin.html",
                                     {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)]})
+                                     'extra_style_link_list': [utilities.get_browser_style(request)],
+                                     })
 
 @login_required(login_url="/login")
 def view_stats(request):

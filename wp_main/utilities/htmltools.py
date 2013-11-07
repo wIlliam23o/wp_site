@@ -1108,8 +1108,8 @@ def clean_html(source_string):
         return ""
     
     return remove_whitespace(
-                remove_comments(
-                    hide_email(source_string)))
+               remove_comments(
+                   hide_email(source_string)))
     
     
 def render_html(template_name, **kwargs):

@@ -93,7 +93,7 @@
 .sd { color: #00AA00; font-style: italic } /* Literal.String.Doc */
 .s2 { color: #00AA00 } /* Literal.String.Double */
 .se { color: #00AA00; font-weight: normal } /* Literal.String.Escape */
-.sh { color: ##00AA00 } /* Literal.String.Heredoc */
+.sh { color: #00AA00 } /* Literal.String.Heredoc */
 .si { color: #00AA00; font-weight: bold } /* Literal.String.Interpol */
 .sx { color: #00AA00 } /* Literal.String.Other */
 .sr { color: #00AA00 } /* Literal.String.Regex */

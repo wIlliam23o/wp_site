@@ -215,6 +215,19 @@ def str_(object_):
     """ returns str(object_) to the template. """
     return str(object_)
 
+
+def get_remote_host(request):
+    """ Same as get_remote_ip, except for hostname. """
+    
+    return utilities.get_remote_host(request)
+
+
+def get_remote_ip(request):
+    """ Make the convenience function available for templates. """
+    
+    return utilities.get_remote_ip(request)
+
+   
 def repr_(object_):
     """ returns repr(object_) to the template """
     return repr(object_)
@@ -286,6 +299,8 @@ registered_filters = (comments_button,
                       exceeds_max,
                       exceeds_min,
                       dict_value,
+                      get_remote_host,
+                      get_remote_ip,
                       meta_value,
                       is_mobile,
                       is_test_site,

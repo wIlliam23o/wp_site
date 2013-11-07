@@ -192,17 +192,20 @@ def debug_allowed(request):
         inspired by debug_toolbar's _show_toolbar() method.
     """
     
-    # full test mode, no debug allowed.
+    # full test mode, no debug allowed (as if it were the live site.)
     if getattr(settings, 'TEST', False):
         return False
-
-    # possible ip forwarding, if available use it.
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', None)
-    if x_forwarded_for:
-        remote_addr = x_forwarded_for.split(',')[0].strip()
-    else:
-        remote_addr = request.META.get('REMOTE_ADDR', None)
-
+    
+    # If user is admin/authenticated we're okay.
+    if request.user.is_authenticated() and request.user.is_staff:
+        return True
+    
+    # Non-authenticated users:
+    # Get ip for this user
+    remote_addr = get_remote_ip(request)
+    if not remote_addr:
+        return False
+    
     # run address through our quick debug security check (settings.INTERNAL_IPS and settings.DEBUG)
     ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
     # log all invalid ips that try to access debug
@@ -264,4 +267,20 @@ def get_objects_if(objects_, attribute, equals, orderby=None):
             _log.debug(str(objects_) + " has no order_by()!")
     return results
 
-            
+
+def get_remote_host(request):
+    """ Returns the HTTP_HOST for this user. """
+    
+    host = request.META.get('HTTP_HOST', None)
+    return host
+
+
+def get_remote_ip(request):
+    """ Just returns the IP for this user (for ip.html, is_debug_allowed(), etc.). """
+    # possible ip forwarding, if available use it.
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', None)
+    if x_forwarded_for:
+        remote_addr = x_forwarded_for.split(',')[0].strip()
+    else:
+        remote_addr = request.META.get('REMOTE_ADDR', None)
+    return remote_addr
