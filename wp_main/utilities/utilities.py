@@ -271,7 +271,7 @@ def get_objects_if(objects_, attribute, equals, orderby=None):
 def get_remote_host(request):
     """ Returns the HTTP_HOST for this user. """
     
-    host = request.META.get('HTTP_HOST', None)
+    host = request.META.get('REMOTE_HOST', None)
     return host
 
 
