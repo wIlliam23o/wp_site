@@ -32,9 +32,9 @@ var wptools = {
               var elems = document.querySelectorAll(selector);
                         
               var length = elems.length;
-              var i=0;
+              //var i=0;
               if (length > 0) {
-                  for (i; i < length; i++) {
+                  for (var i=0; i < length; i++) {
                      // fix href target
                       var href_ = elems[i].getAttribute('href');
                       if (href_) {
@@ -121,13 +121,13 @@ var wptools = {
         }
         
         , strdup : function (char_, count_ ) {
-        	var s = ""
+        	var s = "";
         	if (count_ && count_ > 0) {
         		for (i=0; i < count_; i++) {
         			s = s + char_;
         		}
         	}
-        	return s
+        	return s;
         }
         , csrf_safe_method : function (method) {
     		// these HTTP methods do not require CSRF protection
@@ -153,9 +153,9 @@ var wptools = {
 							 xhr.setRequestHeader("X-CSRFToken", csrftoken);
 						}
 					}
-			}
+			};
 			
-			return data
+			return data;
 		}
 		, navigateto : function (url) {
 			window.location.href = url;
@@ -184,7 +184,34 @@ var wptools = {
 		
         
 };
+
+/* Various tools for Misc section */
+var misctools = {
+    fixLongDescBtn: function (alias) {
+            var miscbtnid = '#misclongdescbtn-' + alias;
+            var longdescbtn = $(miscbtnid);
+
+            if (longdescbtn.text() == 'Show Less') {
+                // element is hidden
+                longdescbtn.text('Show More');
+            } else {
+                longdescbtn.text('Show Less');
+            }
+        },
         
+    toggleLongDesc: function (alias) {
+            var longdescid = "#misclongdesc-" + alias;
+            var longdesc = $(longdescid);
+            longdesc.slideToggle();
+            this.fixLongDescBtn(alias);
+    },
+        
+    submitMisc: function (f) {
+            $("#viewer-filename").val(f);
+            $("#file-viewer").submit();
+    },
+
+};    
 /**
 *
 *  Base64 encode / decode

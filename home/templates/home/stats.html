@@ -5,47 +5,26 @@
 
 {% block content %}
 	<!-- Projects Block -->
-	<div class='title-box' style='background: white; padding-left: 5px; margin-top: 10px; margin-bottom: 20px;'>
+	<div class='title-box' style='background: #ffffff; padding-left: 5px; margin-top: 10px; margin-bottom: 20px;'>
 		<h3 class='title'>Current stats:</h3>
 	</div>
-	
-	
-	{% if projects %}
-		<div class='stats-block'>
-			<div class='title-box' style='background: white; padding-left: 5px; margin-top: 10px;'>
-				<h3 class='title'>Projects:</h3>
-			</div>
-			<div class='stats-lines'>
-					{% for line in projects %}
-						{{ line }}
-					{% endfor %}
-			</div>
-		</div>
-	{% endif %}
-	<!-- Posts Block -->
-	{% if posts %}
-		<div class='stats-block'>
-			<div class='title-box' style='background: white; padding-left: 5px; margin-top: 10px;'>
-				<h3 class='title'>Blog Posts:</h3>
-			</div>
-			<div class='stats-lines'>
-					{% for line in posts %}
-						{{ line }}
-					{% endfor %}
-			</div>
-		</div>
-	{% endif %}
-	<!-- Files Block -->
-	{% if files %}
-		<div class='stats-block'>
-			<div class='title-box' style='background: white; padding-left: 5px; margin-top: 10px;'>
-				<h3 class='title'>Files:</h3>
-			</div>
-			<div class='stats-lines'>
-					{% for line in files %}
-						{{ line }}
-					{% endfor %}
-			</div>
-		</div>
+	{% if stats %}
+	   {% for statinfo in stats.stats %}
+	       <div class='stats-block'>
+	           <div class='title-box' style='background: #ffffff; padding-left: 5px; margin-top: 10px;'>
+	               <h3 class='title'>{{ statinfo.title }}:</h3>
+	           </div>
+	           <div class='stats-lines'>
+	               {% for line in statinfo.statlines %}
+	                   {{ line }}
+	               {% endfor %}
+	           </div>
+	       </div>
+	   {% endfor %}
+	{% else %}
+	   <!-- No StatsCollection() -->
+	   <div class='stats-block'>
+	       <span>Sorry, no stats available.</span>
+	   </div>
 	{% endif %}
 {% endblock %}

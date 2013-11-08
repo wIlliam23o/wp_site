@@ -14,6 +14,8 @@
 from django.conf import settings
 # Local tools
 from wp_main.utilities import htmltools
+from wp_main.utilities.utilities import get_browser_style
+
 # Log
 from wp_main.utilities.wp_logging import logger
 _log = logger("utilities.responses").log
@@ -333,7 +335,34 @@ def get_referer_view(request, default=None):
     referer = u'/' + u'/'.join(referer[1:])
     return referer
 
+def default_dict(request=None, extradict=None):
+    """ Use default dict contents, 
+        This dict will return with at least:
+        {'request': request, 'extra_style_link_list': utilities.get_browser_style(request)}
+        request must be passed to use this.
+        Any extra dict items in the extradict are added to the default
+    """
+    if request:
+        defaults = {'request': request,
+                    'extra_style_link_list': [get_browser_style(request)],
+                    }
+    else:
+        defaults = {}
+    defaultkeys = defaults.keys()
+    
+    if extradict:
+        for keyname in extradict.keys():
+            keyval = extradict[keyname]
+            if (keyname in defaultkeys) and (keyname != 'request'):
+                # Adds list/string/number values to the defaults.
+                defaults[keyname] = defaults[keyname] + keyval
+            else:
+                # Assigns extra keys to the defaults.
+                defaults[keyname] = keyval
+    return defaults
 
+                
+                
 
 
     

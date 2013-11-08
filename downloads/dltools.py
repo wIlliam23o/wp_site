@@ -71,6 +71,7 @@ def update_tracker_projects(tracker_, project_object, dosave=True):
     
     if hasattr(tracker_, 'id'):
         trackerid = tracker_.id
+        # Tracker must be saved at least once before adding a project relation.
         if trackerid < 0:
             tracker_.save()
     

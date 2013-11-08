@@ -9,8 +9,9 @@ import os.path
 # Download tools
 from downloads import dltools
 
-# Project Info
-from projects import tools
+# Project/Misc Info
+from projects import tools as ptools
+from misc import tools as misctools
 # Local Tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
@@ -60,12 +61,19 @@ def download(request, file_path):
         # File to track? (not a directory)
         if os.path.isfile(absolute_path):
             # see if its a project file.
-            proj = tools.get_project_from_path(absolute_path)
+            proj = ptools.get_project_from_path(absolute_path)
             # update project's download count
             if proj is not None:
                 # increment downloads for this project.
                 proj.download_count += 1
                 proj.save()
+            # see if it's a misc file
+            misc = misctools.get_by_filename(file_path)
+            # update misc files count
+            if misc:
+                misc.download_count += 1
+                misc.save()
+                
             # update file tracker info    
             filetracker = dltools.get_file_tracker(absolute_path)   
             if filetracker is not None:

@@ -33,28 +33,32 @@ class file_tracker(models.Model):
     def __unicode__(self):
         return self.get_shortname(dosave=False)
     
-    def get_shortname(self,dosave=False):
+    def get_shortname(self, updateinfo=False, dosave=False):
         """ retrieves shortname if it is set, 
             will set the shortname for you and return it
         """
         if self.filename is None:
             return None
         
-        if (self.shortname is None) or (self.shortname == ""):
+        if (not self.shortname) or (updateinfo):
+            # update missing info, or force update.
             self.shortname = os.path.split(self.filename)[1]
-            if dosave: self.save()
+            if dosave: 
+                self.save()
         return self.shortname
     
-    def get_location(self, dosave=False):
+    def get_location(self, updateinfo=False, dosave=False):
         """ retrieves dir for this file if it is set, 
             will set the location for you and return it
         """
         if self.filename is None:
             return None
         
-        if (self.location is None) or (self.location == ""):
+        if (not self.location) or (updateinfo):
+            # Update missing info, or force update.
             self.location = os.path.split(self.filename)[0]
-            if dosave: self.save()
+            if dosave: 
+                self.save()
         return self.location
     
     def set_filename(self, newfilename, updateinfo=True, dosave=True):
@@ -66,9 +70,10 @@ class file_tracker(models.Model):
             return None
         self.filename = newfilename
         if updateinfo:
-            self.get_location()
-            self.get_shortname()
-        if dosave: self.save()
+            self.get_location(updateinfo = updateinfo)
+            self.get_shortname(updateinfo = updateinfo)
+        if dosave: 
+            self.save()
         return self.filename
     
     

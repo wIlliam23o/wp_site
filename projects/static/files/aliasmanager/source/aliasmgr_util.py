@@ -5,7 +5,7 @@ Created on Sep 24, 2013
 
 @author: Christopher Welborn
 '''
-
+import re
 import gtk
 import os
 import aliasmgr_integrator
@@ -16,11 +16,13 @@ integrator = aliasmgr_integrator.am_integrator()
 
 # Command/Alias Object ------------------------------------
 class Command():
-    def __init__(self, name="", cmd=[], comment="", exported="New"):
-        self.name = name
-        self.cmd = cmd
-        self.comment = comment
-        self.exported = exported
+    def __init__(self, name=None, cmd=None, comment=None, exported=None):
+        # set defaults.
+        self.name = name if name else ''
+        self.cmd = cmd if cmd else []
+        self.comment = comment if comment else '' 
+        self.exported = exported if exported else 'New'
+    
     
     def __repr__(self):
         """ return string representation of this command. """
@@ -38,7 +40,8 @@ class Command():
         return (len(self.cmd) > 1)
       
     def isexported(self):
-        return (self.exported.lower() == "yes" or self.exported.lower() == "new")
+        lowerexported = self.exported.lower()
+        return ((lowerexported == 'yes') or (lowerexported == 'new'))
       
     def setexport(self, bexported, bnew = False):
         """ Sets the appropriate string value for cmd.exported using booleans,
@@ -134,7 +137,11 @@ class Dialogs():
             gtkbtn = gtk.STOCK_OK
         else:
             gtkbtn = gtk.STOCK_OPEN
-            
+        
+        # Add app name to title if its not already given.
+        if not stitle.lower().startswith(settings.name.lower()):
+            stitle = '{}: {}'.format(settings.name, stitle)
+        # Create Dialog.    
         self.dlgwindow = gtk.FileChooserDialog(stitle,
                          None,
                          gtkaction,
@@ -167,6 +174,7 @@ class Dialogs():
             # Return an empty string (CANCELED)
             self.dlgwindow.destroy()
             return ""
+        
     # MessageBox ---------------------------------------
     def msgbox(self, smessage, gtktype=gtk.MESSAGE_INFO, gtkbuttons = gtk.BUTTONS_OK):
         # get type
@@ -186,10 +194,14 @@ class Dialogs():
                                      gtk.DIALOG_MODAL,
                                    gtktype,
                                    buttons=btns)
-        self.msgwindow.set_markup("<b>" + settings.name + "</b>")
+        self.msgwindow.set_markup('<b>{}</b>'.format(settings.name))
         self.msgwindow.format_secondary_markup(smessage)
         self.msgwindow.run()
         self.msgwindow.destroy()
+        
+    def msgbox_warn(self, message):
+        """ Show a warning messagebox. """
+        self.msgbox(message, gtktype=self.warning)
         
     def msgbox_yesno(self, smessage):
         self.msgwindow = gtk.MessageDialog(None,
@@ -197,16 +209,35 @@ class Dialogs():
                                     gtk.MESSAGE_QUESTION,
                                     buttons=gtk.BUTTONS_YES_NO)
         
-        self.msgwindow.set_markup("<b>" + settings.name + "</b>")
+        self.msgwindow.set_markup('<b>{}</b>'.format(settings.name))
         self.msgwindow.format_secondary_markup(smessage)
         response = self.msgwindow.run()
         self.msgwindow.destroy()
         return response
                 
 # Functions ----------------------------------------
-def readfile(aliasfile = None):
-    """ Read alias/script file, return a list of command() objects.
-        Returns empty list on failure.
+def get_def_count(contents, defword):
+    """ Counts lines beginning with 'defword',
+        to retrieve actual 'alias' and 'function' defs in
+        the file.
+        returns: count (Integer)
+    """
+    
+    if '\n' in contents:
+        lines = contents.split('\n')
+    else:
+        lines = [contents]
+    
+    cnt = 0
+    for line in lines:
+        if line.startswith(defword):
+            cnt += 1
+    return cnt
+
+def getfilecontents(aliasfile = None):
+    """ Return alias files raw content (string)
+        Shows a message if alias file cannot be found.
+        Returns None on failure.
     """
     if aliasfile is None:
         aliasfile = settings.get("aliasfile")
@@ -214,181 +245,268 @@ def readfile(aliasfile = None):
     if not os.path.isfile(aliasfile):
         #print("Alias file not found!: " + aliasfile)
         dlg = Dialogs()
-        dlg.msgbox("Alias file not found!:\n" + aliasfile, dlg.error)
-        return False
-    # Temporary list of aliases/functions
-    #lst_temp = []
-    lst_commands = []
+        dlg.msgbox('Alias file not found!:\n{}'.format(aliasfile), dlg.error)
+        return None
     
     # Load file
-    with open(aliasfile, 'r') as fread:
-        # Flag for setting if we are inside a function
-        bfunction = False
-        # Flag for setting if we found function comments
-        bcomment = False
-        scomment = ""
-        
-        # Temporary list for function contents
-        lst_contents = []
-        # Initialize Tab Depths
-        tabdepth = 0
-        spacedepth = 0
-        
-        for sline in fread.readlines():
-            # Initialize new command object
-            cmd = Command()
-            
-            # Detect Alias --------------------------------
-            if (sline.startswith("alias")):
-                # Replace TABS/NEWLINE
-                sline = sline.replace('\t', '').replace('\n', '')
-                
-                # Trim 'alias'
-                sbuf = sline.replace("alias ", "")
-                
-                # Trim Comments
-                if "#" in sbuf:
-                    sbuf = sbuf[:sbuf.index("#")]
-                    # Get comment
-                    scomment = sline[sline.index("#") + 1:]
-                    # Trim leading space
-                    while scomment.startswith(" "):
-                        scomment = scomment[1:]
-                else:
-                    # No Comment
-                    scomment = ""
-               
-                # Retrieve name
-                sname = sbuf.split("=")[0].strip(" ")
-                scommand = sbuf.split("=")[1].strip(" ")
-                # Trim quotes
-                scommand = scommand.strip('"').strip("'")
-                # Add command to list (Name, Command, Comment, Exported [not needed for alias])
-                cmd.name = sname
-                cmd.cmd = [scommand]
-                cmd.comment = scomment
-                lst_commands.append(cmd)
-                #lst_temp.append([sname, [scommand], scomment, ""])
- 
-            # Detect Function -------------------------------
-            if sline.replace('\t', '').startswith("function"):
-                # Grab function name
-                ssplit = sline.split(" ")
-                sname = ssplit[1].replace('\n', '').replace("()", "")
-                
-                # Find initial tab/space depth
-                if tabdepth == 0:
-                    if sline.startswith('\t'):
-                        sbuf = sline
-                        while sbuf.startswith('\t'):
-                            sbuf = sbuf[1:]
-                            tabdepth += 1
-                        #self.printlog("TABDEPTH=" + str(tabdepth))
-                if spacedepth == 0:
-                    if sline.startswith(" "):
-                        sbuf = sline
-                        while sbuf.startswith(" "):
-                            sbuf = sbuf[1:]
-                            spacedepth += 1
-                        #self.printlog("SPACEDEPTH=" + str(spacedepth))
-                # We are now inside a function
-                bfunction = True
-            # Inside Function ----------------------------------
-            if bfunction:
-                # Detect comment
-                if sline.replace('\t', '').replace(' ', '').startswith("#"):
-                    # First comment only
-                    if not bcomment:
-                        # Found comment
-                        scomment = sline.replace('\t', '').replace('\n', '')[1:]
-                        while scomment.startswith(" "):
-                            scomment = scomment[1:]
-                        # Set flag
-                        bcomment = True
-                
-                # Add raw contents    
-                # Skip over function definition if multi-line function
-                if not sline.strip(" ").replace('\n', '').endswith("()"):
-                    lst_contents.append(sline.replace('\n', ''))
-                    
-                # Found end of function (could be a single line though)
-                # Parse contents, decide which to keep
-                if ((sline.strip().replace('\n', '').endswith(" }")) or 
-                    (sline.replace('\n', '').replace('\t', '').replace(' ', '') == "}")):
-                    # End of function
-                    bfunction = False
-                    # Reset comment finder
-                    bcomment = False
-                    
-                    # Keep function contents
-                    #print "Keeping Contents:"
-                    lst_keep = []
-                    for itm in lst_contents:
-                        # Save trimmed version of line
-                        strim = itm.replace('\t', '').replace(' ', '').replace('\n', '')
-                        snotabs = itm.replace('\t', '').replace('\n', '')
-                        # Figure out which contents to keep. No Braces.
-                        if (strim != "{") and (strim != "}"): ## and (not strim.startswith("#")):
-                            # Trim single line definition
-                            if "()" in itm:
-                                itm = itm[itm.index("()") + 2:]
-                                snotabs = itm.replace('\t', '').replace('\n', '')
-                                strim = snotabs.replace(' ', '')
-                                if strim.startswith("{"):
-                                    snotabs = snotabs[snotabs.index("{") + 1:]
-                                    if snotabs.endswith("}"):
-                                        snotabs = snotabs[:snotabs.index("}")]
-                                    itm = snotabs
-                            # Trim leading { and following }...
-                            if snotabs.startswith("{"):
-                                snotabs = snotabs[1:]
-                                if snotabs.endswith("}"):
-                                    snotabs = snotabs[:len(snotabs) -1]
-                                itm = snotabs
-                            # Trim initial tabdepth from itm
-                            if itm.startswith('\t'):
-                                #self.printlog("TRIMMING TABDEPTH: " + str(tabdepth))
-                                itm = itm[tabdepth:]
-                                # Trim one more tab depth
-                                if itm.startswith('\t'):
-                                    itm = itm[1:]
-
-                            # Append Function Contents, don't add initial coment
-                            if ((scomment != "") and 
-                                (not ((itm.startswith("#")) and (scomment in itm)))):
-                                lst_keep.append(itm)
-                            elif scomment == "":
-                                lst_keep.append(itm)
-                            #self.printlog("...." + itm)
-                            
-                    # Append function name/contents/comment /exported [set with fixexports()]
-                    cmd.name = sname
-                    cmd.cmd = lst_keep
-                    cmd.comment = scomment
-                    lst_commands.append(cmd)
-                    
-                    #lst_temp.append([sname, lst_keep, scomment, ""])
-                    # Reset comment string
-                    scomment = ""
-                    # Reset contents finder list
-                    lst_contents = []
-        # Return finished list
-        return lst_commands #lst_temp
+    try:
+        with open(aliasfile, 'r') as fread:
+            filecontent = fread.read()
+        return filecontent
+    except (IOError, OSError) as exio:
+        msg = 'Unable to read file:\n{}'.format(aliasfile)
+        fullmsg = '{}\n{}'.format(msg, str(exio))
+        dlg = Dialogs()
+        dlg.msgbox(fullmsg, dlg.error)
+        return None
     
-    # Failed to open file
-    #print("Failed to open alias file: " + aliasfile)
-    return False
 
-def fixexports(lst_data):
-    """ 
+def parsealiasline_old(sline):
+    """ old deprecated method of parsing alias info from a line. """
+    # Detect Alias --------------------------------
+    if (sline.startswith("alias")):
+        # Replace TABS/NEWLINE
+        sline = sline.replace('\t', '').replace('\n', '')
+       
+        # Trim 'alias'
+        sbuf = sline.replace("alias ", "")
+       
+        # Trim Comments
+        if "#" in sbuf:
+            sbuf = sbuf[:sbuf.index("#")]
+            # Get comment
+            scomment = sline[sline.index("#") + 1:]
+            # Trim leading space
+            scomment = scomment.strip(' ')
+        else:
+            # No Comment
+            scomment = ""
+      
+        # Retrieve name and command, without quotes.
+        aliasparts  = sbuf.split('=')
+        sname = aliasparts[0].strip(" ")
+        scommand = aliasparts[1].strip(" ").strip('"').strip("'")
+        # Add command to list (Name, Command, Comment, Exported [not needed for alias])
+        return Command(name = sname, 
+                       cmd = [scommand], 
+                       comment = scomment)
+    return None
+
+
+def parse_aliases(filecontents):
+    """ parse all aliases from file, return a list of Command() objects """
+
+    # this one handles quotes inside of commands better...
+    name_pat = re.compile(r'alias[ ]?(?P<name>[\d\w_\-]+)=(?P<cmdinfo>.+)')
+    cmd_comment_pat = re.compile(r'(?P<command>.+)[#](?P<comment>.+)?')
+    cmd_nocomment_pat = re.compile(r'(?P<command>.+)')
+
+    lst_commands = []
+    # Get all alias lines, with (name, raw command and comment)
+    aliases = name_pat.findall(filecontents)
+    for name, rawcmd in aliases:
+        # use regex for separating comments from command.
+        if '#' in rawcmd:
+            cmdmatch = cmd_comment_pat.search(rawcmd)
+        else:
+            # use normal regex.
+            cmdmatch = cmd_nocomment_pat.search(rawcmd)
+        if cmdmatch:
+            command = cmdmatch.groupdict()['command']
+            if cmdmatch.groupdict().has_key('comment'):
+                comment = cmdmatch.groupdict()['comment']
+            else:
+                comment = ''
+        # Add alias to list as a Command() object...
+        lst_commands.append(Command(name = stripchars(name, ' \t\n'),
+                                    cmd = [stripquotes(stripchars(command, ' \t\n'))],
+                                    comment = stripchars(comment, '# \t\n'),
+                                    exported = '[n/a]'))
+    return lst_commands
+
+
+def parse_exports(filecontents):
+    """ parse all exports from file contents, return a list of exported names. """
+
+    exportpat = re.compile(r'export[ ]+?(?P<export>.+)', flags = re.MULTILINE)
+    exports = exportpat.findall(filecontents)
+    if exports:
+        exports = [stripchars(e, ' \t\n') for e in exports]
+    return exports
+
+
+def parse_functions(filecontents):
+    """ parse all functions from the alias file. """
+
+    # Get all exports from the file
+    exports = parse_exports(filecontents)
+        
+    # Parse all functions from the file.
+    # Flag for setting if we are inside a function
+    bfunction = False
+    # Flag for setting if we found function comments
+    bcomment = False
+    scomment = ''
+    # List of parsed Command() objects...
+    commands = []
+    # Temporary list for raw function contents
+    lst_contents = []    
+
+    # Initialize Tab Depths
+    tabdepth = 0
+    spacedepth = 0
+        
+    for sline in filecontents.split('\n'):
+
+        # Detect Function -------------------------------
+        if sline.replace('\t', '').replace(' ', '').startswith("function"):
+            # Grab function name
+            ssplit = sline.split(" ")
+            sname = ssplit[1].replace('\n', '').replace("()", "")
+           
+            # Find initial tab/space depth
+            if tabdepth == 0:
+                if sline.startswith('\t'):
+                    sbuf = sline
+                    tabdepth, sbuf = trimcount(sbuf, '\t')
+
+            if spacedepth == 0:
+                if sline.startswith(" "):
+                    sbuf = sline
+                    spacedepth, sbuf = trimcount(sbuf, ' ')
+
+            # We are now inside a function
+            bfunction = True
+        # Inside Function ----------------------------------
+        if bfunction:
+            # Detect comment
+            if sline.replace('\t', '').replace(' ', '').startswith("#"):
+                # First comment only
+                if not bcomment:
+                    # Found comment
+                    scomment = sline.replace('\t', '').replace('\n', '')[1:]
+                    scomment = scomment.strip(' ')
+                    # Set flag
+                    bcomment = True
+           
+            # Add raw contents    
+            # Skip over function definition if multi-line function
+            if not sline.strip(" ").replace('\n', '').endswith("()"):
+                lst_contents.append(sline.replace('\n', ''))
+               
+            # Found end of function (could be a single line though)
+            # Parse contents, decide which to keep
+            if ((sline.strip().replace('\n', '').endswith(" }")) or 
+                (sline.replace('\n', '').replace('\t', '').replace(' ', '') == "}")):
+                # End of function
+                bfunction = False
+                # Reset comment finder
+                bcomment = False
+               
+                # Keep function contents
+                lst_keep = []
+                for itm in lst_contents:
+                    # Save trimmed version of line
+                    strim = itm.replace('\t', '').replace(' ', '').replace('\n', '')
+                    snotabs = itm.replace('\t', '').replace('\n', '')
+                    # Figure out which contents to keep. No Braces.
+                    if (strim != "{") and (strim != "}"): ## and (not strim.startswith("#")):
+                        # Trim single line definition
+                        if "()" in itm:
+                            itm = itm[itm.index("()") + 2:]
+                            snotabs = itm.replace('\t', '').replace('\n', '')
+                            strim = snotabs.replace(' ', '')
+                            if strim.startswith("{"):
+                                snotabs = snotabs[snotabs.index("{") + 1:]
+                                if snotabs.endswith("}"):
+                                    snotabs = snotabs[:snotabs.index("}")]
+                                itm = snotabs
+                        # Trim leading { and following }...
+                        if snotabs.startswith("{"):
+                            snotabs = snotabs[1:]
+                            if snotabs.endswith("}"):
+                                snotabs = snotabs[:len(snotabs) -1]
+                            itm = snotabs
+                        # Trim initial tabdepth from itm
+                        if itm.startswith('\t'):
+                            #self.printlog("TRIMMING TABDEPTH: " + str(tabdepth))
+                            itm = itm[tabdepth:]
+                            # Trim one more tab depth
+                            if itm.startswith('\t'):
+                                itm = itm[1:]
+
+                        # Append Function Contents, don't add initial coment
+                        if ((scomment != "") and 
+                            (not ((itm.startswith("#")) and (scomment in itm)))):
+                            lst_keep.append(itm)
+                        elif scomment == "":
+                            lst_keep.append(itm)
+                        #self.printlog("...." + itm)
+                       
+                # Append function name/contents/comment /exported [set with fixexports()]
+                sexported = 'Yes' if (sname in exports) else 'No'
+                commands.append(Command(name = sname, 
+                                            cmd = lst_keep, 
+                                            comment = scomment,
+                                            exported = sexported))
+                
+                # Reset comment string
+                scomment = ''
+                # Reset contents finder list
+                lst_contents = []
+    # Return finished list
+    return commands
+    
+
+def readfile(aliasfile = None):
+    """ Read alias/script file, return a list of command() objects.
+        Returns empty list on failure.
+    """
+    
+    # Get alias file contents
+    filecontents = getfilecontents(aliasfile=aliasfile)
+    aliaslinecnt = get_def_count(filecontents, 'alias')
+    functionlinecnt = get_def_count(filecontents, 'function')
+    
+    commands = []
+    if filecontents is None: return []
+    # Get all aliases from the file.(also, initialize lst_commands)
+    aliases = parse_aliases(filecontents)
+    commands = commands + aliases
+    # Get all functions form the file (also fills in exported items)
+    functions = parse_functions(filecontents)
+    commands = commands + functions
+    # Validate parsing of aliases/functions
+    warnmsg = []
+    if aliaslinecnt != len(aliases):
+        msg = 'Could not parse all aliases, may be missing some.\n{}\n{}'
+        msg = msg.format('     alias lines: {}'.format(str(aliaslinecnt)),
+                         '  parsed aliases: {}'.format(str(len(aliases))))
+        warnmsg.append(msg)
+    if functionlinecnt != len(functions):
+        msg = 'Could not parse all functions, may be missing some.\n{}\n{}'
+        msg = msg.format('  function lines: {}'.format(str(functionlinecnt)),
+                         'parsed functions: {}'.format(str(len(functions))))
+        warnmsg.append(msg)
+    if warnmsg:
+        print('\nreadfile: missing aliases/functions: \n{}'.format('\n'.join(warnmsg)))
+        Dialogs().msgbox_warn('\n'.join(warnmsg))
+    else:
+        print('\nreadfile: all aliases/functions parsed.')
+    
+    return commands
+
+    
+def fixexports_old(lst_data):
+    """ Deprecated - readfile()->parse_functions() does this already (except better)
         Fixes export data in main list, 
         "Yes", "No", or "Not Needed" is added to item info 
     """
     lst_exports = readexports()
     
     # file failed to load completely
-    if lst_exports == False or lst_data == False:
-        #print("fixexports: Failed to load exports list.")
+    if (not lst_exports) or (not lst_data):
+        print('\nfixexports: Failed to load exports list.')
         return False
        
     if lst_exports and lst_data:
@@ -594,3 +712,39 @@ def chmod_file(sfilename):
             os.system('chmod a+x ' + sfilename)
             return ('chmod +x ' + sfilename)
  
+
+def stripchars(original, chars):
+    """ remove chars from beginning and end of string """
+    if hasattr(chars, 'lower'):
+        chars = [c for c in chars]
+    #print("STRIPPING: '{}'".format(original))
+    if original:
+        while original and (original[0] in chars):
+            original = original[1:]
+    if original:
+        while original and (original[-1] in chars):
+            original = original[:-1]
+    
+    return original
+
+
+def stripquotes(original):
+    """ Trims a single quote from the string """
+    
+    if ((original.startswith("'") and original.endswith("'")) or
+        (original.startswith('"') and original.endswith('"'))):
+        return original[1:-1]
+    return original
+
+def trimcount(originalstring, chartotrim):
+    """ trims a char from the beginning of string, 
+        and returns a count and the trimmed string.
+        example:
+            spacecnt, trimmed = trimcount('   no spaces', ' ')
+            # returns: (3, "no spaces") 
+    """
+    cnt = 0
+    while originalstring.startswith(chartotrim):
+        cnt += 1
+        originalstring = originalstring[1:]
+    return cnt, originalstring

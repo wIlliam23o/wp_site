@@ -1,4 +1,12 @@
-secret*
 internal*
-*_local*
-test*wp*switch*
+*local*.py*
+*secret*
+*test*wp*switch*
+.project
+.pydevproject
+.settings*
+*.pyc
+clsCj*
+files/pi
+misc/static/files/pi*
+

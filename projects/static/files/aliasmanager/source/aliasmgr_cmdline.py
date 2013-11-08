@@ -29,7 +29,7 @@ class CmdLine():
             ret = self.arg_handler(largs)
             return ret
         else:
-            print("No arguments supplied to aliasmgr.cmdline!")
+            print('No arguments supplied to aliasmgr.CmdLine!')
             return 1
 
            
@@ -190,9 +190,8 @@ class CmdLine():
     def printaliases(self, sarg):
         """ Print aliases in current file """
         
-        lst_items = amutil.fixexports(self.commands)
-        if lst_items:
-            for itm in lst_items:
+        if self.commands:
+            for itm in self.commands:
                 # Comments?
                 if len(itm.comment) > 0:
                     # Add Comment
@@ -253,14 +252,14 @@ class CmdLine():
             print('\nNo items found in alias file: {}'.format(self.aliasfile))
             return 1
         return 0
+    
+    
     def printexports(self):
         """ Prints exports only """
-        lst_exports = amutil.readexports()
-        if lst_exports:
-            #print("Found " + str(len(lst_exports)) + " exports:")
-            for itm in lst_exports:
-                print(itm)
+        exports = [f.name for f in self.commands if f.exported.lower() == 'yes']
+        if exports:
+            print('\n'.join(exports))
             return 0
         else:
-            print('\nUnable to load exports!')
+            print('\nNo exports found!\n')
             return 1

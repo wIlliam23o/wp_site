@@ -12,6 +12,7 @@
 '''
 
 from django import template
+from django.conf import settings
 from wp_main.utilities import htmltools
 from wp_main.utilities import utilities
 from wp_main.utilities.highlighter import wp_highlighter
@@ -19,6 +20,7 @@ from wp_main.utilities.wp_logging import logger
 # for admin site filtering
 from blogger.models import wp_blog
 from projects.models import wp_project
+from misc.models import wp_misc
 
 _log = logger("wp_tags").log
 
@@ -131,10 +133,13 @@ def is_test_site(request_object):
     if request_object is None or request_object.META is None:
         # happens on template errors, which hopefully don't make it to production.
         return True
-    
+    # Get current server name for this instance.
+    # Could be the live server, test server, or local server 
+    # the local server_name changes depending on where it's accessed from.
     server_name = request_object.META['SERVER_NAME']
-    return (server_name.startswith('test.') or
-            server_name == '127.0.0.1')
+    
+    return (server_name.startswith('test.') or      # remote test site
+            (server_name in settings.INTERNAL_IPS)) # local dev
 
 
 def contains(str_or_list, val_to_find):
@@ -210,6 +215,19 @@ def str_(object_):
     """ returns str(object_) to the template. """
     return str(object_)
 
+
+def get_remote_host(request):
+    """ Same as get_remote_ip, except for hostname. """
+    
+    return utilities.get_remote_host(request)
+
+
+def get_remote_ip(request):
+    """ Make the convenience function available for templates. """
+    
+    return utilities.get_remote_ip(request)
+
+   
 def repr_(object_):
     """ returns repr(object_) to the template """
     return repr(object_)
@@ -250,6 +268,8 @@ def disabled_css(item):
         obj = utilities.get_object_safe(wp_blog.objects, title=name)
     elif 'wp_project' in otype:
         obj = utilities.get_object_safe(wp_project.objects, name=name)
+    elif 'wp_misc' in otype:
+        obj = utilities.get_object_safe(wp_misc.objects, name=name)
     else:
         _log.debug("Object type not filtered yet: " + otype)
         obj = None
@@ -279,6 +299,8 @@ registered_filters = (comments_button,
                       exceeds_max,
                       exceeds_min,
                       dict_value,
+                      get_remote_host,
+                      get_remote_ip,
                       meta_value,
                       is_mobile,
                       is_test_site,

@@ -192,36 +192,58 @@ def debug_allowed(request):
         inspired by debug_toolbar's _show_toolbar() method.
     """
     
-    # full test mode, no debug allowed.
+    # full test mode, no debug allowed (as if it were the live site.)
     if getattr(settings, 'TEST', False):
         return False
-
-    # possible ip forwarding, if available use it.
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', None)
-    if x_forwarded_for:
-        remote_addr = x_forwarded_for.split(',')[0].strip()
-    else:
-        remote_addr = request.META.get('REMOTE_ADDR', None)
-
-    # run address through our quick debug security check (settings.INTERNAL_IPS and settings.DEBUG)
-    # future settings may have a different or seperate list of debug-allowed ip's.
-    ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
     
+    # If user is admin/authenticated we're okay.
+    if request.user.is_authenticated() and request.user.is_staff:
+        return True
+    
+    # Non-authenticated users:
+    # Get ip for this user
+    remote_addr = get_remote_ip(request)
+    if not remote_addr:
+        return False
+    
+    # run address through our quick debug security check (settings.INTERNAL_IPS and settings.DEBUG)
+    ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
+    # log all invalid ips that try to access debug
+    if not ip_in_settings:
+        ipwarnmsg = 'Debug not allowed for ip: {}'.format(str(remote_addr))
+        ipwarnmsg += '\n    ...DEBUG is {}.'.format(str(settings.DEBUG))
+        _log.warn(ipwarnmsg)
     return (ip_in_settings and bool(settings.DEBUG))
 
 
 def get_object_safe(objects_, **kwargs):
     """ does a mymodel.objects.get(kwargs),
+        Other Keyword Arguments:
+
         returns None on error.
     """
+    if hasattr(objects_, 'objects'):
+        # Main Model passed instead of Model.objects.
+        objects_ = getattr(objects_, 'objects')
+        
     try:
         obj = objects_.get(**kwargs)
     except:
+        # No Error is raised, just return None
         obj = None
     return obj
 
 
 def get_objects_if(objects_, attribute, equals, orderby=None):
+    """ Filters objects, returns only objects with 'attribute' == equals.
+        Arguments:
+            objects_  : A query set, or my_Model.objects
+            attribute : Name of an attribute to check (string to be used with getattr())
+            equals    : What the attribute should be to get included.
+                        if getattr(object, attribute) == equals: results.append(object)
+            orderby   : orderby for django's queryset. all() is used if orderby is None
+    """
+    
     results = None
     if orderby is None:
         if hasattr(objects_, 'all'):
@@ -245,4 +267,20 @@ def get_objects_if(objects_, attribute, equals, orderby=None):
             _log.debug(str(objects_) + " has no order_by()!")
     return results
 
-            
+
+def get_remote_host(request):
+    """ Returns the HTTP_HOST for this user. """
+    
+    host = request.META.get('REMOTE_HOST', None)
+    return host
+
+
+def get_remote_ip(request):
+    """ Just returns the IP for this user (for ip.html, is_debug_allowed(), etc.). """
+    # possible ip forwarding, if available use it.
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', None)
+    if x_forwarded_for:
+        remote_addr = x_forwarded_for.split(',')[0].strip()
+    else:
+        remote_addr = request.META.get('REMOTE_ADDR', None)
+    return remote_addr

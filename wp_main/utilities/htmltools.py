@@ -38,7 +38,7 @@ re_email_address = r'[\d\w\-\.]+@[\d\w\-\.]+\.[\w\d\-\.]+'
 # RegEx for fixing open tags (fix_open_tags())
 re_closing_complete = re.compile('[\074]/\w+[\076]{1}')
 re_closing_incomplete = re.compile(r'[\074]/\w+')
-re_opening_complete = re.compile(r'[\074][\w "\'=\-]+[\076]{1}')
+re_opening_complete = re.compile(r'[\074][\w "\'=\-\/]+[\076]{1}')
 re_opening_incomplete = re.compile(r'[\074][\w "\'=\-]+')
 re_start_tag = re.compile(r'[\074]\w+')
 
@@ -566,6 +566,38 @@ def comments_button(link_href):
 
     return "<a href='" + link_href + "#comments-box'><div class='comments-button'><span class='comments-button-text'>comments...</span></div></a>"
  
+def get_html_file(wpobj):
+    """ finds html file to use for t content, if any.
+        returns empty string on failure.
+    """
+    
+    if hasattr(wpobj, 'html_url'):
+        htmlattr = 'html_url'
+    elif hasattr(wpobj, 'contentfile'):
+        htmlattr = 'contentfile'
+    else:
+        _log.error('Object doesn\'t have a html file attribute!: {}'.format(wpobj.__name__))
+        return ''
+    if not hasattr(wpobj, 'alias'):
+        _log.error('Object doesn\'t have an \'alias\' attribute!: {}'.format(wpobj.__name__))
+        return ''
+    # Get objects html_url/contentfile
+    obj_file = getattr(wpobj, htmlattr)
+    if not obj_file:
+        # use default location if no manual override is set.
+        html_file = utilities.get_absolute_path("static/html/" + wpobj.alias + ".html")
+    elif obj_file.lower() == "none":
+        # html files can be disabled by putting None in the html_url/contentfile field.
+        return ''
+    else:
+        if os.path.isfile(obj_file):
+            # already absolute
+            html_file = obj_file
+        else:
+            # try absolute path
+            html_file = utilities.get_absolute_path(obj_file)
+    return html_file
+
     
 def load_html_file(sfile):
     """ loads html content from file.
@@ -1076,8 +1108,8 @@ def clean_html(source_string):
         return ""
     
     return remove_whitespace(
-                remove_comments(
-                    hide_email(source_string)))
+               remove_comments(
+                   hide_email(source_string)))
     
     
 def render_html(template_name, **kwargs):

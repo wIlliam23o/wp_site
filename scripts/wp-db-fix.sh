@@ -7,7 +7,7 @@
 
 # (Basically it increments the nextval() to the TABLE's max id + 1.)
 
-# Tables to modify
+# Tables to modify (This is specific to this project)
 tables=("blogger_wp_blog" 
 		"projects_wp_project" 
 		"django_admin_log" 

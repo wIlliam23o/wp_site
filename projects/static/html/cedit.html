@@ -50,11 +50,11 @@
 cedit <filename>
 # ...to open a file.
 	
-cedit list
+cedit --list
 # ...lists current configuration (editor and elevation command)
 		
-cedit set editor=[your editor]
-cedit set elevcmd=[your elevation-cmd]
+cedit --editor path_to_editor
+cedit --elevcmd path_to_elevcmd
 # ...sets your favorite commands so cedit will remember what to use.
 	</pre>
 
@@ -62,7 +62,7 @@ cedit set elevcmd=[your elevation-cmd]
 		If your favorite editor isn't in the same directory as cedit or /usr/bin, then
 		you will need to set the editor like this:
 		<pre class='bash'>
-cedit set editor=/my/path/to/myeditor
+cedit -e /my/path/to/myeditor
 		</pre>
 	</p>
 </div>
@@ -79,14 +79,14 @@ cedit set editor=/my/path/to/myeditor
 		To install cedit in /usr/bin (for all users) run:
     </p>
     <pre class='bash'>
-sudo ./cedit.py install
+sudo ./cedit.py -i
 	</pre>
 	
 	<p>
 		To install cedit for a single user run:
    	</p>
    	<pre class='bash'>
-./cedit.py install user
+./cedit.py --install --user
     
 # this will try to install cedit to /home/USERNAME/.local/bin
 # you will need this directory to exist, and be included in your PATH variable.
@@ -139,6 +139,40 @@ cedit <filename>
 	</p>
 </div>
 
+<!-- Updates -->
+<div class='wp-block feature-list'>
+	<div class='title-box'>
+		<h3 class='title'>Updates</h3>
+	</div>
+
+	<span class='update-title'>Update: version 1.2.2</span>
+	<p>
+		Uses python 3 by default <span class='highlight-embedded python'>/usr/bin/env python3</span>
+		<p class='indented subtext'>
+			if you can't use python 3 you can always change the first line of cedit.py,<br>
+			or run it with <span class='highlight-embedded bash'>python cedit.py</span>
+			or <span class='highlight-embedded bash'>python2.7 cedit.py</span>
+		</p>
+		<br>
+		Added multi-file ability.
+		<p class='indented subtext'>
+			...if your favorite editor doesn't allow opening multiple files like 'editor file1 file2 file3',<br>
+			you can use the --shellall flag. It will shell an editor process for each file.<br>
+			(most editors will at least group them in the same window, if not you will have multiple windows opened)
+		</p>
+		<br>
+		Changed flags, added flags. Makes the code a little cleaner
+		<p class='indented subtext'>
+			(taking full advantage of <a href='http://docopt.org' target='_blank'>docopt</a> instead of parsing command args.)
+		</p>
+		<br>
+		Added more help messages when required modules aren't present
+		<p class='indented subtext'>
+			(imports 2 non-standard modules that most users probably don't have.)
+		</p>
+	</p>
+</div>
+
 <!-- Future -->
 <div class='wp-block feature-list'>
 	<div class='title-box'>
@@ -150,7 +184,7 @@ cedit <filename>
 		I may add the ability to set favorite editors for favorite file-types like:
 	</p>
 	<pre class='bash'>
-cedit set .py=geany
+cedit --set .py,geany
 	</pre>
 </div>
 	

@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-	{% if request|debug_allowed  and request|is_test_site %}
+	{% if request|debug_allowed %}
 		<!-- Show Debugging Info -->
 		<div class="wp-block welcome-message-box">
 				<span class="welcome-message-text">

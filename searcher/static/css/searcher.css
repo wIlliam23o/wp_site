@@ -54,6 +54,19 @@
 	margin-bottom: 10px;
 }
 
+.search-listing-title-box {
+    position: relative;
+    display: inline-block;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: lightGrey;
+    border-style: solid;
+    padding: 3px;
+    
+}
+.search-listing-title-box:hover {
+    border-color: #B5CEFF;
+}
 .search-listing-title {
 	margin-bottom: 5px;
 	font-size: 1.3em;

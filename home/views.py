@@ -54,6 +54,21 @@ def view_debug(request):
                                      })
 
 
+def view_ip(request):
+    """  returns the remote ip page. """
+    
+    return responses.clean_response('home/ip.html',
+                                    {'request': request,
+                                     'extra_style_link_list': [utilities.get_browser_style(request)],
+                                     })
+
+
+def view_ip_simple(request):
+    """ returns the remote ip in plain text. """
+    
+    return responses.text_response(utilities.get_remote_ip(request))
+
+
 @login_required(login_url='/login')
 def view_test(request):
     """ returns whatever tests are being conducted in test.html template. """
@@ -74,21 +89,21 @@ def view_login(request):
     username = request.REQUEST.get('user', None)
     pw = request.REQUEST.get('pw', None)
     
-    _log.debug("username: " + str(username) + ", pw: " + str(pw))
+    #_log.debug("username: " + str(username) + ", pw: " + str(pw))
     
     response = responses.redirect_response("/badlogin.html")
     if (username is not None) and (pw is not None):
         
         user = auth.authenticate(user=username, password=pw)
        
-        _log.debug("USER=" + str(user))
+        #_log.debug("USER=" + str(user))
         
         if user is not None:
             if user.is_active():
                 auth.login(request, user)
                 referer_view = responses.get_referer_view(request, default=None)
                 
-                _log.debug("referer_view: " + str(referer_view))
+                #_log.debug("referer_view: " + str(referer_view))
                 
                 # Change response based on whether or not previous view was given.
                 if referer_view is None:
@@ -106,7 +121,8 @@ def view_badlogin(request):
     
     return responses.clean_response("home/badlogin.html",
                                     {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)]})
+                                     'extra_style_link_list': [utilities.get_browser_style(request)],
+                                     })
 
 @login_required(login_url="/login")
 def view_stats(request):
@@ -118,22 +134,25 @@ def view_stats(request):
         return mark_safe(line.replace(' ', '&nbsp;') + '\n<br/>\n')
     def convert_pblock(pblock):
         if pblock is None: return []
+        if not pblock.keys(): return []
+    
         pblock_args = {'append_key': ': '}
         return [convert_line(line) for line in pblock.iterblock(**pblock_args)]
     # gather print_block stats from wpstats and convert to lists of strings.
-    # for projects, blog posts, and file trackers...
-    projectlines = convert_pblock(wpstats.get_projects_info(orderby='-download_count'))
-    postlines = convert_pblock(wpstats.get_blogs_info(orderby='-view_count'))
-    filelines = convert_pblock(wpstats.get_files_info(orderby='-download_count'))
+    # for projects, misc objects, blog posts, and file trackers...
+    projectinfo = htools.StatsInfo('Projects', convert_pblock(wpstats.get_projects_info(orderby='-download_count')))
+    miscinfo = htools.StatsInfo('Misc', convert_pblock(wpstats.get_misc_info(orderby='-download_count')))
+    postinfo = htools.StatsInfo('Posts', convert_pblock(wpstats.get_blogs_info(orderby='-view_count')))
+    fileinfo = htools.StatsInfo('File Trackers', convert_pblock(wpstats.get_files_info(orderby='-download_count')))
+    # Add them to a collection.
+    stats = htools.StatsCollection(projectinfo, miscinfo, postinfo, fileinfo)
     
     if request.user.is_authenticated():
         response = responses.clean_response("home/stats.html",
                                             {'request': request,
                                              'extra_style_link_list': [utilities.get_browser_style(request),
                                                                        "/static/css/stats.css"],
-                                             'projects': projectlines,
-                                             'posts': postlines,
-                                             'files': filelines,
+                                             'stats': stats,
                                              })
     else:
         response = responses.clean_response("home/badlogin.html",

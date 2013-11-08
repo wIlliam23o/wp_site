@@ -85,15 +85,16 @@ def get_urls(request):
                      '/about': 'monthly',
                      '/projects': 'weekly',
                      '/blog': 'daily',
-                                          }
+                     '/misc': 'weekly',
+                     }
     # build basic urls for main site nav.   
-    for main_url in ['/', '/about', '/projects', '/blog']:
+    for main_url in ['/', '/about', '/projects', '/blog', '/misc']:
         _url = sitemap_url(rel_location = main_url,
                            protocol = protocol_,
                            domain = domain_,
                            changefreq = default_freqs[main_url], 
                            lastmod = today_,
-                           priority = '0.7')
+                           priority = '0.8')
         urls_.append(_url)
     
     # build projects urls
@@ -115,6 +116,7 @@ def get_urls(request):
                            lastmod = str(post_.posted),
                            priority = '0.5')
         urls_.append(_url)
+
         
     # return complete list.
     return urls_   

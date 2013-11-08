@@ -128,6 +128,10 @@ h2.title, h1.title {
 h2.title { font-size: 1.2em; }
 h1.title { font-size: 1.5em; }
 
+p.indented { margin-left: 15px;}
+p.subtext { font-size: 0.85em; }
+
+
 .desc {
 	padding-left: 40px;
 	padding-right: 40px;
@@ -435,6 +439,10 @@ a.jumpto-nav {
 /* Projects Vertical Menu */
 .vertical-menu {
 	position: absolute;
+	/* trying out a fixed menu, doesn't really fit.
+	position: fixed;
+	z-index: 999; 
+	*/
 	left: 5px;
 	top: 220px;
 	background: transparent;
