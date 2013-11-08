@@ -63,6 +63,12 @@ def view_ip(request):
                                      })
 
 
+def view_ip_simple(request):
+    """ returns the remote ip in plain text. """
+    
+    return responses.text_response(utilities.get_remote_ip(request))
+
+
 @login_required(login_url='/login')
 def view_test(request):
     """ returns whatever tests are being conducted in test.html template. """

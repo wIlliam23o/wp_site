@@ -24,7 +24,7 @@ urlpatterns = patterns('',
     # debug info
     url(r'^debug\.html$', homeviews.view_debug),
     # ip info
-    url(r'^ip$', homeviews.view_ip),
+    url(r'^ip$', homeviews.view_ip_simple),
     url(r'^ip\.html?$', homeviews.view_ip),
     # stats info
     url(r'^stats\.html$', homeviews.view_stats),
