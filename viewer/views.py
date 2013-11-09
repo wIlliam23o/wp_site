@@ -42,7 +42,7 @@ def ajax_contents(request):
     """ retrieves file contents per an ajax request. """
     
     if not request.is_ajax():
-        raise Http404("File not found, sorry.")
+        return response_error(Http404("File not found, sorry."))
     
     get_data = responses.json_get_request(request)
     
@@ -53,9 +53,9 @@ def ajax_contents(request):
         try:
             file_info = get_file_info(get_data['file'])
         except Exception as ex:
-            raise
+            return response_error(ex)
         if not file_info:
-            raise Http404('File not found, sorry.')
+            return response_error(Http404('File not found, sorry.'))
         
         # Grab DEBUG and send it.
         file_info['debug'] = settings.DEBUG
@@ -90,7 +90,7 @@ def ajax_contents(request):
         # send json encoded data.
         return responses.json_response(file_info)
     else:
-        raise Http404("No file name provided!")
+        return response_error(Http404("No file name provided!"))
 
     
 @csrf_protect
@@ -261,4 +261,8 @@ def highlight_file(static_path, file_content):
         
     return mark_safe(file_content)
 
+
+def response_error(ex):
+    """ Respond with contents of error message. """
     
+    return responses.json_response({'status': 'error', 'message': str(ex)})
