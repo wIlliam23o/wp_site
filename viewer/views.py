@@ -190,11 +190,14 @@ def get_file_info(file_path):
     
     # Directory was passed, get files to use. (based on project, dir listing)
     if os.path.isdir(absolute_path):
-        static_path, absolute_path = get_using_paths(static_path, absolute_path, project)
-        if static_path is None or absolute_path is None:
-            #return responses.alert_message("Sorry, there was an error viewing that file.", body_message=alertmsg)
-            raise Http404("Sorry, there was an error viewing that file.")
-        
+        if project:
+            static_path, absolute_path = get_using_paths(static_path, absolute_path, project)
+            if static_path is None or absolute_path is None:
+                #return responses.alert_message("Sorry, there was an error viewing that file.", body_message=alertmsg)
+                raise Http404("Sorry, there was an error viewing that file.")
+        else:
+            raise Http404("Sorry, that file doesn't exist.")
+    
     # Update project view count tracker
     miscobj = None
     if project:
