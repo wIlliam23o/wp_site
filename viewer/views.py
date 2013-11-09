@@ -50,7 +50,10 @@ def ajax_contents(request):
     if get_data.get('file', False):
         logdebug('Loading info for file: {}'.format(get_data['file']))
         
-        file_info = get_file_info(get_data['file'])
+        try:
+            file_info = get_file_info(get_data['file'])
+        except Exception as ex:
+            raise
         if not file_info:
             raise Http404('File not found, sorry.')
         
