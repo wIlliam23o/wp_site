@@ -187,6 +187,10 @@ def get_absolute_path(relative_file_path):
             sabsolutepath = spossible
             break
     
+    # Guard against files outside of the project.
+    if not sabsolutepath.startswith(settings.STATIC_PARENT):
+        return ''
+    
     return sabsolutepath
 
 
