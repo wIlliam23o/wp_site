@@ -174,6 +174,9 @@ def get_absolute_path(relative_file_path):
     
 
     #if relative_file_path.startswith('/'): relative_file_path = relative_file_path[1:]
+    # Guard against ../ tricks.
+    if '..' in relative_file_path:
+        return ''
     
     sabsolutepath = ""
     for root, dirs, files in os.walk(settings.STATIC_PARENT): #@UnusedVariable: dirs, files

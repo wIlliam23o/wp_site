@@ -51,6 +51,9 @@ def ajax_contents(request):
         logdebug('Loading info for file: {}'.format(get_data['file']))
         
         file_info = get_file_info(get_data['file'])
+        if not file_info:
+            raise Http404('File not found, sorry.')
+        
         # Grab DEBUG and send it.
         file_info['debug'] = settings.DEBUG
         

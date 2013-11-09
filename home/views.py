@@ -12,9 +12,10 @@ from scripts import wpstats
 # logging
 from wp_main.utilities.wp_logging import logger
 _log = logger("home").log
-############# @todo: make log_context() so context keys/values can be passed to logging!
+# @todo: make log_context() so context keys/values can be passed to logging!
 # Home tools
 from home import hometools as htools
+
 
 def index(request):
     """ serve up main page (home, index, landing) """
@@ -24,7 +25,7 @@ def index(request):
                                     {'request': request,
                                      'blog_post': htools.get_latest_blog(),
                                      'featured_project': htools.get_featured_project(),
-                                     'extra_style_link_list': [utilities.get_browser_style(request),],
+                                     'extra_style_link_list': [utilities.get_browser_style(request), ],
                                      })
     
 
@@ -66,7 +67,7 @@ def view_ip(request):
 def view_ip_simple(request):
     """ returns the remote ip in plain text. """
     
-    return responses.text_response(utilities.get_remote_ip(request))
+    return responses.text_response('{}\n'.format(str(utilities.get_remote_ip(request))))
 
 
 @login_required(login_url='/login')
@@ -124,6 +125,7 @@ def view_badlogin(request):
                                      'extra_style_link_list': [utilities.get_browser_style(request)],
                                      })
 
+
 @login_required(login_url="/login")
 def view_stats(request):
     """ return stats info for projects, blog posts, and file trackers.
@@ -132,9 +134,12 @@ def view_stats(request):
     
     def convert_line(line):
         return mark_safe(line.replace(' ', '&nbsp;') + '\n<br/>\n')
+
     def convert_pblock(pblock):
-        if pblock is None: return []
-        if not pblock.keys(): return []
+        if pblock is None:
+            return []
+        if not pblock.keys():
+            return []
     
         pblock_args = {'append_key': ': '}
         return [convert_line(line) for line in pblock.iterblock(**pblock_args)]
@@ -169,12 +174,13 @@ def view_scriptkids(request):
     
     # get ip if possible.
     ip_address = request.META.get("HTTP_X_FORWARDED_FOR", None)
-    if ip_address is None: ip_address = request.META.get("REMOTE_ADDR", None)
+    if ip_address is None:
+        ip_address = request.META.get("REMOTE_ADDR", None)
     use_ip = (ip_address is not None)
 
     # get insulting image to display
     scriptkid_img = htools.get_scriptkid_image()
-    if scriptkid_img is not None: 
+    if scriptkid_img is not None:
         scriptkid_img = utilities.get_relative_path(scriptkid_img)
     use_img = (scriptkid_img is not None)
     
@@ -186,9 +192,10 @@ def view_scriptkids(request):
                                      'use_img': use_img,
                                      'scriptkid_img': scriptkid_img,
                                      'use_ip': use_ip,
-                                     'ip_address':ip_address,
+                                     'ip_address': ip_address,
                                      })
     
+
 def view_403(request):
     """ return the forbidden page. (403 template) """
     return view_error(request, 403)
@@ -222,4 +229,3 @@ def view_error(request, error_number):
                                      "request_path": mark_for_escaping(request_path),
                                      "extra_style_link_list": [utilities.get_browser_style(request)],
                                      })
-    
