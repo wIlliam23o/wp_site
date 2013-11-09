@@ -56,7 +56,7 @@ function load_file_data (xhrdata) {
     if (file_info.status == 'error') {
     	var errmessage = file_info.message;
     	if (errmessage) {
-    		$("#file-content").html("<span>There was an error processing that file:</span><br><span>" + errmessage + "</span>");
+    		$("#file-content").html("<span>" + errmessage + "</span>");
     	} else {
     		$("#file-content").html("<span>Sorry, an unknown error occurred.</span>")
     	}

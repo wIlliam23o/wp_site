@@ -12,10 +12,27 @@
 {% block content %}
     {% if misc %}
         <div class="misc-container">
-            <!-- misc Header -->
-            <div class="misc-title">
+            <!-- Header (Name/Link/Version) -->
+            <div class='misc-header-box'>
                 <h1 class="misc-header">{{ misc.name }}</h1>
+                <br/>
+                {% if misc.version %}
+                    <span class="version">version {{ misc.version }}</span>
+                    <br/>
+                {% endif %}
+                <!-- Misc Type Info -->
+                <div class='misc-type-info-box'>
+                    <div class='misc-type-info-item'>
+                        <span class='misc-type-label'>Type:&nbsp;</span>
+                        <span class='misc-type-value'>{{ misc.filetype }}</span>
+                    </div>
+                    <div class='misc-type-info-item'>
+                        <span class='misc-type-label'>Language:&nbsp;</span>
+                        <span class='misc-type-value'>{{ misc.language }}</span>
+                    </div>
+                </div>
             </div>
+            
             <!-- misc Body -->
             <div class="misc-content">
                 <!-- Content -->
