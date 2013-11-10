@@ -21,6 +21,7 @@
     
     Debug button/box toggle added.
         shows/hides the django debug info box (for use with test site)
+
 */
 
 var wptools = {
