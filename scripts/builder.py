@@ -2,8 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """ builder.py
-    Builds the Welborn Productions site.
-    Right now it just makes sure to minify all javascript.
+    Helps to build the Welborn Productions site.
+    When .css or .js files are modified, a new .min file needs to be created.
+    This script helps to automate that process by checking last-modified times,
+    and allows you to build single files, or certain extensions, and filter which
+    files should be built.
+
+    This is meant to be incorporated into the wprefresh.py script, so doing a reresh
+    will also include any new changes to .js or .css files, plus any other file
+    that may need 'building' in the future.
+
+    -Christopher Welborn 2013
 """
 
 import os
@@ -26,12 +35,19 @@ _NAME = 'Builder'
 _VERSION = '1.0.0'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 DEBUG = False
+# These strings will always be filtered.
+DEFAULT_FILTERS = ['.min.', '-min.']
+# These are the default extensions to use (when build_files() is called)
+DEFAULT_EXTENSIONS = ['.css', '.js']
 
-# Minimum time in minutes for a file to be considered newly modified.
-# if (now - file.modifiedtime) < MIN_TIME (minutes): process the file.
-# if there is no .min file, it will be processed anyways.
-MIN_TIME = 10
-
+# Strings for skip reasons..
+SKIP_REASON_TABLE = {'filtered': '(filtered)        ',
+                     'defaultfiltered': '(default filtered)',
+                     'modifiedtime': '(modified-time)   ',
+                     'forced': '(forced)          ',
+                     'notincluded': '(not included)    ',
+                     'passed': '(passed)          ',
+                     }
 # Initialize Django..
 try:
     if not django_init.init_django(sys.path[0]):
@@ -47,19 +63,23 @@ usage_str = """{versionstr}
 
     Usage:
         {script} -h | -v
-        {script} <file> [-d]
-        {script} [-i strings] [-f strings] [-m minutes] [-d]
-        {script} -c | -j [-i strings] [-f strings] [-m minutes] [-d]
+        {script} [-a] [-i strings] [-f strings] [-p] [-d]
+        {script} <file>... [-a] [-i strings] [-f string] [-p] [-d]
+        {script} -c [-a] [-i strings] [-f strings] [-p] [-d]
+        {script} -j [-a] [-i strings] [-f strings] [-p] [-d]
 
     Options:
-        <file>                 : Build a single file.
+        <file>                 : One or multiple files to build. (no filename builds all)
+        -a,--all               : Build all files, ignore filters/includes and modification status.
         -c,--css               : Build only .css files.
         -d,--debug             : Debug, doesn't actually build anything.
+                                 Use this to find out which files would be built,
+                                 or why they wouldn't be built.
         -f str,--filtered str  : Comma-separated list of strings to filter out.
         -h,--help              : Show this message.
         -i str,--included str  : Comma-separated list of strings to include.
         -j,--js                : Build only .js files.
-        -m min,--modtime min   : Minimum last-modified duration to rebuild a file. (in minutes)
+        -p,--path              : When filtering/including match the whole path, not just the filename.
         -v,--version           : Show {name} version.
 """.format(name=_NAME, script=_SCRIPT, versionstr=_VERSIONSTR)
 
@@ -71,37 +91,55 @@ def main(argd):
     
     included = parse_commas(argd['--included'])
     filtered = parse_commas(argd['--filtered'])
-    MIN_TIME = parse_modtime(argd['--modtime'])
+    buildargs = {'included': included,
+                 'filtered': filtered,
+                 'forced': argd['--all'],
+                 'matchpath': argd['--path'],
+                 }
 
     if argd['<file>']:
         # Build a single file.
-        ret = build_file(argd['<file>'])
+        statusargs = {'method': 'Multiple', 'filecount': len(argd['<file>'])}
+        statusargs.update(buildargs)
+        print_buildstatus(**statusargs)
+        ret = build_files(argd['<file>'], **buildargs)
     else:
+        # No files passed,  build all, or certain extensions.
+
         if argd['--js']:
             # Build JS
-            ret = build_js_files(included=included, filtered=filtered)
+            statusargs = {'method': 'JS'}
+            statusargs.update(buildargs)
+            print_buildstatus(**statusargs)
+            ret = build_js_files(**buildargs)
         elif argd['--css']:
             # Build CSS
-            ret = build_css_files(included=included, filtered=filtered)
+            statusargs = {'method': 'CSS'}
+            statusargs.update(buildargs)
+            print_buildstatus(**statusargs)
+            ret = build_css_files(**buildargs)
         else:
             # Build all files.
-            ret = build_all(included=included, filtered=filtered)
+            print_buildstatus(**buildargs)
+            ret = build_all(**buildargs)
             if not ret:
                 print('\nBuild all: failures!')
 
     return 0 if ret else 1
 
 
-def build_all(included=None, filtered=None, forced=False):
-    """ Basically runs all build functions available. """
+def build_all(**kwargs):
+    """ Basically runs all build functions available.
+        For keyword arguments see: walk_files_byext()
+    """
     
     allreturns = []
-    jsret = build_js_files(included=included, filtered=filtered, forced=forced)
+    jsret = build_js_files(**kwargs)
     allreturns.append(jsret)
     if not jsret:
         print('\nBuild js: Failed')
     
-    cssret = build_css_files(included=included, filtered=filtered, forced=forced)
+    cssret = build_css_files(**kwargs)
     allreturns.append(cssret)
     if not cssret:
         print('\nBuild css: Failed')
@@ -125,17 +163,13 @@ def build_css_file(filename):
     return (procret == 0)
 
 
-def build_css_files(included=None, filtered=None, forced=False):
-    """ Builds all css files. """
-
-    if filtered and not 'min' in filtered:
-        filtered.append('min')
-    else:
-        filtered = ['min']
+def build_css_files(**kwargs):
+    """ Builds all css files. see walk_files_byext() for keyword arguments """
 
     #@TODO: This is the same as build_js_files except closure is used! Combine them!
-    print('\nGathering css files...')
-    cssfiles = get_files_byext('.css', included=included, filtered=filtered, forced=forced)
+    # Get walker (Generator) for these files/filters
+    cssfiles = walk_files_byext('.css', **kwargs)
+    totallen = 0
     for filename in cssfiles:
         try:
             status = filename
@@ -144,25 +178,26 @@ def build_css_files(included=None, filtered=None, forced=False):
             else:
                 procret = build_css_file(filename)
             if procret:
-                status = '{}: Success'.format(filename)
+                status = '{}: Success'.format(trim_filename(filename))
+                totallen += 1
             else:
-                status = '{}: Fail'.format(filename)
+                status = '{}: Fail'.format(trim_filename(filename))
             print(status)
         except Exception as ex:
             print('\nUnable to build css files!:\n{}'.format(ex))
             return False
 
-    print('\nBuild css: Success ({} files)'.format(str(len(cssfiles))))
+    print('\nBuild css: Success ({} files)'.format(str(totallen)))
     return True
 
 
 def build_file(filenameshort):
     """ Find a files fullpath, determine builder, and build it. """
-    filename = find_file(filenameshort)
+    filename = find_file(filenameshort, forced=True)
     if not filename:
         print('\nUnable to locate that file: {}'.format(filenameshort))
         return 1
-    print('Found file: {}'.format(filename))
+    print(' Found file: {}'.format(filename))
 
     builder = get_builder_func(filename)
     if not builder:
@@ -178,6 +213,91 @@ def build_file(filenameshort):
     else:
         print('Unable to build: {}'.format(filename))
     return 0 if ret else 1
+
+
+def build_files(filenames, **kwargs):
+    """ Build multiple files, builder function is determined by the extension.
+        Arguments:
+            filenames  : List of filenames to build (can be shortnames, find_file() is used.)
+
+        Keyword Arguments:
+            see is_skip_file()...
+    """
+    if not filenames:
+        print('\nNo files to build!')
+        return 1
+
+    successcount = 0
+    failurecount = 0
+
+    def get_file_list():
+        if DEBUG:
+            print('\nRetrieving list of file names...')
+        getargs = {k: v for k, v in kwargs.items()}
+        getargs['forced'] = True
+        getargs['silent'] = True
+        return {os.path.split(f)[1]: f for f in get_files_byext(DEFAULT_EXTENSIONS, **getargs)}
+
+    def _find_in_list(f):
+        if not filelist:
+            print('\nFile list is not initialized!')
+            return None
+        if f in filelist.keys():
+            return filelist[f]
+        else:
+            fvals = filelist.values()
+            if f in fvals:
+                return fvals[fvals.index(f)]
+        return None
+
+    filelist = None
+    for filenameshort in filenames:
+        # Initialize file list for the first item.
+        if os.path.exists(filenameshort):
+            filename = filenameshort
+        else:
+            # Need to retrieve long name.
+            if not filelist:
+                # Build the initial file list..
+                filelist = get_file_list()
+            # Try to retrieve the file.
+            filename = _find_in_list(filenameshort)
+
+        if not filename:
+            print('\nUnable to locate that file!: {}'.format(filenameshort))
+            return 1
+
+        # Skip file?
+        skipfile, skipreason = is_skip_file(filename, **kwargs)
+        if skipfile:
+            if DEBUG:
+                print('     Skip file {}: {}'.format(skipreason, trim_filename(filename)))
+            continue
+
+        builder = get_builder_func(filename)
+        if not builder:
+            print('\nUnable to find a builder for that file: {}'.format(filename))
+            return 1
+
+        if DEBUG:
+            ret = True
+        else:
+            ret = builder(filename)
+
+        statusstr = '{}: '.format(trim_filename(filename))
+        if ret:
+            successcount += 1
+            print('{}Success'.format(statusstr))
+        else:
+            print('{}Failed'.format(statusstr))
+            failurecount += 1
+
+    if failurecount > 0:
+        print('\nBuild files: Failures ({} successes, {} failures)'.format(str(successcount), str(failurecount)))
+    else:
+        print('\nBuild files: Success ({} files)'.format(str(successcount)))
+
+    return 1 if (failurecount > 0) else 0
 
 
 def build_js_file(filename):
@@ -197,21 +317,13 @@ def build_js_file(filename):
     return (procret == 0)
 
 
-def build_js_files(included=None, filtered=None, forced=False):
-    """ builds all js files. """
+def build_js_files(**kwargs):
+    """ builds all js files. see walk_files_byext() for keyword arguments """
     
-    if filtered and not 'min' in filtered:
-        filtered.append('min')
-    else:
-        filtered = ['min']
-    
-    print('\nGathering js files...')
-    jsfiles = get_files_byext('.js', included=included, filtered=filtered, forced=False)
+    # Get walker (Generator) for these files/filters
+    jsfiles = walk_files_byext('.js', **kwargs)
+    totallen = 0
     for filename in jsfiles:
-        #skipfile = is_skip_file(filename, included=included, filtered=filtered)
-
-        # if skipfile:
-        #    continue
         try:
             status = filename
             if DEBUG:
@@ -219,22 +331,25 @@ def build_js_files(included=None, filtered=None, forced=False):
             else:
                 procret = build_js_file(filename)
             if procret:
-                status = '{}: Success'.format(filename)
+                status = '{}: Success'.format(trim_filename(filename))
+                totallen += 1
             else:
-                status = '{}: Fail'.format(filename)
+                status = '{}: Fail'.format(trim_filename(filename))
             print(status)
         except Exception as ex:
             print('\nUnable to build js files!:\n{}'.format(ex))
             return False
 
-    print('\nBuild js: Success ({} files)'.format(str(len(jsfiles))))
+    print('\nBuild js: Success ({} files)'.format(str(totallen)))
     return True
 
 
-def find_file(filename):
+def find_file(filename, silent=True, forced=False):
     """ Retrieves full path for file. """
-    for fullpath in get_files_byext(filename[-3:]):
-        if fullpath.endswith('{}'.format(filename)):
+    for fullpath in walk_files_byext(filename[-3:], silent=silent, forced=forced):
+        print('\nChecking: {}\n    With: {}'.format(fullpath, filename))
+
+        if fullpath.endswith(filename):
             return fullpath
     return None
 
@@ -261,34 +376,14 @@ def get_external_tool(toolfile):
     return fullpath
 
 
-def get_files_byext(ext, included=None, filtered=None, forced=False):
-    """ Retrieve all static files by extension.
-        Arguments:
-            ext       : File must end with 'ext' to count.
-        Keyword Arguments:
-            filtered  : List of strings that will exclude a file from matching.
-                        Example: get_files_byext('.js', ['min']) # Filters out .min.js files.
-            included  : List of string that will include a file. (exclude takes precedence)
-            forced    : Boolean, files aren't updated if last-modified time is < MIN_TIME,
-                        unless forced == True.
+def get_files_byext(ext, **kwargs):
+    """ Get a list of all files by extension.
+        see walk_files_byext() for arguments/keyword arguments
     """
+
+    extfiles = [f for f in walk_files_byext(ext, **kwargs)]
     
-    foundfiles = []
-    for root, dirs, files in os.walk(settings.BASE_DIR):  # @UnusedVariable: dirs
-        
-        # Only look in static dirs.
-        if not '/static' in root:
-            continue
-        
-        for filename in files:
-            # Only get files with matching extension.
-            if filename.endswith(ext):
-                fullpath = os.path.join(root, filename)
-                if not is_skip_file(fullpath, included=included, filtered=filtered, forced=forced):
-                    foundfiles.append(fullpath)
-                    if DEBUG:
-                        print('Found file: {}'.format(filename))
-    return foundfiles
+    return extfiles
 
 
 def get_modified_duration(filename):
@@ -323,36 +418,98 @@ def get_parent_dir(filename):
     return os.path.split(filename)[0]
 
 
-def is_skip_file(filename, included=None, filtered=None, forced=False):
-    """ Determines if this file should be built using included and filtered strings. """
+def is_modified(filename):
+    """ Returns true if the main file has been modified, but the .min has not. """
+    fileextparts = os.path.splitext(filename)
+    filebase = fileextparts[0]
+    is_min = filebase.endswith('.min')
+    fileext = fileextparts[-1]
+
+    if is_min:
+        # This is a min file, grab the original filename. (swap variables)
+        minfile = filename
+        filename = '{}{}'.format(filebase[:-3], 'js')
+        if not os.path.isfile('\nNo original file found for: {}'.format(minfile) +
+                              '\n    Looking for: {}'.format(filename)):
+            return False
+
+    else:
+        # This is the original file, grab the min filename
+        minfile = '{}.min{}'.format(filebase, fileext)
+        if not os.path.isfile(minfile):
+            # No min file, has never been created. (force it)
+            print('\nNew file: {}'.format(filename))
+            return True
+
+    # Have min and original, calculate modified times.
+    try:
+        originalmod = os.path.getmtime(filename)
+    except Exception as ex:
+        print('\nUnable to stat file: {}\n{}\nFile will be built..'.format(filename, ex))
+        return True
+    try:
+        minmod = os.path.getmtime(minfile)
+    except Exception as ex:
+        print('\nUnable to stat file: {}\n{}\nFile will be built..'.format(minfile, ex))
+        return True
+
+    if originalmod > minmod:
+        # Original is newer than the min...
+        return True
+
+    # min is newer than the original
+    return False
+
+
+def is_skip_file(filename, included=None, filtered=None, forced=False, matchpath=False):
+    """ Determines if this file should be built using included and filtered strings.
+        Returns tuple of (Boolean-Skip-File, 'Reason for skipping or not skipping')
+        The SKIP_REASON_TABLE is global so it doesn't have to create it on every file
+        check.
+    """
     
+    reason = 'passed'
+    # Check default filters first.
+    for defaultstr in DEFAULT_FILTERS:
+        if defaultstr in filename:
+            return True, SKIP_REASON_TABLE['defaultfiltered']
+    # Except for default filters, forced will always return False (don't skip)
     if forced:
-        return False
+        return False, 'forced'
 
     skipfile = False
-    filenameshort = os.path.split(filename)[1] if '/' in filename else filename
+
+    if matchpath:
+        # Match included/filtered with the whole path.
+        filenameshort = filename
+    else:
+        # Get short name for searching included/filtered strings.
+        filenameshort = os.path.split(filename)[1] if '/' in filename else filename
 
     if included:
+        # Check to see if this file should be included.
         for includestr in included:
             if not includestr in filenameshort:
+                reason = SKIP_REASON_TABLE['notincluded']
                 skipfile = True
                 break
 
     if filtered:
+        # Check to make sure this file isn't being filtered (will override the included)
         for filterstr in filtered:
             if filterstr in filenameshort:
+                reason = SKIP_REASON_TABLE['filtered']
                 skipfile = True
                 break
 
-    # Get last modified time...
+    # Get last modified time (if this file isn't already being skipped)...
     if not skipfile:
-        modtime = get_modified_duration(filename)
-        if DEBUG:
-            print(filenameshort + ' - Minutes since modification: ' + str(modtime))
-        if modtime > MIN_TIME:
-            return True
+        if not is_modified(filename):
+            # File has not been modified, we will skip it.
+            reason = SKIP_REASON_TABLE['modifiedtime']
+            skipfile = True
 
-    return skipfile
+    return skipfile, reason
 
 
 def parse_commas(s):
@@ -371,18 +528,134 @@ def parse_commas(s):
     return items
 
 
-def parse_modtime(s):
-    """ Parses the --modtime arg, returns the default MIN_TIME on failure. """
+def parse_modtime(s, default=30):
+    """ Parses the --modtime arg, returns the default MIN_TIME on failure.
+        This arg has been deprecated!
+    """
 
     if not s:
-        return MIN_TIME
+        return default
 
     try:
         ftime = float(s)
         return ftime
     except:
         print('\nInvalid value for --modtime!: {}\n..using the default.'.format(s))
-        return MIN_TIME
+        return default
+
+
+def print_buildstatus(**kwargs):
+    """ Print status of build flags..
+        Keyword Arguments:
+            method     : String to identify this type of build ('CSS', 'JS', 'All', etc.)
+            filecount  : Length of file list (not always used or available.)
+            ...for the rest see walk_files_byext()
+    """
+    # Get keyword arguments.
+    included = kwargs.get('included', None)
+    filtered = kwargs.get('filtered', None)
+    forced = kwargs.get('forced', False)
+    matchpath = kwargs.get('matchpath', False)
+    # Special keyword arg for this function only..
+    method = kwargs.get('method', 'All')
+    filecount = kwargs.get('filecount', None)
+
+    includestr = ' '.join(['\'{}\''.format(s) for s in included]) if included else 'All'
+    filterstr = ' '.join(['\'{}\''.format(s) for s in filtered]) if filtered else 'None'
+    if forced and included:
+        includestr += ' (--all is being used, these includes don\'t matter!)'
+    if filtered:
+            if forced:
+                filterstr += ' (--all is being used, non-default filters don\'t matter!)'
+    else:
+        filterstr += ' (default filters only)'
+
+    forcedstr = 'True (all files will be built, filters/includes are ignored.)' if forced else 'False'
+    matchpathstr = 'True (full paths will be matched by filters/includes' if matchpath else 'False'
+
+    filecountstr = '{} '.format(str(filecount)) if filecount else ''
+    debugstr = 'On (Nothing will be built.)' if DEBUG else 'Off'
+    print(' Build started: {}{} files'.format(filecountstr, method))
+    print('      Included: {}'.format(includestr))
+    print('      Filtered: {}'.format(filterstr))
+    print('        Forced: {}'.format(forcedstr))
+    print('    Match Path: {}'.format(matchpathstr))
+    print('    Debug Mode: {}'.format(debugstr))
+    print('\n')
+
+
+def trim_filename(s, maxlength=40):
+    """ Trim a long filename down to maxlength chars with '...' prepended.
+        ...for printing status.
+    """
+
+    # Account for '...' or extra spaces...
+    maxlength = maxlength - 3
+    if len(s) > maxlength:
+        # Shorten this name, prepend '...'
+        return '...{}'.format(s[-maxlength:])
+    else:
+        # Space indent this short filename. (Account for '...')
+        spacelen = (len(s) - maxlength) + 3
+        return '{}{}'.format((' ' * spacelen), s)
+
+
+def walk_files_byext(exts, included=None, filtered=None, forced=False, matchpath=False, silent=False):
+    """ Retrieve all static files by extension.
+        Yields one filename at a time.
+        Arguments:
+            exts       : File must end with 'ext' to count. (Can be a list of extensions)
+        
+        Keyword Arguments:
+            filtered   : List of strings that will exclude a file from matching.
+                         Example: get_files_byext('.js', ['min']) # Filters out .min.js files.
+            included   : List of string that will include a file. (exclude takes precedence)
+            forced     : If True, all files will be built no matter what the modified status is.
+            matchpath  : If True, included/filtered matches against the whole file path,
+                         not just the filename. 
+                         Ex: get_file_byext('.js', included=['admin'], matchpath=True)
+                             ...this will match all the files in any /admin directory.
+            silent     : If silent, don't print anything ever (overrides global DEBUG (--debug))
+    """
+
+    def _print(s):
+        if not silent:
+            print(s)
+
+    def is_extension(f):
+        """ returns True if file has extension in exts. """
+
+        return (f[-3:] in exts) or (f[-4:] in exts)
+
+    if not isinstance(exts, (list, tuple, set)):
+        exts = [exts]
+
+    for root, dirs, files in os.walk(settings.BASE_DIR):  # @UnusedVariable: dirs
+        
+        # Only look in static dirs.
+        if not '/static' in root:
+            continue
+        
+        for filename in files:
+            # Only get files with matching extension.
+            if is_extension(filename):
+                fullpath = os.path.join(root, filename)
+                skipfile, skipreason = is_skip_file(fullpath,
+                                                    included=included,
+                                                    filtered=filtered,
+                                                    forced=forced,
+                                                    matchpath=matchpath)
+                if skipfile:
+                    # This file will be skipped.
+                    if DEBUG:
+                        _print('    Skip file {} : {}'.format(skipreason, filename))
+                else:
+                    # File will be processed
+                    if DEBUG:
+                        _print('    Found file {}: {}'.format(skipreason, filename))
+                    yield fullpath
+
+    return
 
 
 class ToolNotFound(Exception):

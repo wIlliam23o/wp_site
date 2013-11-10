@@ -31,8 +31,8 @@ function view_file (filename) {
 			$("#floater").fadeOut();
 		},
 		status: {
-			404: function () { console.log("PAGE NOT FOUND!"); },
-			500: function () { console.log("A major error occurred."); }
+			404: function () { console.log('PAGE NOT FOUND!'); },
+			500: function () { console.log('A major error occurred.'); }
 		}
 	});
 
