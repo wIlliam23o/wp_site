@@ -12,8 +12,9 @@
    start date: May 29, 2013
 '''
 
-import sys, os, os.path #@UnusedImport: os is used, dont know why pydev trips on this.
-#dont-be-a-dick-pydev, #yolo
+import sys
+import os 
+
 script_dir = sys.path[0]
 project_dir = os.path.split(script_dir)[0]
 settings_dir = os.path.join(project_dir, 'wp_main/')
@@ -34,8 +35,9 @@ admin_css = os.path.join(project_dir, "home/static/admin/css")
 admin_css_static = os.path.join(settings.STATIC_PARENT, "static/admin/css")
 if not admin_css_static.endswith('/'): admin_css_static += '/'
 
-# location of manage.py
+# location of manage.py, builder.py
 manage_py = os.path.join(settings.BASE_DIR, "manage.py")
+builder_py = os.path.join(settings.BASE_DIR, 'scripts', 'builder.py')
 
 # apache restart locations.
 remote_apache_path = os.path.join(settings.STATIC_PARENT, 'apache2', 'bin')
@@ -57,8 +59,11 @@ def main(args):
     # refreshes can be skipped
     SKIP_COLLECT = ('no' in args) or ('-n' in args) or ('--nocollect' in args) or ('--nostatic' in args)
     SKIP_REFRESH = ('skip' in args) or ('-s' in args) or ('--skiprefresh' in args) or ('--norefresh' in args) or ('--noapache' in args)
-    SKIP_ALL = (SKIP_COLLECT and SKIP_REFRESH)
     WARN_LIVE = False if TEST_SITE else (not (AUTO_LIVE or SKIP_REFRESH))
+    # build can be skipped
+    SKIP_BUILD = ('-b' in args) or ('--nobuild' in args) or ('skipbuild' in args)
+    BUILD_ALL_JS = ('-j' in args) or ('--alljs' in args) or ('buildall' in args)
+    SKIP_ALL = (SKIP_COLLECT and SKIP_REFRESH and SKIP_BUILD)
     
     # Ambiguous args
     if SKIP_COLLECT and AUTO_COLLECT:
@@ -68,7 +73,7 @@ def main(args):
         print('\nBoth \'live\' and \'skip\' args used, this won\'t work.')
         sys.exit(1)
     if SKIP_ALL:
-        print('\nSkipping collectstatic and apache refresh...')
+        print('\nSkipping collectstatic, apache refresh, and build...')
         sys.exit(0)
     # WARN LIVE SITE
     if WARN_LIVE:
@@ -77,6 +82,21 @@ def main(args):
         if not warn_response.lower().startswith('y'):
             print "\nCancelling, goodbye."
             return 0
+    
+    # BUILD
+    if SKIP_BUILD:
+        print('Skipping build...')
+    else:
+        if os.path.isfile(builder_py):
+            print('\nRunning builder...')
+            build_cmd = ['python', builder_py]
+            if not BUILD_ALL_JS:
+                # only build wp*.js files. not external stuff. (takes too long)
+                build_cmd = build_cmd + ['-i', 'wp', '-f', '-wp']
+            print('running: {}'.format(' '.join(build_cmd)))
+            os.system(' '.join(build_cmd))
+        else:
+            print('\nbuilder.py not found!: {}'.format(builder_py))
         
     # COLLECTSTATIC
     if SKIP_COLLECT:

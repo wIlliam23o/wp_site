@@ -16,6 +16,9 @@ _VERSION = '1.0.0'
 def initialize_django(scriptpath):
     project_dir = os.path.split(scriptpath)[0]
     settings_dir = os.path.join(project_dir, "wp_main/")
+    if not os.path.isdir(settings_dir):
+        print('\nUnable to find dir: {}'.format(os.path.join(project_dir, 'wp_main/')))
+        return False
     if not settings_dir in sys.path: 
         sys.path.insert(0, settings_dir)
     if not project_dir in sys.path: 
@@ -23,4 +26,6 @@ def initialize_django(scriptpath):
     # Set django environment variable (if not set yet)
     if not 'DJANGO_SETTINGS_MODULE' in os.environ.keys():
         os.environ["DJANGO_SETTINGS_MODULE"] = "wp_main.settings"
+    return True
+
 init_django = initialize_django

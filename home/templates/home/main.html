@@ -83,23 +83,23 @@
 	
 	<!-- Javascript: jQuery -->
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-	<script type="text/javascript" src="/static/js/jquery.cookie.js"></script>
+	<script type="text/javascript" src="/static/js/jquery.cookie.min.js"></script>
 	
 	<!-- Javascript: Fisheye Dock -->
 	{% if request|is_mobile %}
 		<!-- No dock js loaded on mobile site. It doesn't work well with touch screens. -->
 	{% else %}
-		<script type="text/javascript" src="/static/js/dock.js"></script>
-		<script type="text/javascript" src="/static/js/fisheye-iutil.js"></script>
+		<script type="text/javascript" src="/static/js/dock.min.js"></script>
+		<script type="text/javascript" src="/static/js/fisheye-iutil.min.js"></script>
 	{% endif %}
 	
 	<!-- Javascript: Image Rotator -->
-	<script type="text/javascript" src="/static/js/jquery.wt-rotator-wp.js"></script>
+	<script type="text/javascript" src="/static/js/jquery.wt-rotator-wp.min.js"></script>
 	<!--<script type="text/javascript" src="/static/js/jquery.banner-rotator-wp.js"></script>-->
 	<script type="text/javascript" src="/static/js/jquery.easing.1.3.min.js"></script>
 	
 	<!-- Javascript: Local Tools (email protection) -->
-	<script type="text/javascript" src="/static/js/wptools.js"></script>
+	<script type="text/javascript" src="/static/js/wptools.min.js"></script>
 
 
 <!-- EXTRA JAVASCRIPT (per page) -->
