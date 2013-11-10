@@ -36,7 +36,7 @@ def view_about(request):
 
     return responses.clean_response("home/about.html",
                                     {'request': request,
-                                     'extra_style_link_list': ["/static/css/about.css",
+                                     'extra_style_link_list': ["/static/css/about.min.css",
                                                                utilities.get_browser_style(request)],
                                      },
                                     link_list=htmltools.auto_link_list,
@@ -51,7 +51,7 @@ def view_debug(request):
     return responses.clean_response("home/debug.html",
                                     {'request': request,
                                      'extra_style_link_list': [utilities.get_browser_style(request),
-                                                               "/static/css/highlighter.css"],
+                                                               "/static/css/highlighter.min.css"],
                                      })
 
 
@@ -156,7 +156,7 @@ def view_stats(request):
         response = responses.clean_response("home/stats.html",
                                             {'request': request,
                                              'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                       "/static/css/stats.css"],
+                                                                       "/static/css/stats.min.css"],
                                              'stats': stats,
                                              })
     else:
@@ -188,7 +188,7 @@ def view_scriptkids(request):
     return responses.clean_response("home/scriptkids.html",
                                     {'request': request,
                                      'extra_style_link_list': [utilities.get_browser_style(request),
-                                                               "/static/css/highlighter.css"],
+                                                               "/static/css/highlighter.min.css"],
                                      'use_img': use_img,
                                      'scriptkid_img': scriptkid_img,
                                      'use_ip': use_ip,

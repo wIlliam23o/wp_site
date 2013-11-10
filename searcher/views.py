@@ -1,5 +1,5 @@
 # Global settings
-from django.conf import settings
+#from django.conf import settings
 from django.utils.safestring import mark_for_escaping
 
 # Local tools
@@ -10,7 +10,6 @@ _log = logger("search").log
 
 # Search tools
 from searcher import searchtools
-
 
 
 def view_index(request):
@@ -24,7 +23,7 @@ def view_index(request):
         return responses.clean_response("searcher/searchform.html",
                                         {'request': request,
                                          'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                   "/static/css/searcher.css"],
+                                                                   "/static/css/searcher.min.css"],
                                          })
     else:
         # pass it to view_results
@@ -51,9 +50,10 @@ def view_results(request, query):
                                      'query_safe': mark_for_escaping(query),
                                      'results_count': len(results_list),
                                      'extra_style_link_list': [utilities.get_browser_style(request),
-                                                               "/static/css/searcher.css",
-                                                               "/static/css/highlighter.css"],
+                                                               "/static/css/searcher.min.css",
+                                                               "/static/css/highlighter.min.css"],
                                      })
+
 
 def view_paged(request):
     """ views page slice of results using GET args. """
@@ -81,12 +81,12 @@ def view_paged(request):
         # results slice
         if results_count > 0:
             results_slice = utilities.slice_list(results_list,
-                                                 starting_index = page_args['start_id'],
-                                                 max_items = page_args['max_items'])
+                                                 starting_index=page_args['start_id'],
+                                                 max_items=page_args['max_items'])
         else:
             results_slice = []
         
-    # get last index.     
+    # get last index.
     end_id = str(page_args['start_id'] + len(results_slice))
     return responses.clean_response("searcher/results_paged.html",
                                     {"request": request,
@@ -102,6 +102,6 @@ def view_paged(request):
                                      "has_prev": (page_args['start_id'] > 0),
                                      "has_next": (page_args['start_id'] < (results_count - page_args['max_items'])),
                                      "extra_style_link_list": [utilities.get_browser_style(request),
-                                                               "/static/css/searcher.css",
-                                                               "/static/css/highlighter.css"],
+                                                               "/static/css/searcher.min.css",
+                                                               "/static/css/highlighter.min.css"],
                                      })

@@ -3,7 +3,7 @@
 	top: -8px; 
 	height: 50px;
 	left: 0;
-	/* padding-left: 20px;  <-disabled for left-align, getting rid of center. */*/
+	/* padding-left: 20px;  <-disabled for left-align, getting rid of center. */
 	}
 a.dock-item { 
 	display: block;

@@ -43,13 +43,16 @@ usage_str = """{versionstr}
         {script} [-h | -v]
         {script} <file> [-d]
         {script} [-i strings] [-f strings] [-d]
+        {script} -c | -j [-i strings] [-f strings] [-d]
 
     Options:
         <file>                 : Build a single file (if building is required.)
+        -c,--css               : Build only .css files.
         -d,--debug             : Debug, doesn't actually build anything.
         -f str,--filtered str  : Comma-separated list of strings to filter out.
         -h,--help              : Show this message.
         -i str,--included str  : Comma-separated list of strings to include.
+        -j,--js                : Build only .js files.
         -v,--version           : Show {name} version.
 """.format(name=_NAME, script=_SCRIPT, versionstr=_VERSIONSTR)
 
@@ -65,11 +68,18 @@ def main(argd):
         # Build a single file.
         ret = build_file(argd['<file>'])
     else:
-        # Build all files.
-        ret = build_all(included=included, filtered=filtered)
-        if not ret:
-            print('\nBuild all: failures!')
-        ret = False
+        if argd['--js']:
+            # Build JS
+            ret = build_js_files(included=included, filtered=filtered)
+        elif argd['--css']:
+            # Build CSS
+            ret = build_css_files(included=included, filtered=filtered)
+        else:
+            # Build all files.
+            ret = build_all(included=included, filtered=filtered)
+            if not ret:
+                print('\nBuild all: failures!')
+
     return 0 if ret else 1
 
 
@@ -79,12 +89,61 @@ def build_all(included=None, filtered=None):
     allreturns = []
     jsret = build_js_files(included=included, filtered=filtered)
     allreturns.append(jsret)
-    if jsret:
-        print('\nBuild js: Success')
-    else:
+    if not jsret:
         print('\nBuild js: Failed')
     
+    cssret = build_css_files(included=included, filtered=filtered)
+    allreturns.append(cssret)
+    if not cssret:
+        print('\nBuild css: Failed')
+
     return all(allreturns)
+
+
+def build_css_file(filename):
+    """ Build a single css file. """
+
+    try:
+        yui = get_external_tool('yuicompressor.jar')
+    except ToolNotFound:
+        raise
+
+    outfile = filename.replace('.css', '.min.css')
+
+    cmdargs = ['java', '-jar', yui, filename, '-o', outfile]
+
+    procret = subprocess.check_call(cmdargs)
+    return (procret == 0)
+
+
+def build_css_files(included=None, filtered=None):
+    """ Builds all css files. """
+
+    if filtered and not 'min' in filtered:
+        filtered.append('min')
+    else:
+        filtered = ['min']
+
+    #@TODO: This is the same as build_js_files except closure is used! Combine them!
+    cssfiles = get_files_byext('.css', included=included, filtered=filtered)
+    for filename in cssfiles:
+        try:
+            status = filename
+            if DEBUG:
+                procret = True
+            else:
+                procret = build_css_file(filename)
+            if procret:
+                status = '{}: Success'.format(filename)
+            else:
+                status = '{}: Fail'.format(filename)
+            print(status)
+        except Exception as ex:
+            print('\nUnable to build css files!:\n{}'.format(ex))
+            return False
+
+    print('\nBuild css: Success ({} files)'.format(str(len(cssfiles))))
+    return True
 
 
 def build_file(filenameshort):
@@ -140,7 +199,7 @@ def build_js_files(included=None, filtered=None):
     for filename in jsfiles:
         #skipfile = is_skip_file(filename, included=included, filtered=filtered)
 
-        #if skipfile:
+        # if skipfile:
         #    continue
         try:
             status = filename
@@ -156,6 +215,8 @@ def build_js_files(included=None, filtered=None):
         except Exception as ex:
             print('\nUnable to build js files!:\n{}'.format(ex))
             return False
+
+    print('\nBuild js: Success ({} files)'.format(str(len(jsfiles))))
     return True
 
 
@@ -171,6 +232,7 @@ def get_builder_func(filename):
     """ Retrieve the proper builder function for a filename. """
     
     builders = {'.js': build_js_file,
+                '.css': build_css_file,
                 }
     
     for builderext in builders.keys():
@@ -198,7 +260,7 @@ def get_files_byext(ext, included=None, filtered=None):
     """
     
     foundfiles = []
-    for root, dirs, files in os.walk(settings.BASE_DIR): #@UnusedVariable: dirs
+    for root, dirs, files in os.walk(settings.BASE_DIR):  # @UnusedVariable: dirs
         
         # Only look in static dirs.
         if not '/static' in root:
@@ -263,4 +325,3 @@ if __name__ == '__main__':
     mainargd = docopt(usage_str, version=_VERSIONSTR)
     mainret = main(mainargd)
     sys.exit(mainret)
-

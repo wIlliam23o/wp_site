@@ -1,7 +1,7 @@
 # File/Path
 import os.path
 # Mark generated html as safe to view.
-from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
+from django.utils.safestring import mark_safe  # don't escape html with strings marked safe.
 from django.utils.html import escape
 
 # Standard Errors
@@ -32,11 +32,13 @@ _log = logger('viewer').log
 # For retrieving project information (source viewing)
 from projects import tools as ptools
 
+
 def logdebug(s):
     """ Write log message only if settings.DEBUG. """
     if settings.DEBUG:
         _log.debug(s)
          
+
 @csrf_protect
 def ajax_contents(request):
     """ retrieves file contents per an ajax request. """
@@ -105,12 +107,12 @@ def view_loader(request):
     if request.REQUEST.get('file', False):
         file_path = request.REQUEST['file'].strip("'").strip('"')
         return responses.clean_response_req("viewer/loader.html",
-                                            context_dict = {'file': file_path,
-                                                            'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                                      '/static/css/projects.css',
-                                                                                      '/static/css/highlighter.css'],
-                                                            },
-                                            with_request = request)
+                                            context_dict={'file': file_path,
+                                                          'extra_style_link_list': [utilities.get_browser_style(request),
+                                                                                    '/static/css/projects.min.css',
+                                                                                    '/static/css/highlighter.min.css'],
+                                                          },
+                                            with_request=request)
     else:
         raise Http404("No file passed to request.")
 
@@ -144,9 +146,11 @@ def get_source_files(project):
 def get_using_paths(dir_path, absolute_path=None, proj=None):
     """ When given a dir as a path, find out which file is preferred to use first. """
     
-    if absolute_path is None: absolute_path = utilities.get_absolute_path(dir_path)
+    if absolute_path is None:
+        absolute_path = utilities.get_absolute_path(dir_path)
 
-    if not os.path.isdir(absolute_path): return (None, None)
+    if not os.path.isdir(absolute_path):
+        return (None, None)
     
     try:
         files = os.listdir(absolute_path)
@@ -155,7 +159,8 @@ def get_using_paths(dir_path, absolute_path=None, proj=None):
         _log.debug("unable to listdir: " + absolute_path + '\n' + str(ex))
         
     # no files in this directory, or bad dir.
-    if len(files) == 0: return (None, None)
+    if len(files) == 0:
+        return (None, None)
 
     # dir has files, get most important to show.
     if proj is None:
@@ -177,12 +182,13 @@ def get_using_paths(dir_path, absolute_path=None, proj=None):
     
     return (static_path, absolute_path)
 
+
 def get_file_info(file_path):
     """ retrieves actual file content for viewer. """
     absolute_path = utilities.get_absolute_path(file_path)
     static_path = utilities.get_relative_path(file_path)
     # no file to load.
-    if not absolute_path: 
+    if not absolute_path:
         _log.error('Invalid file path for viewer.get_file_content(): {}'.format(file_path))
         raise Http404("Sorry, that file doesn't exist.")
         
@@ -193,7 +199,7 @@ def get_file_info(file_path):
         if project:
             static_path, absolute_path = get_using_paths(static_path, absolute_path, project)
             if static_path is None or absolute_path is None:
-                #return responses.alert_message("Sorry, there was an error viewing that file.", body_message=alertmsg)
+                # return responses.alert_message("Sorry, there was an error viewing that file.", body_message=alertmsg)
                 raise Http404("Sorry, there was an error viewing that file.")
         else:
             raise Http404("Sorry, that file doesn't exist.")
@@ -201,7 +207,7 @@ def get_file_info(file_path):
     # Update project view count tracker
     miscobj = None
     if project:
-        project.view_count +=1
+        project.view_count += 1
         project.save()
     else:
         # Not a project, may be a Misc Object.
@@ -219,9 +225,9 @@ def get_file_info(file_path):
     if os.path.isfile(absolute_path):
         filetracker = dltools.get_file_tracker(absolute_path)
         if filetracker is not None:
-            if project is not None: 
+            if project is not None:
                 dltools.update_tracker_projects(filetracker, project, dosave=False)
-            filetracker.view_count +=1
+            filetracker.view_count += 1
             filetracker.save()
     
     # Get file content
@@ -237,7 +243,7 @@ def get_file_info(file_path):
                 'miscobj': miscobj,
                 'static_path': static_path,
                 'absolute_path': absolute_path,
-                'file_content': file_content,}
+                'file_content': file_content, }
     return fileinfo
     
 

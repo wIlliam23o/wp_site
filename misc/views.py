@@ -8,6 +8,7 @@ from misc import tools as misctools
 
 _log = logger('misc').log
 
+
 @requires_csrf_token
 def view_index(request):
     """ Main index for Misc objects. """
@@ -16,12 +17,13 @@ def view_index(request):
     return responses.clean_response_req("misc/index.html",
                                         {'request': request,
                                          'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                   '/static/css/misc.css',
-                                                                   '/static/css/highlighter.css'],
+                                                                   '/static/css/misc.min.css',
+                                                                   '/static/css/highlighter.min.css'],
                                          'miscobjects': miscobjs,
                                          },
                                         with_request=request)
     
+
 @requires_csrf_token
 def view_misc_any(request, identifier):
     """ View a specific misc item. """
@@ -34,8 +36,8 @@ def view_misc_any(request, identifier):
     return responses.clean_response_req('misc/misc.html',
                                         {'request': request,
                                          'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                   '/static/css/misc.css',
-                                                                   '/static/css/highlighter.css'],
+                                                                   '/static/css/misc.min.css',
+                                                                   '/static/css/highlighter.min.css'],
                                          'misc': misc,
                                          },
                                         with_request=request)

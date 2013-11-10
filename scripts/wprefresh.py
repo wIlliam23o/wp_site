@@ -13,7 +13,7 @@
 '''
 
 import sys
-import os 
+import os
 
 script_dir = sys.path[0]
 project_dir = os.path.split(script_dir)[0]
@@ -21,7 +21,7 @@ settings_dir = os.path.join(project_dir, 'wp_main/')
 sys.path.insert(0, project_dir)
 sys.path.insert(0, settings_dir)
 
-if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
+if not 'DJANGO_SETTINGS_MODULE' in os.environ.keys():
     os.environ['DJANGO_SETTINGS_MODULE'] = 'wp_main.settings'
 
 # DJANGO READY.
@@ -30,10 +30,11 @@ print "django environment ready."
 # Get Settings..
 from django.conf import settings
 
-#admin css dirs (source, target)
+# admin css dirs (source, target)
 admin_css = os.path.join(project_dir, "home/static/admin/css")
 admin_css_static = os.path.join(settings.STATIC_PARENT, "static/admin/css")
-if not admin_css_static.endswith('/'): admin_css_static += '/'
+if not admin_css_static.endswith('/'):
+    admin_css_static += '/'
 
 # location of manage.py, builder.py
 manage_py = os.path.join(settings.BASE_DIR, "manage.py")
@@ -45,8 +46,9 @@ if os.path.isdir(remote_apache_path):
     apachecmd = ''.join(['. ', remote_apache_path]) + '/'
     use_elevation = False
 else:
-    apachecmd = os.path.join('/etc', 'init.d','apache2') + ' '
+    apachecmd = os.path.join('/etc', 'init.d', 'apache2') + ' '
     use_elevation = True
+
 
 def main(args):
     global apachecmd
@@ -85,7 +87,7 @@ def main(args):
     
     # BUILD
     if SKIP_BUILD:
-        print('Skipping build...')
+        print('\nSkipping build...')
     else:
         if os.path.isfile(builder_py):
             print('\nRunning builder...')
@@ -100,7 +102,7 @@ def main(args):
         
     # COLLECTSTATIC
     if SKIP_COLLECT:
-        print('Skipping collectstatic...')
+        print('\nSkipping collectstatic...')
     else:
         if os.path.isfile(manage_py):
             print("\nRunning collectstatic...")
@@ -120,22 +122,22 @@ def main(args):
             css_cmd += ['cp', os.path.join(admin_css, '*'), admin_css_static]
             os.system(' '.join(css_cmd))
         else:
-            print("\nadmin css directories not found:\n    source: " + admin_css + \
+            print("\nadmin css directories not found:\n    source: " + admin_css +
                   '\n    target: ' + admin_css_static + '\n')
     
-   
     # RESTART APACHE
     if SKIP_REFRESH:
-        print('Skipping apache restart...')
+        print('\nSkipping apache restart...')
     else:
         print("\nRestarting apache... (" + apachecmd + 'restart)')
         if os.path.isfile(apachecmd.strip(' ')) or os.path.isdir(apachecmd.strip('/').strip('. ')):
             try:
-                if use_elevation: apachecmd = 'sudo ' + apachecmd
+                if use_elevation:
+                    apachecmd = 'sudo ' + apachecmd
                 os.system(apachecmd + 'restart')
             except Exception as ex:
                 print('\nunable to restart apache:\n' + str(ex))
-        else: 
+        else:
             print('\napache command not found!: ' + apachecmd + '\n')
             
         print("\nFinished.\n")
@@ -143,4 +145,3 @@ def main(args):
 if __name__ == '__main__':
     args = sys.argv[1:]
     sys.exit(main(args))
-
