@@ -229,7 +229,18 @@ def get_headerstr(obj):
 
 def get_model_fields(model, includefunctions=False):
     # get attributes, without private attrs.
-    tmpobject = model.objects.create(name='testitem', alias='testitem')
+    if hasattr(model, 'alias'):
+        testattrs = {'alias': 'testitem'}
+    elif hasattr(model, 'slug'):
+        testattrs = {'slug': 'testitem'}
+    else:
+        testattrs = {}
+    if hasattr(model, 'name'):
+        testattrs['name'] = 'testitem'
+    elif hasattr(model, 'title'):
+        testattrs['title'] = 'testitem'
+    
+    tmpobject = model.objects.create(**testattrs)
     tmpobject.delete()
     attrs = [a for a in dir(tmpobject) if not a.startswith('_')]
     

@@ -104,8 +104,8 @@ def search_misc(querystr):
         return []
     
     results = []
-    
-    for misc in wp_misc.objects.order_by('-publish_date'):
+
+    for misc in wp_misc.objects.filter(disabled=False).order_by('-publish_date'):
         mcontent = misctools.get_long_desc(misc)
         targets = (misc.name,  misc.alias,
                    misc.version, misc.filetype,
@@ -138,7 +138,7 @@ def search_projects(querystr):
         # Nothing to search
         return []
     
-    for proj in wp_project.objects.order_by('-publish_date'):
+    for proj in wp_project.objects.filter(disabled=False).order_by('-publish_date'):
         targets = (proj.name, proj.alias,
                    proj.version, proj.description,
                    str(proj.publish_date), ptools.get_html_content(proj),
@@ -170,7 +170,7 @@ def search_blog(querystr):
         return []
     
     results = []
-    for post in wp_blog.objects.order_by('-posted'):
+    for post in wp_blog.objects.filter(disabled=False).order_by('-posted'):
         pdesc = blogtools.prepare_content(blogtools.get_post_body_short(post, max_text_lines=16))
         targets = (post.title, post.slug,
                    blogtools.get_post_body(post), pdesc,
@@ -191,8 +191,8 @@ def search_all(querystr, projects_first=True):
     
     if projects_first:
         results = search_projects(querystr)
-        results += search_blog(querystr)
         results += search_misc(querystr)
+        results += search_blog(querystr)
     else:
         results = search_blog(querystr)
         results += search_projects(querystr)

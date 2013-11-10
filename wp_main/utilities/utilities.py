@@ -223,6 +223,24 @@ def debug_allowed(request):
     return (ip_in_settings and bool(settings.DEBUG))
 
 
+def get_objects_enabled(objects_):
+    """ Safely retrieves all objects where disabled == False.
+        Handles 'no objects', returns [] if there are no objects.
+    """
+    
+    # Model was passed instead of model.objects.
+    if hasattr(objects_, 'objects'):
+        objects_ = getattr(objects_, 'objects')
+    
+    try:
+        allobjs = objects_.get(disabled=False)
+    except Exception as ex:
+        _log.error('No objects to get!: {}'.format(objects_.__name__))
+        allobjs = []
+    
+    return allobjs
+
+    
 def get_object_safe(objects_, **kwargs):
     """ does a mymodel.objects.get(kwargs),
         Other Keyword Arguments:
