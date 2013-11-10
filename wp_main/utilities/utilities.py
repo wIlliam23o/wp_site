@@ -233,10 +233,10 @@ def get_objects_enabled(objects_):
         objects_ = getattr(objects_, 'objects')
     
     try:
-        allobjs = objects_.get(disabled=False)
+        allobjs = objects_.filter(disabled=False)
     except Exception as ex:
-        _log.error('No objects to get!: {}'.format(objects_.__name__))
-        allobjs = []
+        _log.error('No objects to get!: {}\n{}'.format(objects_.__name__, ex))
+        allobjs = None
     
     return allobjs
 
