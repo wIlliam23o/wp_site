@@ -80,48 +80,51 @@ def check_input(cmdname, cmdargs):
         yesforced = False
         noforced = False
         if cmdargs:
-            for yesarg in ('-y', 'yes', '--yes'):
+            for yesarg in ('-c', '--collect'):
                 if yesarg in cmdargs:
                     yesforced = True
                     break
-            for noarg in ('-n', 'no', '--nostatic', '--nocollect'):
+            for noarg in ('-C', '--nocollect'):
                 if noarg in cmdargs:
                     noforced = True
                     break
             if yesforced and noforced:
-                print('\nBoth \'yes\' and \'no\' args used, this won\'t work.')
+                print('\nBoth \'--collect\' and \'--nocollect\' '
+                      'args used, this won\'t work.')
                 sys.exit(1)
         if (not yesforced) and (not noforced):
             collectstatic = input('Would you like to collect static files? (yes/no): ')
             if collectstatic.lower().startswith('y'):
-                flags.append('yes')
+                flags.append('--collect')
             else:
-                flags.append('no')
+                flags.append('--nocollect')
         # Get live/skip args
         liveforced = False
         skipforced = False
         if cmdargs:
             # live args used?
-            for livearg in ('-l', 'live', '--live'):
+            for livearg in ('-l', '--live'):
                 if livearg in cmdargs:
                     liveforced = True
                     break
             # skip args used?
-            for skiparg in ('skip', '-s', '--skiprefresh', '--norefresh', '--noapache'):
+            for skiparg in ('-r', '--norestart'):
                 if skiparg in cmdargs:
                     skipforced = True
                     break
         if skipforced and liveforced:
-            print('\nBoth \'skip\' and \'live\' args used, this won\'t work.')
+            print('\nBoth \'--live\' and \'--norestart\' args used, '
+                  'this won\'t work.')
             sys.exit(1)
             
         needlive = (not liveforced) and (not skipforced)
         if (not is_test_site()) and (needlive):
-            livesite = input('*** This is the LIVE site! ***\nWould you like to refresh apache? (yes/no): ')
+            livesite = input('*** This is the LIVE site! ***\n'
+                             'Would you like to restart apache? (yes/no): ')
             if livesite.lower().startswith('y'):
-                flags.append('live')
+                flags.append('--live')
             else:
-                flags.append('skip')
+                flags.append('--norestart')
         return flags
     # No extra args needed
     return []
@@ -236,11 +239,11 @@ def parse_commands(args):
     
     # command flags, mapped to their function.
     commands = {'-l': {'aliases': ['--list'],
-                       'func': do_list, 
+                       'func': do_list,
                        'kwargs': None,
                        },
                 '-h': {'aliases': ['--help'],
-                       'func': print_usage, 
+                       'func': print_usage,
                        'kwargs': {'retcode': 0},
                        },
                 }
@@ -281,7 +284,7 @@ def parse_commands(args):
             # unknown flag!
             print_fail('Unknown flag given!: {}\nRun with --help for usage instructions.'.format(cmdarg))
              
-    # Return args without any 'wrun command flags'.    
+    # Return args without any 'wrun command flags'.
     return args
 
  
@@ -361,7 +364,7 @@ def print_usage(retcode=None):
         
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print_usage(retcode=1)       
+        print_usage(retcode=1)
     # Run any commands before looking up a script name.
     parsedargs = parse_commands(sys.argv[1:])
     if not parsedargs:
