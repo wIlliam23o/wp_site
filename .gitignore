@@ -10,3 +10,6 @@ clsCj*
 files/pi
 misc/static/files/pi*
 *.sass-cache*
+*.pdf
+*files/books*
+*misc/static/files/books*
