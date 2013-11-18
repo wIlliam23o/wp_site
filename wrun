@@ -42,7 +42,8 @@ EXECS = {'.py': 'python',
                               
 def main(args):
     """ main entry point, parses args to run scripts.
-        expects args = sys.argv[1:], or ['scriptfiletorun.py', 'scriptarg1', 'arg2', ..]
+        expects args = sys.argv[1:], or
+        ['scriptfiletorun.py', 'scriptarg1', 'arg2', ..]
     """
     
     # Get additional args for the script
@@ -73,7 +74,13 @@ def main(args):
 
 
 def check_input(cmdname, cmdargs):
+    if ('-h' in cmdargs) or ('--help' in cmdargs):
+        return []
+    elif ('-v' in cmdargs) or ('--version' in cmdargs):
+        return []
+
     if cmdname.startswith('wprefresh'):
+
         print('\nwprefresh may require more input...')
         flags = []
         # Collect Static for wprefresh
@@ -134,7 +141,9 @@ def do_list():
     """ List all script files found. """
     
     scripts = get_scripts()
-    print('\nFound {} scripts in: {}\n    {}'.format(str(len(scripts)), SCRIPTSDIR, '\n    '.join(scripts)))
+    print('\nFound {} scripts in: {}\n    {}'.format(str(len(scripts)),
+                                                     SCRIPTSDIR,
+                                                     '\n    '.join(scripts)))
     
     
 def get_scripts():

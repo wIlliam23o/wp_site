@@ -9,3 +9,4 @@ internal*
 clsCj*
 files/pi
 misc/static/files/pi*
+*.sass-cache*

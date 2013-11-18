@@ -1,0 +1,61 @@
+@import 'welbornprod';
+/* -------------------------- home.css -------------------------- */
+/* welcome message */
+
+/* container for 'Featured Project/Latest Blog */
+.featured-main-box, .home-welcome-box {
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-bottom: 10px;
+    margin-top: 10px;
+    margin: 15px;
+    position: relative;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-color: $bordermain;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: $shadownormal;
+    background: white;
+}
+
+/* container for feature/blog entry/project */
+.featured-item-container {
+    margin: 15px;
+    padding: 10px;
+    background-color: $whitedull;
+    border-radius: 5px;
+    box-shadow: $shadowmedium;
+    text-align: left;
+
+}
+
+/* Header box with name/title version/date*/
+.featured-header-box {
+    text-align: left;
+    width: 100%
+}
+
+.featured-name {
+    font-size: 2em;
+}
+
+.featured-version {
+    font-size:$fontsmall;
+    color: $greydark;
+    font-weight: bold;
+    font-family: $fontsnormal;
+    text-align: right;
+    padding-left: 0%;
+}
+
+/* box holding description/body */
+.featured-desc {
+    margin-top: 10px;
+    padding: 5px;
+    border-radius: 10px;
+    border-color: $bordermain;
+    border-style: solid;
+    border-width: 2px;
+}

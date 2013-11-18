@@ -1,0 +1,50 @@
+// Global colors/settings for Welborn Productions
+// Every .scss file should import this, if it uses the common colors/styles.
+
+// Borders
+$bordermain: rgba(202,217,224,0.5);
+$borderlight: #AFAFAF;
+$borderhover: #B5CEFF;
+$borderblue: #74AFEE;
+$borderwhite: #FFFFFF;
+$borderred: #B90000;
+$bordercode: #7793A7;
+
+// Colors
+$blackmain: #000000;
+$whitemain: #FFFFFF;
+$whitedull: #FAFAFA;
+// $greybg Matches rgb(49, 49, 49) for linear-gradient used in main bg gradient.
+$greybg: #313131;
+$greydark: #4d4d4d;
+$greymain: #919191;
+$greylight: #AFAFAF;
+$bluelink: #2358A6;
+$bluemain: #26A1F4;
+$bluelight: #74AFEE;
+$bluehover: #007DD1;
+
+
+// Shadows
+$shadowbig:  #EEEEEE 0px 0px 20px;
+$shadowmedium: #bac2c7 0px 0px 15px;
+$shadownormal: 4px 4px 4px rgba(0,0,0,0.07);
+$shadowsmall: #bac2c7 1px 1px 4px;
+$shadowtext: 2px 2px 4px rgba(0, 0, 0, 1);
+$shadowtextsmall:  #999999 1px 1px 3px;
+
+// Font Stacks
+$fontssmall: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
+$fontsnormal: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
+$fontsmono: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+
+// Font Sizes
+$fontsmall: 0.8em;
+$fontnormal: 1em;
+$fontbigger: 1.2em;
+$fontmedium: 1.5em;
+$fontbig: 2.0em;
+$fontlarge: 3.5em;
+
+// Line Heights
+$lineheightnormal: 1.1em;

@@ -3,7 +3,9 @@
 
 '''
       project: Welborn Productions - Tools - Refresher
-     @summary: Refreshes static files (collectstatic), refreshes admin css (static/admin/css),
+     @summary: Builds files that need it with builder.py,
+               Refreshes static files (collectstatic),
+               refreshes admin css (static/admin/css),
                and Restarts the server.
     
       @author: Christopher Welborn <cj@welbornprod.com>
@@ -53,11 +55,12 @@ USAGESTR = """wprefresh.py v. {version}
         -B,--nobuild    : Skip building files.
         -c,--collect    : Auto static collection.
         -C,--nocollect  : Skip static collection.
+        -d,--debug      : Prints extra info (not much right now).
         -h,--help       : Show this message.
         -l,--live       : Suppress warning about live site.
         -r,--norestart  : Skip apache restart.
         -v,--version    : Show version.
-"""
+""".format(version=VERSIONSTR)
 
 
 def main(argd):
@@ -93,7 +96,7 @@ def main(argd):
         check_call(collect_static, autocollect=argd['--collect'])
     # Run admin copy (overwrites anything in /static)
     if not argd['--noadmin']:
-        check_call(collect_admin_css)
+        check_call(collect_admin_css, printskipped=argd['--debug'])
     # Run apache restart
     if not argd['--norestart']:
         check_call(apache_restart)
@@ -113,7 +116,8 @@ def apache_restart():
         use_elevation = True
    
     print("\nRestarting apache... (" + apachecmd + 'restart)')
-    if os.path.isfile(apachecmd.strip(' ')) or os.path.isdir(apachecmd.strip('/').strip('. ')):
+    if (os.path.isfile(apachecmd.strip(' ')) or
+       os.path.isdir(apachecmd.strip('/').strip('. '))):
         try:
             if use_elevation:
                 apachecmd = 'sudo ' + apachecmd
@@ -197,7 +201,7 @@ def collect_static(autocollect=False):
     return ret
 
 
-def collect_admin_css():
+def collect_admin_css(printskipped=False):
     """ Move admin css to proper dir """
     # admin css dirs (source, target)
     admin_css = os.path.join(project_dir, "home/static/admin/css")
@@ -214,7 +218,8 @@ def collect_admin_css():
             if copy_file(srcfile, dstfile):
                 print('    Copied to: {}'.format(dstfile))
             else:
-                print('     Skipping: {}'.format(srcfile))
+                if printskipped:
+                    print('     Skipping: {}'.format(srcfile))
         ret = True
     else:
         print("\nadmin css directories not found:\n    source: " + admin_css +
