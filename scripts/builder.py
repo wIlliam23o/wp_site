@@ -483,7 +483,7 @@ def get_external_tool(toolfile):
     # Use `which` to determine location..
     cmdargs = ['which', toolfile]
     try:
-        rawoutput = subprocess.check_output(cmdargs).strip('\n')
+        rawoutput = subprocess.check_output(cmdargs).decode('utf-8').strip('\n')
     except subprocess.CalledProcessError:
         # which returned non-zero, command not found.
         print(notfoundmsg)
