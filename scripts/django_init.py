@@ -17,26 +17,37 @@ _VERSION = '1.0.1'
 project_dir = ''
 settings_dir = ''
 scripts_dir = ''
-initialized = False
+base_dir = ''
+
+try:
+    from django.conf import settings
+    base_dir = settings.BASE_DIR
+    initialized = True
+except ImportError:
+    initialized = False
 
 
 def initialize_django(scriptpath):
     global project_dir, settings_dir, scripts_dir, initialized
 
-    # Set django environment variable (if not set yet)
-    if not 'DJANGO_SETTINGS_MODULE' in os.environ.keys():
-        os.environ["DJANGO_SETTINGS_MODULE"] = "wp_main.settings"
-
-    # This usually only happens in the interpreter.
-    # We will use the cwd...
-    if not scriptpath:
-        scriptpath = os.getcwd()
-
-    # Get base directories..
-    if scriptpath.endswith('scripts'):
-        project_dir = os.path.split(scriptpath)[0]
+    # Django is already initialized?
+    if initialized and base_dir:
+        project_dir = base_dir
     else:
-        project_dir = scriptpath
+        # Set django environment variable (if not set yet)
+        if not 'DJANGO_SETTINGS_MODULE' in os.environ.keys():
+            os.environ["DJANGO_SETTINGS_MODULE"] = "wp_main.settings"
+
+        # This usually only happens in the interpreter.
+        # We will use the cwd...
+        if not scriptpath:
+            scriptpath = os.getcwd()
+
+        # Get base directories..
+        if scriptpath.endswith('scripts'):
+            project_dir = os.path.split(scriptpath)[0]
+        else:
+            project_dir = scriptpath
 
     settings_dir = os.path.join(project_dir, "wp_main")
     scripts_dir = os.path.join(project_dir, 'scripts')
@@ -48,10 +59,11 @@ def initialize_django(scriptpath):
             return False
     
     # Insert paths for this project (if they aren't already in there)
-    if not settings_dir in sys.path:
-        sys.path.insert(0, settings_dir)
     if not project_dir in sys.path:
         sys.path.insert(0, project_dir)
+
+    if not settings_dir in sys.path:
+        sys.path.insert(0, settings_dir)
     if not scripts_dir in sys.path:
         sys.path.insert(0, scripts_dir)
 
