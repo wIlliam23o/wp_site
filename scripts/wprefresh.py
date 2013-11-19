@@ -27,7 +27,7 @@ VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 # Initialize Django stuff.
 try:
     import django_init
-    if not django_init.django_init(sys.path[0]):
+    if not django_init.init_django():
         sys.exit(1)
 except ImportError as eximp:
     print('\nMissing django_init.py!:\n{}'.format(eximp))
@@ -38,19 +38,7 @@ except Exception as ex:
 
 # Fix raw_input..
 if sys.version < '3':
-    input = raw_input
-
-
-# Set paths/files and initialize Django.
-script_dir = sys.path[0]
-#project_dir = os.path.split(script_dir)[0]
-#settings_dir = os.path.join(project_dir, 'wp_main/')
-project_dir = django_init.project_dir
-settings_dir = django_init.settings_dir
-
-# Modifying PATH, anything that needs the original path should go above this.
-#sys.path.insert(0, project_dir)
-#sys.path.insert(0, settings_dir)
+    input = raw_input  # noqa
 
 # Get Settings..
 from django.conf import settings
@@ -76,7 +64,7 @@ USAGESTR = """wprefresh.py v. {version}
 
 def main(argd):
     # if test is passed no warning is given before restarting the server.
-    TEST = ('wp_test' in project_dir)
+    TEST = ('wp_test' in django_init.project_dir)
     WARN = False if TEST else (not (argd['--live'] or argd['--norestart']))
 
     # Check for mismatched args..
@@ -215,7 +203,7 @@ def collect_static(autocollect=False):
 def collect_admin_css(printskipped=False):
     """ Move admin css to proper dir """
     # admin css dirs (source, target)
-    admin_css = os.path.join(project_dir, "home/static/admin/css")
+    admin_css = os.path.join(django_init.project_dir, "home/static/admin/css")
     admin_css_static = os.path.join(settings.STATIC_PARENT, "static/admin/css")
 
     if not admin_css_static.endswith('/'):

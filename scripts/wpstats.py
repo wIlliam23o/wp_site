@@ -25,10 +25,8 @@ try:
     except ImportError:
         # Import style for cmdline.
         import django_init
-    if not django_init.django_init(sys.path[0]):
+    if not django_init.init_django():
         sys.exit(1)
-    project_dir = django_init.project_dir
-    settings_dir = django_init.settings_dir
 except ImportError as eximp:
     print('\nUnable to import django_init.py!:\n{}'.format(eximp))
     sys.exit(1)
@@ -46,9 +44,6 @@ except ImportError as eximp:
     print("unable to import welbornprod modules!\n" +
           "are you in the right directory?\n\n" + str(eximp))
     sys.exit(1)
-
-# everything from welborn prod was imported correctly.
-#print( "django environment ready...")
 
 # import local tools
 try:

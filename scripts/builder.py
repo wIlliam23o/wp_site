@@ -33,12 +33,13 @@ except ImportError as eximp:
     sys.exit(1)
 # Initialize Django..
 try:
-    if not django_init.init_django(sys.path[0]):
+    if not django_init.init_django():
         print('\nUnable to initialize django environment!')
         sys.exit(1)
 except Exception as ex:
     print('\nUnable to initialize django environment!\n{}'.format(ex))
     sys.exit(1)
+
 # Import Django stuff.
 from django.conf import settings
 

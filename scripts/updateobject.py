@@ -45,11 +45,18 @@ import sys
 # Local helper modules.
 try:
     import django_init
+    if not django_init.init_django():
+        print('\nUnable to initialize django!')
+        sys.exit(1)
+except ImportError as eximp:
+    print('\nMissing django_init.py!:\n{}'.format(eximp))
+    sys.exit(1)
+
+try:
     import objectupdater
 except ImportError as eximp:
     print('Missing local module!\nThis won\'t work!\n{}'.format(eximp))
     sys.exit(1)
-django_init.init_django(sys.path[0])
 
 # import model stuff.
 try:
@@ -73,7 +80,7 @@ is_updatealias = lambda f: f.startswith('update') and (not 'updateobject' in f)
 # Helper for trimming .py from a filename (for aliases, and _SCRIPT)
 trim_pyext = lambda f: f[:-3] if f.endswith('.py') else f
 # Directory where the alias scripts for updateobject.py can be found.
-SCRIPTSDIR = sys.path[0] if sys.path[0].endswith('/scripts') else os.path.join(sys.path[0], 'scripts')
+SCRIPTSDIR = django_init.scripts_dir
 
 try:
     # Grab all updateobject aliases (but not updateobject).

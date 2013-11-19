@@ -10,48 +10,58 @@ import sys
 import os
 
 NAME = 'DjangoInit'
-_VERSION = '1.0.1'
+_VERSION = '1.0.3'
 
 
 # Exportable attributes..
+# These are only set when initialize_django() successfully completes.
 project_dir = ''
 settings_dir = ''
 scripts_dir = ''
-base_dir = ''
-
-try:
-    from django.conf import settings
-    base_dir = settings.BASE_DIR
-    initialized = True
-except ImportError:
-    initialized = False
-except Exception:
-    initialized = False
+initialized = False
 
 
-def initialize_django(scriptpath):
+def get_root_parent(scriptpath):
+    """ Retrieves the parent dir for the whole project.
+        This is a good place to start building relative
+        paths.
+    """
+
+    if not '/' in scriptpath:
+        return None
+
+    if not 'wp_site' in scriptpath:
+        print('\nInvalid path for this project: {}'.format(scriptpath))
+        print('No wp_site dir found!')
+        return None
+
+    parts = scriptpath.split('/')
+    parent = '/'.join(parts[:parts.index('wp_site')])
+    return parent
+
+
+def initialize_django():
     global project_dir, settings_dir, scripts_dir, initialized
 
-    # Django is already initialized?
-    if initialized and base_dir:
-        project_dir = base_dir
-    else:
-        # Set django environment variable (if not set yet)
-        if not 'DJANGO_SETTINGS_MODULE' in os.environ.keys():
-            os.environ["DJANGO_SETTINGS_MODULE"] = "wp_main.settings"
+    # Set environment variable (if not set already.)
+    if not 'DJANGO_SETTINGS_MODULE' in os.environ.keys():
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'wp_main.settings'
+    
+    # Find first real sys.path (first is empty sometimes from cmdline)
+    for paths in sys.path:
+        if paths:
+            scriptpath = paths
+            break
 
-        # This usually only happens in the interpreter.
-        # We will use the cwd...
-        if not scriptpath:
-            scriptpath = os.getcwd()
+    project_parent = get_root_parent(scriptpath)
+    if not project_parent:
+        # This is bad!
+        print('\nCan\'t find project parent from: {}'.format(scriptpath))
+        return False
 
-        # Get base directories..
-        if scriptpath.endswith('scripts'):
-            project_dir = os.path.split(scriptpath)[0]
-        else:
-            project_dir = scriptpath
-
-    settings_dir = os.path.join(project_dir, "wp_main")
+    # These relative paths should be on all sites (dev, test, prod.)
+    project_dir = os.path.join(project_parent, 'wp_site')
+    settings_dir = os.path.join(project_dir, 'wp_main')
     scripts_dir = os.path.join(project_dir, 'scripts')
 
     # Make sure all required directories exist.
@@ -61,9 +71,10 @@ def initialize_django(scriptpath):
             return False
     
     # Insert paths for this project (if they aren't already in there)
+    # Insert main path.
     if not project_dir in sys.path:
         sys.path.insert(0, project_dir)
-
+    # Insert extra import paths.
     if not settings_dir in sys.path:
         sys.path.insert(0, settings_dir)
     if not scripts_dir in sys.path:
@@ -72,23 +83,6 @@ def initialize_django(scriptpath):
     # Success
     initialized = True
     return True
+
 # Aliases..
 init_django = initialize_django
-django_init = initialize_django
-
-
-def import_settings():
-    """ Retrieve django.conf.settings.... """
-    if not initialized:
-        if not django_init(sys.path[0]):
-            return None
-
-    # Django is initialized, try to retrieve django.conf.settings
-    try:
-        from django.conf import settings
-    except ImportError as eximp:
-        print('\nUnable to import django settings!:\n{}'.format(eximp))
-        return None
-
-    # Return the settings module.
-    return settings
