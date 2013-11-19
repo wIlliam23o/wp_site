@@ -25,6 +25,8 @@ try:
     initialized = True
 except ImportError:
     initialized = False
+except Exception:
+    initialized = False
 
 
 def initialize_django(scriptpath):
