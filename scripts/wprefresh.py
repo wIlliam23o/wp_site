@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -26,8 +26,9 @@ VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
 # Initialize Django stuff.
 try:
-    from django_init import django_init
-    django_init(sys.path[0])
+    import django_init
+    if not django_init.django_init(sys.path[0]):
+        sys.exit(1)
 except ImportError as eximp:
     print('\nMissing django_init.py!:\n{}'.format(eximp))
     sys.exit(1)
@@ -42,12 +43,14 @@ if sys.version < '3':
 
 # Set paths/files and initialize Django.
 script_dir = sys.path[0]
-project_dir = os.path.split(script_dir)[0]
-settings_dir = os.path.join(project_dir, 'wp_main/')
+#project_dir = os.path.split(script_dir)[0]
+#settings_dir = os.path.join(project_dir, 'wp_main/')
+project_dir = django_init.project_dir
+settings_dir = django_init.settings_dir
 
 # Modifying PATH, anything that needs the original path should go above this.
-sys.path.insert(0, project_dir)
-sys.path.insert(0, settings_dir)
+#sys.path.insert(0, project_dir)
+#sys.path.insert(0, settings_dir)
 
 # Get Settings..
 from django.conf import settings
@@ -145,7 +148,7 @@ def build_files(wponly=False):
     builder_py = os.path.join(settings.BASE_DIR, 'scripts', 'builder.py')
     if os.path.isfile(builder_py):
         print('\nRunning builder...')
-        build_cmd = ['python', builder_py]
+        build_cmd = ['python3', builder_py]
         if wponly:
             # only build wp*.js files. not external stuff. (takes too long)
             build_cmd = build_cmd + ['-i', 'wp', '-f', '-wp']
@@ -199,7 +202,7 @@ def collect_static(autocollect=False):
         collect_cmd = ['echo', '"yes"', '|'] if autocollect else []
         if use_elevation:
             collect_cmd += ['sudo']
-        collect_cmd += ['python', manage_py, 'collectstatic']
+        collect_cmd += ['python3', manage_py, 'collectstatic']
         print("running: " + ' '.join(collect_cmd))
         callret = os.system(' '.join(collect_cmd))
         ret = (callret == 0)

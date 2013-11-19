@@ -1,3 +1,7 @@
+# Version info
+from sys import version as sysversion
+from django.utils.version import get_version as get_django_version
+
 # safe html in responses.
 from django.utils.safestring import mark_safe, mark_for_escaping
 # authentication
@@ -50,6 +54,8 @@ def view_debug(request):
     
     return responses.clean_response("home/debug.html",
                                     {'request': request,
+                                     'djangoversion': get_django_version(),
+                                     'sysversion': sysversion,
                                      'extra_style_link_list': [utilities.get_browser_style(request),
                                                                "/static/css/highlighter.min.css"],
                                      })

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -19,7 +19,12 @@ __VERSION__ = '1.5.0'
 
 # Set django environment variable (if not set yet)
 try:
-    from scripts import django_init
+    try:
+        # Import style for django.
+        from scripts import django_init
+    except ImportError:
+        # Import style for cmdline.
+        import django_init
     if not django_init.django_init(sys.path[0]):
         sys.exit(1)
     project_dir = django_init.project_dir

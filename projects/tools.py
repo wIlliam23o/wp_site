@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -11,8 +11,7 @@
    start date: Mar 14, 2013
 '''
 # File/Path stuff
-from os import listdir #@UnusedImport: os.listdir is used, aptana is stupid.
-import os.path
+import os
 
 # Project info
 from projects.models import wp_project
@@ -25,7 +24,8 @@ from wp_main.utilities import htmltools
 from wp_main.utilities.wp_logging import logger
 _log = logger('projects.tools').log
 
-def sorted_projects(sort_method = "-publish_date"):
+
+def sorted_projects(sort_method="-publish_date"):
     """ return sorted list of projects.
         sort methods: date, name, id
     """
@@ -137,13 +137,13 @@ def get_download_file_content(project, surl):
         return html_.tostring()
     
     
-def build_download_file_content(project, surl, desc_text = ' - Current package.'):
+def build_download_file_content(project, surl, desc_text=' - Current package.'):
     """ builds download content box from single file url.
         given the file to download, it outputs the html for the
         download section.
     """
     
-    # intial template for this downloadable file link    
+    # intial template for this downloadable file link
     html_ = htmltools.html_content("""
         <div class='download-file'>
             <a class='download-link' href='{{ relative_link }}'>
@@ -213,7 +213,7 @@ def prepare_content(project, scontent):
         
     # do screenshots.
     images_dir = get_screenshots_dir(project)
-    # inject screenshots.      
+    # inject screenshots.
     if os.path.isdir(images_dir):
         html_.inject_screenshots(images_dir)
         
@@ -282,7 +282,6 @@ def process_injections(project, request=None):
     return html_.tostring()
 
 
-    
 def get_project_from_path(file_path):
     """ determines if this file is from a project. 
         returns project object if it is.
@@ -294,5 +293,3 @@ def get_project_from_path(file_path):
         if proj.alias in str(file_path):
             return proj
     return None
-
-    

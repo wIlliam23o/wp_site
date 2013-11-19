@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 '''updateobject.py
     Busybox-style command that updates various models depending on the name it is called by.
@@ -132,7 +132,7 @@ _VERSION = '1.1.0'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 
 # Usage string to use with docopt.
-usage_str = objectupdater.base_usage_str.format(name=_NAME, 
+usage_str = objectupdater.base_usage_str.format(name=_NAME,
                                                 ver=_VERSION,
                                                 script=_SCRIPT,
                                                 properid=modelused['name'],
@@ -150,13 +150,13 @@ def main(argd):
     elif argd['<identifier>']:
         # Retrieve project info.
         if argd['--list']:
-            ret = objectupdater.do_object_info(argd['<identifier>'], 
-                                               modelused['model'], 
+            ret = objectupdater.do_object_info(argd['<identifier>'],
+                                               modelused['model'],
                                                attrs=modelused['attrs'])
         elif argd['--update']:
-            ret = objectupdater.do_object_update(argd['<identifier>'], 
-                                                 argd['--update'], 
-                                                 modelused['model'], 
+            ret = objectupdater.do_object_update(argd['<identifier>'],
+                                                 argd['--update'],
+                                                 modelused['model'],
                                                  attrs=modelused['attrs'])
         else:
             # No args with identifier (do Header String print)
@@ -243,8 +243,8 @@ def do_list_projects(model=None):
         aliasspace = (' ' * ((longestalias - len(proj.alias)) + 1))
         versionstr = 'v. {}'.format(proj.version) if proj.version else ''
 
-        infostr = '    {name}{namespace}({alias}){aliasspace}{ver}'.format(name=proj.name, 
-                                                                           alias=proj.alias, 
+        infostr = '    {name}{namespace}({alias}){aliasspace}{ver}'.format(name=proj.name,
+                                                                           alias=proj.alias,
                                                                            ver=versionstr,
                                                                            namespace=namespace,
                                                                            aliasspace=aliasspace)

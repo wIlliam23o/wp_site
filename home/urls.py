@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -15,11 +15,9 @@
 #from django.conf.urls import patterns, url
 #from home import views
 #
-#urlpatterns = patterns('',
-#                     
+# urlpatterns = patterns('',
+#
 #    url(r'^$', views.index, name='home'),
 #    url(r'^[Aa]bout/?$', views.view_about, name='about'),
 #    url
 #                      )
-
-
