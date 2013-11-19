@@ -17,6 +17,10 @@ import sys
 import os.path
 import re  # for regex 'finders'
 
+# Fix for python 3
+if sys.version < '3':
+    input = raw_input
+
 NAME = 'WpSwitch'
 VERSION = '1.0.2'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
@@ -195,7 +199,7 @@ class switch(object):
     def __unicode__(self):
         """ unicode representation of switch """
         
-        return unicode(self.name, encoding='utf-8')
+        return self.__str__()
     
     def __repr__(self):
         """ representation of switch """
@@ -975,7 +979,7 @@ def parse_switchdata(switchline):
         # possible values.
         values = parse_values(switchdata[2])
         # error parsing values?
-        if isinstance(values, (str, unicode)):
+        if hasattr(values, 'encode'):
             print(values + switchline)
             skip = True
             
@@ -1047,7 +1051,7 @@ def parse_values(values):
         values = [v.strip(' ') for v in values.split(value_sep)]
         #print_debug("Sep: " + value_sep + '\nValues: ' + ' | '.join(values) + '\nStart/End: ' + val2_start + val1_end)
         
-        if len(values) <> 2:
+        if len(values) != 2:
             values = "\nbad switch data, too many possible values: "
         else:
             # fix missing start/end from regex.
@@ -1471,7 +1475,7 @@ def cmdline_get_response(prompt, **kwargs):
     # the calling function should trap cmdlineExit()... (cmdline_build_switch())
     try:
         while True:
-            response = raw_input(prompt)
+            response = input(prompt)
             response_trim = response.replace(' ', '').lower()
             response_multicheck = response_trim.replace(',', '')
             
@@ -1597,7 +1601,7 @@ def print_block(msgdata, max_line_len=80):
 
     fixedvals = []
     # simple 1 tag with values tuple
-    if isinstance(msgdata[0], (str, unicode)):
+    if hasattr(msgdata[0], 'encode'):
         tagname = msgdata[0]
         taglen = len(tagname)
         rawvalues = msgdata[1:]
