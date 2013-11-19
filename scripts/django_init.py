@@ -31,10 +31,16 @@ def get_root_parent(scriptpath):
         return None
 
     if not 'wp_site' in scriptpath:
+        # Maybe this is the parent (it is for remote-servers sometimes)
+        parent = os.path.join(scriptpath, 'wp_site')
+        if os.path.isdir(parent):
+            return parent
+        # Nope, no parent here.
         print('\nInvalid path for this project: {}'.format(scriptpath))
         print('No wp_site dir found!')
         return None
 
+    # retrieve parent dirs, and append the 'wp_site' we're looking for.
     parts = scriptpath.split('/')
     parent = '/'.join(parts[:parts.index('wp_site')])
     return parent
@@ -46,7 +52,7 @@ def initialize_django():
     # Set environment variable (if not set already.)
     if not 'DJANGO_SETTINGS_MODULE' in os.environ.keys():
         os.environ['DJANGO_SETTINGS_MODULE'] = 'wp_main.settings'
-    
+
     # Find first real sys.path (first is empty sometimes from cmdline)
     for paths in sys.path:
         if paths:
