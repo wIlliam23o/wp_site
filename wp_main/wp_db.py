@@ -13,6 +13,8 @@
 
 import Crypto.Cipher.Blowfish
 import os.path
+import sys
+
 
 def get_key(key_filename):
     """ retrieves key from local file """
@@ -22,35 +24,24 @@ def get_key(key_filename):
             skey = fread.read().strip(' ').strip('\n')
     return skey
 
+
 def decrypt(skey, str_):
     """ decrypt a string using local key.
         returns empty string on failure.
     """
     
+    if isinstance(str_, str) and str_.startswith('b\''):
+        str_ = eval(str_)
     decrypted = ''
     if len(skey) > 0:
         tdes = Crypto.Cipher.Blowfish.BlowfishCipher(key=skey)
-        decrypted = tdes.decrypt(str_.replace('{nl}', '\n'))
+        # Python 2 has newlines..
+        if sys.version < '3':
+            str_ = str_.replace('{nl}', '\n')
+        decrypted = tdes.decrypt(str_).decode('utf-8')
         # trim padding chars.
         while (decrypted.endswith('X')):
             decrypted = decrypted[:-1]
     else:
         decrypted = '[unable to decrypt]'
     return decrypted
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

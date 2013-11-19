@@ -12,7 +12,7 @@
 '''
 
 from django import template
-from django.utils.safestring import mark_safe #, mark_for_escaping
+from django.utils.safestring import mark_safe  # , mark_for_escaping
 from projects import tools as ptools
 from wp_main.utilities.wp_logging import logger
 import os.path
@@ -21,12 +21,13 @@ _log = logger("projects.tags").log
 
 register = template.Library()
 
+
 def process_project_html(project, request=None):
     """ runs the project through some html processing
         for screenshots, article ads, download code, sourceview code, etc.
         works on project.get_html_content() through projects.tools.process_injections()
     """
-    if project is None: 
+    if project is None:
         _log.debug("received None project!")
         return ""
     
@@ -50,4 +51,4 @@ registered = [process_project_html,
               has_project_html]
 # Register all tags in the 'registered list'
 for func in registered:
-    register.filter(func.func_name, func)
+    register.filter(func.__name__, func)

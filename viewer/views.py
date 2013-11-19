@@ -10,7 +10,6 @@ from django.http import Http404
 # DEBUG?
 from django.conf import settings
 
-
 # Django decorators
 from django.views.decorators.csrf import csrf_protect
 
@@ -132,7 +131,7 @@ def get_source_files(project):
         else:
             # retrieve all source filenames
             file_names = os.listdir(sabsolute)
-            print str(file_names)
+
             if len(file_names) == 0:
                 source_files = []
             else:
@@ -274,4 +273,5 @@ def highlight_file(static_path, file_content):
 def response_error(ex):
     """ Respond with contents of error message. """
     
+    _log.error('view_error: {}'.format(ex))
     return responses.json_response({'status': 'error', 'message': str(ex)})

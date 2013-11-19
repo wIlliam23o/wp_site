@@ -1,5 +1,14 @@
 from __future__ import print_function
 
+
+class NoItemError(Exception):
+    pass
+
+
+class NoValueError(Exception):
+    pass
+
+
 def safe_dict_val(dict_, keyname_, default_value=None):
     """ safely retrieve a dict value
         if key is missing, just return default value like dict.get()
@@ -14,13 +23,15 @@ def safe_dict_val(dict_, keyname_, default_value=None):
         # a list of acceptable key names can be passed.
         # this will try them all.
         for trykey in keyname_:
-            if dict_.has_key(trykey):
+            if trykey in dict_.keys():
                 return dict_[trykey]
     else:
         default_value = dict_.get(keyname_, default_value)
     return default_value
 
+
 class tracked_dict(dict):
+
     """ An extension for the dict object,
         It adds the ability to keep track of items in
         the order they were added.
@@ -99,11 +110,6 @@ class tracked_dict(dict):
             #     key3: test3
             
     """
-
-    class NoItemError(Exception):
-        pass
-    class NoValueError(Exception):
-        pass
     
     def __init__(self, KV=None, **F):
         if KV is not None:
@@ -114,16 +120,15 @@ class tracked_dict(dict):
         if (KV is not None) and hasattr(KV, 'keys'):
             # copied from another dict, hope they're in order.
             self.tracked_keys = [k for k in KV.keys()]
-        elif isinstance(KV, (list,tuple)):
+        elif isinstance(KV, (list, tuple)):
             # process key names in order of discovery
-            self.tracked_keys = [k for k,v in KV]
+            self.tracked_keys = [k for k, v in KV]
         else:
             self.tracked_keys = []
             
-
     def __repr__(self):
         repritems = []
-        for k,v in self.iteritems():
+        for k, v in self.iteritems():
             repritems.append(': '.join(("'" + str(k) + "'", str(v))))
         return '{' + ', '.join(repritems) + '}'
 
@@ -134,7 +139,7 @@ class tracked_dict(dict):
         return unicode(self.__str__(), encoding='utf-8')
                              
     def __setitem__(self, key, val):
-        dict.__setitem__(self, key,val)
+        dict.__setitem__(self, key, val)
         # don't add the same key twice (may be re-set later)
         if not key in self.tracked_keys:
             self.tracked_keys.append(key)
@@ -173,7 +178,7 @@ class tracked_dict(dict):
                     self.tracked_keys.append(keyname)
         # update from key,value pairs.
         elif isinstance(KV, (list, tuple)):
-            for k,v in KV:
+            for k, v in KV:
                 if not k in self.tracked_keys:
                     self.tracked_keys.append(k)
 
@@ -188,7 +193,7 @@ class tracked_dict(dict):
         return [self[key] for key in self.tracked_keys]
 
     def pop(self, key, default_val=None):
-        if self.has_key(key):
+        if key in self.keys():
             popped_val = dict.pop(self, key, default_val)
             if key in self.tracked_keys:
                 self.tracked_keys.remove(key)
@@ -208,7 +213,9 @@ class tracked_dict(dict):
         del self[firstkey]
         return (firstkey, val)
     
+
 class print_block(tracked_dict):
+
     """ Another dict() extension that allows you to
         build a block of text and print it out with some
         kind of aligned format.
@@ -333,21 +340,17 @@ class print_block(tracked_dict):
         self.space_char = ' '
         self._maxlen = self._get_maxlen()
         
-         
     def __setitem__(self, key, val):
         tracked_dict.__setitem__(self, key, val)
         self._maxlen = self._get_maxlen()
 
-
     def __getitem__(self, val):
         item = tracked_dict.__getitem__(self, val)
-        return item 
-
+        return item
 
     def __delitem__(self, val):
         tracked_dict.__delitem__(self, val)
         self._maxlen = self._get_maxlen()
-
 
     def _get_maxlen(self):
         """ gets the longest key name, so we can align everything else to it.
@@ -355,10 +358,10 @@ class print_block(tracked_dict):
         current_len = 0
         for key in self.tracked_keys:
             keylen = len(key)
-            if keylen > current_len: current_len = keylen
+            if keylen > current_len:
+                current_len = keylen
         return current_len + self.extra_spaces
     
-
     def _formatkey(self, k, **kwargs):
         """ formats the key name. applies the correct amount of self.space_char's
             and prepends/appends text where needed.
@@ -386,7 +389,6 @@ class print_block(tracked_dict):
             formatted_ = (self.space_char * (self._maxlen - len(k)))
         return pre_ + formatted_ + k
     
-
     def _formatval(self, v, **kwargs):
         """ formats the value. applies the correct amount of self.space_char's
             and prepends/appends text where needed.
@@ -414,7 +416,6 @@ class print_block(tracked_dict):
             formatted_ = (self.space_char * (self._maxlen))
         return pre_ + formatted_ + v + app_
 
-
     def _fixvalues(self):
         """ parses all values, turns '\n' seperated strings into separate
             tuple items. Joins tuples and tuple-children into a single list
@@ -429,7 +430,7 @@ class print_block(tracked_dict):
             fixedvals = []
 
             # strings are added, newlines are split
-            if isinstance(val, (str, unicode)):
+            if hasattr(val, 'encode'):
                 if '\n' in val:
                     fixedvals = val.split('\n')
                 else:
@@ -438,7 +439,7 @@ class print_block(tracked_dict):
             elif isinstance(val, (list, tuple)):
                 # tuple/list children are parsed for \n's.
                 for subval in val:
-                    if isinstance(subval, (str, unicode)):
+                    if hasattr(subval, 'encode'):
                         if '\n' in subval:
                             fixedvals += subval.split('\n')
                         else:
@@ -448,7 +449,6 @@ class print_block(tracked_dict):
                         
             # update values
             self.update([(key, fixedvals)])
-            
             
     def printblock(self, **kwargs):
         """ convenience function to print the block of text.
@@ -577,7 +577,8 @@ class print_block(tracked_dict):
         for keyname in self.iterkeys():
             values = self.__getitem__(keyname)
             
-            if values is None: raise self.NoValueError("No values in: " + keyname)
+            if values is None:
+                raise self.NoValueError("No values in: " + keyname)
 
             # Yield first line (because the key and value should be in the same line)
             keyformat_args = {'prepend_text': prepend_text,
@@ -592,7 +593,7 @@ class print_block(tracked_dict):
             if len(values) > 1:
                 for val in values[1:]:
                     # values was a single tuple/list of strings.
-                    if isinstance(val, (str, unicode)):
+                    if hasattr(val, 'encode'):
                         valformat_args = {'append_text': append_text,
                                           'prepend_text': prepend_text,
                                           'prepend_insert': prepend_val}
@@ -606,13 +607,12 @@ class print_block(tracked_dict):
                             yield (self._formatval(subval, **valformat_args))
 
             # add a blank line after this key?
-            if newline_keys: yield ''
+            if newline_keys:
+                yield ''
 
-                
-# Test Run
-import sys
+
 def printx(s, endline='\n'):
-    if not isinstance(s, (str, unicode)):
+    if not hasattr(s, 'encode'):
         s = str(s)
     
     print(s, end=endline)
@@ -620,9 +620,8 @@ def printx(s, endline='\n'):
 
 if __name__ == "__main__":
     myblockstring = [["warning", "don't do this mang"],
-                     ["also", ["dont","do", "this", "either"]]
+                     ["also", ["dont", "do", "this", "either"]]
                      ]
-    
     
     d = print_block(myblockstring)
     format_args = {'append_text': '!',
@@ -630,5 +629,3 @@ if __name__ == "__main__":
                    'prepend_val': '..',
                    'newline_key': True}
     d.printblock(**format_args)
-    
-        

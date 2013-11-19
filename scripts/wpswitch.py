@@ -12,12 +12,22 @@
    start date: May 2, 2013
 '''
 
-import copy # copies switch() class, saves previous version while editing/building switches.
+import copy  # copies switch() class, saves previous version while editing/building switches.
 import sys
 import os.path
-import re # for regex 'finders'
+import re  # for regex 'finders'
 
-usage_str = """
+NAME = 'WpSwitch'
+VERSION = '1.0.2'
+VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
+
+# Fix path.
+project_dir = os.path.split(sys.path[0])[0]
+CHECK_DIRS = (sys.path[0],
+              project_dir)
+
+usage_str = """{version}
+
     usage: wpswitch <command> | <switch_name on|off|-|?|!|@> [options]
     
     commands:
@@ -42,7 +52,7 @@ usage_str = """
       -d, --dryrun : dry run, don't modify any files (will print to console)
         -r, --real : show the real value when setting switches. 
         
-    """
+""".format(version=VERSIONSTR)
 
 help_str = """
     wpswitch help:
@@ -135,15 +145,10 @@ help_str = """
             
             running something like 'wpswitch testdatabase off' seems a lot better to me.
     """
-             
-# Fix path.
-project_dir = os.path.split(sys.path[0])[0]
-       
-CHECK_DIRS = (sys.path[0],
-              project_dir)       
-        
-# Switch Class
+                     
+
 class switch(object):
+
     """ Holds info about a single switch, 
         such as Name, Possible Values for On/Off,
         and the RegEx/Text needed to find the switch. """
@@ -164,7 +169,6 @@ class switch(object):
                      Group: Name of the group this switch belongs to, or None if not grouped.
         """
         
-        
         self.filename = filename
         # allows setting multiple names for a switch ["database", "db"]
         if isinstance(name, (list, tuple)):
@@ -183,7 +187,6 @@ class switch(object):
         self.description = description
         self.group = group
     
-    
     def __str__(self):
         """ string representation of switch """
         
@@ -200,7 +203,8 @@ class switch(object):
     
     def __eq__(self, other):
         if isinstance(other, switch):
-            return ((self.get_switch_str() == other.get_switch_str()) and (self.group == other.group))
+            return ((self.get_switch_str() == other.get_switch_str()) and
+                    (self.group == other.group))
         else:
             return False
         
@@ -222,13 +226,12 @@ class switch(object):
         else:
             values = str(','.join(self.values))
         
-        return str(SWITCH_SEPARATOR.join((str(self.filename), 
-                                          names, 
-                                          values, 
+        return str(SWITCH_SEPARATOR.join((str(self.filename),
+                                          names,
+                                          values,
                                           str(self.finder),
                                           str(self.description))))
 
-    
     def get_switch_id(self):
         """ Trying to find a unique identifier for switches. """
         
@@ -239,7 +242,6 @@ class switch(object):
         
         return str(SWITCH_SEPARATOR.join((str(self.filename), names)))
     
-                
     def get_name(self):
         """ safely etrieves default name for this switch if aliases are given.
             Otherwise returns self.name
@@ -250,18 +252,15 @@ class switch(object):
         else:
             return self.aliases[0]
         
-    
     def get_description(self):
         """ safely retrieves a description (returns 'None' string on failure) """
         
         return str(self.description)
 
-
     def on_value(self):
         """ Retrieves the expected value for "on" """
         
         return self.values[0]
-    
     
     def off_value(self):
         """ Retrieves the expected value for "off" """
@@ -278,8 +277,8 @@ class switch(object):
             possible_values may not be a string.
         """
         
-        possible_values = {"on":self.on_value(),
-                           "off":self.off_value()}
+        possible_values = {"on": self.on_value(),
+                           "off": self.off_value()}
         for skey in possible_values.keys():
             if str(value).lower() == str(skey).lower():
                 return possible_values[skey]
@@ -287,13 +286,12 @@ class switch(object):
                 return skey
         return None
 
-            
     def is_regex(self):
         """ Returns true if the finder text is a regex expression """
         
         if self.finder is not None:
-            return (self.finder.startswith('/') and 
-                    self.finder.endswith('/') and 
+            return (self.finder.startswith('/') and
+                    self.finder.endswith('/') and
                     len(self.finder) > 2)
             
         return False
@@ -318,12 +316,12 @@ class switch(object):
             with open(filename) as fread:
                 contents = fread.read()
         except Exception as ex:
-            print_fail("Cannot retrieve contents for " + self.get_name() + " : " + self.filename + '\n' + \
+            print_fail("Cannot retrieve contents for " + self.get_name() + " : " + self.filename + '\n' +
                        "Error: " + str(ex))
         # everything passed, return contents.
         return contents
     
-    def get_switch_text(self, contents = None):
+    def get_switch_text(self, contents=None):
         """ retrieves actual code text for this switch.
             (for when regex is used, but also works for regular text.)
             contents is the switches file contents, if none is passed
@@ -342,19 +340,19 @@ class switch(object):
             # regular expressions, find actual text to use for switch
             match_ = re.search(finder, contents)
             if match_ is None:
-                print_fail("Switch " + self.get_name() + \
+                print_fail("Switch " + self.get_name() +
                            "'s regular expression not found in: " + self.filename)
             # get actual text from regex expression
             actualtext = match_.group()
         else:
             # regular text will be used.
             if not finder in contents:
-                print_fail("Switch " + self.get_name() + \
+                print_fail("Switch " + self.get_name() +
                            "'s text not found in: " + self.filename)
             actualtext = finder
         return actualtext
     
-    def get_state(self, actual_value = False, contents=None):
+    def get_state(self, actual_value=False, contents=None):
         """ Retrieves current trigger state for this switch
             by reading its file and finding the current state.
             returns: "on" or "off" unless actual_value is True,
@@ -368,13 +366,12 @@ class switch(object):
         # Get switches actual text in the file
         actualtext = self.get_switch_text(contents)
         
-
         # find state
         splitter = contents.split(actualtext)
         if len(splitter) < 2:
             # nothing on the right side of the finder? someone messed up.
-            print_fail("Cannot find state for " + self.get_name() + \
-                        " in " + self.filename + "!")
+            print_fail("Cannot find state for " + self.get_name() +
+                       " in " + self.filename + "!")
 
         # state is everything up to the next comment or newline.
         rightside = splitter[1]
@@ -400,7 +397,7 @@ class switch(object):
             state = state[state.index("=") + 1:].strip(' ')
 
         if actual_value:
-            # just return the actual content of the value 
+            # just return the actual content of the value
             # (even if it doesn't match our acceptable values)
             return state
         else:
@@ -424,7 +421,7 @@ class switch(object):
         splitter = contents.split(actualtext)
         if len(splitter) < 2:
             # nothing on right hand side?!
-            print_fail("Cannot find text line for " + self.get_name() + \
+            print_fail("Cannot find text line for " + self.get_name() +
                        " in " + self.filename + "!")
         
         if '\n' in splitter[1]:
@@ -437,7 +434,7 @@ class switch(object):
         # return whole line
         return actualtext + state
     
-    def set_value(self, new_value, contents = None, dryrun = False):
+    def set_value(self, new_value, contents=None, dryrun=False):
         """ Sets the switch value in its file.
             if dryrun is True, no files will be modified. (for testing)
             you can pass file contents in if you want,
@@ -477,16 +474,16 @@ class switch(object):
             # just print the results to console.
             
             dividerlen = (80 - len(filename)) if len(filename) < 80 else 0
-            print '\n' + self.relative_filename() + ':' + ('-' * dividerlen) + "\n"
-            print '\n'.join(modified_lines) + '\n' + ('-' * 80) + '\n'
+            print('\n' + self.relative_filename() + ':' + ('-' * dividerlen) + "\n")
+            print('\n'.join(modified_lines) + '\n' + ('-' * 80) + '\n')
         else:
             # modify file.
             try:
                 with open(filename, 'w') as fwrite:
                     fwrite.write('\n'.join(modified_lines))
             except Exception as ex:
-                print_fail("Error setting " + self.get_name() + \
-                           " in " + self.filename + "!\n" + \
+                print_fail("Error setting " + self.get_name() +
+                           " in " + self.filename + "!\n" +
                            str(ex))
         # Finished
         return True
@@ -504,7 +501,9 @@ class switch(object):
                     return filename
         return None
 
+
 class cmdlineExit(Exception):
+
     """ Error to raise when interactive cmd-line stuff is exited by user,
         this way I can trap it and handle it.
     """
@@ -516,14 +515,15 @@ switches = None
 SWITCH_SEPARATOR = '|'
 # Acceptable length of switch data when reading from file.
 # read_file() will check len - 1 in case the description has been left out on purpose.
-SWITCH_LEN = 5 # file|name|values|finder|description
+SWITCH_LEN = 5  # file|name|values|finder|description
 # default switches list/file...
 DEFAULT_SWITCHES_FILE = "switches.conf"
 # possible command-line switches for setting/getting switch values.
 good_switch_args = ("on", "off", "-", "?", "!", "@")
 # possible commands
-good_commands = ("help", "names", "status", "values", 
+good_commands = ("help", "names", "status", "values",
                  "full", "groups", "build", "files")
+
 
 def main(args):
     """ main entry-point for wpswitches.
@@ -561,10 +561,8 @@ def main(args):
     brealvals = (("-r" in other_args) or ("--real" in other_args))
     
     if bdryrun:
-        print "dry-run, no files will be modified!"
+        print("dry-run, no files will be modified!")
     
-
-            
     # Commands ---------------------------------------
     if name.lower() in good_commands:
         do_command(name.lower(), val, dryrun=bdryrun)
@@ -593,12 +591,12 @@ def main(args):
                     # Already set.
                     print_fail(sw.get_name() + " is already set to: " + val.lower())
             # Set new value
-            if sw.set_value(newval, dryrun = bdryrun):
+            if sw.set_value(newval, dryrun=bdryrun):
                 # print results (results double-check by grabbing actual value from file)
                 results = sw.get_name() + " set to: " + sw.get_state(actual_value=brealvals)
                 if bdryrun:
                     results += " (not really)"
-                print results
+                print(results)
                 
     # Finished.
     sys.exit(0)
@@ -649,6 +647,7 @@ def do_command(name, val, dryrun=False):
         
     sys.exit(0)
 
+
 def check_value(name, actual=False):
     """ returns the value for a switch (on or off)
         if actual_value is True, then the actual code value is returned.
@@ -663,7 +662,7 @@ def check_value(name, actual=False):
     output = sw.get_name() + " : " + verbose_val
     if actual:
         output += " : " + actual_val
-    print output + '\n'
+    print(output + '\n')
     return verbose_val
 
 
@@ -675,11 +674,11 @@ def check_line(name):
     line = sw.get_switch_line(contents)
     state = sw.get_state(False, contents)
     # console output
-    print sw.get_name() + ': ' + state + '\n' + line
+    print(sw.get_name() + ': ' + state + '\n' + line)
     return line
 
 
-def list_switches(switchlist = None):
+def list_switches(switchlist=None):
     """ print a list of current switches """
     
     if switchlist is None:
@@ -688,12 +687,12 @@ def list_switches(switchlist = None):
     else:
         group = get_group_bylist(switchlist)
         s = "current switch names for group: " + group
-    print s
+    print(s)
     for sw in switchlist:
-        print "    " + sw.get_name()
+        print("    " + sw.get_name())
 
 
-def list_status(full_value = False, switchlist=None):
+def list_status(full_value=False, switchlist=None):
     """ print a list of switch names and states """
     
     if switchlist is None:
@@ -702,14 +701,14 @@ def list_status(full_value = False, switchlist=None):
     else:
         group = get_group_bylist(switchlist)
         s = 'current switch names and states for group: ' + group
-    print s
+    print(s)
     
     for sw in switchlist:
         contents = sw.get_file_contents()
         status = "    " + sw.get_name() + " : " + sw.get_state(False, contents)
         if full_value:
             status += " (" + sw.get_state(True, contents) + ")"
-        print status
+        print(status)
         
 
 def list_full(switchlist=None):
@@ -722,17 +721,17 @@ def list_full(switchlist=None):
         # Get group from switchlist passed.
         group = get_group_bylist(switchlist)
         s = 'current switch names and lines for group: ' + group
-    print s
+    print(s)
     
     for sw in switchlist:
         line = sw.get_switch_line()
-        print sw.get_name() + ":\n" + line + '\n'
+        print(sw.get_name() + ":\n" + line + '\n')
     
 
 def list_groups():
     """ print group information """
     
-    print "current groups:"
+    print("current groups:")
     groups = get_groups()
     # add the 'None' group.
     groups.append('None')
@@ -740,41 +739,48 @@ def list_groups():
     # print'em
     for group in groups:
         displayname = '(no group)' if group == 'None' else group
-        print '    ' + displayname + ": "
+        print('    ' + displayname + ": ")
         for sw in get_group_members(group):
             contents = sw.get_file_contents()
-            print '        ' + sw.name + " : " + sw.get_state(False, contents) + ' (' + sw.get_state(True, contents) + ')'
+            print('        ' + sw.name + " : " +
+                  sw.get_state(False, contents) +
+                  ' (' + sw.get_state(True, contents) + '))')
             
+
 def list_files():
     """ print all filenames for switches. """
     
     filemembers = get_file_members()
     
-    print "file members:"
+    print("file members:")
     if len(filemembers) == 0:
-        print "    (no switches)\n"
+        print("    (no switches)\n")
     else:
         for filename in filemembers.keys():
-            print '    ' + filename + ":"
-            print '        ' + '\n        '.join(filemembers[filename]) + '\n'
+            print('    ' + filename + ":")
+            print('        ' + '\n        '.join(filemembers[filename]) + '\n')
 
 
 def get_files(switch_list=None):
     """ returns a list of filenames belonging to switches. """
     
-    if switch_list is None: switch_list = switches
+    if switch_list is None:
+        switch_list = switches
     
     files = []
     for sw in switch_list:
-        if not sw.filename in files: files.append(sw.filename)
+        if not sw.filename in files:
+            files.append(sw.filename)
     return files
 
 
 def get_file_members(switch_list=None):
     """ returns all switches that use this filename as their target """
     
-    if switch_list is None: switch_list = switches
-    if switch_list is None: return {}
+    if switch_list is None:
+        switch_list = switches
+    if switch_list is None:
+        return {}
     results = {}
     for sw in switch_list:
         if results.has_key(sw.filename):
@@ -783,12 +789,15 @@ def get_file_members(switch_list=None):
             results[sw.filename] = [sw.name]
     return results
 
+
 def get_groups(switch_list=None):
     """ returns a list of group names """
-    if switch_list is None: switch_list = switches
+    if switch_list is None:
+        switch_list = switches
     groups = []
     for sw in switch_list:
-        if not sw.group in groups: groups.append(str(sw.group))
+        if not sw.group in groups:
+            groups.append(str(sw.group))
     return groups
     
 
@@ -797,7 +806,8 @@ def get_group_members(groupname, switch_list=None):
         returns list of members.
     """
     
-    if switch_list is None: switch_list = switches
+    if switch_list is None:
+        switch_list = switches
     if groupname == '-' or groupname == '':
         groupname = 'None'
         
@@ -808,7 +818,7 @@ def get_group_members(groupname, switch_list=None):
     return members
 
 
-def get_group_bylist(switchlist = None):
+def get_group_bylist(switchlist=None):
     """ determine the group from a list of switches.
         if all the groups aren't the same, returns "(mixed groups)"
     """
@@ -828,11 +838,14 @@ def get_group_bylist(switchlist = None):
     
     return list_group
         
+
 def get_switch_byname(name, switch_list=None):
     """ retrieves switch by name """
     
-    if name is None: return None
-    if switch_list is None: switch_list = switches
+    if name is None:
+        return None
+    if switch_list is None:
+        switch_list = switches
     
     for sw in switch_list:
         if sw.aliases is None:
@@ -871,7 +884,7 @@ def read_file(filename="switches.conf"):
         with open(filepath) as fread:
             lines = fread.readlines()
     except Exception as ex:
-        print_fail("unable to read file: " + filepath + '\n' + \
+        print_fail("unable to read file: " + filepath + '\n' +
                    str(ex))
     return read_lines(lines)
 
@@ -906,10 +919,10 @@ def read_lines(lines):
             (SWITCH_SEPARATOR in switchline)):
             # Actual switch data.
             newswitch = parse_switchdata(switchline)
-            newswitch.group = groupname    
+            newswitch.group = groupname
             # Build switch.
             if newswitch is None:
-                print "skipping switch: " + switchline
+                print("skipping switch: " + switchline)
             else:
                 good_switches.append(newswitch)
         
@@ -920,6 +933,7 @@ def read_lines(lines):
     # finished.
     return good_switches
 
+
 def is_comment_line(line_):
     """ determines if a single line is a comment for switches config,
         allows the same logic to be used whereever switch parsing is done.
@@ -927,6 +941,7 @@ def is_comment_line(line_):
     """
     line_ = line_.replace(' ', '').replace('\t', '').replace('\n', '')
     return (line_.startswith('#') or line_.startswith('//') or line_.startswith(';'))
+
 
 def parse_switchdata(switchline):
     """ retrieves individual items from switchdata text line.
@@ -937,19 +952,21 @@ def parse_switchdata(switchline):
     """
     switchline = strip_chars(switchline, (' ', '\t', '\n', '|'))
     # may contain an empty value, this would break everything.
-    if '||' in switchline: return None
+    if '||' in switchline:
+        return None
     
     switchdata = switchline.split('|')
     data_len = len(switchdata)
     skip = False
     if (data_len < SWITCH_LEN - 1) or (data_len > SWITCH_LEN):
-        print "\nbad switch data, wrong item length: " + switchline
+        print("\nbad switch data, wrong item length: " + switchline)
         sw_file = name = values = finder = desc = None
         skip = True
     else:
         # parse switch data
         sw_file = switchdata[0].strip(' ').strip('\t')
-        if sw_file.startswith('|'): sw_file = sw_file[1:]
+        if sw_file.startswith('|'):
+            sw_file = sw_file[1:]
         # name
         name = switchdata[1]
         # has aliases?
@@ -959,7 +976,7 @@ def parse_switchdata(switchline):
         values = parse_values(switchdata[2])
         # error parsing values?
         if isinstance(values, (str, unicode)):
-            print values + switchline
+            print(values + switchline)
             skip = True
             
         # finder text
@@ -972,8 +989,10 @@ def parse_switchdata(switchline):
         desc = None
         if len(switchdata) > 4:
             desc = switchdata[4]
-            if desc.endswith(SWITCH_SEPARATOR) or desc.endswith('\n'): desc = desc[:-1]
-            if len(desc) == 0: desc = None
+            if desc.endswith(SWITCH_SEPARATOR) or desc.endswith('\n'):
+                desc = desc[:-1]
+            if len(desc) == 0:
+                desc = None
         newswitch = None if skip else switch(sw_file, name, values, finder, desc)
         return newswitch
 
@@ -1072,18 +1091,19 @@ def validate_switches():
     err_count = len(duplicate_switches + switch_group_conflicts)
     if err_count > 0:
         if len(duplicate_switches) > 0:
-            print "duplicate switch names found!:"
+            print("duplicate switch names found!:")
             for dupe_switch in duplicate_switches:
-                print '    ' + dupe_switch
+                print('    ' + dupe_switch)
         if len(switch_group_conflicts) > 0:
-            print "conflicting switch and group names found!:"
+            print("conflicting switch and group names found!:")
             for conflict in switch_group_conflicts:
-                print '    ' + conflict
-        print '\nswitch config errors found: ' + str(err_count)  + \
-              '\nplease correct these errors and try again...'
+                print('    ' + conflict)
+        print('\nswitch config errors found: ' + str(err_count) +
+              '\nplease correct these errors and try again...')
         sys.exit(1)
         
-def write_file(filename = 'switches.conf', dryrun = False):
+
+def write_file(filename='switches.conf', dryrun=False):
     """ Writes all switches to file.
         Warning: This will overwrite the existing switches.conf.
                  All comments will be replaced, and switches will be 
@@ -1093,7 +1113,7 @@ def write_file(filename = 'switches.conf', dryrun = False):
     filepath = find_file(filename)
     if not filepath:
         filepath = filename
-        print "\nfile not found, trying to create a new one: " + filepath
+        print("\nfile not found, trying to create a new one: " + filepath)
         #("switches file not found!: " + filename)
         
     newcontents = []
@@ -1104,8 +1124,8 @@ def write_file(filename = 'switches.conf', dryrun = False):
         newcontents.append('\n[\\' + groupname + ']\n')
     
     if dryrun:
-        print "\nwriting file: " + filepath + '\n\n'
-        print ''.join(newcontents)
+        print("\nwriting file: " + filepath + '\n\n')
+        print(''.join(newcontents))
         return True
     else:
         try:
@@ -1118,7 +1138,8 @@ def write_file(filename = 'switches.conf', dryrun = False):
             print_fail("error writing switches file: " + filepath + '\n' + str(ex))
     return False
         
-def write_switch_line(switch_, prev_switch=None, filename='switches.conf', dryrun = False):
+
+def write_switch_line(switch_, prev_switch=None, filename='switches.conf', dryrun=False):
     """ Replace an old switch line with a new one in switches.conf,
         If prev_switch is not passed, the new switch is simply added to the end.
         * switch_ must be a valid switch().
@@ -1149,7 +1170,8 @@ def write_switch_line(switch_, prev_switch=None, filename='switches.conf', dryru
         oldtrim = strip_chars(oldline, (' ', '\t', '\n'))
         
         # start of comment block?
-        if oldtrim.startswith('/*'): commentblock = True
+        if oldtrim.startswith('/*'):
+            commentblock = True
         # empty line?
         emptyline = (oldtrim == '')
         # comment line?
@@ -1159,7 +1181,7 @@ def write_switch_line(switch_, prev_switch=None, filename='switches.conf', dryru
         if groupline:
             groupname = get_groupname_from_line(oldtrim)
         
-        # This is switch data.    
+        # This is switch data.
         if (not commentline) and (not groupline) and (not emptyline):
             # get current line's switch()
             oldswitch = parse_switchdata(oldline)
@@ -1167,22 +1189,22 @@ def write_switch_line(switch_, prev_switch=None, filename='switches.conf', dryru
             # is this the switch to be replaced?
             if (oldswitch is not None) and (oldswitch.get_name() == switch_.get_name()):
                 # replacing previous switch? check the group name
-                if ((prev_switch is not None) and 
-                    (oldswitch.get_name() == prev_switch.get_name())):
+                if ((prev_switch is not None) and
+                   (oldswitch.get_name() == prev_switch.get_name())):
                     # warn about changing groups (for now)
                     if prev_switch.group != switch_.group:
                         oldgroup = str(prev_switch.group)
                         newgroup = str(switch_.group)
-                        print '\n'
-                        print_block(("** warning: ", 
+                        print('\n')
+                        print_block(("** warning: ",
                                      "group has changed from '" + oldgroup + "' to '" + newgroup + "'.",
                                      "this switch is being placed in '" + str(groupname) + "'."))
                               
                 # Replace old switch setting.
                 editedline = oldline.replace(oldtrim, switchstr)
-                if dryrun: 
-                    print '\n'
-                    print_block((("replacing old switch: ", oldtrim), 
+                if dryrun:
+                    print('\n')
+                    print_block((("replacing old switch: ", oldtrim),
                                  ('with: ', switchstr)))
                     
                 replaced = True
@@ -1190,17 +1212,19 @@ def write_switch_line(switch_, prev_switch=None, filename='switches.conf', dryru
         # add the line (edited or not)
         editedlines.append(editedline)
         # end of comment block?
-        if oldtrim.endswith('*/'): commentblock = False
+        if oldtrim.endswith('*/'):
+            commentblock = False
     
     # Add as new switch
     if not replaced:
-        if dryrun: print "\nadding new line:\n    " + switchstr
+        if dryrun:
+            print("\nadding new line:\n    " + switchstr)
         editedlines.append(switchstr)
     
     # Write new file
     if dryrun:
-        print "\n\nwriting file " + filename + "..."
-        print ''.join(editedlines)
+        print("\n\nwriting file " + filename + "...")
+        print(''.join(editedlines))
     else:
         try:
             with open(filepath, 'w') as fwrite:
@@ -1213,7 +1237,6 @@ def write_switch_line(switch_, prev_switch=None, filename='switches.conf', dryru
     return True
         
         
-     
 def validate_args(args):
     """ makes sure valid arguments are passed. """
     
@@ -1241,8 +1264,8 @@ def validate_args(args):
             print_fail("switch/command not found: " + name)
         # check possible values
         if not val.lower() in good_switch_args:
-            print_usage("Bad switch value!: " + val + '\n' + \
-                       "Expecting: " + ', '.join(good_switch_args))
+            print_usage("Bad switch value!: " + val + '\n' +
+                        "Expecting: " + ', '.join(good_switch_args))
             sys.exit(1)
     
     # return arguments as: (name, value, (all other args, or empty list))
@@ -1266,7 +1289,8 @@ def find_file(filename):
         returns False on failure.
     """
     
-    if os.path.isfile(filename): return filename
+    if os.path.isfile(filename):
+        return filename
     # check some directories for the file.
     for checkdir in CHECK_DIRS:
         possiblename = os.path.join(checkdir, filename)
@@ -1274,7 +1298,8 @@ def find_file(filename):
             return possiblename
     return False
 
-def cmdline_build_switch(initial_name=None, dryrun = False, filename = 'switches.conf'):
+
+def cmdline_build_switch(initial_name=None, dryrun=False, filename='switches.conf'):
     """ interactive 'switch builder/editor' in the console, 
         parses input to build a switch, validates info, and adds it to switches.conf.
     """
@@ -1284,17 +1309,19 @@ def cmdline_build_switch(initial_name=None, dryrun = False, filename = 'switches
         oldswitch = None
         sw = switch()
         header = "Ready to build switch: "
-        if initial_name is not None: header += initial_name
-        print header + '\n'
+        if initial_name is not None:
+            header += initial_name
+        print(header + '\n')
     else:
         # save old switch for comparison during switch-write.
         oldswitch = copy.deepcopy(sw)
-        print "Editing switch: " + sw.name + '\n'
+        print("Editing switch: " + sw.name + '\n')
     
     # prints prompts with current values (if any value is present)
     def prompt_val(s, val):
-        max_prompt_len=60
-        if s.endswith(':'): s = s[0:-1]
+        max_prompt_len = 60
+        if s.endswith(':'):
+            s = s[0:-1]
         if val is None:
             s = s + ':'
         else:
@@ -1306,7 +1333,6 @@ def cmdline_build_switch(initial_name=None, dryrun = False, filename = 'switches
     #switch_aliases = []
     for aliaslst in [eachswitch.aliases if (eachswitch.aliases is not None) else [] for eachswitch in switches]:
         switch_names += aliaslst
-    
     
     # remove this name from the list if a name is set,
     # we will be using the list of names to block answers to the "name:" prompt.
@@ -1330,7 +1356,7 @@ def cmdline_build_switch(initial_name=None, dryrun = False, filename = 'switches
             names = ','.join(sw.aliases)
             aliases = sw.aliases
 
-        name = cmdline_get_response(prompt_val("Name", names), 
+        name = cmdline_get_response(prompt_val("Name", names),
                                     default_value=names,
                                     blocked_values=switch_names)
         if ',' in name:
@@ -1340,7 +1366,7 @@ def cmdline_build_switch(initial_name=None, dryrun = False, filename = 'switches
         else:
             if sw.aliases is not None:
                 remove_aliases = cmdline_get_response(prompt_val("Remove Aliases? (y/n)", "n"),
-                                                      acceptable_values = ("y", "n", "yes", "no"),
+                                                      acceptable_values=("y", "n", "yes", "no"),
                                                       default_value = "n",
                                                       allow_blank = False)
                 if remove_aliases.startswith('y'):
@@ -1348,28 +1374,30 @@ def cmdline_build_switch(initial_name=None, dryrun = False, filename = 'switches
         
         # remove duplicates from aliases.
         for aliasdupe in [a for a in aliases]:
-            if aliases.count(aliasdupe) > 1: aliases.remove(aliasdupe)
+            if aliases.count(aliasdupe) > 1:
+                aliases.remove(aliasdupe)
         sw.name = name
         sw.aliases = None if aliases == [] else aliases
 
         # Group?
-        group = cmdline_get_response(prompt_val("Group", str(sw.group)), 
-                                     default_value = str(sw.group),
+        group = cmdline_get_response(prompt_val("Group", str(sw.group)),
+                                     default_value=str(sw.group),
                                      allow_blank=True)
         if group == '':
             group = None
         sw.group = group
         
         # Get filename
-        sw.filename = cmdline_get_response(prompt_val("Target File", sw.filename), 
+        sw.filename = cmdline_get_response(prompt_val("Target File",
+                                                      sw.filename),
                                            default_value=sw.filename,
                                            file_must_exist=True)
         
         # Get finder
-        sw.finder = cmdline_get_response(prompt_val("Target String (Finder)", sw.finder),
+        sw.finder = cmdline_get_response(prompt_val("Target String (Finder)",
+                                                    sw.finder),
                                          default_value=sw.finder)
     
-        
         # Get Values
         if sw.values is None:
             onvalue = None
@@ -1385,27 +1413,28 @@ def cmdline_build_switch(initial_name=None, dryrun = False, filename = 'switches
         sw.values = (onvalue, offvalue)
     
         # Get Description
-        sw.description = cmdline_get_response(prompt_val("Description", sw.description), 
-                                       default_value=sw.description,
-                                       allow_blank=True)
+        sw.description = cmdline_get_response(prompt_val("Description",
+                                                         sw.description),
+                                              default_value=sw.description,
+                                              allow_blank=True)
         
         # Set values
         if sw == oldswitch:
             if dryrun:
-                print "\nswitches are still equal,\nwould've wrote: " + sw.get_switch_str()
+                print("\nswitches are still equal,\nwould've wrote: " +
+                      sw.get_switch_str())
             else:
-                print "\nswitch not changed."
+                print("\nswitch not changed.")
         else:
-            print "\nwriting switch: " + sw.get_name()
-            #if write_file(filename, dryrun):
+            print("\nwriting switch: " + sw.get_name())
+            # if write_file(filename, dryrun):
             if write_switch_line(sw, oldswitch, filename, dryrun):
-                print "...success."
+                print("...success.")
         
-    except cmdlineExit as excancel: #@UnusedVariable: excancel
-        print "\nswitch editing cancelled, no changes were made.\n"
+    except cmdlineExit:  # @UnusedVariable: excancel
+        print("\nswitch editing cancelled, no changes were made.\n")
     
         
-
 def cmdline_get_response(prompt, **kwargs):
     """ prints a prompt, retrieves response
         keyword arguments allow validation:
@@ -1434,8 +1463,8 @@ def cmdline_get_response(prompt, **kwargs):
     condition = get_dict_val(kwargs, 'condition', True)
     
     def answer_warn(s):
-        print '\n' + s
-        print '...type !exit, !cancel, or !quit to cancel building this switch.\n'
+        print('\n' + s)
+        print('...type !exit, !cancel, or !quit to cancel building this switch.\n')
         
     # this traps the EOFError that is raised on user cancelling...
     # a cmdlineExit() is raised instead, same as when '!exit' is the response.
@@ -1478,9 +1507,7 @@ def cmdline_get_response(prompt, **kwargs):
                 if condition:
                     return response
             
-    except EOFError as exeof: #@UnusedVariable: exeof
-        raise cmdlineExit("User Cancelled")
-    except KeyboardInterrupt as exkey: #@UnusedVariable: exkey
+    except (EOFError, KeyboardInterrupt):
         raise cmdlineExit("User Cancelled")
     
 
@@ -1497,37 +1524,43 @@ def get_dict_val(dict_, key, default_val=None):
 def strip_chars(str_, char_list=None):
     """ strips all characters in the list using strip() """
     
-    if char_list is None: char_list = (' ', '\t', '\n')
+    if char_list is None:
+        char_list = (' ', '\t', '\n')
     
     for ch in char_list:
         str_ = str_.strip(ch)
     return str_
     
+
 def print_debug(s):
     """ just a wrapper for print that can be easily searched for and replaced. """
     
-    print s
+    print(s)
+
 
 def print_help():
     """ print a long message about how to configure and use wpswitch """
     
-    print help_str
+    print(help_str)
     
+
 def print_usage(sreason=None):
     """ prints usage, with a reason for showing it if needed """
     
     if sreason is not None:
-        print sreason
+        print(sreason)
     
-    print usage_str
+    print(usage_str)
+
 
 def print_fail(sreason=None):
     """ exits the script, with a reason given if needed. """
     
     if sreason is not None:
-        print sreason
-    print '\nGoodbye.\n'
+        print(sreason)
+    print('\nGoodbye.\n')
     sys.exit(1)
+
 
 def print_block(msgdata, max_line_len=80):
     """ prints formatted blocks of text like:
@@ -1540,14 +1573,19 @@ def print_block(msgdata, max_line_len=80):
     def get_longest_tag(taglist):
         current_len = 0
         for tagname in taglist:
-            if isinstance(tagname, (list, tuple)): tagname = tagname[0]
-            if len(tagname) > current_len: current_len = len(tagname)
+            if isinstance(tagname, (list, tuple)):
+                tagname = tagname[0]
+            if len(tagname) > current_len:
+                current_len = len(tagname)
         return current_len
     taglen = get_longest_tag(msgdata)
+
     def format_tag(tagname, len_):
         return (' ' * (len_ - len(tagname))) + tagname
+
     def format_val(val, len_):
         return (' ' * len_) + val
+
     def parse_vals(valraw):
         outvals = []
         for val in valraw:
@@ -1564,9 +1602,9 @@ def print_block(msgdata, max_line_len=80):
         taglen = len(tagname)
         rawvalues = msgdata[1:]
         fixedvals = parse_vals(rawvalues)
-        print tagname + fixedvals[0]
+        print(tagname + fixedvals[0])
         for val in fixedvals[1:]:
-            print format_val(val, taglen)
+            print(format_val(val, taglen))
     # multiple tags, each item is a tuple with (tagname, value1, value2..)
     elif isinstance(msgdata[0], (list, tuple)):
         taglen = get_longest_tag(msgdata)
@@ -1574,9 +1612,9 @@ def print_block(msgdata, max_line_len=80):
             tagname = mainitem[0]
             rawvalues = mainitem[1:]
             fixedvals = parse_vals(rawvalues)
-            print format_tag(tagname, taglen) + fixedvals[0]
+            print(format_tag(tagname, taglen) + fixedvals[0])
             for val in fixedvals[1:]:
-                print format_val(val, taglen)
+                print(format_val(val, taglen))
                 
 # START OF SCRIPT -------------------------------------------------------------
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ import os
 # global settings
 from django.conf import settings
 # User-Agent helper...
-from django_user_agents.utils import get_user_agent  # @UnresolvedImport
+from wp_user_agents.utils import get_user_agent  # @UnresolvedImport
 
 # use log wrapper for debug and file logging.
 from wp_main.utilities.wp_logging import logger

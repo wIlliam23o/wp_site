@@ -74,10 +74,11 @@ def main(args):
 
 
 def check_input(cmdname, cmdargs):
-    if ('-h' in cmdargs) or ('--help' in cmdargs):
-        return []
-    elif ('-v' in cmdargs) or ('--version' in cmdargs):
-        return []
+    if cmdargs:
+        if ('-h' in cmdargs) or ('--help' in cmdargs):
+            return []
+        elif ('-v' in cmdargs) or ('--version' in cmdargs):
+            return []
 
     if cmdname.startswith('wprefresh'):
 

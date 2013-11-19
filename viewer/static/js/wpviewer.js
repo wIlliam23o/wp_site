@@ -21,7 +21,7 @@ function view_file (filename) {
 			// handle errors...
 			if (status == 'error') {
 				$("#file-content").html("<span class='B'>Sorry, either that file doesn't exist, or there was an error processing it.</span>");
-				console.log(xhr.responseText);
+				console.log('response: ' + xhr.responseText);
 			} 
 			else {
 				// Data okay to use, send it to the file loader.

@@ -19,27 +19,35 @@ import os
 
 from docopt import docopt
 
-# Fix raw_input..
-if sys.version < '3':
-    input = raw_input
-
 # Script info...
 NAME = 'WpRefresh'
 VERSION = '1.2.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
+# Initialize Django stuff.
+try:
+    from django_init import django_init
+    django_init(sys.path[0])
+except ImportError as eximp:
+    print('\nMissing django_init.py!:\n{}'.format(eximp))
+    sys.exit(1)
+except Exception as ex:
+    print('\nError initializing django environment!:\n{}'.format(ex))
+    sys.exit(1)
+
+# Fix raw_input..
+if sys.version < '3':
+    input = raw_input
+
+
 # Set paths/files and initialize Django.
 script_dir = sys.path[0]
 project_dir = os.path.split(script_dir)[0]
 settings_dir = os.path.join(project_dir, 'wp_main/')
+
+# Modifying PATH, anything that needs the original path should go above this.
 sys.path.insert(0, project_dir)
 sys.path.insert(0, settings_dir)
-
-if not 'DJANGO_SETTINGS_MODULE' in os.environ.keys():
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'wp_main.settings'
-
-# DJANGO READY.
-print "django environment ready."
 
 # Get Settings..
 from django.conf import settings

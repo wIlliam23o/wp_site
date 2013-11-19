@@ -30,6 +30,7 @@ register = template.Library()
 # for admin change_list filtering.
 import re
 
+
 def comments_button(value):
     """ returns comments button for this blog post. """
     
@@ -101,7 +102,7 @@ def dict_value(dict_object, dictkey):
     
     try:
         val = dict_object[dictkey]
-    except: # Exception as ex:
+    except:  # Exception as ex:
         val = ''
     return val
 
@@ -111,7 +112,7 @@ def meta_value(request_object, dictkey):
     
     try:
         val = request_object.META[dictkey]
-    except: # Exception as ex:
+    except:  # Exception as ex:
         val = ''
     return val
 
@@ -134,12 +135,12 @@ def is_test_site(request_object):
         # happens on template errors, which hopefully don't make it to production.
         return True
     # Get current server name for this instance.
-    # Could be the live server, test server, or local server 
+    # Could be the live server, test server, or local server
     # the local server_name changes depending on where it's accessed from.
     server_name = request_object.META['SERVER_NAME']
     
     return (server_name.startswith('test.') or      # remote test site
-            (server_name in settings.INTERNAL_IPS)) # local dev
+            (server_name in settings.INTERNAL_IPS))  # local dev
 
 
 def contains(str_or_list, val_to_find):
@@ -197,6 +198,7 @@ def is_disabled(model_obj):
     else:
         return False
 
+
 def log_debug(data):
     """ writes something to the log. str(data) is used on objects,
         returns original object.
@@ -210,6 +212,7 @@ def log_debug(data):
         s = str(data)
     _log.debug(s)
     return data
+
 
 def str_(object_):
     """ returns str(object_) to the template. """
@@ -247,7 +250,7 @@ def disabled_css(item):
         # grab object.
         if len(obj_match.groups()) == 4:
             # beginning of a tag (<a href)
-            tag = obj_match.groups()[0] #@UnusedVariable: tag
+            tag = obj_match.groups()[0]  # @UnusedVariable: tag
             # type of object (wp_blog/1)
             otype = obj_match.groups()[2].strip('/')
             # name/title of object (My Blog Post)
@@ -257,11 +260,14 @@ def disabled_css(item):
             _log.debug("Incorrect number of items in match: " + str(item))
             return item
     # tag, type, & name should be set now, parse them
-    if name.startswith('(!)'): name = name[3:]
-    if 'v. ' in name: name = name[:name.index('v. ')]
+    if name.startswith('(!)'):
+        name = name[3:]
+    if 'v. ' in name:
+        name = name[:name.index('v. ')]
     name = name.strip(' ')
     # parse type
-    if '/' in otype: otype = otype[:otype.index('/')]
+    if '/' in otype:
+        otype = otype[:otype.index('/')]
     
     # convert to object
     if 'wp_blog' in otype:
@@ -318,5 +324,4 @@ registered_filters = (comments_button,
 
 # register all filters in the registered tuple.
 for filter_ in registered_filters:
-    register.filter(filter_.func_name, filter_)
-
+    register.filter(filter_.__name__, filter_)

@@ -51,7 +51,7 @@ def view_project(request, project, requested_page, source=None):
                              "/static/css/highlighter.min.css"]
     
     # no project, no matches found (or error retrieving).
-    if project is None:
+    if not project:
         notfound_msg = "<a href='/projects'>Click here to visit a listing of my projects.</a><br/>\n" + \
                        "<span>Or you could try <a href='/search?q={{PAGE}}'>searching</a>...</span>"
         return responses.alert_message(alert_msg="Sorry, I can't find that project.",

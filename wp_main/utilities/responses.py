@@ -11,7 +11,7 @@
 '''
 
 # Global settings
-from django.conf import settings
+#from django.conf import settings
 # Local tools
 from wp_main.utilities import htmltools
 from wp_main.utilities.utilities import get_browser_style
@@ -32,7 +32,7 @@ import json
 import re
 
 
-def clean_template(template_, context_ = None, force_ = False):
+def clean_template(template_, context_=None, force_=False):
     """ renders a template with context and
         applies the cleaning functions.
         
@@ -42,9 +42,10 @@ def clean_template(template_, context_ = None, force_ = False):
         Blank Lines, Whitespace, Comments are removed if DEBUG = True.
         see: htmltools.render_clean() or htmltools.clean_html()
     """
-    if context_ is None: context_ = {}
+    if context_ is None:
+        context_ = {}
     
-    if isinstance(template_, (str, unicode)):
+    if hasattr(template_, 'encode'):
         # render template and then clean.
         return htmltools.render_clean(template_, context_)
     elif hasattr(template_, 'render'):
@@ -76,7 +77,6 @@ def basic_response(scontent='', *args, **kwargs):
     return HttpResponse(scontent, *args, **kwargs)
 
 
-
 def xml_response(template_name, context_dict):
     """ loads sitemap.xml template, renders with context_dict,
         returns HttpResponse with content_type='application/xml'.
@@ -86,17 +86,18 @@ def xml_response(template_name, context_dict):
         tmp_ = loader.get_template(template_name)
         cont_ = Context(context_dict)
         clean_render = htmltools.remove_whitespace(
-                            htmltools.remove_comments(tmp_.render(cont_)))
+            htmltools.remove_comments(tmp_.render(cont_)))
         response = HttpResponse(clean_render, content_type='application/xml')
     except:
         response = HttpResponseNotFound()
     
     return response
 
-def text_response(text_content, content_type = 'text/plain'):
+
+def text_response(text_content, content_type='text/plain'):
     """ sends basic HttpResponse with content type as text/plain """
     
-    return HttpResponse(text_content, content_type = content_type)
+    return HttpResponse(text_content, content_type=content_type)
 
 
 def render_response(template_name, context_dict):
@@ -111,20 +112,24 @@ def render_response(template_name, context_dict):
     except:
         return alert_message("Sorry, there was an error loading this page.")
 
+
 def clean_response(template_name, context_dict, **kwargs):
     """ same as render_response, except does code cleanup (no comments, etc.)
         returns cleaned HttpResponse.
     """
-    if context_dict is None: context_dict = {}
+    if context_dict is None:
+        context_dict = {}
     request_ = kwargs.get('request_', None)
     # Add request to context if available.
-    if request_: context_dict['meta'] = request_.META
+    if request_:
+        context_dict['meta'] = request_.META
     kwargs['context_dict'] = context_dict
     
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception as ex:
-        _log.error("Unable to render template: " + template_name + '\n' + str(ex))
+        _log.error("Unable to render template: {}\n{}".format(template_name,
+                                                              ex))
         return alert_message("Sorry, there was an error loading this page.")
     else:
         return HttpResponse(rendered)
@@ -135,17 +140,16 @@ def clean_response_req(template_name, context_dict, **kwargs):
         otherwise it's the same as clean_response
     """
     
-    
-    if context_dict is None: context_dict = {}
+    if context_dict is None:
+        context_dict = {}
     kwargs['context_dict'] = context_dict
     
-    with_request = kwargs.get('with_request', False)
-    
+    #with_request = kwargs.get('with_request', False)
     
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception as ex:
-        _log.error("Unable to render template with request context: " + template_name + \
+        _log.error("Unable to render template with request context: " + template_name +
                    '\n' + str(ex))
         return alert_message("Sorry, there was an error loading this page.")
     else:
@@ -183,9 +187,10 @@ def json_response(data):
 def json_get(data):
     """ Retrieves a dict from json data string. """
     
-    if isinstance(data, dict): return data
+    if isinstance(data, dict):
+        return data
     
-    datadict = json.loads(data)
+    datadict = json.loads(data.decode('utf-8'))
     return datadict
 
 
@@ -195,6 +200,7 @@ def json_get_request(request):
     if request.is_ajax():
         return json_get(request.body)
     return None
+
 
 def get_request_arg(request, arg_names, default=None, min_val=0, max_val=999999):
     """ return argument from request (GET or POST),
@@ -210,39 +216,51 @@ def get_request_arg(request, arg_names, default=None, min_val=0, max_val=999999)
     if isinstance(arg_names, (list, tuple)):
         # list of arg aliases was passed, try them all.
         for arg_ in arg_names:
-            if request.REQUEST.has_key(arg_):
+            if arg_ in request.REQUEST.keys():
                 val = request.REQUEST[arg_]
                 break
     else:
-        # single arg_name was passed.    
-        if request.REQUEST.has_key(arg_names):
+        # single arg_name was passed.
+        if arg_names in request.REQUEST.keys():
             val = request.REQUEST[arg_names]
     
-    if val.isalnum():
-        # check min/max for int values
-        try:
-            int_val = int(val)
-            if (int_val < min_val):
-                int_val = min_val
-            if (int_val > max_val):
-                int_val = max_val
-            # return float instead of string
-            val = int_val
-        except:
-            pass
+    # Default wasn't available, try some different types..
+    if default is None:
+        if val.isalnum():
+            # check min/max for int values
+            try:
+                int_val = int(val)
+                if (int_val < min_val):
+                    int_val = min_val
+                if (int_val > max_val):
+                    int_val = max_val
+                # return float instead of string
+                val = int_val
+            except:
+                pass
+        else:
+            # try float, check min/max if needed.
+            try:
+                float_val = float(val)
+                if (float_val < min_val):
+                    float_val = min_val
+                if (float_val > max_val):
+                    float_val = max_val
+                # return float instead of string
+                val = float_val
+            except:
+                pass
     else:
-        # try float, check min/max if needed.
+        # Get desired type from defaults type.
+        desiredtype = type(default)
         try:
-            float_val = float(val)
-            if (float_val < min_val):
-                float_val = min_val
-            if (float_val > max_val):
-                float_val = max_val
-            # return float instead of string
-            val = float_val
-        except:
-            pass
-      
+            if val != '':
+                desiredval = desiredtype(val)
+                # If an error isn't trigured, we converted successfully.
+                val = desiredval
+        except Exception as ex:
+            _log.error('Unable to determine type from: {}\n{}'.format(val, ex))
+
     # final return after processing,
     # will goto default value if val is empty.
     if val == "":
@@ -269,28 +287,20 @@ def get_paged_args(request, total_count):
     """
 
     # get order_by
-    order_by_ = get_request_arg(request, ['order_by','order'], None)
+    order_by_ = get_request_arg(request, ['order_by', 'order'], None)
         
     # get max_posts
-    max_ = get_request_arg(request, ['max_items','max'], 25, min_val=1, max_val=100)
+    max_ = get_request_arg(request, ['max_items', 'max'], 25, min_val=1, max_val=100)
     
     # get start_id
-    start_id = get_request_arg(request, ['start_id','start'], 0, min_val=0, max_val=9999)
+    start_id = get_request_arg(request, ['start_id', 'start'], 0, min_val=0, max_val=9999)
     # calculate last page based on max_posts
-    last_page = ( total_count - max_ ) if ( total_count > max_ ) else 0
+    last_page = (total_count - max_) if (total_count > max_) else 0
     # fix starting id.
-    if isinstance(start_id, (str, unicode)):
-        if start_id.lower() == 'last':
-            start_id = last_page
-        #elif ((start_id.lower() == 'first') or # not needed. duh. (see below) 
-        #      (start_id.lower() == 'start')):
-        #    start_id = 0
-        else:
-            # this shouldn't happen, get_request_arg() returns an integer or float
-            # if a good integer/float value was passed. So any unexpected string value
-            # means someone is messing with the args in a way that would break the view.
-            # so if the conditions above aren't met ('last' or 'first'), it defaults to a safe value (0).
-            start_id = 0
+    if hasattr(start_id, 'lower'):
+        start_id = last_page if start_id.lower() == 'last' else 0
+    else:
+        start_id = 0
         
     # fix maximum start_id (must be within the bounds)
     if start_id > (total_count - 1):
@@ -335,10 +345,12 @@ def get_referer_view(request, default=None):
     referer = u'/' + u'/'.join(referer[1:])
     return referer
 
+
 def default_dict(request=None, extradict=None):
     """ Use default dict contents, 
         This dict will return with at least:
-        {'request': request, 'extra_style_link_list': utilities.get_browser_style(request)}
+        {'request': request, 
+         'extra_style_link_list': utilities.get_browser_style(request)}
         request must be passed to use this.
         Any extra dict items in the extradict are added to the default
     """
@@ -360,9 +372,3 @@ def default_dict(request=None, extradict=None):
                 # Assigns extra keys to the defaults.
                 defaults[keyname] = keyval
     return defaults
-
-                
-                
-
-
-    
