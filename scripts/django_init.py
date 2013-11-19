@@ -31,10 +31,11 @@ def get_root_parent(scriptpath):
         return None
 
     if not 'wp_site' in scriptpath:
-        # Maybe this is the parent (it is for remote-servers sometimes)
-        parent = os.path.join(scriptpath, 'wp_site')
-        if os.path.isdir(parent):
-            return parent
+        # Maybe this is the parent (it is for remote-servers since 3.3)
+        if os.path.isdir(os.path.join(scriptpath, 'wp_site')):
+            # This is the parent.
+            return scriptpath
+
         # Nope, no parent here.
         print('\nInvalid path for this project: {}'.format(scriptpath))
         print('No wp_site dir found!')
