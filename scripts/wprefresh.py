@@ -1,9 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
       project: Welborn Productions - Tools - Refresher
-     @summary: Refreshes static files (collectstatic), refreshes admin css (static/admin/css),
+     @summary: Builds files that need it with builder.py,
+               Refreshes static files (collectstatic),
+               refreshes admin css (static/admin/css),
                and Restarts the server.
     
       @author: Christopher Welborn <cj@welbornprod.com>
@@ -12,115 +14,280 @@
    start date: May 29, 2013
 '''
 
-import sys, os, os.path #@UnusedImport: os is used, dont know why pydev trips on this.
-#dont-be-a-dick-pydev, #yolo
-script_dir = sys.path[0]
-project_dir = os.path.split(script_dir)[0]
-settings_dir = os.path.join(project_dir, 'wp_main/')
-sys.path.insert(0, project_dir)
-sys.path.insert(0, settings_dir)
+import sys
+import os
 
-if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'wp_main.settings'
+from docopt import docopt
 
-# DJANGO READY.
-print "django environment ready."
+# Script info...
+NAME = 'WpRefresh'
+VERSION = '1.2.0'
+VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
+
+# Initialize Django stuff.
+try:
+    import django_init
+    if not django_init.init_django():
+        sys.exit(1)
+except ImportError as eximp:
+    print('\nMissing django_init.py!:\n{}'.format(eximp))
+    sys.exit(1)
+except Exception as ex:
+    print('\nError initializing django environment!:\n{}'.format(ex))
+    sys.exit(1)
+
+# Fix raw_input..
+if sys.version < '3':
+    input = raw_input  # noqa
 
 # Get Settings..
 from django.conf import settings
 
-#admin css dirs (source, target)
-admin_css = os.path.join(project_dir, "home/static/admin/css")
-admin_css_static = os.path.join(settings.STATIC_PARENT, "static/admin/css")
-if not admin_css_static.endswith('/'): admin_css_static += '/'
+USAGESTR = """{version}
 
-# location of manage.py
-manage_py = os.path.join(settings.BASE_DIR, "manage.py")
+    Usage:
+        wprefresh.py [options]
 
-# apache restart locations.
-remote_apache_path = os.path.join(settings.STATIC_PARENT, 'apache2', 'bin')
-if os.path.isdir(remote_apache_path):
-    apachecmd = ''.join(['. ', remote_apache_path]) + '/'
-    use_elevation = False
-else:
-    apachecmd = os.path.join('/etc', 'init.d','apache2') + ' '
-    use_elevation = True
+    Options:
+        -A,--noadmin    : Skip admin css copy.
+        -b,--buildwp    : Only build wp files.
+        -B,--nobuild    : Skip building files.
+        -c,--collect    : Auto static collection.
+        -C,--nocollect  : Skip static collection.
+        -d,--debug      : Prints extra info (not much right now).
+        -h,--help       : Show this message.
+        -l,--live       : Suppress warning about live site.
+        -r,--norestart  : Skip apache restart.
+        -R,--restart    : Just restart the server, nothing else.
+        -v,--version    : Show version.
+""".format(version=VERSIONSTR)
 
-def main(args):
-    global apachecmd
-    
-    # if test is passed we will work on the test site, otherwise it will be live.
-    TEST_SITE = ('wp_test' in project_dir)
-    # refreshes can be forced
-    AUTO_LIVE = ('live' in args) or ('-l' in args) or ('--live' in args)
-    AUTO_COLLECT = ('yes' in args) or ('-y' in args) or ('--yes' in args)
-    # refreshes can be skipped
-    SKIP_COLLECT = ('no' in args) or ('-n' in args) or ('--nocollect' in args) or ('--nostatic' in args)
-    SKIP_REFRESH = ('skip' in args) or ('-s' in args) or ('--skiprefresh' in args) or ('--norefresh' in args) or ('--noapache' in args)
-    SKIP_ALL = (SKIP_COLLECT and SKIP_REFRESH)
-    WARN_LIVE = False if TEST_SITE else (not (AUTO_LIVE or SKIP_REFRESH))
-    
-    # Ambiguous args
-    if SKIP_COLLECT and AUTO_COLLECT:
-        print('\nBoth \'yes\' and \'no\' args used, this won\'t work.')
-        sys.exit(1)
-    if AUTO_LIVE and SKIP_REFRESH:
-        print('\nBoth \'live\' and \'skip\' args used, this won\'t work.')
-        sys.exit(1)
-    if SKIP_ALL:
-        print('\nSkipping collectstatic and apache refresh...')
-        sys.exit(0)
-    # WARN LIVE SITE
-    if WARN_LIVE:
-        print "\nYou are refreshing the ** LIVE SITE ** !"
-        warn_response = raw_input("\n    Continue anyway? (y|n): ")
-        if not warn_response.lower().startswith('y'):
-            print "\nCancelling, goodbye."
-            return 0
-        
-    # COLLECTSTATIC
-    if SKIP_COLLECT:
-        print('Skipping collectstatic...')
+
+def main(argd):
+    # if test is passed no warning is given before restarting the server.
+    TEST = ('wp_test' in django_init.project_dir)
+    WARN = False if TEST else (not (argd['--live'] or argd['--norestart']))
+
+    # Check for mismatched args..
+    mismatched = check_argset(argd,
+                              [('--collect', '--nocollect'),
+                               ('--nobuild', '--buildwp'),
+                               ('--restart', '--collect'),
+                               ('--restart', '--buildwp'),
+                               ('--restart', '--norestart'),
+                               ])
+    if mismatched:
+        return 1
+
+    # Check overall skip.
+    if check_args(argd, ('--norestart',
+                         '--nobuild',
+                         '--nocollect',
+                         '--noadmin')):
+        print('\nSkipping entire refresh...')
+        return 0
+
+    # Show warning if needed..
+    if WARN and (not warn_live()):
+        return 0
+
+    # Just restart
+    if argd['--restart']:
+        check_call(apache_restart)
+        return 0
+
+    # Run build files..
+    if not argd['--nobuild']:
+        check_call(build_files, wponly=argd['--buildwp'])
+    # Run collect static
+    if not argd['--nocollect']:
+        check_call(collect_static, autocollect=argd['--collect'])
+    # Run admin copy (overwrites anything in /static)
+    if not argd['--noadmin']:
+        check_call(collect_admin_css, printskipped=argd['--debug'])
+    # Run apache restart
+    if not argd['--norestart']:
+        check_call(apache_restart)
+
+    return 0
+
+
+def apache_restart():
+    """ Restart the apache server """
+    # apache restart locations.
+    remote_apache_path = os.path.join(settings.STATIC_PARENT, 'apache2', 'bin')
+    if os.path.isdir(remote_apache_path):
+        apachecmd = ''.join(['. ', remote_apache_path]) + '/'
+        use_elevation = False
     else:
-        if os.path.isfile(manage_py):
-            print("\nRunning collectstatic...")
-            collect_cmd = ['echo', '"yes"', '|'] if AUTO_COLLECT else []
-            if use_elevation:
-                collect_cmd += ['sudo']
-            collect_cmd += ['python', manage_py, 'collectstatic']
-            print("running: " + ' '.join(collect_cmd))
-            os.system(' '.join(collect_cmd))
-        else:
-            print("\nmanage.py not found!: " + manage_py + '\n')
-        
-        # COLLECT ADMIN CSS
-        if os.path.isdir(admin_css) and os.path.isdir(admin_css_static):
-            print("\nCopying admin css...")
-            css_cmd = ['sudo'] if use_elevation else []
-            css_cmd += ['cp', os.path.join(admin_css, '*'), admin_css_static]
-            os.system(' '.join(css_cmd))
-        else:
-            print("\nadmin css directories not found:\n    source: " + admin_css + \
-                  '\n    target: ' + admin_css_static + '\n')
-    
+        apachecmd = os.path.join('/etc', 'init.d', 'apache2') + ' '
+        use_elevation = True
    
-    # RESTART APACHE
-    if SKIP_REFRESH:
-        print('Skipping apache restart...')
+    print("\nRestarting apache... (" + apachecmd + 'restart)')
+    if (os.path.isfile(apachecmd.strip(' ')) or
+       os.path.isdir(apachecmd.strip('/').strip('. '))):
+        try:
+            if use_elevation:
+                apachecmd = 'sudo ' + apachecmd
+            callret = os.system(apachecmd + 'restart')
+            ret = (callret == 0)
+        except Exception as ex:
+            print('\nunable to restart apache:\n' + str(ex))
+            ret = False
     else:
-        print("\nRestarting apache... (" + apachecmd + 'restart)')
-        if os.path.isfile(apachecmd.strip(' ')) or os.path.isdir(apachecmd.strip('/').strip('. ')):
-            try:
-                if use_elevation: apachecmd = 'sudo ' + apachecmd
-                os.system(apachecmd + 'restart')
-            except Exception as ex:
-                print('\nunable to restart apache:\n' + str(ex))
-        else: 
-            print('\napache command not found!: ' + apachecmd + '\n')
-            
-        print("\nFinished.\n")
-        
-if __name__ == '__main__':
-    args = sys.argv[1:]
-    sys.exit(main(args))
+        print('\napache command not found!: ' + apachecmd + '\n')
+        ret = False
+    return ret
 
+
+def build_files(wponly=False):
+    """ Build css/js files """
+    builder_py = os.path.join(settings.BASE_DIR, 'scripts', 'builder.py')
+    if os.path.isfile(builder_py):
+        print('\nRunning builder...')
+        build_cmd = ['python3', builder_py]
+        if wponly:
+            # only build wp*.js files. not external stuff. (takes too long)
+            build_cmd = build_cmd + ['-i', 'wp', '-f', '-wp']
+        print('running: {}'.format(' '.join(build_cmd)))
+        callret = os.system(' '.join(build_cmd))
+        ret = (callret == 0)
+    else:
+        print('\nbuilder.py not found!: {}'.format(builder_py))
+        ret = False
+    return ret
+
+
+def check_args(argd, arglist):
+    """ If all args in arglist are present in argd,
+        return True. (Checks for mismatched args)
+    """
+
+    values = [argd[a] for a in arglist]
+    if all(values):
+        print('\nThese args can\'t be used at the same time:')
+        print('    {}'.format('\n    '.join(arglist)))
+        return True
+    return False
+
+
+def check_argset(argd, argsets):
+    """ Checks several sets of args at once. """
+    ret = False
+    for arglist in argsets:
+        if check_args(argd, arglist):
+            ret = True
+            break
+    return ret
+
+
+def check_call(func, *args, **kwargs):
+    """ Check return of a command, exit on failure. """
+    if not func(*args, **kwargs):
+        print('Command failed: {}'.format(func.__name__))
+        sys.exit(1)
+    return True
+
+
+def collect_static(autocollect=False):
+    """ Run manage.py collectstatic """
+    manage_py = os.path.join(settings.BASE_DIR, "manage.py")
+    use_elevation = 'workspace/' in settings.BASE_DIR
+
+    if os.path.isfile(manage_py):
+        print("\nRunning collectstatic...")
+        collect_cmd = ['echo', '"yes"', '|'] if autocollect else []
+        if use_elevation:
+            collect_cmd += ['sudo']
+        collect_cmd += ['python3', manage_py, 'collectstatic']
+        print("running: " + ' '.join(collect_cmd))
+        callret = os.system(' '.join(collect_cmd))
+        ret = (callret == 0)
+    else:
+        print("\nmanage.py not found!: " + manage_py + '\n')
+        ret = False
+    return ret
+
+
+def collect_admin_css(printskipped=False):
+    """ Move admin css to proper dir """
+    # admin css dirs (source, target)
+    admin_css = os.path.join(django_init.project_dir, "home/static/admin/css")
+    admin_css_static = os.path.join(settings.STATIC_PARENT, "static/admin/css")
+
+    if not admin_css_static.endswith('/'):
+        admin_css_static += '/'
+    if os.path.isdir(admin_css) and os.path.isdir(admin_css_static):
+        print("\nCopying admin css...")
+        srcfiles = os.listdir(admin_css)
+        for filename in srcfiles:
+            srcfile = os.path.join(admin_css, filename)
+            dstfile = os.path.join(admin_css_static, filename)
+            if copy_file(srcfile, dstfile):
+                print('    Copied to: {}'.format(dstfile))
+            else:
+                if printskipped:
+                    print('     Skipping: {}'.format(srcfile))
+        ret = True
+    else:
+        print("\nadmin css directories not found:\n    source: " + admin_css +
+              '\n    target: ' + admin_css_static + '\n')
+        ret = False
+    return ret
+
+
+def copy_file(srcfile, dstfile):
+    """ Copies a single file. """
+    use_elevation = 'workspace/' in settings.BASE_DIR
+    if is_modified(srcfile, dstfile):
+        css_cmd = ['sudo'] if use_elevation else []
+        css_cmd += ['cp', srcfile, dstfile]
+        callret = os.system(' '.join(css_cmd))
+        return (callret == 0)
+    return False
+
+
+def is_modified(srcfile, dstfile):
+    """ Returns true if the src file has been modified,
+        and the destination file has not (or doesn't exist yet).
+    """
+
+    # Have min and original, calculate modified times.
+    try:
+        srcmod = os.path.getmtime(srcfile)
+    except Exception as ex:
+        print('\nUnable to stat file: {}'.format(srcfile, ex))
+        return False
+    try:
+        if os.path.isfile(dstfile):
+            dstmod = os.path.getmtime(dstfile)
+        else:
+            # Destination doesn't exit yet.
+            return True
+    except Exception as ex:
+        print('\nUnable to stat file: {}'.format(dstfile, ex))
+        return False
+
+    if srcmod > dstmod:
+        # Source file is newer than the destination file
+        return True
+
+    # destination file is newer than the source file
+    return False
+
+
+def warn_live():
+    print('\nYou are working on the ** LIVE SITE ** !')
+    print('Continuing will restart the server...')
+    warn_response = input('\n    Continue anyway? (y|n): ')
+    if not warn_response.lower().startswith('y'):
+        print('\nCancelling, goodbye.')
+        return False
+    return True
+    
+
+# START OF SCRIPT ------------------------------------------------------------
+if __name__ == '__main__':
+    mainargd = docopt(USAGESTR, version=VERSIONSTR)
+    mainret = main(mainargd)
+    sys.exit(mainret)

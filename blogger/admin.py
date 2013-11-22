@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -14,6 +14,8 @@ from django.contrib import admin
 from blogger.models import wp_blog
 
 # admin actions
+
+
 def disable_posts(modeladmin, request, queryset):
     """ makes .disabled = True on all selected posts. """
     queryset.update(disabled=True)
@@ -49,5 +51,3 @@ class wp_blogAdmin(admin.ModelAdmin):
                disable_comments]
     
 admin.site.register(wp_blog, wp_blogAdmin)
-
-

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -9,12 +9,11 @@
     @organization: welborn productions <welbornproductions.net>
 """
 
-import os.path
-from os import walk #@UnusedImport: walk is used, pydev...really?
+import os
 # global settings
 from django.conf import settings
 # User-Agent helper...
-from django_user_agents.utils import get_user_agent #@UnresolvedImport
+from wp_user_agents.utils import get_user_agent  # @UnresolvedImport
 
 # use log wrapper for debug and file logging.
 from wp_main.utilities.wp_logging import logger
@@ -26,12 +25,14 @@ def slice_list(list_, starting_index=0, max_items=-1):
         if max_items > 0 then only that length of items is returned.
         otherwise, all items are returned.
     """
-    if list_ is None: return []
-    if len(list_) == 0: return []
+    if list_ is None:
+        return []
+    if len(list_) == 0:
+        return []
     
     sliced_ = list_[starting_index:]
     if ((max_items > 0) and
-        (len(sliced_) > max_items)):
+       (len(sliced_) > max_items)):
         return sliced_[:max_items]
     else:
         return sliced_
@@ -49,6 +50,7 @@ def remove_list_dupes(list_, max_allowed=1):
     
     return list_
 
+
 def prepend_path(prepend_this, prependto_path):
     """ os.path.join fails if prependto_path starts with '/'.
         so I made my own. it's not as dynamic as os.path.join, but
@@ -59,6 +61,7 @@ def prepend_path(prepend_this, prependto_path):
     
     spath = (prepend_this + prependto_path) if prependto_path.startswith('/') else (prepend_this + '/' + prependto_path)
     return spath.replace("//", '/')
+
 
 def append_path(appendto_path, append_this):
     """ os.path.join fails if append_this starts with '/'.
@@ -72,7 +75,6 @@ def append_path(appendto_path, append_this):
     return spath.replace("//", '/')
 
 
-
 def get_filename(file_path):
     try:
         sfilename = os.path.split(file_path)[1]
@@ -81,6 +83,7 @@ def get_filename(file_path):
         sfilename = file_path
     return sfilename
     
+
 def safe_arg(_url):
     """ basically just trims the / from the POST args right now """
     
@@ -122,20 +125,22 @@ def get_browser_name(request):
     user_agent = get_user_agent(request)
     return user_agent.browser.family.lower()
     
+
 def get_browser_style(request):
     """ return browser-specific css file (or False if not needed) """
     
     browser_name = get_browser_name(request)
     # get browser css to use...
     if browser_name.startswith("ie"):
-        return "/static/css/main-ie.css"
+        return "/static/css/main-ie.min.css"
     elif "firefox" in browser_name:
-        return "/static/css/main-gecko.css"
+        return "/static/css/main-gecko.min.css"
     elif "chrome" in browser_name:
-        return "/static/css/main-webkit.css"
+        return "/static/css/main-webkit.min.css"
     else:
         return False
     
+
 def is_mobile(request):
     """ determine if the client is a mobile phone/tablet
         actually, determine if its not a pc.
@@ -172,17 +177,23 @@ def get_absolute_path(relative_file_path):
     if relative_file_path == "":
         return ""
     
-
     #if relative_file_path.startswith('/'): relative_file_path = relative_file_path[1:]
+    # Guard against ../ tricks.
+    if '..' in relative_file_path:
+        return ''
     
     sabsolutepath = ""
-    for root, dirs, files in os.walk(settings.STATIC_PARENT): #@UnusedVariable: dirs, files
+    for root, dirs, files in os.walk(settings.STATIC_PARENT):  # @UnusedVariable: dirs, files
         spossible = os.path.join(root, relative_file_path)
 
         # dirs allowed
         if os.path.isfile(spossible) or os.path.isdir(spossible):
             sabsolutepath = spossible
             break
+    
+    # Guard against files outside of the public /static dir.
+    if not sabsolutepath.startswith(settings.STATIC_ROOT):
+        return ''
     
     return sabsolutepath
 
@@ -216,6 +227,24 @@ def debug_allowed(request):
     return (ip_in_settings and bool(settings.DEBUG))
 
 
+def get_objects_enabled(objects_):
+    """ Safely retrieves all objects where disabled == False.
+        Handles 'no objects', returns [] if there are no objects.
+    """
+    
+    # Model was passed instead of model.objects.
+    if hasattr(objects_, 'objects'):
+        objects_ = getattr(objects_, 'objects')
+    
+    try:
+        allobjs = objects_.filter(disabled=False)
+    except Exception as ex:
+        _log.error('No objects to get!: {}\n{}'.format(objects_.__name__, ex))
+        allobjs = None
+    
+    return allobjs
+
+    
 def get_object_safe(objects_, **kwargs):
     """ does a mymodel.objects.get(kwargs),
         Other Keyword Arguments:

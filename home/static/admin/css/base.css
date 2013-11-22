@@ -818,7 +818,7 @@ table#change-history tbody th {
 }
 
 #user-tools {
-    position: absolute;
+    /* position: absolute; -Cj Disabled because /login was looking horrible */
     top: 0;
     right: 0;
     padding: 1.2em 10px;

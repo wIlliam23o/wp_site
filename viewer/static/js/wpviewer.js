@@ -21,7 +21,7 @@ function view_file (filename) {
 			// handle errors...
 			if (status == 'error') {
 				$("#file-content").html("<span class='B'>Sorry, either that file doesn't exist, or there was an error processing it.</span>");
-				console.log(xhr.responseText);
+				console.log('response: ' + xhr.responseText);
 			} 
 			else {
 				// Data okay to use, send it to the file loader.
@@ -31,8 +31,8 @@ function view_file (filename) {
 			$("#floater").fadeOut();
 		},
 		status: {
-			404: function () { console.log("PAGE NOT FOUND!"); },
-			500: function () { console.log("A major error occurred."); }
+			404: function () { console.log('PAGE NOT FOUND!'); },
+			500: function () { console.log('A major error occurred.'); }
 		}
 	});
 
@@ -52,13 +52,26 @@ function update_loading_msg (message) {
 function load_file_data (xhrdata) {
 	var file_info = JSON.parse(xhrdata.responseText);
     
+    // Server-side error.
+    if (file_info.status == 'error') {
+    	var errmessage = file_info.message;
+    	if (errmessage) {
+    		$("#file-content").html("<span>" + errmessage + "</span>");
+    	} else {
+    		$("#file-content").html("<span>Sorry, an unknown error occurred.</span>")
+    	}
+    	return
+    }
+
 	// Content
 	if (file_info.file_content != "") {
 		$("#file-content").html(file_info.file_content);
 	} 
 	else {
 		$("#file-content").html("<span>Sorry, no content in this file...</span>");
+		return
 	}
+
 	// Header for projects (pythons None equates to null in JS.)
 	if (file_info.project_alias !== null && file_info.project_name !== null) {
 		$("#project-title-name").html(file_info.project_name);

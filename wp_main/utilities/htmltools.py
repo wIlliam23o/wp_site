@@ -11,14 +11,14 @@
 '''
 
 
-# Files/Paths 
+# Files/Paths
 import os.path
-
+from sys import version as sysversion
 # Global settings
 #from django.conf import settings
 
 # Regex for email hiding
-import re 
+import re
 import base64
 
 # Django template loaders
@@ -32,6 +32,10 @@ from wp_main.utilities import highlighter
 from wp_main.utilities.wp_logging import logger
 _log = logger("utilities.htmltools").log
 
+# Fix for python 3 in strip_()
+if sysversion[0] == '3':
+    unicode = str
+
 # RegEx for finding an email address
 # (not compiled, because it gets compiled with additional regex in some functions)
 re_email_address = r'[\d\w\-\.]+@[\d\w\-\.]+\.[\w\d\-\.]+'
@@ -42,7 +46,9 @@ re_opening_complete = re.compile(r'[\074][\w "\'=\-\/]+[\076]{1}')
 re_opening_incomplete = re.compile(r'[\074][\w "\'=\-]+')
 re_start_tag = re.compile(r'[\074]\w+')
 
+
 class html_content(object):
+
     """ class to hold html content, and perform various operations on it. 
         set self.content on initialization, set(), set_if(content, True), or through self.content = "stuff".
         functions modify the content and return the modified html_content object.
@@ -57,36 +63,30 @@ class html_content(object):
     def __init__(self, content=''):
         self.content = content
 
-    
     def __repr__(self):
         """ return content from this class """
         
         return str(self.content)
-    
     
     def __str__(self):
         """ return content from this class """
         
         return str(self.content)
 
-    
     def __unicode__(self):
         """ return content from this class """
         
-        return unicode(self.content, encoding="utf-8")
+        return self.__str__(self.content)
 
-    
     def __add__(self, other):
         """ concatenate content to this one """
         
         return html_content(self.content + other)
     
-    
     def __len__(self):
         """ returns the length of the content string """
         
         return len(self.content)
-    
     
     def __iter__(self):
         """ provides iteration of the content by character """
@@ -94,49 +94,40 @@ class html_content(object):
         for character_ in self.content:
             yield character_
     
-    
     def __contains__(self, other):
         """ provides the 'if in' method for content """
         
-        return (other in self.content) #(self.content.find(other) > -1)
-    
-    
+        return (other in self.content)  # (self.content.find(other) > -1)
     
     def __lt__(self, other):
         """ comparison on the content """
         
         return (self.content < other)
     
-    
     def __gt__(self, other):
         """ comparison on the content """
         
         return (self.content > other)
-    
     
     def __le__(self, other):
         """ comparison on the content """
         
         return (self.content <= other)
     
-    
     def __ge__(self, other):
         """ comparison on the content """
         
         return (self.content >= other)
-    
     
     def __eq__(self, other):
         """ comparison on the content """
         
         return (self.content == other)
     
-    
     def __ne__(self, other):
         """ comparison on the content """
         
         return (self.content != other)
-    
     
     def set(self, content):
         """ sets self.content,
@@ -150,27 +141,23 @@ class html_content(object):
             # regular content
             self.content = content
         
-    
     def set_if(self, condition_, content):
         """ sets self.content if condition_ is True """
         
         if condition_:
             self.set(content)
             
-        
     def append(self, append_text):
         """ appends text to the end of content (just like __add__).. """
         
         self.content += append_text
         return self
     
-    
     def append_line(self, append_line):
         """ appends a new line of text to content. """
         
         self.content += '\n' + append_line
         return self
-    
     
     def append_lines(self, lines_):
         """ appends a list/tuple of lines to content """
@@ -179,13 +166,11 @@ class html_content(object):
             self.content += '\n' + ('\n'.join(lines_))
         return self
     
-    
     def prepend(self, prepend_text):
         """ prepends text to the beginning of content """
         
         self.content = prepend_text + self.content
         return self
-    
     
     def prepend_line(self, prepend_line):
         """ prepends a line of text to content. """
@@ -193,7 +178,6 @@ class html_content(object):
         self.content = prepend_line + '\n' + self.content
         return self
 
-    
     def prepend_lines(self, lines_):
         """ prepends a list/tuple of lines to content """
         
@@ -201,19 +185,16 @@ class html_content(object):
             self.content = '\n'.join(lines_) + '\n' + self.content
         return self
     
-    
     def split(self, split_by=' '):
         """ just like str.split() """
         
         return self.content.split(split_by)
-    
     
     def replace(self, replace_what, replace_with):
         """ just like str.replace(), except it modifies the content """
         
         self.content = self.content.replace(replace_what, replace_with)
         return self
-    
     
     def replace_if(self, replace_what, replace_with):
         """ runs replace() if replace_what equates to true. """
@@ -222,12 +203,10 @@ class html_content(object):
             self.replace(replace_what, replace_with)
         return self
     
-    
     def tostring(self):
         """ returns string represenation of content. (like str(html_content())) """
         
         return str(self.content)
-    
     
     def contains(self, contains_what):
         """ returns True if contains_what in content.
@@ -245,13 +224,11 @@ class html_content(object):
         # regular string check
         return (contains_what in self.content)
     
-    
-    def wrap_link(self, link_url = '', alt_text = ''):
+    def wrap_link(self, link_url='', alt_text=''):
         """ wrap content in an <a href=link_url> """
         
         self.content = wrap_link(self.content, link_url, alt_text)
         return self
-    
     
     def auto_link(self, link_list, **kwargs):
         """ auto link specific words in the content.
@@ -260,7 +237,6 @@ class html_content(object):
         
         self.content = auto_link(self.content, link_list, **kwargs)
         return self
-    
     
     def check_replacement(self, target_replacement):
         """ fixes target replacement string in inject functions.
@@ -274,8 +250,7 @@ class html_content(object):
         
         return check_replacement(self.content, target_replacement)
         
-
-    def inject_article_ad(self, target_replacement = "{{ article_ad }}"):
+    def inject_article_ad(self, target_replacement="{{ article_ad }}"):
         """ basically does a text replacement, 
             see: htmltools.inject_article_ad()
         """
@@ -283,7 +258,6 @@ class html_content(object):
         self.content = inject_article_ad(self.content, target_replacement)
         return self
     
-
     def inject_screenshots(self, images_dir, **kwargs):
         """ inject code for screenshots box.
             see: htmltools.inject_screenshots()
@@ -293,7 +267,6 @@ class html_content(object):
         self.content = inject_screenshots(self.content, images_dir, target_replacement, noscript_image)
         return self
         
-
     def inject_sourceview(self, project, **kwargs):
         """ injects code for source viewing.
             see: htmltools.inject_sourceview()
@@ -302,7 +275,7 @@ class html_content(object):
         link_text = kwargs.get('link_text', None)
         desc_text = kwargs.get('desc_text', None)
         target_replacement = kwargs.get('target_replacement', '{{ source_view }}')
-        self.content = inject_sourceview(project, self.content, request, 
+        self.content = inject_sourceview(project, self.content, request,
                                          link_text, desc_text, target_replacement)
         return self
         
@@ -331,7 +304,6 @@ class html_content(object):
         self.content = remove_whitespace(self.content)
         return self
 
-    
     def highlight(self):
         """ runs all highlighting functions (inline/embedded) """
         
@@ -339,7 +311,6 @@ class html_content(object):
         self.highlight_inline()
         
         return self
-    
     
     def highlight_inline(self):
         """ highlight all inline 'pre class=[language]' content (if any) """
@@ -349,7 +320,6 @@ class html_content(object):
         
         return self
     
-    
     def highlight_embedded(self):
         """ highlight all embedded lines in content (if any) """
         
@@ -357,7 +327,6 @@ class html_content(object):
             self.content = highlighter.highlight_embedded(self.content)
         
         return self
-    
     
     def hide_email(self):
         """ base64 encodes all email addresses for use with wptool.js reveal functions.
@@ -369,19 +338,27 @@ class html_content(object):
         else:
             # single line
             slines = [self.content]
+
+        # Fixing python 3 until i remove py2 completely
+        if hasattr(base64, 'encodebytes'):
+            encode = base64.encodebytes
+        else:
+            encode = base64.encodestring
         
         final_output = []
+        # encode/decode has been added for py3 (until i remove py2)
         for sline in slines:
             mailtos_ = find_mailtos(sline)
             for mailto_ in mailtos_:
-                b64_mailto = base64.encodestring(mailto_).replace('\n','')
-                sline = sline.replace(mailto_, b64_mailto )
-                #_log.debug("mailto: replaced " + mailto_ +'\n    with: ' + b64_mailto)
+
+                b64_mailto = encode(mailto_.encode('utf-8')).replace('\n', '')
+                sline = sline.replace(mailto_, b64_mailto.decode('utf-8'))
+
             emails_ = find_email_addresses(sline)
             for email_ in emails_:
-                b64_addr = base64.encodestring(email_).replace('\n','')
-                sline = sline.replace(email_, b64_addr )
-                #_log.debug("email: replaced " + email_ +'\n    with: ' + b64_addr)
+                b64_addr = encode(email_.encode('utf-8')).replace('\n', '')
+                sline = sline.replace(email_, b64_addr.decode('utf-8'))
+
             # add line (encoded or not)
             final_output.append(sline)
         self.content = '\n'.join(final_output)
@@ -403,7 +380,6 @@ class html_content(object):
             # first item is the mailto: line we want.
             mailtos_.append(groups_[0])
         return mailtos_
-    
     
     def find_email_addresses(self):
         """ finds all instances of email@addresses.com inside a wp-address classed tag. for hide_email() """
@@ -438,10 +414,12 @@ auto_link_list = (("Windows", "http://www.windows.com"),
                   ("BASIC", "http://en.wikipedia.org/wiki/BASIC"),
                   ("ATTiny", "http://www.atmel.com/products/microcontrollers/avr/tinyavr.aspx"),
                   ("(?P<CGROUP>C language)", "http://en.wikipedia.org/wiki/C_(programming_language)"),
-                 )
+                  )
     
 # Module Functions (not everything can be an html_content(), or should be.)
-def wrap_link(content_, link_url, alt_text = ""):
+
+
+def wrap_link(content_, link_url, alt_text=""):
     """ wrap content in <a href> """
     s = ""
     s_end = ""
@@ -453,6 +431,7 @@ def wrap_link(content_, link_url, alt_text = ""):
         s_end = "</a>"
     
     return s + content_ + s_end
+
 
 def auto_link(str_, link_list, **kwargs):
     """ Grabs words from HTML content and makes them links.
@@ -468,7 +447,7 @@ def auto_link(str_, link_list, **kwargs):
                 auto_link(mycontent, my_link_list, **my_attrs)s
     """
     
-    if isinstance(str_, (str, unicode)):
+    if hasattr(str_, 'encode'):
         lines = str_.split('\n')
         joiner = '\n'
     else:
@@ -480,8 +459,10 @@ def auto_link(str_, link_list, **kwargs):
     for line in iter(lines):
         linetrim = line.replace(' ', '').replace('\t', '')
         # start of tags
-        if "<p" in linetrim: inside_p = True
-        if "<span" in linetrim: inside_span = True
+        if "<p" in linetrim:
+            inside_p = True
+        if "<span" in linetrim:
+            inside_span = True
         
         # deal with good tags
         if inside_p or inside_span:
@@ -489,8 +470,10 @@ def auto_link(str_, link_list, **kwargs):
         new_lines.append(line)
         
         # end of tags
-        if "</p>" in linetrim: inside_p = False
-        if "</span>" in linetrim: inside_span = False
+        if "</p>" in linetrim:
+            inside_p = False
+        if "</span>" in linetrim:
+            inside_span = False
     # end of content
     if joiner is None:
         return new_lines
@@ -517,16 +500,19 @@ def auto_link_line(str_, link_list, **kwargs):
     """
     
     try:
-        if len(link_list) == 0: return str_
-        if len(link_list[0]) < 2: return str_
+        if len(link_list) == 0:
+            return str_
+        if len(link_list[0]) < 2:
+            return str_
     except:
         _log.error("Invalid input to auto_link()!, expecting a list/tuple of 2-tuple/lists")
         return str_
     # build attributes
+
     def parse_key(k):
         # for passing keys like "class", you can do "_class"
         return k.strip('_')
-    attr_strings = [' ' + parse_key(k) + '="' + v + '"' for k,v in kwargs.items()]
+    attr_strings = [' ' + parse_key(k) + '="' + v + '"' for k, v in kwargs.items()]
     attr_string = ''.join(attr_strings) if len(attr_strings) > 0 else ''
     # replace text with links
     for link_pat, link_href in link_list:
@@ -541,7 +527,7 @@ def auto_link_line(str_, link_list, **kwargs):
                 else:
                     # use first group dict key if found
                     if len(re_match.groupdict().keys()) > 0:
-                        first_key = re_match.groupdict().keys()[0]
+                        first_key = list(re_match.groupdict().keys())[0]
                         link_text = re_match.groupdict()[first_key]
                     else:
                         # use first non-named group
@@ -566,6 +552,7 @@ def comments_button(link_href):
 
     return "<a href='" + link_href + "#comments-box'><div class='comments-button'><span class='comments-button-text'>comments...</span></div></a>"
  
+
 def get_html_file(wpobj):
     """ finds html file to use for t content, if any.
         returns empty string on failure.
@@ -625,7 +612,7 @@ def load_html_file(sfile):
         return ""
     except Exception as ex:
         _log.error("General error opening file: " + sfile + '\n' + str(ex))
-        return ""     
+        return ""
         
 
 def check_replacement(source_string, target_replacement):
@@ -648,10 +635,10 @@ def check_replacement(source_string, target_replacement):
     if target_replacement.replace(' ', '') in source_string:
         target_replacement = target_replacement.replace(' ', '')
     
-    return target_replacement if (target_replacement in source_string) else False  
+    return target_replacement if (target_replacement in source_string) else False
     
 
-def inject_article_ad(source_string, target_replacement = "{{ article_ad }}"):
+def inject_article_ad(source_string, target_replacement="{{ article_ad }}"):
     """ basically does a text replacement, 
         replaces 'target_replacement' with the code for article ads.
         returns finished html string.
@@ -662,14 +649,14 @@ def inject_article_ad(source_string, target_replacement = "{{ article_ad }}"):
     if target:
         # at this moment article ad needs no Context.
         article_ad = render_clean("home/articlead.html")
-        return source_string.replace(target, article_ad)  
+        return source_string.replace(target, article_ad)
     
     # target not found.
     return source_string
 
 
-def inject_screenshots(source_string, images_dir, target_replacement = "{{ screenshots_code }}", 
-                       noscript_image = None):
+def inject_screenshots(source_string, images_dir, target_replacement="{{ screenshots_code }}",
+                       noscript_image=None):
     """ inject code for screenshots box.
         walks image directory, grabbing images for the image rotator box.
         uses screenshots.html template to display them.
@@ -691,7 +678,8 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     # get absolute path for images dir, if none exists then delete the target_replacement.
     images_dir = utilities.get_absolute_path(images_dir)
     
-    if images_dir == "": return source_string.replace(target, "")
+    if images_dir == "":
+        return source_string.replace(target, "")
     
     # Get useable relative dir (user-passed may be wrong format)
     relative_dir = utilities.get_relative_path(images_dir)
@@ -711,7 +699,7 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
         """ shortcut for file extension test in good_pics list comprehension """
         return (filename[-4:] in formats)
 
-    # Build acceptable pics list   
+    # Build acceptable pics list
     good_pics = [relative_img(f) for f in all_files if good_format(f)]
 
     # auto-pick noscript image if needed
@@ -729,7 +717,7 @@ def inject_screenshots(source_string, images_dir, target_replacement = "{{ scree
     return source_string.replace(target, screenshots)
 
 
-def inject_sourceview(project, source_string, request=None, link_text = None, desc_text = None, target_replacement = "{{ source_view }}"):
+def inject_sourceview(project, source_string, request=None, link_text=None, desc_text=None, target_replacement="{{ source_view }}"):
     """ injects code for source viewing.
         needs wp_project (project) passed to gather info.
         if target_replacement is not found, returns source_string.
@@ -753,22 +741,23 @@ def inject_sourceview(project, source_string, request=None, link_text = None, de
     relativedir = utilities.get_relative_path(project.source_dir)
     relativepath = relativedir if relativedir else relativefile
     # has good link?
-    if relativepath == "": _log.debug("missing source file/dir for: " + project.name)
+    if relativepath == "":
+        _log.debug("missing source file/dir for: " + project.name)
 
     # get default filename to display in link.
-    file_name = utilities.get_filename(project.source_file) if project.source_file else project.name        
+    file_name = utilities.get_filename(project.source_file) if project.source_file else project.name
     
     # get link text
     if link_text is None:
         link_text = file_name + " (local)"
 
     sourceview = render_clean("home/sourceview.html",
-                              context_dict = {'project': project,
-                                              'file_path': relativepath,
-                                              'link_text': link_text,
-                                              'desc_text': desc_text,
-                                              },
-                              with_request = request,
+                              context_dict={'project': project,
+                                            'file_path': relativepath,
+                                            'link_text': link_text,
+                                            'desc_text': desc_text,
+                                            },
+                              with_request=request,
                               )
     return source_string.replace(target, sourceview)
     
@@ -787,7 +776,7 @@ def remove_comments(source_string):
             keeplines = []
             
             for sline in source_string.split('\n'):
-                strim = sline.replace('\t', '').replace(' ','')
+                strim = sline.replace('\t', '').replace(' ', '')
                 if not is_comment(strim):
                     keeplines.append(sline)
             return '\n'.join(keeplines)
@@ -811,7 +800,7 @@ def remove_newlines(source_string):
             if (("<pre" in sline_lower) or
                 ("<script" in sline_lower)):
                 in_skipped = True
-            # process line.  
+            # process line.
             if in_skipped:
                 # add original line.
                 final_output.append(sline + '\n')
@@ -838,7 +827,7 @@ def remove_whitespace(source_string):
         slines = source_string.split('\n')
     else:
         slines = [source_string]
-    # start processing    
+    # start processing
     in_skipped = False
     final_output = []
     for sline in slines:
@@ -846,7 +835,7 @@ def remove_whitespace(source_string):
         # start of skipped tag
         if "<pre" in sline_lower:
             in_skipped = True
-        # process line.   
+        # process line.
         if in_skipped:
             # add original line.
             final_output.append(sline)
@@ -888,7 +877,6 @@ def fix_p_spaces(source_string):
         sline = slines[i]
         strim = sline.replace('\t', '').replace(' ', '').lower()
         
-            
         # process p tag.
         if inside_p:
             # Found end of tag.
@@ -922,6 +910,7 @@ def trim_whitespace_line(sline):
         scopy = scopy[:-1]
     return scopy
 
+
 def hide_email(source_string):
     """ base64 encodes all email addresses for use with wptool.js reveal functions.
         for spam protection.
@@ -933,17 +922,24 @@ def hide_email(source_string):
         # single line
         slines = [source_string]
     
+    # Fix py3 with base64.encodebytes(), encode/decode also added.
+    # (until I remove py2 completely)
+    if hasattr(base64, 'encodebytes'):
+        encode = getattr(base64, 'encodebytes')
+    else:
+        encode = getattr(base64, 'encodestring')
+
     final_output = []
     for sline in slines:
         mailtos_ = find_mailtos(sline)
         for mailto_ in mailtos_:
-            b64_mailto = base64.encodestring(mailto_).replace('\n','')
-            sline = sline.replace(mailto_, b64_mailto )
+            b64_mailto = encode(mailto_.encode('utf-8'))
+            sline = sline.replace(mailto_, b64_mailto.decode('utf-8').replace('\n', ''))
             #_log.debug("mailto: replaced " + mailto_ +'\n    with: ' + b64_mailto)
         emails_ = find_email_addresses(sline)
         for email_ in emails_:
-            b64_addr = base64.encodestring(email_).replace('\n','')
-            sline = sline.replace(email_, b64_addr )
+            b64_addr = encode(email_.encode('utf-8'))
+            sline = sline.replace(email_, b64_addr.decode('utf-8').replace('\n', ''))
             #_log.debug("email: replaced " + email_ +'\n    with: ' + b64_addr)
         # add line (encoded or not)
         final_output.append(sline)
@@ -988,7 +984,8 @@ def strip_all(s, strip_chars):
         every character of every item in the list.
     """
     
-    if s is None: return s
+    if s is None:
+        return s
     if isinstance(strip_chars, (list, tuple)):
         strip_chars = ''.join(strip_chars)
     
@@ -1013,7 +1010,7 @@ def fix_open_tags(source):
     
     """
     try:
-        if isinstance(source, (str, unicode)):
+        if hasattr(source, 'encode'):
             if '\n' in source:
                 source = source.split('\n')
                 joiner = '\n'
@@ -1040,9 +1037,12 @@ def fix_open_tags(source):
     #incomplete_tags = []
     # list to hold good and 'fixed' lines.
     fixed_lines = []
+
     def find_opening(closing):
-        if '/' in closing: closing = closing.replace('/', '')
-        if closing.endswith('>'): closing = closing[:-1]
+        if '/' in closing:
+            closing = closing.replace('/', '')
+        if closing.endswith('>'):
+            closing = closing[:-1]
 
         for starts in opening_tags:
             if closing in starts:
@@ -1069,7 +1069,7 @@ def fix_open_tags(source):
         # Incomplete closing tag (no '>')
         if closing_inc and not closing:
             # find it's start tag, and use it to build a 'fixed' end tag.
-            expecting = opening_tags[len(opening_tags) -1].replace('<', '</') + '>'
+            expecting = opening_tags[len(opening_tags) - 1].replace('<', '</') + '>'
             line = line.replace(closing_inc.group(), expecting)
             tag_opening = find_opening(expecting)
             if tag_opening:
@@ -1088,7 +1088,7 @@ def fix_open_tags(source):
 
     if len(opening_tags) > 0:
         for i in range(len(opening_tags), 0, -1):
-            left_over = opening_tags[i-1]
+            left_over = opening_tags[i - 1]
             if not left_over in ignore_tags:
                 fixed_lines.append(left_over.replace('<', '</') + '>')
 
@@ -1103,13 +1103,13 @@ def clean_html(source_string):
 
     # these things have to be done in a certain order to work correctly.
     # hide_email, fix p spaces, remove_comments, remove_whitespace, remove_newlines
-    if source_string is None: 
+    if source_string is None:
         _log.debug("None object passed as source_string!")
         return ""
     
     return remove_whitespace(
-               remove_comments(
-                   hide_email(source_string)))
+        remove_comments(
+            hide_email(source_string)))
     
     
 def render_html(template_name, **kwargs):
@@ -1145,14 +1145,17 @@ def render_html(template_name, **kwargs):
             context_ = context_dict
             
         rendered = tmplate.render(context_)
-        if link_list: rendered = auto_link(rendered, link_list, **auto_link_args)
+        if link_list:
+            rendered = auto_link(rendered, link_list, **auto_link_args)
         return rendered
     except Exception as ex:
         errstr = "Unable to render html template"
-        if with_request: errstr += " with request context"
+        if with_request:
+            errstr += " with request context"
 
         _log.error(errstr + ': ' + template_name + '\n' + str(ex))
         return None
+
 
 def render_clean(template_name, **kwargs):
     """ runs render_html() through clean_html().
@@ -1172,5 +1175,3 @@ def render_clean(template_name, **kwargs):
     """
 
     return clean_html(render_html(template_name, **kwargs))
-
-

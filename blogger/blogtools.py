@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -10,6 +10,7 @@
  
    start date: Mar 20, 2013
 '''
+
 
 # Global settings
 from django.conf import settings
@@ -23,46 +24,58 @@ from wp_main.utilities.highlighter import highlight_inline, highlight_embedded
 # Blog Info
 from blogger.models import wp_blog
 
+# Fix Python3 (until I remove py2 completely)
+if settings.SYSVERSION[0] == '3':
+    unicode = str
+
 # Defaults (if nothing is passed to these functions)
 DEFAULT_ORDERBY = '-posted_datetime'
 DEFAULT_MAXPOSTS = 25    # number of posts per page.
 DEFAULT_MAXLINES = 17    # number of lines before adding 'more..' button on previews.
-DEFAULT_MAXLENGTH = 2000 # number of characters before adding 'more..' button on previews.
+DEFAULT_MAXLENGTH = 2000  # number of characters before adding 'more..' button on previews.
+
+
 def get_post_byany(_identifier):
     """ retrieve blog post by any identifier, returns None on failure """
     
     # by id
     try:
         id_ = int(_identifier)
-        post_ = utilities.get_object_safe(wp_blog.objects, id = id_)
+        post_ = utilities.get_object_safe(wp_blog.objects, id=id_)
     except ValueError:
         post_ = None
 
     # by title
-    if post_ is None: post_ = utilities.get_object_safe(wp_blog.objects, title = _identifier)
+    if post_ is None:
+        post_ = utilities.get_object_safe(wp_blog.objects, title=_identifier)
  
     # by slug
     if post_ is None:
         # id and title failed, try slug.
         # remove html ending
-        if _identifier.lower().endswith(".html"): _identifier = _identifier[:-5]
-        if _identifier.lower().endswith(".htm"): _identifier = _identifier[:-4]
+        if _identifier.lower().endswith(".html"):
+            _identifier = _identifier[:-5]
+        if _identifier.lower().endswith(".htm"):
+            _identifier = _identifier[:-4]
         
         # try quick slug id. (Case-insensitive because all slugs are lowercase)
-        post_ = utilities.get_object_safe(wp_blog.objects, slug = _identifier.lower())
+        post_ = utilities.get_object_safe(wp_blog.objects, slug=_identifier.lower())
 
     if post_ is None:
         return post_
     else:
         return post_ if not post_.disabled else None
 
+
 def get_post_list(starting_index=0, max_posts=None, _order_by=None):
     """ returns a list of posts, starting with starting_id,
         as long as max_posts. 
         this is for pageination.
     """
-    if _order_by is None: _order_by = DEFAULT_ORDERBY
-    if max_posts is None: max_posts = DEFAULT_MAXPOSTS
+    if _order_by is None:
+        _order_by = DEFAULT_ORDERBY
+    if max_posts is None:
+        max_posts = DEFAULT_MAXPOSTS
     all_posts = [post for post in wp_blog.objects.order_by(_order_by) if not post.disabled]
     
     return utilities.slice_list(all_posts, starting_index, max_posts)
@@ -92,14 +105,16 @@ def get_post_body_short(post_, max_text_length=None, max_text_lines=None):
     """ retrieves body for post, timming if needed.
         uses get_post_body to retrieve the initial body. """
 
-    if max_text_length is None: max_text_length = DEFAULT_MAXLENGTH
-    if max_text_lines is None: max_text_lines = DEFAULT_MAXLINES
+    if max_text_length is None:
+        max_text_length = DEFAULT_MAXLENGTH
+    if max_text_lines is None:
+        max_text_lines = DEFAULT_MAXLINES
     new_body = get_post_body(post_)
     trimmed = False
     
-    # trim by maximum text length        
-    if ((max_text_length > 0) and 
-        (len(new_body) > max_text_length)):
+    # trim by maximum text length
+    if ((max_text_length > 0) and
+       (len(new_body) > max_text_length)):
         new_body = new_body[:max_text_length]
         trimmed = True
         
@@ -125,7 +140,6 @@ def get_post_body_short(post_, max_text_length=None, max_text_lines=None):
         new_body += "<span class='continued'> ...(continued)</span>" + \
                     htmltools.readmore_box('/blog/view/' + post_.slug)
 
-    
     return new_body
 
 
@@ -139,12 +153,14 @@ def fix_post_list(blog_posts, max_posts=None, max_text_length=None, max_text_lin
         returns list of blog_posts.
     """
     
-    
     if blog_posts is None:
         return []
-    if max_posts is None: max_posts = DEFAULT_MAXPOSTS
-    if max_text_length is None: max_text_length = DEFAULT_MAXLENGTH
-    if max_text_lines is None: max_text_lines = DEFAULT_MAXLINES
+    if max_posts is None:
+        max_posts = DEFAULT_MAXPOSTS
+    if max_text_length is None:
+        max_text_length = DEFAULT_MAXLENGTH
+    if max_text_lines is None:
+        max_text_lines = DEFAULT_MAXLINES
     
     for post_ in [post_copy for post_copy in blog_posts]:
         new_body = get_post_body_short(post_, max_text_length, max_text_lines)
@@ -153,8 +169,8 @@ def fix_post_list(blog_posts, max_posts=None, max_text_length=None, max_text_lin
         
     # trim posts length
     if ((max_posts > 0) and
-        (len(blog_posts) > max_posts)):
-        blog_posts = blog_posts[:max_posts]        
+       (len(blog_posts) > max_posts)):
+        blog_posts = blog_posts[:max_posts]
     return blog_posts
 
 
@@ -185,6 +201,7 @@ def get_tag_links(post_):
         taglinks += sbase.replace("{{ link_name }}", tag_)
     return taglinks
 
+
 def prepare_content(body_content):
     """ runs various functions on the content, like source-highlighting """
     
@@ -199,12 +216,12 @@ def prepare_content(body_content):
 def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, _order_by=None):
     """ retrieve all posts with tag_ as a tag. """
     
-    if _order_by is None: _order_by = DEFAULT_ORDERBY
+    if _order_by is None:
+        _order_by = DEFAULT_ORDERBY
     if ',' in _tag:
         _tag = _tag.replace(',', ' ')
         
     _tag = utilities.trim_special(_tag)
-    
     
     if ' ' in _tag:
         tag_queries = _tag.split(' ')
@@ -237,8 +254,7 @@ def get_tag_list(post_object_or_tag_string):
         returns list on success, empty list on failure.
     """
     
-    if (isinstance(post_object_or_tag_string, str) or
-        isinstance(post_object_or_tag_string, unicode)):
+    if hasattr(post_object_or_tag_string, 'encode'):
         # tag string was passed
         ptags = post_object_or_tag_string
     else:
@@ -284,7 +300,7 @@ def get_tags_post_count():
     for post_ in [p for p in wp_blog.objects.all() if not p.disabled]:
         tags = get_tag_list(post_)
         for tag_ in tags:
-            if tag_counts.has_key(tag_):
+            if tag_ in tag_counts.keys():
                 tag_counts[tag_] += 1
             else:
                 tag_counts[tag_] = 1
@@ -292,7 +308,7 @@ def get_tags_post_count():
     return tag_counts
     
 
-def get_tags_fontsizes(tags_dict = None):
+def get_tags_fontsizes(tags_dict=None):
     """ returns all tag name with font size according to post count.
         for listing all tags on the tags.html page.
         returns a dict with {tag_name:font size} (in em's)
@@ -300,7 +316,6 @@ def get_tags_fontsizes(tags_dict = None):
     
     if tags_dict is None:
         tags_dict = get_tags_post_count()
-    
     
     tag_sizes = {}
     for tag_name in tags_dict.keys():
@@ -322,8 +337,11 @@ def get_tags_fontsizes(tags_dict = None):
             
     return tag_sizes
 
+
 class wp_tag():
+
     """ tag class for use with the tags.html template and view. """
+
     def __init__(self, name_="", count_=0, size_="1em"):
         self.name = name_
         self.count = count_

@@ -229,7 +229,18 @@ def get_headerstr(obj):
 
 def get_model_fields(model, includefunctions=False):
     # get attributes, without private attrs.
-    tmpobject = model.objects.create(name='testitem', alias='testitem')
+    if hasattr(model, 'alias'):
+        testattrs = {'alias': 'testitem'}
+    elif hasattr(model, 'slug'):
+        testattrs = {'slug': 'testitem'}
+    else:
+        testattrs = {}
+    if hasattr(model, 'name'):
+        testattrs['name'] = 'testitem'
+    elif hasattr(model, 'title'):
+        testattrs['title'] = 'testitem'
+    
+    tmpobject = model.objects.create(**testattrs)
     tmpobject.delete()
     attrs = [a for a in dir(tmpobject) if not a.startswith('_')]
     
@@ -460,16 +471,43 @@ def update_object(obj, attr, val, objectname=None):
     # Get attribute type.
     requiredtype = type(oldattr)
     
-    # helper for converting to datetime.date type.
     def makedate(s):
+        """ helper for converting to datetime.date type. """
         year, month, day = (int(p) for p in s.split('-'))
         return datetime.date(year, month, day)
-    
+    def makebool(s):
+        """ helper for converting to bool (since bool("False") == True). """
+        trues = ('true', '1')
+        falses = ('false', '0')
+        if s.lower() in trues:
+            return True
+        elif s.lower() in falses:
+            return False
+        else:
+            print('\nError in makebool(). Value \'{}\' was not found in acceptable values!'.format(s))
+            return False
     # Convert string arg val into actual type required.
-    convertfunc = makedate if isinstance(oldattr, datetime.date) else requiredtype
+    # Some types are kinda 'dumb', and need help to be converted.
+    convertfunc = None
+    # Map to conversion functions for 'dumb' types.
+    helpertypes = {datetime.date: makedate,
+                   bool: makebool,
+                   }
+    # Find out if the old attribute is a 'dumb' type and assign the conversion function.
+    for helptype in helpertypes.keys():
+        if isinstance(oldattr, helptype):
+            convertfunc = helpertypes[helptype]
+            break
+    # No conversion function is set yet, it's not a 'dumb' type.
+    if convertfunc is None:
+        convertfunc = requiredtype
+
     try:
+        # Use the conversion function to make sure proper types are set (in Django/Database)
         val = convertfunc(val)
-        print('\nSetting {}.{} = {} as {}'.format(objname, attr, val, str(type(val))))
+        # A little bit 'prettier' type string than <type 'this'>.
+        typestr = str(type(val)).strip('<').strip('>')
+        print('\nSetting {}.{} = {} as {}'.format(objname, attr, val, typestr))
     except Exception as ex:
         print('\nError converting value to required type!: {}\n{}'.format(val, ex))
         return 1

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -30,6 +30,7 @@ from misc import tools as misctools
 
 
 class wp_result(object):
+
     """ holds search result information """
     
     def __init__(self, title="", link="", desc="", posted=""):
@@ -41,11 +42,17 @@ class wp_result(object):
 
 def is_empty_query(querystring):
     """ returns True if querystring == '', or len(querystring) < 3 """
+
+    if not hasattr(querystring, 'encode'):
+        querystring = str(querystring)
     return (querystring == '') or (len(querystring) < 3)
 
 
 def fix_query_string(querystr):
     """ Removes too many spaces from query string. """
+    if not hasattr(querystr, 'encode'):
+        querystr = str(querystr)
+
     while '  ' in querystr:
         querystr = querystr.replace('  ', ' ')
     while '++' in querystr:
@@ -61,6 +68,9 @@ def force_query_list(querystr):
         ...basically forces the use of a list.
     """
 
+    if not hasattr(querystr, 'encode'):
+        querystr = str(querystr)
+    
     # string with ' '
     if ' ' in querystr:
         return [q for q in querystr.split(' ') if len(q.replace(' ', '')) > 2]
@@ -104,10 +114,10 @@ def search_misc(querystr):
         return []
     
     results = []
-    
-    for misc in wp_misc.objects.order_by('-publish_date'):
+
+    for misc in wp_misc.objects.filter(disabled=False).order_by('-publish_date'):
         mcontent = misctools.get_long_desc(misc)
-        targets = (misc.name,  misc.alias,
+        targets = (misc.name, misc.alias,
                    misc.version, misc.filetype,
                    misc.language, mcontent,
                    misc.description, str(misc.publish_date),
@@ -138,7 +148,7 @@ def search_projects(querystr):
         # Nothing to search
         return []
     
-    for proj in wp_project.objects.order_by('-publish_date'):
+    for proj in wp_project.objects.filter(disabled=False).order_by('-publish_date'):
         targets = (proj.name, proj.alias,
                    proj.version, proj.description,
                    str(proj.publish_date), ptools.get_html_content(proj),
@@ -170,7 +180,7 @@ def search_blog(querystr):
         return []
     
     results = []
-    for post in wp_blog.objects.order_by('-posted'):
+    for post in wp_blog.objects.filter(disabled=False).order_by('-posted'):
         pdesc = blogtools.prepare_content(blogtools.get_post_body_short(post, max_text_lines=16))
         targets = (post.title, post.slug,
                    blogtools.get_post_body(post), pdesc,
@@ -191,8 +201,8 @@ def search_all(querystr, projects_first=True):
     
     if projects_first:
         results = search_projects(querystr)
-        results += search_blog(querystr)
         results += search_misc(querystr)
+        results += search_blog(querystr)
     else:
         results = search_blog(querystr)
         results += search_projects(querystr)
@@ -209,7 +219,7 @@ def highlight_queries(queriestr, scontent):
     if isinstance(queriestr, (list, tuple)):
         queries = queriestr
     else:
-        if ',' in queriestr: 
+        if ',' in queriestr:
             queriestr = queriestr.replace(',', ' ')
         if ' ' in queriestr:
             queries = queriestr.split(' ')

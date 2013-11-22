@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -10,10 +10,11 @@
  
    start date: Apr 1, 2013
 '''
-import os, os.path #@UnusedImport: os is used.
+import os
+import os.path  # @UnusedImport: os is used.
 
 # Global DEBUG setting
-from django.conf import settings #@UnusedImport: settings
+from django.conf import settings  # @UnusedImport: settings
 # Home settings
 from home import homesettings as hsettings
 # Blog/Projects info
@@ -45,6 +46,7 @@ def get_latest_project():
     else:
         return None
 
+
 def get_featured_project():
     """ retrieve the featured project from homesettings 
         as a wp_project object.
@@ -59,7 +61,7 @@ def get_featured_project():
         proj_ = wp_project.objects.get(alias=salias)
     except Exception as ex:
         # bad alias?
-        _log.debug("unable to retrieve featured project: " + salias + \
+        _log.debug("unable to retrieve featured project: " + salias +
                    '\n' + str(ex))
         proj_ = get_latest_project()
         
@@ -81,25 +83,29 @@ def get_scriptkid_image():
         _log.error("images was empty!")
         return None
     
-
-    
     randomindex = random.randint(0, len(images) - 1)
     return os.path.join(image_dir, images[randomindex])
 
+
 class StatsInfo(object):
+
     """ Holds info for stats.html template and home.view_stats() view. """
+
     def __init__(self, title=None, statlines=None):
         self.title = title
         self.statlines = statlines
+
+
 class StatsCollection(object):
+
     """ Holds a collection of StatsInfo objects. """
+
     def __init__(self, *args):
         """ Adds a list of StatsInfo()'s on intialization """
         self.stats = []
         for arg in args:
             if arg is not None:
                 self.stats.append(arg)
+
     def add(self, statsinfo):
         self.stats.append(statsinfo)
-    
-        

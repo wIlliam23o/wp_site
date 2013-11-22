@@ -1,5 +1,5 @@
 # Mark generated Html as safe to view.
-#from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
+# from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
 
 # Project Info
 from projects.models import wp_project
@@ -29,11 +29,11 @@ def view_index(request):
         response = responses.alert_message(alert_msg="Sorry, no projects found!")
     else:
         response = responses.clean_response("projects/index.html",
-                                                {'request': request,
-                                                 'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                           "/static/css/projects.css"],
-                                                 'projects': all_projects,
-                                                 })
+                                            {'request': request,
+                                             'extra_style_link_list': [utilities.get_browser_style(request),
+                                                                       "/static/css/projects.min.css"],
+                                             'projects': all_projects,
+                                             })
     return response
 
 
@@ -47,26 +47,27 @@ def view_project(request, project, requested_page, source=None):
     # default flags
     use_screenshots = False
     extra_style_link_list = [utilities.get_browser_style(request),
-                             "/static/css/projects.css",
-                             "/static/css/highlighter.css"]
+                             "/static/css/projects.min.css",
+                             "/static/css/highlighter.min.css"]
     
     # no project, no matches found (or error retrieving).
-    if project is None:
+    if not project:
         notfound_msg = "<a href='/projects'>Click here to visit a listing of my projects.</a><br/>\n" + \
                        "<span>Or you could try <a href='/search?q={{PAGE}}'>searching</a>...</span>"
         return responses.alert_message(alert_msg="Sorry, I can't find that project.",
                                        body_message=notfound_msg.replace('{{PAGE}}', str(requested_page)))
     
     # possible matches passed?
-    matches = project if isinstance(project, (list,tuple)) else None
-    if matches: project = None
+    matches = project if isinstance(project, (list, tuple)) else None
+    if matches:
+        project = None
     
     # Grab project info
     if project:
         # this will tell the template to add screenshots javascript.
         use_screenshots = project.screenshot_dir != ''
         # keep track of how many times this has been viewed.
-        project.view_count +=1
+        project.view_count += 1
         project.save()
     
     # Grab projects list for vertical menu
@@ -80,7 +81,7 @@ def view_project(request, project, requested_page, source=None):
                                          'project': project,
                                          'matches': matches,
                                          'use_screenshots': use_screenshots,
-                                         }, 
+                                         },
                                         with_request=request)
 
 
@@ -124,7 +125,7 @@ def get_byname(_name):
         return proj if not proj.disabled else None
     except wp_project.DoesNotExist:
         for proj in wp_project.objects.all():
-            if proj.name.lower().replace(' ', '') == _name.lower().replace(' ',''):
+            if proj.name.lower().replace(' ', '') == _name.lower().replace(' ', ''):
                 return proj
         return None
     except:
@@ -189,11 +190,11 @@ def get_withmatches(_identifier):
                 _id = str(project.id)
                 # try matching in various ways
                 if ((_strim in _nametrim) or
-                    (_nametrim in _strim) or
-                    (_strim in _desctrim) or
-                    (_strim in _alias) or
-                    (_alias in _strim) or
-                    (_strim in _id)):
+                   (_nametrim in _strim) or
+                   (_strim in _desctrim) or
+                   (_strim in _alias) or
+                   (_alias in _strim) or
+                   (_strim in _id)):
                     if not project in lst_matches:
                         lst_matches.append(project)
         # return list of matching projects
@@ -201,5 +202,3 @@ def get_withmatches(_identifier):
     else:
         # project was found (only show if its not disabled)
         return proj if not proj.disabled else None
-    
-    

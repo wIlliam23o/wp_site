@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -16,7 +16,6 @@ from wp_main.utilities.wp_logging import logger
 _log = logger("downloads.tools").log
 
 
-
 def get_file_tracker(absolute_path, createtracker=True, dosave=False):
     """ gets an existing file_tracker, or creates a new one from a filename """
     try:
@@ -28,7 +27,7 @@ def get_file_tracker(absolute_path, createtracker=True, dosave=False):
                 filetracker = file_tracker()
                 filetracker.set_filename(absolute_path, dosave=False)
             except Exception as ex:
-                _log.error("Unable to create new file tracker for: " + absolute_path + '\n' + \
+                _log.error("Unable to create new file tracker for: " + absolute_path + '\n' +
                            str(ex))
                 filetracker = None
         else:
@@ -48,7 +47,8 @@ def update_tracker_views(absolute_path, createtracker=True, dosave=True):
         return None
     
     filetracker.view_count += 1
-    if dosave: filetracker.save()
+    if dosave:
+        filetracker.save()
 
     return filetracker
 
@@ -62,19 +62,21 @@ def update_tracker_downloads(absolute_path, createtracker=True, dosave=True):
         return None
     
     filetracker.download_count += 1
-    if dosave: filetracker.save()
+    if dosave:
+        filetracker.save()
     
     return filetracker
+
 
 def update_tracker_projects(tracker_, project_object, dosave=True):
     """ adds a project to this tracker's project field safely. """
     
     if hasattr(tracker_, 'id'):
         trackerid = tracker_.id
-        # Tracker must be saved at least once before adding a project relation.
+    # Tracker must be saved at least once before adding a project relation.
+    if trackerid is not None:
         if trackerid < 0:
             tracker_.save()
-    
-    tracker_.project.add(project_object)
-    if dosave: tracker_.save()
-    
+        tracker_.project.add(project_object)
+        if dosave:
+            tracker_.save()

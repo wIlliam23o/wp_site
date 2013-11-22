@@ -1,5 +1,5 @@
 # Mark generated Html as safe to view.
-from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
+from django.utils.safestring import mark_safe  # don't escape html with strings marked safe.
 # Gloval settings
 from django.conf import settings
 
@@ -17,6 +17,7 @@ from wp_main.utilities import utilities
 from wp_main.utilities import responses
 from wp_main.utilities.wp_logging import logger
 _log = logger('downloads').log
+
 
 def index(request):
     """ default download page, when no file is specified """
@@ -40,8 +41,8 @@ def download(request, file_path):
     absolute_path = utilities.get_absolute_path(file_path)
     # location relative to site
     static_path = absolute_path.replace(settings.STATIC_PARENT, '')
-    if (not static_path.startswith('/')): static_path = '/' + static_path
-    
+    if (not static_path.startswith('/')):
+        static_path = '/' + static_path
     
     if absolute_path == "":
         # File doesn't exist. Return an error.
@@ -74,18 +75,13 @@ def download(request, file_path):
                 misc.download_count += 1
                 misc.save()
                 
-            # update file tracker info    
-            filetracker = dltools.get_file_tracker(absolute_path)   
+            # update file tracker info
+            filetracker = dltools.get_file_tracker(absolute_path)
             if filetracker is not None:
-                if proj is not None: dltools.update_tracker_projects(filetracker, proj)
+                if proj is not None:
+                    dltools.update_tracker_projects(filetracker, proj)
                 
                 filetracker.download_count += 1
                 filetracker.save()
                  
-        
     return response
-
-
-
-           
-    

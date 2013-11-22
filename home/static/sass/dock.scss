@@ -1,0 +1,34 @@
+@import 'welbornprod';
+.dock-container { 
+    position: relative; 
+    top: -8px; 
+    height: 50px;
+    left: 0;
+    /* padding-left: 20px;  <-disabled for left-align, getting rid of center. */
+    }
+a.dock-item { 
+    display: block;
+    width: 50px;
+    position: absolute;
+    bottom: 0;
+    font-family: $fontsnormal;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    text-shadow: $shadowtext;
+    }
+.dock-item span { 
+    display: none; 
+    padding-left: 20px; 
+    }
+.dock-item img { 
+    border: 0; 
+    margin: 5px 10px 0px; 
+    width: 100%; 
+    }
+#dock {
+    /*margin-left: 60px;*/
+    display: inline-block;
+    
+}

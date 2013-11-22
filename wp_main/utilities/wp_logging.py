@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -15,8 +15,10 @@ import logging
 from django.conf import settings
 from os.path import join as pathjoin
 
+
 class logger(object):
-    def __init__(self, log_name, use_file_in_debug = True):
+
+    def __init__(self, log_name, use_file_in_debug=True):
         # initialize logger with name (from module)
         self.log = logging.getLogger(log_name)
         # file will always be used in production site.
@@ -41,7 +43,7 @@ class logger(object):
             self.log.addHandler(self.filehandler)
 
     # not using these from now on, we will use logger().log.debug(),
-    # to keep better track of funcName and lineno (hopefully),    
+    # to keep better track of funcName and lineno (hopefully),
     def debug(self, message):
         self.log.debug(message)
     

@@ -1,12 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Django settings for wp_main project.
 
 # file/path (path joining)
 import os.path
+from sys import version as sysversion
+SYSVERSION = sysversion
 
-#DEBUG is in settings_local...
+# DEBUG is in settings_local...
 
 # decide which dirs to use based on hostname.
 # determine parent dir for script
@@ -24,11 +26,11 @@ if 'webapps' in BASE_PARENT:
     SERVER_LOC = 'remote'
 else:
     # local development directories
-    STATIC_PARENT= '/var/www/'
+    STATIC_PARENT = '/var/www/'
     MEDIA_URL = 'http://127.0.0.1/media/'
     SERVER_LOC = 'local'
     
-# Static/Media directories. 
+# Static/Media directories.
 STATIC_ROOT = os.path.join(STATIC_PARENT, "static")
 MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
     
@@ -53,7 +55,8 @@ if os.path.isfile(KEY_INTERNAL_IPS_FILE):
                 # list of ips in file.
                 ips_list = []
                 for ip_ in ip_raw.split('\n'):
-                    # allows '1.1.1.01' as the least ip length right now, but not '1.1.1.1'.
+                    # allows '1.1.1.01' as the least ip length right now,
+                    # but not '1.1.1.1'.
                     if len(ip_) > 7:
                         _internal_ips.append(ip_)
             else:
@@ -67,15 +70,15 @@ INTERNAL_IPS = tuple(_internal_ips)
 
 
 # Admin info
-ADMINS = ( ('Christopher Welborn', 'cj@welbornprod.com'), )
+ADMINS = (('Christopher Welborn', 'cj@welbornprod.com'), )
 MANAGERS = ADMINS
 
 
 # Database info (filled in with settings_local)
 DATABASES = {
     'default': {
-        'ENGINE': '', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '', 
+        'ENGINE': '',
+        'NAME': '',
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
@@ -84,8 +87,15 @@ DATABASES = {
 }
 
 # Fill in missing settings from local file (not in git).
-execfile(os.path.join(BASE_DIR, 'settings_local.py'))
-
+SECRET_LOCAL_SETTINGS = os.path.join(BASE_DIR, 'settings_local.py')
+if sysversion < '3':
+    execfile(SECRET_LOCAL_SETTINGS)
+else:
+    # Python 3 exec file is gone.
+    exec(compile(open(SECRET_LOCAL_SETTINGS).read(),
+                 SECRET_LOCAL_SETTINGS,
+                 'exec'),
+         globals(), locals())
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -122,7 +132,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # SECRET_KEY SETTINGS
@@ -134,16 +144,16 @@ if os.path.isfile(SECRET_KEY_FILE):
             SECRET_KEY = fread.read().replace('\n', '')
     except (IOError, OSError)as ex_access:
         # failed to read secretkey.txt
-        SECRET_KEY = NONSECRET_KEY #@UndefinedVariable: in local settings.
+        SECRET_KEY = NONSECRET_KEY  # @UndefinedVariable: in local settings.
 else:
     # no secret key exists.
-    SECRET_KEY = NONSECRET_KEY #@UndefinedVariable
+    SECRET_KEY = NONSECRET_KEY  # @UndefinedVariable
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
+    #     'django.template.loaders.eggs.Loader',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -169,7 +179,7 @@ MIDDLEWARE_CLASSES = (
     # django debug tools
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     # special user-agent middleware...
-    'django_user_agents.middleware.UserAgentMiddleware',
+    'wp_user_agents.middleware.UserAgentMiddleware',
 
 )
 
@@ -179,7 +189,8 @@ ROOT_URLCONF = 'wp_main.urls'
 WSGI_APPLICATION = 'wp_main.wsgi.application'
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Put strings here, like "/home/html/django_templates" or
+    # "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     TEMPLATES_BASE,
@@ -202,9 +213,9 @@ INSTALLED_APPS = (
     # django debug tools (for test-site and local development)
     'debug_toolbar',
     # for making get_user_agent(request) available.
-    'django_user_agents',
+    'wp_user_agents',
     # local apps
-    'wp_main', # contains global template tags (wp_tags)
+    'wp_main',  # contains global template tags (wp_tags)
     'home',
     'projects',
     'viewer',
@@ -231,30 +242,29 @@ LOGGING = {
 }
     
 
-
 # Only turn error emails on with the remote server
 # They are driving me nuts when I'm expirimenting locally and DEBUG == False.
 if SERVER_LOC == 'remote':
-    LOGGING['handlers'] = { 'mail_admins': {
-                                            'level': 'ERROR',
-                                            'filters': ['require_debug_false'],
-                                            'class': 'django.utils.log.AdminEmailHandler'
-                                            }
-                           }
-    LOGGING['loggers'] = { 'django.request': {
-                                              'handlers': ['mail_admins'],
-                                              'level': 'ERROR',
-                                              'propagate': True,
-                                              }
+    LOGGING['handlers'] = {'mail_admins': {
+        'level': 'ERROR',
+        'filters': ['require_debug_false'],
+        'class': 'django.utils.log.AdminEmailHandler'
+    }
+    }
+    LOGGING['loggers'] = {'django.request': {
+                          'handlers': ['mail_admins'],
+                          'level': 'ERROR',
+                          'propagate': True,
+                          }
                           }
 
 
-DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS' : False}
+DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS': False}
 
-# default login url (regex for wp_main.urls, put here to avoid future mismatches)
+# default login url
+# (regex for wp_main.urls, put here to avoid future mismatches)
 LOGIN_URL = "/login"
 LOGIN_URL_REGEX = "^login/?.+"
 
 # default page to visit after login (if 'next url' is not specified)
 LOGIN_REDIRECT_URL = "/"
-

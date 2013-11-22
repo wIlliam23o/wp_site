@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -16,7 +16,7 @@ from downloads.models import file_tracker
 
 
 class wp_downloadsAdmin(admin.ModelAdmin):
-    #prepopulated_fields= {'alias': ('name'.replace(' ', '').lower(),)
+    # prepopulated_fields= {'alias': ('name'.replace(' ', '').lower(),)
     #                      }
     pass
 
