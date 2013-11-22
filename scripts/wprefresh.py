@@ -43,7 +43,7 @@ if sys.version < '3':
 # Get Settings..
 from django.conf import settings
 
-USAGESTR = """wprefresh.py v. {version}
+USAGESTR = """{version}
 
     Usage:
         wprefresh.py [options]
@@ -58,6 +58,7 @@ USAGESTR = """wprefresh.py v. {version}
         -h,--help       : Show this message.
         -l,--live       : Suppress warning about live site.
         -r,--norestart  : Skip apache restart.
+        -R,--restart    : Just restart the server, nothing else.
         -v,--version    : Show version.
 """.format(version=VERSIONSTR)
 
@@ -71,6 +72,9 @@ def main(argd):
     mismatched = check_argset(argd,
                               [('--collect', '--nocollect'),
                                ('--nobuild', '--buildwp'),
+                               ('--restart', '--collect'),
+                               ('--restart', '--buildwp'),
+                               ('--restart', '--norestart'),
                                ])
     if mismatched:
         return 1
@@ -85,6 +89,11 @@ def main(argd):
 
     # Show warning if needed..
     if WARN and (not warn_live()):
+        return 0
+
+    # Just restart
+    if argd['--restart']:
+        check_call(apache_restart)
         return 0
 
     # Run build files..

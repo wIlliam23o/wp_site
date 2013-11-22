@@ -1,6 +1,7 @@
 '''django_startup.py
     
     Ensures that django environment is ready to be used by other scripts.
+    Whether its from the command-line or from the running django app.
     Created on Nov 1, 2013
 
 @author: Christopher Welborn

@@ -17,22 +17,23 @@ import sys
 NAME = 'WpStats'
 __VERSION__ = '1.5.0'
 
-# Set django environment variable (if not set yet)
-try:
+# Setup django environment if ran from the command line.
+if __name__ == '__main__':
     try:
-        # Import style for django.
-        from scripts import django_init
-    except ImportError:
-        # Import style for cmdline.
-        import django_init
-    if not django_init.init_django():
+        try:
+            # Import style for django.
+            from scripts import django_init
+        except ImportError:
+            # Import style for cmdline.
+            import django_init
+        if not django_init.init_django():
+            sys.exit(1)
+    except ImportError as eximp:
+        print('\nUnable to import django_init.py!:\n{}'.format(eximp))
         sys.exit(1)
-except ImportError as eximp:
-    print('\nUnable to import django_init.py!:\n{}'.format(eximp))
-    sys.exit(1)
-except Exception as ex:
-    print('\nUnable to initialize django environment!:\n{}'.format(ex))
-    sys.exit(1)
+    except Exception as ex:
+        print('\nUnable to initialize django environment!:\n{}'.format(ex))
+        sys.exit(1)
 
 # Import welbornprod stuff
 try:
@@ -47,7 +48,7 @@ except ImportError as eximp:
 
 # import local tools
 try:
-    from wpdict import print_block
+    from scripts.wpdict import print_block
 except ImportError as eximp:
     print("unable to import wpdict.py!\n" +
           "is it in the same directory as this script?\n\n" + str(eximp))
