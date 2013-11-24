@@ -1,6 +1,7 @@
 # Version info
 from sys import version as sysversion
 from django.utils.version import get_version as get_django_version
+from django.conf import settings
 
 # safe html in responses.
 from django.utils.safestring import mark_safe, mark_for_escaping
@@ -51,11 +52,13 @@ def view_about(request):
 @login_required(login_url='/login')
 def view_debug(request):
     """ return the django debug info page. """
+    siteversion = settings.SITE_VERSION
     
     return responses.clean_response("home/debug.html",
                                     {'request': request,
                                      'djangoversion': get_django_version(),
                                      'sysversion': sysversion,
+                                     'siteversion': siteversion,
                                      'extra_style_link_list': [utilities.get_browser_style(request),
                                                                "/static/css/highlighter.min.css"],
                                      })
