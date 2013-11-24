@@ -44,7 +44,11 @@ def get_root_parent(scriptpath):
 
     # retrieve parent dirs, and append the 'wp_site' we're looking for.
     parts = scriptpath.split('/')
-    parent = '/'.join(parts[:parts.index('wp_site')])
+    if parts.count('wp_site') == 1:
+        parent = '/'.join(parts[:parts.index('wp_site')])
+    elif parts.count('wp_site') > 1:
+        parent = '/'.join(parts[:parts.index('wp_site') + 1])
+    
     return parent
 
 

@@ -631,7 +631,7 @@ def get_object_fromarchive(data):
 
 def get_object_by_partname(partname, model, attrs=None, objects=None):
     """ Searches through object attributes for a match.
-        (name, alias, title, filename, etc.) 
+        (name, alias, title, filename, etc.)
         Arguments:
             partname  : regex or text to match attribute value with.
             model     : model containing objects to search
