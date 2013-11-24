@@ -13,6 +13,12 @@
     vertical-align: middle;
 }
 
+.form-row input {
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 1.1em;
+    width: 500px;
+}
+
 form .form-row p {
     padding-left: 0;
     font-size: 11px;
@@ -73,10 +79,11 @@ form ul.inline li {
     width: auto;
 }
 
+/* Not sure why they added this, and then overrode it below.
 .colMS .aligned .vLargeTextField, .colMS .aligned .vXMLLargeTextField {
     width: 350px;
 }
-
+*/
 form .aligned p, form .aligned ul {
     margin-left: 7em;
     padding-left: 30px;
@@ -98,7 +105,10 @@ form .aligned p.help {
 }
 
 .colM .aligned .vLargeTextField, .colM .aligned .vXMLLargeTextField {
-    width: 610px;
+    width: 800px;
+    height: 400px;
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 1.2em;
 }
 
 .checkbox-row p.help {

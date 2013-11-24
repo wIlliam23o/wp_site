@@ -102,6 +102,13 @@
                         <!-- Long Description -->
                         <div id="misclongdesc-{{ misc.alias }}" class="misclongdesc">
                             {{ misc|processed_content}}
+                            <!-- Possible Warning -->
+                            {% if misc|has_warning %}
+                                <br>
+                                <div class='misc-warning'>
+                                    {{ misc|get_warning }}
+                                </div>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
