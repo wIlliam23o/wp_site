@@ -1,15 +1,18 @@
 @import 'welbornprod';
 /* ------------------------- about.css ------------------------- */
 .about-box {
+  background: $whitedull;
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   box-shadow: $shadownormal;
   -moz-box-shadow: $shadownormal;
   -webkit-box-shadow: $shadownormal;
-  padding: 5px; }
+  padding: 5px;
+}
 
 .about-pic-box {
+  background: $whitemain;
   border-style: none;
   border-width: 0px;
   border-radius: 5px;

@@ -1,5 +1,6 @@
 /* ------------------------- about.css ------------------------- */
 .about-box {
+  background: #fafafa;
   border-radius: 5px;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
@@ -9,6 +10,7 @@
   padding: 5px; }
 
 .about-pic-box {
+  background: white;
   border-style: none;
   border-width: 0px;
   border-radius: 5px;
