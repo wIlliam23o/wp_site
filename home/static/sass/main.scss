@@ -63,6 +63,32 @@ h1, h2, .module-title h2, h3, h4, h5 {
     line-height: $lineheightnormal;
     letter-spacing: inherit;
     }
+
+.title, h3.title {
+    font-family: $fontsnormal;
+    font-size: 1em;
+    margin-bottom: 2px;
+    color: $greymain;
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    text-transform: lowercase;
+    }
+    
+/* These two should have the same style, different sizes. */
+h2.title, h1.title {
+    padding-left: 0px;
+    margin-left: 0px;
+    margin-bottom: 5px;
+    margin-top: 10px;
+    color: $greylight;
+    text-transform: lowercase;
+    padding-left: 10px;
+    }
+
+h2.title { font-size: $fontbigger; }
+h1.title { font-size: $fontmedium; }
+
 h4 {
     text-transform: lowercase;
     font-family: $fontsnormal;
@@ -106,29 +132,6 @@ ul.menu {padding-left: 0;}
 a .header:hover, a .header.featured-name:hover {
     color: $bluelight;
 }
-
-.title, h3.title {
-    font-family: $fontsnormal;
-    font-size: 1em;
-    margin-bottom: 2px;
-    color: $greymain;
-    padding-left: 10px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    text-transform: lowercase;
-    }
-    
-/* These two should have the same style, different sizes. */
-h2.title, h1.title {
-    padding-left: 0px;
-    margin-left: 0px;
-    margin-bottom: 5px;
-    margin-top: 10px;
-    color: $greylight;
-    text-transform: lowercase;
-    }
-h2.title { font-size: $fontbigger; }
-h1.title { font-size: $fontmedium; }
 
 p.indented { margin-left: 15px;}
 p.subtext { font-size: $fontsmall; }

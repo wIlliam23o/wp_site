@@ -152,7 +152,8 @@
   border-color: #afafaf;
   padding-right: 10px;
   padding-left: 10px;
-  margin-left: 20px; }
+  margin-left: 20px;
+  margin-top: 10px; }
 
 .misc-sub-desc *.title {
   font-size: 1.2em;
