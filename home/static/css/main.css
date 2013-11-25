@@ -1127,3 +1127,7 @@ code, samp {
   border-width: 2px;
   border-radius: 15px;
   margin-bottom: 20px; }
+
+/* Global Screenshots stuff */
+.screenshots_box {
+  margin-top: 10px; }

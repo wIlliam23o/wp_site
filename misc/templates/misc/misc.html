@@ -4,6 +4,23 @@
 
 {% block title %}{% if misc %}- {{ misc.name }}{% endif %}{% endblock %}
 
+<!-- Screenshots Javascript -->
+{% if misc %}
+    {% if misc|has_screenshots %}
+        {% block extrahead %}
+            <script type="text/javascript">
+                $(document).ready(
+                        function() {
+                            $(".screenshots_box").wtRotator(wprotator_settings);
+                            $(".wt-rotator").width("100%");
+                            $(".screen").width("100%");
+                        }
+                    );
+            </script>
+        {% endblock %}
+    {% endif %}
+{% endif %}
+
 <!-- Cancel out index.html blocks -->
 {% block extrastyle %}{% endblock %}
 {% block javascript %}{% endblock %}
@@ -40,7 +57,24 @@
                     <!-- Process misc content and display it. -->
                     <div class='misc-desc'>
                         {{ misc|processed_content }}
+                        <!-- Possible Warning -->
+                        {% if misc|has_warning %}
+                            <br>
+                            <div class='misc-warning'>
+                                {{ misc|get_warning }}
+                            </div>
+                        {% endif %}
                     </div>
+                    <!-- Screenshots -->
+                    {% if misc|has_screenshots %}
+                        <div class='misc-desc'>
+                            <div class='title-box' id='screenshots'>
+                                <h3 class='title'>Screenshots:</h3>
+                            </div>
+                            <!-- Insert screenshots code -->
+                            {{ misc|get_screenshots }}
+                        </div>
+                    {% endif %}
                     <!-- Misc object download box -->
                     <br>
                     <div class='misc-download-box-wrapper'>

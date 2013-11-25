@@ -124,8 +124,7 @@ def generate_fieldchoices():
         val = getattr(MiscTypes, aname)
         if isinstance(val, MiscType):
             choices.append((val, val.description))
-    # set MiscTypes.fieldchoices
-    #setattr(MiscTypes, 'fieldchoices', choices)
+    # set MiscTypes.fieldchoices for Django.
     MiscTypes.fieldchoices = choices
 
 

@@ -7,6 +7,8 @@ Created on Oct 20, 2013
 @author: Christopher Welborn
 '''
 
+import os
+
 from misc.models import wp_misc
 from misc.types import misctype_byname
 
@@ -32,7 +34,7 @@ def get_long_desc(miscobj):
         # Try .content since html content failed.
         content = miscobj.content
         if not content:
-            _log.error('Object has no content!: {}'.format(miscobj.name))
+            _log.error('Misc object has no content!: {}'.format(miscobj.name))
 
     return content
 
@@ -44,6 +46,20 @@ def get_misc_warning(miscobj):
 
     misctype = misctype_byname(miscobj.filetype)
     return misctype.warning
+
+
+def get_screenshots_dir(miscobj):
+    """ Retrieves screenshots html code for this misc object, if
+        screenshots are available.
+        Otherwise, returns None.
+    """
+
+    possibledir = os.path.join('static/images', miscobj.alias)
+    imagedir = utilities.get_absolute_path(possibledir)
+    if not os.path.isdir(imagedir):
+        _log.debug('No screenshots dir: {}'.format(possibledir))
+        return None
+    return imagedir
 
 
 def get_visible_objects():
