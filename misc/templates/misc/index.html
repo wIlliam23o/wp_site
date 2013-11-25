@@ -75,31 +75,33 @@
                     <!-- Misc object download box -->
                     <div class='misc-download-box misc-index'>
                         <div class='misc-download-button misc-index'>
-                            <a href='/dl/{{ misc.filename }}'>Download {{ misc.name }}</a>
+                            <a href='/dl/{{ misc.filename }}' title='Download {{ misc.name }}.'>
+                                Download {{ misc.name }}
+                            </a>
                         </div>
                         {% if misc|is_viewable %}
                             <div class='misc-download-button misc-index'>
-                                <a href='javascript: void(0);' onclick="javascript: misctools.submitMisc('{{ misc.filename }}');">
+                                <a href='javascript: void(0);' title='View source code for {{ misc.name }} locally.' onclick="javascript: misctools.submitMisc('{{ misc.filename }}');">
                                     View {{ misc.name }} (local)
                                 </a>                      
                             </div>
                         {% endif %}
-                        <!-- Long Description Button-->
-                        {% if misc|has_html_content %}
-                            <div class="misc-download-button misc-index">
-                                <a href='javascript: void(0);' onclick="javascript: misctools.toggleLongDesc('{{ misc.alias }}');">
-                                        <span id="misclongdescbtn-{{ misc.alias }}">Show More</span>
-                                </a>
-                            </div>
-                        {% endif %}                            
                         <!-- Screenshots Button -->
                         {% if misc|has_screenshots %}
                             <div class='misc-download-button misc-index'>
-                                <a href='/misc/{{ misc.alias }}#screenshots'>
+                                <a href='/misc/{{ misc.alias }}#screenshots' title='View screenshot for {{ misc.name }}.'>
                                     Screenshots
                                 </a>
                             </div>      
                         {% endif %}
+                        <!-- Long Description Button-->
+                        {% if misc|has_html_content %}
+                            <div class="misc-download-button misc-index">
+                                <a href='javascript: void(0);' title='Show long description for {{ misc.name }}.' onclick="javascript: misctools.toggleLongDesc('{{ misc.alias }}');">
+                                        <span id="misclongdescbtn-{{ misc.alias }}">Show More</span>
+                                </a>
+                            </div>
+                        {% endif %}                            
                     </div>
 
                     {% if misc|has_html_content %}
