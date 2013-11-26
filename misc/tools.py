@@ -57,7 +57,7 @@ def get_screenshots_dir(miscobj):
     possibledir = os.path.join('static/images', miscobj.alias)
     imagedir = utilities.get_absolute_path(possibledir)
     if not os.path.isdir(imagedir):
-        _log.debug('No screenshots dir: {}'.format(possibledir))
+        #_log.debug('No screenshots dir: {}'.format(possibledir))
         return None
     return imagedir
 

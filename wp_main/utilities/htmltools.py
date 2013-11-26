@@ -307,9 +307,16 @@ class html_content(object):
         
         self.highlight_embedded()
         self.highlight_inline()
-        
+        self.highlight_codes()
+
         return self
     
+    def highlight_codes(self):
+        """ highlight all wp highlight codes. """
+
+        self.content = highlighter.highlight_codes(self.content)
+        return self
+
     def highlight_inline(self):
         """ highlight all inline 'pre class=[language]' content (if any) """
         
@@ -318,8 +325,12 @@ class html_content(object):
         
         return self
     
+    # TODO: Remove this when all objects use highlight_codes() style.
     def highlight_embedded(self):
-        """ highlight all embedded lines in content (if any) """
+        """ highlight all embedded lines in content (if any)
+            Soon to be deprecated in favor of highlight_codes().
+
+        """
         
         if self.contains("highlight-embedded"):
             self.content = highlighter.highlight_embedded(self.content)
@@ -1039,6 +1050,7 @@ def fix_open_tags(source):
         if you put a string in, you get a string back.
     
     """
+    # TODO: Fix new wp highlight codes open tags. [python] some stuff... oops.
     try:
         if hasattr(source, 'encode'):
             if '\n' in source:

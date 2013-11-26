@@ -22,14 +22,15 @@
 
 .highlighted-embedded {
   font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
-  font-size: 0.8em;
+  font-size: 0.9em;
   border-style: solid;
   border-radius: 5px;
   border-width: 1px;
   border-color: rgba(202, 217, 224, 0.5);
   margin-left: 2px;
   margin-right: 2px;
-  padding-left: 3px; }
+  padding-left: 3px;
+  display: inline-block; }
 
 .linenos {
   padding-right: 10px;

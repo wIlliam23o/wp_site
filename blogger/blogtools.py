@@ -20,7 +20,7 @@ from wp_main.utilities import htmltools
 from wp_main.utilities.wp_logging import logger
 _log = logger("blog.tools").log
 # Viewer/Highlighter
-from wp_main.utilities.highlighter import highlight_inline, highlight_embedded
+from wp_main.utilities import highlighter
 # Blog Info
 from blogger.models import wp_blog
 
@@ -207,9 +207,12 @@ def prepare_content(body_content):
     
     # do auto source highlighting
     if "<pre class=" in body_content:
-        body_content = highlight_inline(body_content)
+        body_content = highlighter.highlight_inline(body_content)
+    # This can be remove when all posts are switched over to
+    # highlight_codes() format.
     if "highlight-embedded" in body_content:
-        body_content = highlight_embedded(body_content)
+        body_content = highlighter.highlight_embedded(body_content)
+    body_content = highlighter.highlight_codes(body_content)
     return body_content
 
 
