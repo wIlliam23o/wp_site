@@ -6,11 +6,20 @@
 
 @author: Christopher Welborn
 '''
+from wp_main.utilities.wp_logging import logger
+_log = logger('misc.types').log
 
 
 class MiscType(object):
 
-    """ Base class for any MiscType. """
+    """ Base class for any MiscType,
+        They have this all of this magic stuff right now because
+        decisions are made based on the .filetype (MiscType) of a
+        wp_misc. Views and Templates need to know whether or not
+        it is a 'viewable' file type (viewed with the viewer app),
+        and whether there is a 'warning' associated with the type.
+        Like little warnings that say 'To install XChat scripts...'
+    """
 
     def __init__(self, name, desc, **kwargs):
         """ Create a MiscType.
@@ -62,33 +71,7 @@ class MiscType(object):
             self._attrname = self.name.lower()
             return self._attrname
 
-    @classmethod
-    def make_misctype(cls, name, desc, **kwargs):
-        """ Make a new MiscType.
-            Arguments:
-                desc       : Description for Django field-choices
-                name       : Friendly name for Django field-choices
 
-            Keyword Arguments: (same as __init__)
-                _attrname  : name.lower(), can be accessed like:
-                             MiscTypes._attrname
-                warning    : Any warning associated with this type.
-                             (retrieved in misc.index.html)
-        """
-        return cls(name, desc, **kwargs)
-
-    @classmethod
-    def make_misctypes(cls, misctypes):
-        """ Creates a list of MiscTypes, from a list of
-            tuples (name, description).
-            Returns the list.
-        """
-        made = []
-        for name, desc in misctypes:
-            made.append(cls.make_misctype(name, desc))
-        return made
-
-# TODO: Make MiscTypes, comparable, warnings, makeable. Fix Them!
 # Create MiscTypes...
 all_types = (MiscType('Code', 'Code File', viewable=True),
              MiscType('Snippet', 'Code Snippet', viewable=True),
@@ -101,9 +84,13 @@ all_types = (MiscType('Code', 'Code File', viewable=True),
                       warning=('To use these xchat scripts you can either '
                                'drop them in the XChat2 config directory '
                                '(usually ~/.xchat2), or load the script '
-                               'manually by going to Window -> Plugins -> '
-                               'Scripts -> Load...')),
+                               'manually by going to:\n'
+                               'Window -> Plugins &amp; Scripts -> Load...')),
              )
+
+# Generate a map from String value to Actual value for MiscTypes.
+# used to look up MiscTypes by name later (misctype_byname())
+types_info = {mt.name: mt for mt in all_types}
 
 
 def add_misctype(mt):
@@ -113,12 +100,17 @@ def add_misctype(mt):
 
 
 def add_misctype_list(misctypes):
-    """ Add a list of MiscType to this collection. """
+    """ Add a list of MiscType to MiscTypes. """
     for mt in misctypes:
         add_misctype(mt)
 
 
 def generate_fieldchoices():
+    """ Generates a field choices list for Django's admin.
+        Uses MiscType().name and .description, where .name is
+        the database entry, and .description is in the dropdown
+        menu for admin.
+    """
     choices = []
     for aname in [a for a in dir(MiscTypes) if not a.startswith('_')]:
         val = getattr(MiscTypes, aname)
@@ -129,18 +121,38 @@ def generate_fieldchoices():
 
 
 def misctype_byname(s):
-    """ Determine a misc type by string name. """
-    for aname in [a for a in dir(MiscTypes) if not a.startswith('_')]:
-        val = getattr(MiscTypes, aname)
-        if hasattr(val, 'name'):
-            if val.name == s:
-                return val
-    return None
+    """ Retrieve a misc type by string name.
+        This is here because the database started out
+        storing simple string values, everything has been converted
+        over to this smarter MiscType (except for the database.)
+        When the model/database can handle actual MiscType objects
+        this can be removed.
+    """
+    # TODO: Make django/database handle actual MiscTypes.
+    try:
+        misctype = types_info[s]
+    except (KeyError, ValueError):
+        # This type doesn't exist.
+        _log.error('Can\'t find that misctype: {}'.format(s))
+        return None
+    return misctype
 
 
 class MiscTypes:
 
-    """ Various MiscTypes, setup directly after init. """
+    """ Various MiscTypes, setup directly after init
+        of this class. Holds attributes that refer to an actual MiscType.
+        This allows you to do things like:
+            thistype = misctype_byname(mymiscobj.filetype)
+            if thistype.viewable:
+                # ... code to view misc object here.
+                if thistype.warning:
+                    # Show warning for this type.
+                    print(thistype.warning)
+        The attributes for this class are dynamically created during the init
+        for this module.
+        (see global level function calls below)
+    """
     pass
 
 add_misctype_list(all_types)
@@ -179,6 +191,14 @@ class Lang:
     def combine(*args):
         """ Combine 2 or more Lang attributes. """
         return ','.join(args)
+
+    @staticmethod
+    def split(langstring):
+        """ The reverse of combine. """
+        if ',' in langstring:
+            return [l.strip() for l in langstring.split(',')]
+        else:
+            return [langstring.strip()]
 
     # Choices for Django admin
     fieldchoices = (('Python', 'Python (any)'),

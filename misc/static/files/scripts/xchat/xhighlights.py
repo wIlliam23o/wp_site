@@ -9,13 +9,16 @@
 """
 
 __module_name__ = 'xhighlights'
-__module_version__ = '0.3.7'
+__module_version__ = '0.3.8'
 __module_description__ = 'Highlights URLs and Nicks in the chat window.'
 VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
 
 import os
 import re
 import xchat
+
+# File for config. CWD is used, it usually defaults to /home/username
+CONFIGFILE = os.path.join(os.getcwd(), 'xhighlights.conf')
 
 # Regex for matching a link..
 link_re = re.compile('^http\:|^https\:|^ftp|^www\.|\.com$|\.org$|[\w\d]\.net$')
@@ -351,33 +354,23 @@ def message_filter(word, word_eol, userdata):
 
 
 def pref_get(opt):
-    """ Retrieves an XChat preference. """
-
-    # Xchat has to be reloaded after prefs are set,
-    # The regular xchat.get_prefs() will not see anything written to the
-    # file since loading xchat. Also, the '/set' command doesn't work on
-    # any preference xchat 'can't see' (has been written after xchat load.)
-    # So we need to manually retrieve this preference.
-    # This way reloading xhighlights will get latest pref changes
-    # whether xchat has been reloaded or not.
-
-    # Get xchat prefs file.
-    prefsfile = os.path.expanduser('~/.xchat2/xchat.conf')
-    if not os.path.isfile(prefsfile):
-        print_error('Can\'t find xchat.conf: {}'.format(prefsfile),
-                    boldtext=prefsfile)
-        return False
-
+    """ Retrieves an XHighlights preference.
+        Does not depend on XChats preferences file anymore.
+        It will read from the global CONFIGFILE.
+    """
     # Load prefs data.
-    try:
-        with open(prefsfile, 'r') as fread:
-            allprefs = fread.readlines()
-    except (IOError, OSError) as ex:
-        print_error('Unable to open xchat.conf: {}'.format(prefsfile),
-                    exc=ex,
-                    boldtext=prefsfile)
-        return False
-
+    if os.path.isfile(CONFIGFILE):
+        try:
+            with open(CONFIGFILE, 'r') as fread:
+                allprefs = fread.readlines()
+        except (IOError, OSError) as ex:
+            print_error('Unable to open config file: {}'.format(CONFIGFILE),
+                        exc=ex,
+                        boldtext=CONFIGFILE)
+            return False
+    else:
+        # No prefs file.
+        allprefs = []
     existingopt = None
     for line in allprefs:
         if line.startswith(opt):
@@ -399,30 +392,24 @@ def pref_get(opt):
 
 
 def pref_set(opt, val):
-    """ Sets an XChat preference. """
-
-    # The '/set' command will not work here unless this setting
-    # has been written to xchat.conf BEFORE startup. There is also no way
-    # to detect the response from 'xchat.command('set')'. This means
-    # we have to manually write this setting to file, and make sure
-    # pref_get() reads the actual file, not just xchat.get_prefs().
-
-    # Get xchat prefs file.
-    prefsfile = os.path.expanduser('~/.xchat2/xchat.conf')
-    if not os.path.isfile(prefsfile):
-        print_error('Can\'t find xchat.conf: {}'.format(prefsfile),
-                    boldtext=prefsfile)
-        return False
+    """ Sets an XHighlights preference.
+        Does not depend on the XChat preferences file.
+        Will store in global CONFIGFILE.
+    """
 
     # Load prefs data.
-    try:
-        with open(prefsfile, 'r') as fread:
-            allprefs = fread.readlines()
-    except (IOError, OSError) as ex:
-        print_error('Unable to open xchat.conf: {}'.format(prefsfile),
-                    exc=ex,
-                    boldtext=prefsfile)
-        return False
+    if os.path.isfile(CONFIGFILE):
+        try:
+            with open(CONFIGFILE, 'r') as fread:
+                allprefs = fread.readlines()
+        except (IOError, OSError) as ex:
+            print_error('Unable to open config file: {}'.format(CONFIGFILE),
+                        exc=ex,
+                        boldtext=CONFIGFILE)
+            return False
+    else:
+        # No config file yet.
+        allprefs = []
 
     # new options line for xchat.conf.
     optline = '{} = {}'.format(opt, str(val))
@@ -454,14 +441,14 @@ def pref_set(opt, val):
 
     # Write preferences.
     try:
-        with open(prefsfile, 'w') as fwrite:
+        with open(CONFIGFILE, 'w') as fwrite:
             fwrite.writelines(allprefs)
             fwrite.write('\n')
             return True
     except (IOError, OSError) as ex:
-        print_error('Unable to write to xchat.conf: {}'.format(prefsfile),
+        print_error('Unable to write to config file: {}'.format(CONFIGFILE),
                     exc=ex,
-                    boldtext=prefsfile)
+                    boldtext=CONFIGFILE)
         return False
 
 

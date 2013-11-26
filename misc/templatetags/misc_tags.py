@@ -44,7 +44,7 @@ def get_warning(miscobj):
     finalwarning = []
     typewarning = misctype_byname(miscobj.filetype).warning
     if typewarning:
-        finalwarning.append(typewarning)
+        finalwarning.append(typewarning.replace('\n', '<br>'))
 
     langwarnings = {'Python': ('This is known to work with Python 2 and 3.'),
                     'Python 2': ('This has been tested with Python 2, but it '
@@ -89,6 +89,12 @@ def load_html_content(miscobj):
     return misctools.get_long_desc(miscobj)
 
 
+def misctype_str(miscobj):
+    """ Retrieves proper description for this Misc objects filetype. """
+
+    return misctype_byname(miscobj.filetype).description
+
+
 def processed_content(miscobj):
     """ Process a miscobjs content, highlights and all. """
 
@@ -117,6 +123,7 @@ registered = (get_screenshots,
               has_html_content,
               is_viewable,
               load_html_content,
+              misctype_str,
               processed_content,
               process_highlighting,
               )
