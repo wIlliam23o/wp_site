@@ -1,9 +1,9 @@
 /* Styles for misc object listing/pages */
 /* Misc Object Listings */
-.misc_listing, .misc-listing {
+.misc-listing {
   text-align: center; }
 
-.misc_container, .misc-container {
+.misc-container {
   margin: 15px;
   padding: 10px;
   background-color: #fafafa;
@@ -11,7 +11,7 @@
   box-shadow: #bac2c7 0px 0px 15px;
   text-align: left; }
 
-.misc_header, .misc-header-box {
+.misc-header-box {
   text-align: left;
   width: 100%; }
 
@@ -23,7 +23,7 @@
   color: #26a1f4;
   text-transform: lowercase; }
 
-.misc_name, .misc-name {
+.misc-name {
   font-size: 1.5em;
   text-shadow: #999999 1px 1px 3px; }
 
@@ -35,7 +35,7 @@
   text-align: right;
   padding-left: 0%; }
 
-.misc_desc, .misc-desc {
+.misc-desc {
   background: white;
   margin-top: 10px;
   padding: 5px;
@@ -137,3 +137,41 @@
 /* Misc Page */
 .misc_title, .misc-title {
   margin-bottom: 15px; }
+
+/* Sub styles for misc descriptions. */
+.misc-sub-desc {
+  margin-top: 10px;
+  border-radius: 5px;
+  border-style: solid;
+  border-color: #afafaf;
+  border-width: 1px;
+  padding: 5px; }
+
+.misc-sub-desc *.codewrap {
+  font-size: 1em;
+  border-color: #afafaf;
+  padding-right: 10px;
+  padding-left: 10px;
+  margin-left: 20px;
+  margin-top: 10px; }
+
+.misc-sub-desc *.title {
+  font-size: 1.2em;
+  color: #26a1f4; }
+
+.misc-sub-desc *.desc {
+  padding-left: 20px;
+  color: #919191; }
+
+/* Style for auto-appended content such as Xchat warnings. */
+.misc-warning {
+  color: #b90000;
+  border-style: solid;
+  border-radius: 5px;
+  border-color: #afafaf;
+  border-width: 1px;
+  padding: 5px;
+  font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
+  font-size: 1em;
+  margin-top: 15px;
+  display: inline-block; }

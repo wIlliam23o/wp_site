@@ -13,3 +13,5 @@ misc/static/files/pi*
 *.pdf
 *files/books*
 *misc/static/files/books*
+*.wparc
+*.log

@@ -109,7 +109,7 @@ def check_input(cmdname, cmdargs):
                 print('\nBoth \'--collect\' and \'--nocollect\' '
                       'args used, this won\'t work.')
                 sys.exit(1)
-            for restartarg in ('-r', '--restart'):
+            for restartarg in ('-R', '--restart'):
                 if restartarg in cmdargs:
                     restartonly = True
                     break

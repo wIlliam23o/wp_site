@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 
 '''updateobject.py
-    Busybox-style command that updates various models depending on the name it is called by.
-    If it is called using a symlink named 'updateproject', the wp_project model will be used
-    to lookup objects. Same idea with 'updateblog', 'updatemisc', etc.
-    The name determines which model we will start with, and what the friendly names for objects
-    are ('Project', 'Blog Post', etc.). From there, its a matter of knowing what attributes
-    are available for the model and modifiying them (when --update is used).
+    Busybox-style command that updates various models depending on the 
+    name it is called by.
+    If it is called using a symlink named 'updateproject', the wp_project model 
+    will be used to lookup objects. Same idea with 'updateblog', 'updatemisc',
+    etc.
+    The name determines which model we will start with, and what the friendly 
+    names for objects are ('Project', 'Blog Post', etc.). From there, its a
+    matter of knowing what attributes are available for the model and
+    modifiying them (when --update is used).
     So this single script takes on the form of multiple model viewers/editors.
 
     Model fields can be listed (base model attributes and types.)
-    Objects can be listed (all attributes and values.)
-    Objects can be modified (sets attributes on objects and save()s them to the DB)
+    Objects can be listed
+        (all attributes and values.)
+    Objects can be modified
+        (sets attributes on objects and save()s them to the DB)
     Objects can be looked up by ID, or their main identifiers.
         name, alias for wp_project and wp_misc
         title, slug for wp_blog
@@ -25,8 +30,9 @@
             # Updates view_count for this blog post object.
             ./updateblog first-post --update view_count:21
 
-    Types are determined by examining the current value. If the current values type is int,
-    then int(newvalue) is tryed. If it is unicode, then unicode(newvalue).
+    Types are determined by examining the current value.
+    If the current values type is int, then int(newvalue) is tryed.
+    If it is unicode, then unicode(newvalue) [not applicable in Py3].
     If it fails to convert the type, the action is aborted.
     All basic python types work, plus datetime.date.
 
@@ -84,7 +90,8 @@ SCRIPTSDIR = django_init.scripts_dir
 
 try:
     # Grab all updateobject aliases (but not updateobject).
-    available_aliases = [trim_pyext(f) for f in os.listdir(SCRIPTSDIR) if is_updatealias(f)]
+    raw_scripts = os.listdir(SCRIPTSDIR)
+    available_aliases = [trim_pyext(f) for f in raw_scripts if is_updatealias(f)]
 except Exception as ex:
     print('\nUnable to list available aliases, this may or may not work!\n{}'.format(ex))
     available_aliases = None
@@ -150,22 +157,59 @@ usage_str = objectupdater.base_usage_str.format(name=_NAME,
 def main(argd):
     """ main entry point, expects arg dict from docopt. """
     ret = 0
-    if argd['--list'] and (not argd['<identifier>']):
+    # Args for simple object operations.
+    id_args = [argd['<identifier>'], modelused['model'], modelused['attrs']]
+
+    # Function map for simple object operations.
+    id_funcs = {'--archive': {'func': objectupdater.do_object_archive,
+                              'args': id_args,
+                              'kwargs': {'usefile': argd['--file']},
+                              },
+                '--delete': {'func': objectupdater.do_object_delete,
+                             'args': id_args,
+                             },
+                '--list': {'func': objectupdater.do_object_info,
+                           'args': id_args,
+                           },
+                '--json': {'func': objectupdater.do_object_json,
+                           'args': id_args,
+                           },
+                '--pickle': {'func': objectupdater.do_object_pickle,
+                             'args': id_args,
+                             },
+                '--update': {'func': objectupdater.do_object_update,
+                             'args': id_args,
+                             'kwargs': {'data': argd['--update']},
+                             },
+                }
+
+    if argd['--ARCHIVE']:
+        # Create object from archive.
+        ret = objectupdater.do_object_fromarchive(argd['--ARCHIVE'])
+    elif argd['--list'] and (not argd['<identifier>']):
         ret = do_list()
     elif argd['--fields']:
         ret = objectupdater.do_fields(modelused['model'])
     elif argd['<identifier>']:
-        # Retrieve project info.
-        if argd['--list']:
-            ret = objectupdater.do_object_info(argd['<identifier>'],
-                                               modelused['model'],
-                                               attrs=modelused['attrs'])
-        elif argd['--update']:
-            ret = objectupdater.do_object_update(argd['<identifier>'],
-                                                 argd['--update'],
-                                                 modelused['model'],
-                                                 attrs=modelused['attrs'])
-        else:
+        # ID specific functions..
+        handled = False
+        for id_flag in id_funcs.keys():
+            if argd[id_flag]:
+                do_func = id_funcs[id_flag]['func']
+                do_args = id_funcs[id_flag]['args']
+                if 'kwargs' in id_funcs[id_flag].keys():
+                    do_kwargs = id_funcs[id_flag]['kwargs']
+                else:
+                    do_kwargs = None
+                if do_kwargs:
+                    ret = do_func(*do_args, **do_kwargs)
+                else:
+                    ret = do_func(*do_args)
+                handled = True
+                break
+
+        # Unhandled args, or no args.
+        if not handled:
             # No args with identifier (do Header String print)
             ret = objectupdater.do_headerstr(argd['<identifier>'],
                                              modelused['model'],

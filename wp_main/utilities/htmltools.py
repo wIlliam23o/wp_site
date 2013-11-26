@@ -262,9 +262,7 @@ class html_content(object):
         """ inject code for screenshots box.
             see: htmltools.inject_screenshots()
         """
-        target_replacement = kwargs.get('target_replacement', "{{ screenshots_code }}")
-        noscript_image = kwargs.get('noscript_image', None)
-        self.content = inject_screenshots(self.content, images_dir, target_replacement, noscript_image)
+        self.content = inject_screenshots(self.content, images_dir, **kwargs)
         return self
         
     def inject_sourceview(self, project, **kwargs):
@@ -309,9 +307,16 @@ class html_content(object):
         
         self.highlight_embedded()
         self.highlight_inline()
-        
+        self.highlight_codes()
+
         return self
     
+    def highlight_codes(self):
+        """ highlight all wp highlight codes. """
+
+        self.content = highlighter.highlight_codes(self.content)
+        return self
+
     def highlight_inline(self):
         """ highlight all inline 'pre class=[language]' content (if any) """
         
@@ -320,8 +325,12 @@ class html_content(object):
         
         return self
     
+    # TODO: Remove this when all objects use highlight_codes() style.
     def highlight_embedded(self):
-        """ highlight all embedded lines in content (if any) """
+        """ highlight all embedded lines in content (if any)
+            Soon to be deprecated in favor of highlight_codes().
+
+        """
         
         if self.contains("highlight-embedded"):
             self.content = highlighter.highlight_embedded(self.content)
@@ -638,6 +647,58 @@ def check_replacement(source_string, target_replacement):
     return target_replacement if (target_replacement in source_string) else False
     
 
+def get_screenshots(images_dir, noscript_image=None):
+    """ Retrieves html formatted screenshots box for all images in
+        a directory.
+        Returns None on failure.
+        Arguments:
+            images_dir          : Relative dir containing all the images.
+
+        Keyword Arguments:
+            noscript_image      : Path to image to show for <noscript> tag.
+
+    """
+    # accceptable image formats (last 4 chars)
+    formats = [".png", ".jpg", ".gif", ".bmp", "jpeg"]
+    
+    # Make sure we are using the right dir.
+    # get absolute path for images dir, if none exists then delete the target_replacement.
+    images_dir = utilities.get_absolute_path(images_dir)
+    if not images_dir:
+        return None
+    
+    # Get useable relative dir (user-passed may be wrong format)
+    relative_dir = utilities.get_relative_path(images_dir)
+        
+    # find acceptable pics
+    try:
+        all_files = os.listdir(images_dir)
+    except Exception as ex:
+        _log.debug("Can't list dir: " + images_dir + '\n' + str(ex))
+        return None
+    
+    # Help functions for building screenshots.
+    relative_img = lambda filename: os.path.join(relative_dir, filename)
+    good_format = lambda filename: (filename[-4:] in formats)
+
+    # Build acceptable pics list
+    good_pics = [relative_img(f) for f in all_files if good_format(f)]
+
+    # auto-pick noscript image if needed
+    if (len(good_pics) > 0) and (noscript_image is None):
+        noscript_image = good_pics[0]
+    else:
+        # no good pics.
+        noscript_image = None
+ 
+    # Render from template.
+    screenshots = render_clean("home/screenshots.html",
+                               context_dict={'images': good_pics,
+                                             'noscript_image': noscript_image,
+                                             })
+    return screenshots
+
+
 def inject_article_ad(source_string, target_replacement="{{ article_ad }}"):
     """ basically does a text replacement, 
         replaces 'target_replacement' with the code for article ads.
@@ -655,66 +716,46 @@ def inject_article_ad(source_string, target_replacement="{{ article_ad }}"):
     return source_string
 
 
-def inject_screenshots(source_string, images_dir, target_replacement="{{ screenshots_code }}",
-                       noscript_image=None):
+def inject_screenshots(source_string, images_dir, **kwargs):
     """ inject code for screenshots box.
         walks image directory, grabbing images for the image rotator box.
         uses screenshots.html template to display them.
+        Arguments:
+            source_string       : Original string containing the replacement
+                                  target.
+                                  like: '<body>{{ screenshots_code }}</body>'
+            images_dir          : Relative dir containing all the images.
+        Keyword Arguments:
+            target_replacement  : string to replace screenshot html with.
+                                  default: '{{ screenshots_code }}'
+            noscript_image      : Path to image to show for <noscript> tag.
         examples:
-            shtml = inject_screenshots(shtml, "static/images/myapp")
-            shtml = inject_screenshots(shtml, "images/myapp/", noscript_image="sorry_no_javascript.png")
-            shtml = inject_screenshots(shtml, "images/myapp", "{{ replace_with_screenshots }}", "noscript.png")
+            s = inject_screenshots(s, "static/images/myapp")
+            s = inject_screenshots(s, 
+                                   "images/myapp/", 
+                                   noscript_image="sorry_no_javascript.png")
+            s = inject_screenshots(s, 
+                                   "images/myapp",
+                                   "{{ screenshots }}",
+                                   "noscript.png")
     """
-    
+    # Grab kw args, set defaults.
+    target_replacement = kwargs.get('target_replacement',
+                                    '{{ screenshots_code }}')
+    noscript_image = kwargs.get('noscript_image', None)
+
     # fail checks, make sure target exists in source_string
     target = check_replacement(source_string, target_replacement)
     if not target:
         return source_string
     
-    # accceptable image formats (last 4 chars)
-    formats = [".png", ".jpg", ".gif", ".bmp", "jpeg"]
-    
-    # Make sure we are using the right dir.
-    # get absolute path for images dir, if none exists then delete the target_replacement.
-    images_dir = utilities.get_absolute_path(images_dir)
-    
-    if images_dir == "":
-        return source_string.replace(target, "")
-    
-    # Get useable relative dir (user-passed may be wrong format)
-    relative_dir = utilities.get_relative_path(images_dir)
-        
-    # find acceptable pics
-    try:
-        all_files = os.listdir(images_dir)
-    except Exception as ex:
-        _log.debug("Can't list dir: " + images_dir + '\n' + str(ex))
-        all_files = []
-    
-    def relative_img(filename):
-        """ shortcut for os.path.join in the good_pics list comprehension """
-        return os.path.join(relative_dir, filename)
-    
-    def good_format(filename):
-        """ shortcut for file extension test in good_pics list comprehension """
-        return (filename[-4:] in formats)
-
-    # Build acceptable pics list
-    good_pics = [relative_img(f) for f in all_files if good_format(f)]
-
-    # auto-pick noscript image if needed
-    if (len(good_pics) > 0) and (noscript_image is None):
-        noscript_image = good_pics[0]
+    screenshots = get_screenshots(images_dir, noscript_image=noscript_image)
+    if screenshots:
+        # Return fixed source_string with screenshots.
+        return source_string.replace(target, screenshots)
     else:
-        # no good pics.
-        noscript_image = None
- 
-    # Render from template.
-    screenshots = render_clean("home/screenshots.html",
-                               context_dict={'images': good_pics,
-                                             'noscript_image': noscript_image,
-                                             })
-    return source_string.replace(target, screenshots)
+        # No screenshots found.
+        return source_string
 
 
 def inject_sourceview(project, source_string, request=None, link_text=None, desc_text=None, target_replacement="{{ source_view }}"):
@@ -1009,6 +1050,7 @@ def fix_open_tags(source):
         if you put a string in, you get a string back.
     
     """
+    # TODO: Fix new wp highlight codes open tags. [python] some stuff... oops.
     try:
         if hasattr(source, 'encode'):
             if '\n' in source:
