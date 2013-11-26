@@ -13,7 +13,7 @@ _log = logger('misc.types').log
 class MiscType(object):
 
     """ Base class for any MiscType,
-        They have this all of this magic stuff right now because
+        They have all of this magic stuff right now because
         decisions are made based on the .filetype (MiscType) of a
         wp_misc. Views and Templates need to know whether or not
         it is a 'viewable' file type (viewed with the viewer app),
