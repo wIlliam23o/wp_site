@@ -112,11 +112,13 @@ def generate_fieldchoices():
         menu for admin.
     """
     choices = []
-    for aname in [a for a in dir(MiscTypes) if not a.startswith('_')]:
-        val = getattr(MiscTypes, aname)
-        if isinstance(val, MiscType):
-            choices.append((val, val.description))
-    # set MiscTypes.fieldchoices for Django.
+    for misctype in types_info.values():
+        choices.append((misctype.name, misctype.description))
+
+    # Sort choices, apparently Django can't do this for you.
+    choices = sorted(choices, key=lambda c: c[1])
+    # set MiscTypes.fieldchoices for use in
+    # misc.models.wp_misc.filetype field choices.
     MiscTypes.fieldchoices = choices
 
 
@@ -200,16 +202,17 @@ class Lang:
         else:
             return [langstring.strip()]
 
-    # Choices for Django admin
-    fieldchoices = (('Python', 'Python (any)'),
-                    ('Python 2', 'Python 2+'),
-                    ('Python 3', 'Python 3+'),
-                    ('Bash', 'Bash'),
+    # Choices for misc.models.wp_misc.language admin fieldchoices.
+    # Sort these manually here, by description. Django doesn't do it for you.
+    fieldchoices = [('Bash', 'Bash'),
                     ('C', 'C'),
                     ('C++', 'C++'),
-                    ('Perl', 'Perl'),
-                    ('Visual Basic', 'Visual Basic'),
-                    ('Stackless Python', 'Stackless Python'),
-                    ('PyPy', 'PyPy'),
                     ('None', 'None'),
-                    )
+                    ('Perl', 'Perl'),
+                    ('PyPy', 'PyPy'),
+                    ('Python', 'Python (any)'),
+                    ('Python 2', 'Python 2+'),
+                    ('Python 3', 'Python 3+'),
+                    ('Stackless Python', 'Stackless Python'),
+                    ('Visual Basic', 'Visual Basic'),
+                    ]
