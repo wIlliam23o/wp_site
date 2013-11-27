@@ -1105,8 +1105,10 @@ def fix_open_tags(source):
         # Good tag
         elif incomplete and opening:
             # add to the list of known good tags.
-            opening_tag = re_start_tag.search(opening.group()).group()
-            opening_tags.append(opening_tag)
+            opening_tagmatch = re_start_tag.search(opening.group())
+            if opening_tagmatch:
+                opening_tag = opening_tagmatch.group()
+                opening_tags.append(opening_tag)
 
         # Incomplete closing tag (no '>')
         if closing_inc and not closing:
