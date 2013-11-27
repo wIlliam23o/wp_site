@@ -68,7 +68,7 @@
 						<span class="search-listing-date">{{ result.posted }}</span>
 					</div>
 					<div class="search-listing-body">
-						{{ result.description }}
+						{{ result.description|highlight_desc }}
 					</div>
 				</div>
 			{% endfor %}

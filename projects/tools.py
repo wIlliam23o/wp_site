@@ -18,8 +18,7 @@ from projects.models import wp_project
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
-# Code highlighting
-#from wp_main.utilities.highlighter import highlight_inline, highlight_embedded
+
 # Logging
 from wp_main.utilities.wp_logging import logger
 _log = logger('projects.tools').log
@@ -33,14 +32,16 @@ def sorted_projects(sort_method="-publish_date"):
     if sort_method.startswith("date") or sort_method.startswith("-date"):
         sort_method = "-publish_date"
         
-    return [p for p in wp_project.objects.all().order_by(sort_method) if not p.disabled]
+    return [p for p in wp_project.objects.all().order_by(sort_method)
+            if not p.disabled]
 
 
 def get_screenshots_dir(project):
     """ determine screenshots directory for project """
     if project.screenshot_dir == "":
         # try default location
-        images_dir = utilities.get_absolute_path("static/images/" + project.alias)
+        aliasdir = 'static/images/{}'.format(project.alias)
+        images_dir = utilities.get_absolute_path(aliasdir)
     else:
         if os.path.isdir(project.screenshot_dir):
             # project path was absolute
@@ -58,7 +59,8 @@ def get_html_file(project):
     
     if project.html_url == "":
         # use default location if no manual override is set.
-        html_file = utilities.get_absolute_path("static/html/" + project.alias + ".html")
+        aliashtml = 'static/html/{}.html'.format(project.alias)
+        html_file = utilities.get_absolute_path(aliashtml)
     elif project.html_url.lower() == "none":
         # html files can be disabled by putting None in the html_url field.
         return ""
@@ -133,16 +135,18 @@ def get_download_file_content(project, surl):
         # intialize with download-list div
         html_ = htmltools.html_content("<div class='wp-block download-list'>")
         # build html for download link
-        html_.append_lines((build_download_file_content(project, surl), '</div>'))
+        html_.append_lines((build_download_file_content(project, surl),
+                            '</div>'))
         return html_.tostring()
     
     
-def build_download_file_content(project, surl, desc_text=' - Current package.'):
+def build_download_file_content(project, surl, desc_text=None):
     """ builds download content box from single file url.
         given the file to download, it outputs the html for the
         download section.
     """
-    
+    if not desc_text:
+        desc_text = ' - Current package.'
     # intial template for this downloadable file link
     html_ = htmltools.html_content("""
         <div class='download-file'>
@@ -153,7 +157,8 @@ def build_download_file_content(project, surl, desc_text=' - Current package.'):
         </div>""")
     
     # make link
-    html_.replace('{{ relative_link }}', '/dl' + utilities.get_relative_path(surl))
+    html_.replace('{{ relative_link }}',
+                  '/dl{}'.format(utilities.get_relative_path(surl)))
     # make desc text
     html_.replace('{{ desc_text }}', desc_text)
     # make link text
@@ -194,47 +199,47 @@ def get_download_dir_content(project, surl):
     return html_.tostring()
     
 
-def prepare_content(project, scontent):
-    """ prepares project content for final view.
-        adds screenshots, downloads, ads, etc.
-        returns injected html string.
-    """
-    
-    # Top of page. Includes project name header.
-    shead = "<div class='project_container'>\n" + \
-        "    <div class='project_title'>\n" + \
-        "        <h1 class='project-header'>" + project.name + "</h1>\n" + \
-        "    </div>\n"
-    # Working copy of html content
-    html_ = htmltools.html_content(scontent)
-    
-    # do article ads.
-    html_.inject_article_ad()
-        
-    # do screenshots.
-    images_dir = get_screenshots_dir(project)
-    # inject screenshots.
-    if os.path.isdir(images_dir):
-        html_.inject_screenshots(images_dir)
-        
-    # do downloads.
-    sdownload_content = get_download_content(project)
-    if sdownload_content != "":
-        target_ = html_.check_replacement("{{ download_code }}")
-        html_.replace_if(target_, sdownload_content)
-            
-    # do source view.
-    html_.inject_sourceview(project)
-
-    # do auto source highlighting
-    html_.highlight()
- 
-    # remember to close the project_container div.
-    html_.prepend(shead)
-    html_.append('\n</div>\n')
-    
-    # returning STRING until the rest of the project starts using html_content.
-    return html_.tostring()
+# def prepare_content(project, scontent):
+#    """ prepares project content for final view.
+#        adds screenshots, downloads, ads, etc.
+#        returns injected html string.
+#    """
+#
+# Top of page. Includes project name header.
+#    shead = "<div class='project_container'>\n" + \
+#        "    <div class='project_title'>\n" + \
+#        "        <h1 class='project-header'>" + project.name + "</h1>\n" + \
+#        "    </div>\n"
+# Working copy of html content
+#    html_ = htmltools.html_content(scontent)
+#
+# do article ads.
+#    html_.inject_article_ad()
+#
+# do screenshots.
+#    images_dir = get_screenshots_dir(project)
+# inject screenshots.
+#    if os.path.isdir(images_dir):
+#        html_.inject_screenshots(images_dir)
+#
+# do downloads.
+#    sdownload_content = get_download_content(project)
+#    if sdownload_content != "":
+#        target_ = html_.check_replacement("{{ download_code }}")
+#        html_.replace_if(target_, sdownload_content)
+#
+# do source view.
+#    html_.inject_sourceview(project)
+#
+# do auto source highlighting
+#    html_.highlight()
+#
+# remember to close the project_container div.
+#    html_.prepend(shead)
+#    html_.append('\n</div>\n')
+#
+# returning STRING until the rest of the project starts using html_content.
+#    return html_.tostring()
 
 
 def process_injections(project, request=None):

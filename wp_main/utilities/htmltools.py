@@ -305,7 +305,7 @@ class html_content(object):
     def highlight(self):
         """ runs all highlighting functions (inline/embedded) """
         
-        self.highlight_embedded()
+        # self.highlight_embedded()
         self.highlight_inline()
         self.highlight_codes()
 
@@ -326,16 +326,16 @@ class html_content(object):
         return self
     
     # TODO: Remove this when all objects use highlight_codes() style.
-    def highlight_embedded(self):
-        """ highlight all embedded lines in content (if any)
-            Soon to be deprecated in favor of highlight_codes().
-
-        """
-        
-        if self.contains("highlight-embedded"):
-            self.content = highlighter.highlight_embedded(self.content)
-        
-        return self
+#    def highlight_embedded(self):
+#        """ highlight all embedded lines in content (if any)
+# Soon to be deprecated in favor of highlight_codes().#
+#
+#        """
+#
+#        if self.contains("highlight-embedded"):
+#            self.content = highlighter.highlight_embedded(self.content)
+#
+#        return self
     
     def hide_email(self):
         """ base64 encodes all email addresses for use with wptool.js reveal functions.
