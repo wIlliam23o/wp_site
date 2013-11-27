@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Django settings for wp_main project.
+# Version for welbornprod.com
+# (versioning didn't start until the move to python3,
+#  2.0 is considered a new beginning because the project
+#  is moving towards a backward-incompatible state,
+#  where all python 2 'hacks' will be removed.)
+WPVERSION = '2.0.1'
 
 # file/path (path joining)
 import os.path
