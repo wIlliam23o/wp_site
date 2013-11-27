@@ -111,12 +111,22 @@ def highlight_inline(scode, tag_="pre"):
         # Inside a block, collect lines and wait for end.
         if inblock:
             if ("</" + tag_ + ">") in strim:
-                
+                # End of block.
                 inblock = False
                 # highlight block
                 soldblock = "\n".join(current_block)
-                # must have both valid lexer/formatter
-                if lexer is not None:
+                # class = 'none' was used, just wrap it.
+                if lexer == 'NONE':
+                    # No highlighting, just wrap it.
+                    newblock = ['\n<div class=\'highlighted-inline\'>',
+                                soldblock,
+                                '</div>\n',
+                                ]
+                    sfinished = sfinished.replace(soldblock,
+                                                  '\n'.join(newblock))
+                # must have valid lexer for highlighting
+                elif lexer is not None:
+                    # Highlight the old block of text.
                     try:
                         highlighted = pygments.highlight(soldblock,
                                                          lexer,
@@ -134,6 +144,7 @@ def highlight_inline(scode, tag_="pre"):
                 # clear block
                 current_block = []
             else:
+                # Add this line to the block that will be wrapped/highlighted
                 current_block.append(sline)
         else:
             # Detect start
@@ -141,45 +152,35 @@ def highlight_inline(scode, tag_="pre"):
                 # get class name
                 sclass = get_tag_class(sline, tag_)
                 # check for name fixing
-                # certain lexers share names with actual css selectors,
-                # in a list of shortened blog entries the block may not be
-                # highlighted
-                # if the </pre> tag was cut off.
-                # so pre class='c' is a valid statement even if highlighting
-                # isn't done.
-                # this causes the pre tag to be styled with the 'c' selector,
-                # not as the 'c' language.
-                # the workaround is to add a _ before known conflicting names.
+                # names can start with '_' like '_c' in case they share
+                # a name with other css classes.
                 if sclass.startswith("_"):
                     sclass = sclass[1:]
-                # empty class would break this.
-                if sclass == "":
+                if sclass.lower() == 'none':
+                    # no highlighting wanted here.
+                    # but we will wrap it in a <div class='highlighted...'
+                    lexer = 'NONE'
+                    sclass = 'none'
+                    inblock = True
+                elif sclass:
+                    # try highlighting with this lexer name.
+                    try:
+                        lexer = get_lexer_byname(sclass)
+                    except:
+                        _log.error('highlight_inline: unable to create '
+                                   'lexer/formatter with: '
+                                   '{}'.format(sclass))
+                        sclass = ''
+                        lexer = None
+                    # Set the flag to start collecting lines.
+                    inblock = True
+                else:
+                    # No class
                     _log.error("encountered empty highlight class: " + sline)
                     return scode
-                else:
-                    if sclass.lower() == "none":
-                        # no highlighting wanted here.
-                        lexer = None
-                        formatter = None
-                        sclass = ""
-                    else:
-                        # try highlighting with this lexer name.
-                        try:
-                            lexer = get_lexer_byname(sclass)
-                        except:
-                            _log.error('highlight_inline: unable to create '
-                                       'lexer/formatter with: '
-                                       '{}'.format(sclass))
-                            sclass = ''
-                            lexer = None
-                            formatter = None
-                
-                # don't attempt to highlight blocks where class is none.
-                # its there for possible css styles/future development.
-                # ...as long as the class isn't 'none', we are indeed inside
-                #    a block that needs highlighting.
-                inblock = (sclass.lower() != "none")
+                    inblock = False
 
+    # Finished with all lines.
     return sfinished
 
 

@@ -6,9 +6,9 @@
 	</p>
 	<p>
 		Easy Settings allows you to easily save and retrieve simple application settings.
-		Handles non-string types like <code>boolean</code>, <code>integer</code>, <code>long</code>,
-		<code>list</code>, as well as normal <code>string</code> settings. No sections needed,
-		just <code>set()</code>, <code>get()</code>, and <code>save()</code>.
+		Handles non-string types like [python]boolean[/python], [python]integer[/python], [python]long[/python],
+		[python]list[/python], as well as normal [python]string[/python] settings. No sections needed,
+		just [python]set()[/python], [python]get()[/python], and [python]save()[/python].
 	</p>
 </div>
 <!-- Article Ad -->
@@ -131,9 +131,9 @@
 		<strong>Pickle</strong> used strings in python 2.7, and bytes in python 3. All pickled objects
 		are now using a string format in EasySettings, with the help of 3 little conversion
 		functions. You will never have to use these functions, they're really internal use
-		only. But if you want to see how to return a string from <code>pickle.dumps()</code> in python 3,
-		look at the <code>safe_pickle_str()</code> function. To load from a string, instead of bytes, in
-		python 3's <code>pickle.loads()</code>, look at <code>safe_pickle_obj()</code>.
+		only. But if you want to see how to return a string from [python]pickle.dumps()[/python] in python 3,
+		look at the [python]safe_pickle_str()[/python] function. To load from a string, instead of bytes, in
+		python 3's [python]pickle.loads()[/python], look at [python]safe_pickle_obj()[/python].
 	</p>
 	<p>
 		The non-string saving method has been enhanced so debug printing will be
@@ -272,10 +272,10 @@ if settings > settings2:
 	</p>
 	<p>
 		Easy Settings uses a dictionary to store settings before writing to disk, so you can
-		also access settings like a dictionary object using <code>easysettings.settings</code>. The
-		<code>setsave()</code> function will save every time you set an option, and <code>is_saved()</code> will
+		also access settings like a dictionary object using [python]easysettings.settings[/python]. The
+		[python]setsave()[/python] function will save every time you set an option, and [python]is_saved()[/python] will
 		tell you whether or not the file has been saved to disk yet. Code is documented for a
-		newbie, so a <code>help('EasySettings')</code> in the python console will get you started.
+		newbie, so a [python]help('EasySettings')[/python] in the python console will get you started.
 	</p>
 	<p>
 		The search_query argument in the list functions lets you find settings, options, and values by search string:
@@ -355,8 +355,8 @@ except Exception as exEx:
 	</h2>
 
 	<p>
-		If you pass a file name to easysettings(), the <code>configfile_exists()</code> function is called. This
-		function will create a blank config file if the file doesn't exist, otherwise it will return <code>True</code>.
+		If you pass a file name to easysettings(), the [python]configfile_exists()[/python] function is called. This
+		function will create a blank config file if the file doesn't exist, otherwise it will return [python]True[/python].
 		To use the 'automatic creation' do this:
 	</p>
 	<pre class='python'>
