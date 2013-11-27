@@ -210,8 +210,8 @@ def prepare_content(body_content):
         body_content = highlighter.highlight_inline(body_content)
     # This can be remove when all posts are switched over to
     # highlight_codes() format.
-    if "highlight-embedded" in body_content:
-        body_content = highlighter.highlight_embedded(body_content)
+    # if "highlight-embedded" in body_content:
+    #    body_content = highlighter.highlight_embedded(body_content)
     body_content = highlighter.highlight_codes(body_content)
     return body_content
 

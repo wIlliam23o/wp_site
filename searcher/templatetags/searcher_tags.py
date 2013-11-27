@@ -12,9 +12,18 @@
 '''
 import random
 from django import template
+from django.utils.safestring import mark_safe
+from wp_main.utilities import highlighter
 
 register = template.Library()
 
+
+def highlight_desc(s):
+    """ Runs all description text through highlight_codes. """
+
+    if s:
+        s = highlighter.highlight_codes(s)
+    return mark_safe(s)
 
 
 def random_result_msg(value):
@@ -33,6 +42,10 @@ def random_result_msg(value):
     
     return sorry_msgs[random.randint(0, len(sorry_msgs) - 1)]
 
-
-register.filter("random_result_msg", random_result_msg)
-    
+# Which functions should be registered as tags
+registered = (highlight_desc,
+              random_result_msg,
+              )
+# Register all functions in the registered list.
+for func in registered:
+    register.filter(func.__name__, func)

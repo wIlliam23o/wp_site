@@ -28,6 +28,15 @@ HCODEPAT = re.compile(r'(\[[\w\d]+\])([^\[/]+)(\[/[\w\d+]+\])')
 # SHOULD BE REMOVED AFTER ALL POSTS/PROJECTS SWITCH TO HCODEPAT STYLE.
 LEXERPAT = re.compile(r'\w+[ ]highlight-embedded|highlight-embedded[ ]\w+')
 
+# List of valid lexer names.
+LEXERNAMES = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
+
+# Basic style codes
+STYLECODES = {'b': '<span class=\'B\'>{}</span>',
+              'i': '<span class=\'I\'>{}</span>',
+              }
+STYLENAMES = list(STYLECODES.keys())
+
 
 class wp_highlighter(object):
 
@@ -105,18 +114,34 @@ def highlight_inline(scode, tag_="pre"):
     lexer = None
     formatter = formatters.html.HtmlFormatter(linenos=False, style="default")
     sfinished = scode
-    
+    # Styles that won't be highlighted, but wrapped in their own class,
+    # none will get at least a 'highlighted-inline' class.
+    basic_styles = ('none', 'codewrap', 'sampwrap', 'highlighted-inline')
     for sline in slines:
         strim = sline.replace(' ', '').replace('\t', '')
         # Inside a block, collect lines and wait for end.
         if inblock:
             if ("</" + tag_ + ">") in strim:
-                
+                # End of block.
                 inblock = False
                 # highlight block
                 soldblock = "\n".join(current_block)
-                # must have both valid lexer/formatter
-                if lexer is not None:
+                # class = 'none or 'codewrap', etc. was used, just wrap it.
+                if lexer in basic_styles:
+                    # No highlighting, just wrap it.
+                    if lexer == 'none':
+                        newclass = 'highlighted-inline'
+                    else:
+                        newclass = lexer
+                    newblock = ['\n<div class=\'{}\'>'.format(newclass),
+                                soldblock,
+                                '</div>\n',
+                                ]
+                    sfinished = sfinished.replace(soldblock,
+                                                  '\n'.join(newblock))
+                # must have valid lexer for highlighting
+                elif lexer is not None:
+                    # Highlight the old block of text.
                     try:
                         highlighted = pygments.highlight(soldblock,
                                                          lexer,
@@ -134,6 +159,7 @@ def highlight_inline(scode, tag_="pre"):
                 # clear block
                 current_block = []
             else:
+                # Add this line to the block that will be wrapped/highlighted
                 current_block.append(sline)
         else:
             # Detect start
@@ -141,45 +167,35 @@ def highlight_inline(scode, tag_="pre"):
                 # get class name
                 sclass = get_tag_class(sline, tag_)
                 # check for name fixing
-                # certain lexers share names with actual css selectors,
-                # in a list of shortened blog entries the block may not be
-                # highlighted
-                # if the </pre> tag was cut off.
-                # so pre class='c' is a valid statement even if highlighting
-                # isn't done.
-                # this causes the pre tag to be styled with the 'c' selector,
-                # not as the 'c' language.
-                # the workaround is to add a _ before known conflicting names.
+                # names can start with '_' like '_c' in case they share
+                # a name with other css classes.
                 if sclass.startswith("_"):
                     sclass = sclass[1:]
-                # empty class would break this.
-                if sclass == "":
+                if sclass.lower() in basic_styles:
+                    # no highlighting wanted here.
+                    # but we will wrap it in a <div class='highlighted...'
+                    lexer = sclass
+                    sclass = ''
+                    inblock = True
+                elif sclass:
+                    # try highlighting with this lexer name.
+                    try:
+                        lexer = get_lexer_byname(sclass)
+                    except:
+                        _log.error('highlight_inline: unable to create '
+                                   'lexer/formatter with: '
+                                   '{}'.format(sclass))
+                        sclass = ''
+                        lexer = None
+                    # Set the flag to start collecting lines.
+                    inblock = True
+                else:
+                    # No class
                     _log.error("encountered empty highlight class: " + sline)
                     return scode
-                else:
-                    if sclass.lower() == "none":
-                        # no highlighting wanted here.
-                        lexer = None
-                        formatter = None
-                        sclass = ""
-                    else:
-                        # try highlighting with this lexer name.
-                        try:
-                            lexer = get_lexer_byname(sclass)
-                        except:
-                            _log.error('highlight_inline: unable to create '
-                                       'lexer/formatter with: '
-                                       '{}'.format(sclass))
-                            sclass = ''
-                            lexer = None
-                            formatter = None
-                
-                # don't attempt to highlight blocks where class is none.
-                # its there for possible css styles/future development.
-                # ...as long as the class isn't 'none', we are indeed inside
-                #    a block that needs highlighting.
-                inblock = (sclass.lower() != "none")
+                    inblock = False
 
+    # Finished with all lines.
     return sfinished
 
 
@@ -187,10 +203,8 @@ def check_lexer_name(sname):
     """ checks against all lexer names to make sure this is a valid lexer name 
     """
     
-    # retrieves list of tuples with valid lexer names
-    lexer_list = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
     # searches all tuples, returns True if its found.
-    for names_tuple in lexer_list:
+    for names_tuple in LEXERNAMES:
         if sname in names_tuple:
             return True
     return False
@@ -200,9 +214,8 @@ def get_all_lexer_names():
     """ retrieves list of all possible lexer names """
     
     # retrieves list of tuples with valid lexer names
-    lexer_list = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
     lexer_names = []
-    for names_tuple in lexer_list:
+    for names_tuple in LEXERNAMES:
         for name_ in names_tuple:
             lexer_names.append(name_)
     return lexer_names
@@ -265,63 +278,6 @@ def get_lexer_fromfile(sfilename):
         # no lexer found.
         lexer_ = None
     return lexer_
-
-
-def get_embedded_lexer(scode):
-    """ retrieves lexer name from embedded highlight line.
-        SHOULD BE REMOVED WHEN ALL POSTS/PROJECTS SWITCH TO HCODEPAT
-    """
-    tag_match = LEXERPAT.search(scode)
-    if tag_match is None:
-        return None
-    else:
-        tag_list = tag_match.group().split(' ')
-        return tag_list[1 - tag_list.index('highlight-embedded')]
-
-
-def get_embedded_code(scode, tag_="span"):
-    """ retrieves code content from embedded highlight line.
-        SHOULD BE REMOVED WHEN ALL POSTS/PROJECTS SWITCH TO HCODEPAT
-    """
-    patternstr = ('<' + tag_ +
-                  r' class\=["\'](\w+[ ]highlight-embedded' +
-                  r'|highlight-embedded[ ]\w+)["\']>(?P<content>.+)(?=</)')
-    code_match = re.search(patternstr, scode)
-    if code_match is None:
-        return None
-    else:
-        if len(code_match.groups()) < 2:
-            return None
-        else:
-            return code_match.groups()[1]
-
-
-def get_embedded_line(scode, tag_="span"):
-    """ retrieves the whole embedded line, tags and all.
-        SHOULD BE REMOVED WHEN ALL POSTS/PROJECTS SWITCH TO HCODEPAT
-    """
-    patternstr = (r'<' + tag_ +
-                  r' class\=["\'](\w+[ ]highlight-embedded' +
-                  r'|highlight-embedded[ ]\w+)["\']>.+</' +
-                  tag_ + '>')
-    line_match = re.search(patternstr, scode)
-    if line_match is None:
-        return None
-    else:
-        return line_match.group()
-
-    
-def get_embedded_content(sline, tag_="span"):
-    """ retrieves lexer and code from a single embedded highlight line.
-        returns tuple of (lexer name, code to highlight) strings.
-        returns None on error.
-        SHOULD BE REMOVED WHEN ALL POSTS/PROJECTS SWITCH TO HCODEPAT
-    """
-    
-    lexer_name = get_embedded_lexer(sline)
-    code_content = get_embedded_code(sline, tag_)
-    whole_line = get_embedded_line(sline, tag_)
-    return (lexer_name, code_content, whole_line)
     
 
 def highlight_codes(scode):
@@ -349,6 +305,7 @@ def highlight_codes(scode):
             code = mgroups[1].strip()
             return code
         return None
+
     formatter = formatters.html.HtmlFormatter(linenos=False,
                                               nowrap=True,
                                               style='default')
@@ -366,7 +323,7 @@ def highlight_codes(scode):
                 return code
             
             highlighted = pygments.highlight(code, lexer, formatter)
-            _log.debug('highlight: {}, {}'.format(langname, highlighted))
+            #_log.debug('highlight: {}, {}'.format(langname, highlighted))
             return ''.join(['<div class="highlighted-embedded">',
                             highlighted,
                             '</div>'])
@@ -379,7 +336,12 @@ def highlight_codes(scode):
     for mgroups in matches:
         langname = get_language(mgroups)
         code = get_code(mgroups)
-        newcode = try_highlight(code, langname)
+        if langname in STYLENAMES:
+            # catch basic style codes.
+            newcode = STYLECODES[langname].format(code)
+        else:
+            # Do highlighting.
+            newcode = try_highlight(code, langname)
         # Replace old text with new code.
         oldtext = ''.join(mgroups)
         scode = scode.replace(oldtext, newcode)
@@ -390,61 +352,7 @@ def highlight_codes(scode):
         return scode
 
 
-def highlight_embedded(scode, tag_="span"):
-    """ highlights embedded code, like:
-        <p>
-            To import the os module do
-            <span class='highlight-embedded python'>import os</span> 
-            at the top of your script.
-        </p>
-        
-        tag must have the 'highlight-embedded' class, and the lexer name as
-        the other class.
-        if you intend to highlight two things on one line, you still must put
-        the second on a seperate line. Your browser will join them together
-        again. Using a single line for two highlights messes this up.
-
-        SHOULD BE REMOVED WHEN ALL POSTS/PROJECTS SWITCH TO HCODEPAT
-        (SOLVES THE SINGLE LINE PROBLEM, AND IS MUCH CLEANER TO WRITE)
+def get_style_code(stylename):
+    """ Retrieves the html needed to format text based on styles like:
+        [b]bold text[/b] [i]italic text[/i].
     """
-    
-    if '\n' in scode:
-        slines = scode.split('\n')
-    else:
-        # single line only.
-        slines = [scode]
-    formatter = formatters.html.HtmlFormatter(linenos=False,
-                                              nowrap=True,
-                                              style='default')
-    newtagfmt = '<{tag} class=\'highlighted-embedded\'>{highlighted}</{tag}>'
-
-    keep_lines = []
-    for sline in slines:
-        if 'highlight-embedded' in sline:
-            lexer_name, content, whole_tag = get_embedded_content(sline)
-            if ((lexer_name is None) or
-               (content is None) or
-               (whole_tag is None)):
-                # error getting info from tag, use old line.
-                keep_lines.append(sline)
-            else:
-                # highlight the embedded content.
-                try:
-                    lexer = lexers.get_lexer_by_name(lexer_name)
-                    highlighted = pygments.highlight(content,
-                                                     lexer,
-                                                     formatter)
-                    snewtag = newtagfmt.format(tag=tag_,
-                                               highlighted=highlighted)
-                    # replace old content with new highlighted content.
-                    snewline = sline.replace(whole_tag, snewtag)
-                    keep_lines.append(snewline)
-                except:
-                    _log.debug('highlight_embedded: '
-                               'invalid lexer name in: {}'.format(whole_tag))
-                    keep_lines.append(sline)
-        else:
-            # no embedding needed
-            keep_lines.append(sline)
-            
-    return '\n'.join(keep_lines)

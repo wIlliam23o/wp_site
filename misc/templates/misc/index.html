@@ -43,6 +43,14 @@
             {% for misc in miscobjects %}
                 <!-- Single misc listing. -->
                 <div id='{{ misc.alias }}' class="wp-block misc-container">
+                    <!-- EDIT -->
+                    {% if request|is_staff %}
+                        <div class='edit-button'>
+                            <a href='/adminmisc/wp_misc/{{misc.id}}'>
+                                <span>edit</span>
+                            </a>
+                        </div>
+                    {% endif %}
                     <!-- Header (Name/Link/Version) -->
                     <div class='misc-header-box'>
                         <a href="/misc/{{ misc.alias }}">

@@ -28,6 +28,14 @@
 			{% for project in projects %}
 				<!-- Single project listing. -->
 				<div class="wp-block project-container">
+					<!-- EDIT -->
+					{% if request|is_staff %}
+						<div class='edit-button'>
+							<a href='/adminprojects/wp_project/{{ project.id }}'>
+								<span>edit</span>
+							</a>
+						</div>
+					{% endif %}
 					<!-- Header (Name/Link/Version) -->
 					<div class='project-header-box'>
 						<a href="/projects/{{ project.alias }}">

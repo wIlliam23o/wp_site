@@ -258,7 +258,7 @@ def highlight_file(static_path, file_content):
     # Highlight the file (if needed)
     if lexername:
         try:
-            highlighter = wp_highlighter(lexername, 'default', line_nums_=False)
+            highlighter = wp_highlighter(lexername, 'default', line_nums=False)
             highlighter.code = file_content
             file_content = highlighter.highlight()
         except Exception as ex:

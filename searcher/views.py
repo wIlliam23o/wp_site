@@ -19,11 +19,11 @@ def view_index(request):
     query = responses.get_request_arg(request, ['q', 'query', 'search'], default="")
 
     # no query, show search form.
-    if (query is None) or (query == ""):
+    if not query:
         return responses.clean_response("searcher/searchform.html",
                                         {'request': request,
                                          'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                   "/static/css/searcher.min.css"],
+                                                                   '/static/css/searcher.min.css'],
                                          })
     else:
         # pass it to view_results
@@ -37,7 +37,7 @@ def view_results(request, query):
     results_list, results_slice = ([], [])
     search_warning = searchtools.valid_query(query)
         
-    if search_warning == '':
+    if not search_warning:
         # search terms are okay, let's do it.
         results_list = searchtools.search_all(query, projects_first=True)
         results_slice = utilities.slice_list(results_list, starting_index=0, max_items=25)
