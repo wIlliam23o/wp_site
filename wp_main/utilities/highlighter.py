@@ -366,7 +366,7 @@ def highlight_codes(scode):
                 return code
             
             highlighted = pygments.highlight(code, lexer, formatter)
-            _log.debug('highlight: {}, {}'.format(langname, highlighted))
+            #_log.debug('highlight: {}, {}'.format(langname, highlighted))
             return ''.join(['<div class="highlighted-embedded">',
                             highlighted,
                             '</div>'])
