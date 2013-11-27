@@ -10,6 +10,17 @@
 		
 {% endblock %}
 
+{% block extrastyle %}
+	<style type='text/css'>
+		.edit-button {
+			position: relative;
+			display: inline-block;
+			margin-left: 10px;
+			top: 0px;
+		}
+	</style>
+{% endblock %}
+
 {% block contentabove %}
 	<div class="blog-header">
 		<div class="blog-header-title">
@@ -44,15 +55,24 @@
 			{% if blog_posts %}
 				{% for post in blog_posts %}
 					{% if not post.disabled %}
-						<div class="blog-listing">
+						<div class="blog-listing">								
 							<div class='blog-post-title-box'>
 								<a href="/blog/view/{{ post.slug }}">
 									<span class="blog-listing-title">{{ post.title }}</span>
-								</a>
+								</a>							
 							</div>
+							<!-- Comments Button -->
 							{% if post.enable_comments %}
 								{{ post|comments_button }}
-							{% endif %}						
+							{% endif %}	
+							<!-- EDIT -->
+		                    {% if request|is_staff %}
+		                        <div class='edit-button'>
+		                            <a href='/adminblogger/wp_blog/{{ post.id }}'>
+		                                <span>edit</span>
+		                            </a>
+		                        </div>
+		                    {% endif %}	
 							<div class="blog-post-date-box">
 								<span class="blog-post-date">{{ post.posted }}</span>
 							</div>
@@ -76,7 +96,7 @@
 										{% endfor %}
 									</div>
 								</div>
-							{% endif %}
+							{% endif %}	
 						</div>
 					{% endif %}
 				{% endfor %}

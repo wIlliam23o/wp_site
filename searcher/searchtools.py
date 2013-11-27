@@ -125,7 +125,8 @@ def search_misc(querystr):
         got_match = search_targets(queries, targets)
         if got_match:
             goodresult = wp_result(title=misc.name,
-                                   desc=highlight_queries(queries, mcontent),
+                                   desc=highlight_queries(queries,
+                                                          misc.description),
                                    link='/misc/#{}'.format(misc.alias),
                                    posted=str(misc.publish_date))
             results.append(goodresult)

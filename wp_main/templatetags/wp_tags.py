@@ -29,12 +29,24 @@ register = template.Library()
 
 # for admin change_list filtering.
 import re
+#                           tag         adminpage   object  name/title
+disabled_patstr = r'(<a href).+("/admin\w+)/(.+)/">([\(\)\!\-\w\d\. ]+)</a>'
+disabled_pat = re.compile(disabled_patstr)
 
 
 def comments_button(value):
     """ returns comments button for this blog post. """
     
     return mark_safe(htmltools.comments_button('/blog/view/' + value.slug))
+
+
+def is_staff(request):
+    """ Returns true if the user is an admin. """
+
+    if request:
+        if hasattr(request, 'user') and request.user.is_authenticated():
+            return request.user.is_staff
+    return False
 
 
 def is_false(value):
@@ -132,7 +144,8 @@ def is_test_site(request_object):
         returns True/False.
     """
     if request_object is None or request_object.META is None:
-        # happens on template errors, which hopefully don't make it to production.
+        # happens on template errors,
+        # which hopefully don't make it to production.
         return True
     # Get current server name for this instance.
     # Could be the live server, test server, or local server
@@ -183,7 +196,9 @@ def highlight_python(scontent):
 
 
 def debug_allowed(request_object):
-    """ uses utilities to determine if debug info is allowed for this request. """
+    """ uses utilities to determine if debug 
+        info is allowed for this request.
+    """
     
     return utilities.debug_allowed(request_object)
 
@@ -204,7 +219,7 @@ def log_debug(data):
         returns original object.
     """
     
-    if isinstance(data, (str, unicode)):
+    if hasattr(data, 'encode'):
         s = data
     elif isinstance(data, (list, tuple)):
         s = '\n'.join(data)
@@ -241,16 +256,15 @@ def disabled_css(item):
         if the object has .disabled attribute and it is set to True.
         This is used in change_list_results.html template for admin.
     """
-    #                           tag         adminpage   object  name/title
-    obj_pattern = re.compile(r'(<a href).+("/admin\w+)/(.+)/">([\(\)\!\-\w\d\. ]+)</a>')
-    obj_match = obj_pattern.search(item)
+ 
+    obj_match = disabled_pat.search(item)
     if obj_match is None:
         return item
     else:
         # grab object.
         if len(obj_match.groups()) == 4:
             # beginning of a tag (<a href)
-            tag = obj_match.groups()[0]  # @UnusedVariable: tag
+            tag = obj_match.groups()[0]  # noqa
             # type of object (wp_blog/1)
             otype = obj_match.groups()[2].strip('/')
             # name/title of object (My Blog Post)
@@ -286,14 +300,17 @@ def disabled_css(item):
     
     # item is disabled?
     if is_disabled(obj):
-        return mark_safe(item.replace('<a href', '<a class="item-disabled" href'))
+        return mark_safe(item.replace('<a href',
+                                      '<a class="item-disabled" href'))
     else:
         # item was not disabled.
         return item
     
 
 def get_filename(filename):
-    """ uses utilities and os.path to return only the short filename (no path) """
+    """ uses utilities and os.path to return only
+        the short filename (no path)
+    """
     
     return utilities.get_filename(filename)
 
@@ -301,6 +318,7 @@ def get_filename(filename):
 # tuple of filters to register.
 registered_filters = (comments_button,
                       is_false,
+                      is_staff,
                       is_true,
                       exceeds_max,
                       exceeds_min,
