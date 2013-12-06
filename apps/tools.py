@@ -50,14 +50,17 @@ def get_appdir(appname, relative=False):
     return None
 
 
-def get_appgitdir(appname):
+def get_appgitdir(appname, branch=None):
     """ Retrieves github.com dir for welbornprod/wp_site for an app by name.
+        If branch is None then the 'master' branch is used.
     """
 
     appdir = get_appdir(appname, True)
     if not appdir:
         return None
-    gitbase = '/welbornprod/wp_site/tree/master'
+    if not branch:
+        branch = 'master'
+    gitbase = os.path.join('/welbornprod/wp_site/tree', branch)
     # Trim wp_site, to rejoin with github base.
     slicer = 2 if appdir.startswith('/') else 1
     reldir = '/'.join(appdir.split('/')[slicer:])

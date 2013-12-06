@@ -7,10 +7,11 @@
     -Christopher Welborn 2013
 """
 
-from datetime import datetime
 import itertools
-from multiprocessing import Pool
+import os.path
 import sys
+from datetime import datetime
+from multiprocessing import Pool
 
 from docopt import docopt
 
@@ -35,6 +36,8 @@ usage_str = """phonewords.py
         <word>                  : Word to find phone number for.
         wordfile                : File to grab dictionary words from.
                                   Defaults to {defaultfile}
+                                  ...or any file named 'words' in the current
+                                     directory.
         -d,--debug              : Debug mode, may break normal operation.
         -h,--help               : Show this message.
         -P num,--procs num      : For testing purposes, number of processes
@@ -326,7 +329,13 @@ def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
     # Get word list from file.
     if not wordfile:
         # Use default file.
-        wordfile = '/usr/share/dict/words'
+        if os.path.isfile('words'):
+            wordfile = 'words'
+        elif os.path.isfile('/usr/share/dict/words'):
+            wordfile = '/usr/share/dict/words'
+        else:
+            raise ValueError('No default words file available!')
+
     wordlist = [w for w in iter_filelines(wordfile, maxlength=len(number))]
     if not wordlist:
         raise ValueError('Empty word list given: {}'.format(wordfile))
