@@ -60,7 +60,7 @@
                     <br>
                     <span>{{ errors }}</span>
                 {% else %}
-                    {% if results %}
+                    {% if hasargs %}
                         <div class='phonewords-results-box'>
                             <h3 class='header phonewords-header'>
                                 Results:
@@ -70,11 +70,19 @@
                             </span>
                             <div class='phoneword-results-box'>
                                 <!-- Results from lookup function. -->
-                                <textarea id='pw_results' rows={% if results.items|getlength < 40 %} '{{ results.items|getlength|add:"1" }}' {% else %} '40' {% endif %} cols='40' readonly placeholder='Loading results...' class='phonewords-textarea'>
-                                    {% for resnumber, resword in results|sortdict %}
-                                        {{ resnumber }} : {{ resword }}
-                                    {% endfor %}
-                                </textarea>
+                                {% if results %}
+                                    <textarea id='pw_results' rows={% if results.items|getlength < 40 %} '{{ results.items|getlength|add:"1" }}' {% else %} '40' {% endif %} cols='40' readonly placeholder='Loading results...' class='phonewords-textarea'>
+                                        {% for resnumber, resword in results|sortdict %}
+                                            {{ resnumber }} : {{ resword }}
+                                        {% endfor %}
+                                    </textarea>
+                                {% else %}
+                                    <textarea id='pw_results' rows='4' cols='60' readonly placeholder='Loading results...' class='phonewords-textarea'>
+                                        No results found.
+                                        Possibly too many 1s or 0s in the number,
+                                        or just not enough good letters to make a word.
+                                    </textarea>
+                                {% endif %}
                             </div>
                             <!-- Total from get_phonewords() -->
                             {% if total %}

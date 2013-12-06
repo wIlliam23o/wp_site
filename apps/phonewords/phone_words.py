@@ -241,17 +241,9 @@ def get_defaultwordsfile():
     """ Retrieves the default filename for words file. """
     # Use default file.
     if os.path.isfile('words'):
-        wordfile = 'words'
+        return 'words'
     elif os.path.isfile('/usr/share/dict/words'):
-        wordfile = '/usr/share/dict/words'
-    else:
-        try:
-            from django.conf import settings
-            wordfile = os.path.join(settings.BASE_DIR, 'apps/phonewords/words')
-        except:
-            return None
-        if os.path.isfile(wordfile):
-            return wordfile
+        return '/usr/share/dict/words'
     return None
 
 
