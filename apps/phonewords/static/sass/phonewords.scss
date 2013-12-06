@@ -1,0 +1,88 @@
+@import 'welbornprod';
+
+.phonewords-container {
+    border-style: solid;
+    border-radius: 5px;
+    border-color: $bordermain;
+    border-width: 1px;
+    padding: 10px;
+    box-shadow: $shadownormal;
+    background: $whitedull;
+}
+
+.phonewords-container.phonewords-sub-container {
+    box-shadow: none;
+    margin-top: 10px;
+    border-width: 2px;
+}
+
+.phonewords-header {
+    font-size: $fontmedium;
+    text-shadow: $shadowsmall;
+}
+
+.version {
+    padding-left: 5px;
+}
+
+.app-input-text {
+    width: 80px;
+    margin-left: 10px;
+}
+
+.app-submit-button {
+    margin-left: 10px;
+}
+
+.app-submit-button span {
+    padding-left: 5px;
+    padding-right: 5px;
+    font-size: $fontsmall;
+}
+
+/* Results */
+.phonewords-results-box {
+    border-style: solid;
+    border-width: 2px;
+    border-color: $bordermain;
+    border-radius: 5px;
+    padding: 5px;
+    display: inline-block;
+}
+
+.phonewords-results-count {
+    font-family: $fontssmall;
+    font-size: $fontsmall;
+    font-weight: bold;
+    color: $greymain;
+    margin-left: 5px;
+    display: inline-block;
+}
+
+.phonewords-textarea {
+    font-family: $fontsmono;
+    font-size: $fontinline;
+    color: $greybg;
+    border-radius: 5px;
+    border-color: $bordermain;
+    outline: none;
+    resize: none;
+    overflow: auto;
+}
+
+.phonewords-total-box {
+    /* border-style: solid;
+    border-width: 1px;
+    border-color: $borderblue;
+    border-radius: 3px; */
+    padding: 5px;
+    color: $greybg;
+    font-weight: bold;
+    display: inline-block;
+}
+
+/* Description */
+.phonewords-warning {
+    color: $redmain;
+    font-weight: bold;
+}

@@ -18,7 +18,7 @@
 <!-- Floating message -->
 {% block floater %}
 	<div id="floater">
-		<p id="loading-msg">
+		<p id="floater-msg">
 			Loading file: {{ file }}
 		</p>
 	</div>
@@ -73,14 +73,17 @@
 		$(document).ready( function () {
 			
 			// position floater
-			wptools.center_element("#floater");
-			wptools.vertical_element("#floater", 200);
-		
+			wptools.center_element('#floater', true);
 			// setup ajax
 			wptools.pre_ajax();
 
 			// Load initial file
 			view_file("{{ file }}");
 		});
+
+		window.onresize = function () {
+			wptools.center_element('#floater', true);
+		};
+		
 	</script>
 {% endblock %}

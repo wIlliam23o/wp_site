@@ -156,6 +156,12 @@ def is_test_site(request_object):
             (server_name in settings.INTERNAL_IPS))  # local dev
 
 
+def getlength(lennable):
+    """ Tag for len() """
+
+    return len(lennable)
+
+
 def contains(str_or_list, val_to_find):
     """ uses 'if val in str_or_list'.
         returns True if val_to_find is in str_or_list.
@@ -315,6 +321,24 @@ def get_filename(filename):
     return utilities.get_filename(filename)
 
 
+def sortdict(d):
+    """ Generator for returning an iterable of a sorted dict.
+        Can be retrieved like:
+            for skey, sval in sortdict(mydict):
+        Or in a template:
+            {% for skey, sval in mydict|sortdict %}
+    """
+
+    for skey in sorted(d.keys()):
+        yield (skey, d[skey])
+
+
+def sortitems(o):
+    """ wrapper for sorted() """
+
+    return sorted(o)
+
+
 # tuple of filters to register.
 registered_filters = (comments_button,
                       is_false,
@@ -325,6 +349,7 @@ registered_filters = (comments_button,
                       dict_value,
                       get_remote_host,
                       get_remote_ip,
+                      getlength,
                       meta_value,
                       is_mobile,
                       is_test_site,
@@ -338,7 +363,9 @@ registered_filters = (comments_button,
                       str_,
                       repr_,
                       disabled_css,
-                      get_filename)
+                      get_filename,
+                      sortdict,
+                      sortitems)
 
 # register all filters in the registered tuple.
 for filter_ in registered_filters:

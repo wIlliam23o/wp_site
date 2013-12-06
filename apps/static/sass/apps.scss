@@ -1,0 +1,92 @@
+@import 'welbornprod';
+
+/* -- apps.css -- */
+.apps-header {
+    margin-bottom: 10px;
+}
+
+.apps-header-text {
+    margin-top: 5px;
+}
+
+.apps-header-title {
+    display: inline-block;
+}
+
+.apps-listing-box {
+    margin-top: 10px;
+}
+
+.apps-listing-item-box {
+    margin: 15px;
+    padding: 10px;
+    background-color: $whitedull;
+    border-radius: 5px;
+    box-shadow: $shadowmedium;
+    text-align: left;
+}
+
+.apps-header-box {
+    text-align: left;
+    width: 100%;
+}
+
+.apps-name {
+    font-size: $fontmedium;
+    text-shadow: $shadowtextsmall;
+}
+
+.version {
+    font-size:$fontsmall;
+    color: $greydark;
+    font-weight: bold;
+    font-family: $fontssmall;
+    text-align: right;
+    padding-left: 0%;
+}
+
+.apps-desc {
+    background: $whitemain;
+    margin-top: 10px;
+    padding: 5px;
+    border-radius: 10px;
+    border-color: $bordermain;
+    border-style: solid;
+    border-width: 2px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.apps-desc.apps-index {
+    font-size: .8em;
+}
+
+/* Long Description */
+.apps-longdesc {
+    background: $whitemain;
+    font-size:$fontsmall;
+    border-radius: 5px;
+    border-color: $bordermain;
+    border-style: solid;
+    border-width: 2px;
+    box-shadow: $shadownormal;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+/* Goto Button */
+.apps-button {
+    font-family: $fontsnormal;
+    font-size: $fontsmall;
+    border-radius: 3px;
+    display: inline-block;
+    position: relative;
+    margin-top: 10px;
+    margin-right: 5px;
+    margin-left: 5px;
+    margin-bottom: 5px;
+    box-shadow: $shadowsmall;
+    -moz-box-shadow: $shadowsmall;
+    -webkit-box-shadow: $shadowsmall;
+    padding: 5px;
+}

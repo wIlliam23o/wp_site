@@ -54,37 +54,37 @@ function load_file_data (xhrdata) {
     
     // Server-side error.
     if (file_info.status == 'error') {
-    	var errmessage = file_info.message;
-    	if (errmessage) {
-    		$("#file-content").html("<span>" + errmessage + "</span>");
-    	} else {
-    		$("#file-content").html("<span>Sorry, an unknown error occurred.</span>")
-    	}
-    	return
+        var errmessage = file_info.message;
+        if (errmessage) {
+            $("#file-content").html("<span>" + errmessage + "</span>");
+        } else {
+            $("#file-content").html("<span>Sorry, an unknown error occurred.</span>");
+        }
+        return;
     }
 
 	// Content
-	if (file_info.file_content != "") {
+    if (file_info.file_content) {
 		$("#file-content").html(file_info.file_content);
 	} 
 	else {
 		$("#file-content").html("<span>Sorry, no content in this file...</span>");
-		return
+		return;
 	}
 
-	// Header for projects (pythons None equates to null in JS.)
+    /* Header for projects ...pythons None equates to null in JS. */
 	if (file_info.project_alias !== null && file_info.project_name !== null) {
 		$("#project-title-name").html(file_info.project_name);
 		$("#project-link").click( function () { wptools.navigateto("/projects/" + file_info.project_alias); });
 		if (file_info.project_alias) { $("#project-info").fadeIn(); }
 	// Header for miscobj.
 	} else if (file_info.misc_alias !== null && file_info.misc_name !== null) {
-	    $("#project-title-name").html(file_info.misc_name);
-	    $("#project-link").click( function () { wptools.navigateto("/misc/" + file_info.misc_alias); });
-	    if (file_info.misc_alias) { $("#project-info").fadeIn(); }
+        $("#project-title-name").html(file_info.misc_name);
+        $("#project-link").click( function () { wptools.navigateto("/misc/" + file_info.misc_alias); });
+        if (file_info.misc_alias) { $("#project-info").fadeIn(); }
 	}
 	// File info
-	if (file_info.file_short != "" && file_info.static_path != "") {
+    if (file_info.file_short && file_info.static_path) {
 		$("#viewer-filename").html(file_info.file_short);
 		$("#file-link").click( function () { wptools.navigateto("/dl/" + file_info.static_path ); });
 		if (file_info.file_short) { $("#file-info").fadeIn(); }
@@ -97,11 +97,11 @@ function load_file_data (xhrdata) {
 		var existing_items = $(".vertical-menu-item");
 		var existing_length = existing_items.length;
 		// only build the menu once...
-		if (existing_length == 0 && menu_length > 0 ) {
+        if (existing_length === 0 && menu_length > 0 ) {
 			$.each(menu_items, function () {
 				$("#file-menu-items").append("<li class='vertical-menu-item'>" + 
-											 "<a href='javascript: view_file(\"" + this[0].replace(/[ ]/g, '/') + "\");'>" +
-											 "<span class='vertical-menu-text'>" + this[1] + "</span></a></li>");
+                                             "<a href='javascript: view_file(\"" + this[0].replace(/[ ]/g, '/') + "\");'>" +
+                                             "<span class='vertical-menu-text'>" + this[1] + "</span></a></li>");
 			});
 			$("#file-menu").fadeIn();
 		}
