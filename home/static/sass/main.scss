@@ -304,11 +304,12 @@ p.subtext { font-size: $fontsmall; }
     width: auto;
 }
 
+/* Floating message */
 #floater {
-    position: absolute;
+    position: fixed;
     width: 45%;
     height: auto;
-    font-size: 1em;
+    font-size: $fontnormal;
     text-align: center;
     color: $greydark;
     background: white;
@@ -317,7 +318,19 @@ p.subtext { font-size: $fontsmall; }
     z-index: 99999;
     display: none;
     box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
-    top: 20px;  
+    /* top: 20px; */
+}
+
+#floater-msg {
+    font-family: $fontssmall;
+    font-weight: normal;
+}
+
+#floater-smalltext {
+    font-size: $fontsmall;
+    font-family: $fontssmall;
+    font-weight: bold;
+    color: $greymain;
 }
 
 /* Jump-To Styles */
@@ -667,7 +680,13 @@ a.jumpto-nav {
     color: $greydark;
 }
 
-.input-text {
+
+.input-label {
+    font-size: .8em;
+    padding-left: 5px;
+}
+
+.input-text, .input-textbox {
     background: white;
     color: $greymain;
     font-family: $fontssmall;
@@ -675,6 +694,7 @@ a.jumpto-nav {
     border-radius: 5px;
     border-width: 1px;
     width: 200px;
+    padding-left: 5px;
 }
 
 /* Inset Styles */
@@ -960,6 +980,16 @@ code, samp {
     padding: 2px;
 }
 
-.edit-button:hiver {
+.edit-button:hover {
     border-color: $borderhover;
+}
+
+/* Global version style. */
+.version {
+    font-size:$fontsmall;
+    color: $greydark;
+    font-weight: bold;
+    font-family: $fontssmall;
+    text-align: right;
+    padding-left: 0%;
 }

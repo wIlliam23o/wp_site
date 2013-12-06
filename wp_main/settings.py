@@ -94,7 +94,7 @@ DATABASES = {
 # Fill in missing settings from local file (not in git).
 SECRET_LOCAL_SETTINGS = os.path.join(BASE_DIR, 'settings_local.py')
 if sysversion < '3':
-    execfile(SECRET_LOCAL_SETTINGS)
+    execfile(SECRET_LOCAL_SETTINGS)  # noqa
 else:
     # Python 3 exec file is gone.
     exec(compile(open(SECRET_LOCAL_SETTINGS).read(),
@@ -149,10 +149,10 @@ if os.path.isfile(SECRET_KEY_FILE):
             SECRET_KEY = fread.read().replace('\n', '')
     except (IOError, OSError)as ex_access:
         # failed to read secretkey.txt
-        SECRET_KEY = NONSECRET_KEY  # @UndefinedVariable: in local settings.
+        SECRET_KEY = NONSECRET_KEY  # noqa
 else:
     # no secret key exists.
-    SECRET_KEY = NONSECRET_KEY  # @UndefinedVariable
+    SECRET_KEY = NONSECRET_KEY  # noqa
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -228,6 +228,8 @@ INSTALLED_APPS = (
     'blogger',
     'searcher',
     'misc',
+    'apps',  # handles urls for all sub-apps.
+    'apps.phonewords',
     
 )
 

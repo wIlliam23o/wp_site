@@ -285,8 +285,9 @@ p.subtext {
   height: auto;
   width: auto; }
 
+/* Floating message */
 #floater {
-  position: absolute;
+  position: fixed;
   width: 45%;
   height: auto;
   font-size: 1em;
@@ -298,7 +299,17 @@ p.subtext {
   z-index: 99999;
   display: none;
   box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
-  top: 20px; }
+  /* top: 20px; */ }
+
+#floater-msg {
+  font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
+  font-weight: normal; }
+
+#floater-smalltext {
+  font-size: 0.8em;
+  font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
+  font-weight: bold;
+  color: #919191; }
 
 /* Jump-To Styles */
 .jumpto {
@@ -620,14 +631,19 @@ a.jumpto-nav {
 .submit-button:hover {
   color: #4d4d4d; }
 
-.input-text {
+.input-label {
+  font-size: .8em;
+  padding-left: 5px; }
+
+.input-text, .input-textbox {
   background: white;
   color: #919191;
   font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
   border-color: #afafaf;
   border-radius: 5px;
   border-width: 1px;
-  width: 200px; }
+  width: 200px;
+  padding-left: 5px; }
 
 /* Inset Styles */
 span.inset-left {
@@ -1170,5 +1186,14 @@ code, samp {
   border-color: rgba(202, 217, 224, 0.5);
   padding: 2px; }
 
-.edit-button:hiver {
+.edit-button:hover {
   border-color: #b5ceff; }
+
+/* Global version style. */
+.version {
+  font-size: 0.8em;
+  color: #4d4d4d;
+  font-weight: bold;
+  font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
+  text-align: right;
+  padding-left: 0%; }

@@ -1,0 +1,57 @@
+{% extends "home/main.html" %}
+{% load wp_tags %}
+
+{% block title %}- Apps{% endblock %}
+
+<!-- Build Apps Listing -->
+{% block content %}
+    <!-- Apps Header -->
+    <div class="apps-header">
+        <div class="apps-header-title">
+            <a href='/apps'>
+                <h3 class='header'>Apps</h3>
+            </a>
+        </div>
+        
+        <div class="apps-header-text">
+                <span class="title">Welborn productions web apps...</span>
+        </div>
+    </div>
+
+    <!-- Apps Listing -->
+    <div class='apps-listing-box'>
+        {% if appsinfo %}
+            {% for app in appsinfo %}
+                <div class='apps-listing-item-box'>
+                    <!-- Header -->
+                    <div class='apps-header-box'>
+                        <a href='/apps/{{ app.alias }}'>
+                            <span class='header apps-name'>{{ app.name }}</span>
+                        </a>
+                        <br>
+                        <span class='version'>version {{ app.version }}</span>
+                    </div>
+                    <!-- Description -->
+                    <div class='apps-desc apps-index'>
+                        <span class='desc'>{{ app.description }}</span>
+                        <br>
+                        <p class='desc'>
+                            {{ app.longdesc }}
+                        </p>
+                    </div>
+                    <!-- Goto Button -->
+                    <a href='/apps/{{ app.alias }}'>
+                        <div class='apps-button'>
+                            <span>Go to {{ app.name }}</span>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- No Apps -->
+            <p>
+                Sorry, no apps are available right now.
+            </p>
+        {% endif %}
+    </div>
+{% endblock %}
