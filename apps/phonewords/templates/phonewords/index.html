@@ -86,9 +86,10 @@
                             </div>
                             <!-- Total from get_phonewords() -->
                             {% if total %}
-                                <br>
                                 <div class='phonewords-total-box'>
-                                    <span>Total attempts: {{ total }}</span>
+                                    <span class='phonewords-results-count'>
+                                        Total attempts: {{ total }}
+                                    </span>
                                 </div>
                             {% endif %}
                         </div>
