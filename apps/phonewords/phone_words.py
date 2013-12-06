@@ -237,6 +237,24 @@ def format_number(s):
         return s
 
 
+def get_defaultwordsfile():
+    """ Retrieves the default filename for words file. """
+    # Use default file.
+    if os.path.isfile('words'):
+        wordfile = 'words'
+    elif os.path.isfile('/usr/share/dict/words'):
+        wordfile = '/usr/share/dict/words'
+    else:
+        try:
+            from django.conf import settings
+            wordfile = os.path.join(settings.BASE_DIR, 'apps/phonewords/words')
+        except:
+            return None
+        if os.path.isfile(wordfile):
+            return wordfile
+    return None
+
+
 def get_lettercombos(snumber, partialmatch=False, showall=False):
     """ Gets possible letter combinations for a number.
         No -, or spaces please.
@@ -328,12 +346,8 @@ def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
 
     # Get word list from file.
     if not wordfile:
-        # Use default file.
-        if os.path.isfile('words'):
-            wordfile = 'words'
-        elif os.path.isfile('/usr/share/dict/words'):
-            wordfile = '/usr/share/dict/words'
-        else:
+        wordfile = get_defaultwordsfile()
+        if not wordfile:
             raise ValueError('No default words file available!')
 
     wordlist = [w for w in iter_filelines(wordfile, maxlength=len(number))]
