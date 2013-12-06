@@ -32,8 +32,8 @@
 
 {% block content %}
     <div class='phonewords-container'>
-        <div class='phonewords-header'>
-            <h3 class='header'>PhoneWords</h3>
+        <div class='phonewords-header-box'>
+            <h3 class='header phonewords-header'>PhoneWords</h3>
             <span class='version'>version {{ version }}</span>
         </div>
         <!-- App container -->
@@ -62,7 +62,7 @@
                 {% else %}
                     {% if hasargs %}
                         <div class='phonewords-results-box'>
-                            <h3 class='header phonewords-header'>
+                            <h3 class='header phonewords-results-header'>
                                 Results:
                             </h3>
                             <span class='phonewords-results-count'>
@@ -122,8 +122,7 @@
                             <h3 class='title'>Words:</h3>
                             <p class='desc'>
                                 Any word that is 3 to 7 characters long can be entered,
-                                and any non-alphabetical character will not be converted to
-                                a number.
+                                but non-alphabetical characters will not be converted. 
                                 <h3 class='title'>Word Example:</h3>
                                 <p class='desc'>
                                     If you enter 'niceapp', the response would be <code>niceapp : 642-3277</code>
@@ -131,10 +130,10 @@
                             </p>
                             <h3 class='title'>Numbers:</h3>
                             <p class='desc'>
-                                For numbers, you may use a hyphen but other non-number characters
+                                For numbers you may use a hyphen, but other non-number characters
                                 are rejected. The limit is seven due to the number of comparisons and
                                 combinations that have to be calculated. The limit ensures
-                                some kind of reasonable response time.
+                                some kind of a reasonable response time.
                                 <h3 class='title'>Number Example:</h3>
                                 <p class='desc'>
                                     If you enter '762-7827', the response would include about 70 results

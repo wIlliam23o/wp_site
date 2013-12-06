@@ -16,9 +16,18 @@
     border-width: 2px;
 }
 
+.phonewords-header-box {
+
+}
+
 .phonewords-header {
+    font-size: $fontbig2;
+    text-shadow: $shadowtext;
+}
+
+.phonewords-results-header {
     font-size: $fontmedium;
-    text-shadow: $shadowsmall;
+    text-shadow: $shadowtextsmall;
 }
 
 .version {
