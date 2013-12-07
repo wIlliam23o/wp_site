@@ -3,7 +3,8 @@
 
 '''
       project: welborn productions - home - tools
-     @summary: various functions for home views (latest blog, featured project, news, etc.)
+     @summary: various functions for home views
+               (latest blog, featured project, news, etc.)
     
       @author: Christopher Welborn <cj@welbornproductions.net>
 @organization: welborn productions <welbornproductions.net>
@@ -13,8 +14,6 @@
 import os
 import os.path  # @UnusedImport: os is used.
 
-# Global DEBUG setting
-from django.conf import settings  # @UnusedImport: settings
 # Home settings
 from home import homesettings as hsettings
 # Blog/Projects info
@@ -30,21 +29,22 @@ _log = logger("home.tools").log
 def get_latest_blog():
     """ retrieve the last posted blog entry (wp_blog object)"""
     
-    posts = utilities.get_objects_if(wp_blog.objects, 'disabled', False, orderby='-posted_datetime')
-    if posts:
-        return posts[0]
-    else:
-        return None
+    for post in wp_blog.objects.order_by('-posted_datetime'):
+        if post.disabled:
+            continue
+        return post
+    return None
 
 
 def get_latest_project():
     """ retrieve the last published project (wp_project object) """
     
-    allprojs = wp_project.objects.all()
-    if allprojs:
-        return allprojs.order_by("-publish_date")[0]
-    else:
+    try:
+        proj = wp_project.objects.order_by('-publish_date').first()
+    except Exception as ex:
+        _log.error('Unable to retrieve first():\n{}'.format(ex))
         return None
+    return proj
 
 
 def get_featured_project():
@@ -75,7 +75,8 @@ def get_scriptkid_image():
     image_dir = utilities.get_absolute_path("images/scriptkids")
     goodexts = ("jpeg", ".jpg", ".png", ".gif", ".bmp")
     try:
-        images = [img for img in os.listdir(image_dir) if img[-4:].lower() in goodexts]
+        images = (img for img in os.listdir(image_dir)
+                  if img[-4:].lower() in goodexts)
     except Exception as ex:
         _log.error("can't do listdir() on: " + image_dir + '\n' + str(ex))
         return None

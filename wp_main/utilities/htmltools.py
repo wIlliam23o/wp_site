@@ -553,13 +553,13 @@ def auto_link_line(str_, link_list, **kwargs):
 def readmore_box(link_href):
     """ returns Html string for the readmore box. """
     
-    return "<br/><a href='" + link_href + "'><div class='readmore-box'><span class='readmore-text'>more...</span></div></a>"
+    return "<br/><a href='" + link_href + "'><div class='readmore-box'>more...</div></a>"
 
 
 def comments_button(link_href):
     """ returns Html string for the comments box (button) """
 
-    return "<a href='" + link_href + "#comments-box'><div class='comments-button'><span class='comments-button-text'>comments...</span></div></a>"
+    return "<a href='" + link_href + "#comments-box'><div class='comments-button'>comments...</div></a>"
  
 
 def get_html_file(wpobj):
