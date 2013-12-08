@@ -56,17 +56,33 @@ def clean_template(template_, context_=None, force_=False):
         return None
 
 
-def alert_message(alert_msg, body_message="<a href='/'><span>Click here to go home</span></a>", noblock=False):
-    """ Builds an alert message, and returns the HttpResponse object. 
-        alert_message: What to show in the alert box.
-        body_message: Body content wrapped in a wp-block div.
-                      Default is "Click here to go home."
-        noblock: Don't wrap in wp-block div if True.
+def alert_message(alert_msg, **kwargs):
+    """ Builds an alert message, and returns the HttpResponse object.
+        Arguments:
+            alert_msg     : What to show in the alert box.
+
+        Keyword Arguments:
+            body_message  : Body content wrapped in a wp-block div.
+                            Default is "Click here to go home."
+            noblock       : Don't wrap in wp-block div if True.
     
     """
-    # passes the body message to the generic 'main_content' block of the main template
-    main_content = body_message if noblock else "<div class='wp-block'>" + body_message + "</div>"
-    # alert_message will display at the top of the page, per the main templates 'alert_message' block.
+
+    body_message = kwargs.get('body_message',
+                              ('<a href=\'/\'><span>'
+                               'Click here to go home'
+                               '</span></a>'))
+    noblock = kwargs.get('noblock', False)
+
+    # passes the body message to the generic 'main_content'
+    # block of the main template
+    if noblock:
+        main_content = body_message
+    else:
+        main_content = '<div class=\'wp-block\'>{}</div>'.format(body_message)
+
+    # alert_message will display at the top of the page,
+    # per the main templates 'alert_message' block.
     return clean_response("home/main.html",
                           {'main_content': mark_safe(main_content),
                            'alert_message': mark_safe(alert_msg),
@@ -147,15 +163,17 @@ def clean_response_req(template_name, context_dict, **kwargs):
     if request:
         context_dict = RequestContext(request, context_dict)
     else:
-        _log.error('No request passed to clean_response_req!')
+        _log.error('No request passed to clean_response_req!\n'
+                   'template: {}\n'.format(template_name) +
+                   'context: {}\n'.format(repr(context_dict)))
 
     kwargs['context_dict'] = context_dict
 
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception as ex:
-        _log.error("Unable to render template with request context: " + template_name +
-                   '\n' + str(ex))
+        _log.error('Unable to render template with request context: '
+                   '{}\n{}'.format(template_name, ex))
         return alert_message("Sorry, there was an error loading this page.")
     else:
         return HttpResponse(rendered)
@@ -207,15 +225,27 @@ def json_get_request(request):
     return None
 
 
-def get_request_arg(request, arg_names, default=None, min_val=0, max_val=999999):
+def get_request_arg(request, arg_names, **kwargs):
     """ return argument from request (GET or POST),
         arg_names can be a list of alias names like: ['q', 'query', 'search']
            and this will look for any of those args.
         default value can be set.
         automatically returns int/float values instead of string where needed.
         min/max can be set for integer/float values.
+        Arguments:
+            request    : request object to get page args from
+            arg_names  : argument names to accept for this arg.
+
+        Keyword Arguments:
+            default    : default value for argument if it's not found.
+            min_val    : minimum value for int args.
+            max_val    : maximum vlaue for int args.
+                         Default: 999999
     """
     
+    default = kwargs.get('default', None)
+    min_val = kwargs.get('min_val', 0)
+    max_val = kwargs.get('max_val', 999999)
     # blank value to start with. (until we confirm it exists)
     val = ""
     if isinstance(arg_names, (list, tuple)):
@@ -336,10 +366,18 @@ def get_paged_args(request, total_count):
     order_by_ = get_request_arg(request, ['order_by', 'order'], None)
         
     # get max_posts
-    max_ = get_request_arg(request, ['max_items', 'max'], 25, min_val=1, max_val=100)
+    max_ = get_request_arg(request,
+                           ['max_items', 'max'],
+                           default=25,
+                           min_val=1,
+                           max_val=100)
     
     # get start_id
-    start_id = get_request_arg(request, ['start_id', 'start'], 0, min_val=0, max_val=9999)
+    start_id = get_request_arg(request,
+                               ['start_id', 'start'],
+                               default=0,
+                               min_val=0,
+                               max_val=9999)
     # calculate last page based on max_posts
     last_page = (total_count - max_) if (total_count > max_) else 0
     # fix starting id.
@@ -352,7 +390,8 @@ def get_paged_args(request, total_count):
     if start_id > (total_count - 1):
         start_id = total_count - 1
          
-    # get prev page (if previous page is out of bounds, just show the first page)
+    # get prev page
+    # (if previous page is out of bounds, just show the first page)
     prev_page = start_id - max_
     if prev_page < 0:
         prev_page = 0

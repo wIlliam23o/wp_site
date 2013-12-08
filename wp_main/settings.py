@@ -104,11 +104,22 @@ else:
 
 # Cache Settings
 CACHES = {
-    'default': {
+    'cache_db': {
         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
         'LOCATION': 'welbornprod_cache',
+    },
+
+    'cache_dummy': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
+# Set which cache to use.
+if 'webapps' in BASE_PARENT and (not 'test' in BASE_PARENT):
+    # Use db cache for live site.
+    CACHES['default'] = CACHES['cache_db']
+else:
+    # Use dummy cache for local development, and test site.
+    CACHES['default'] = CACHES['cache_dummy']
 
 
 # Local time zone for this installation. Choices can be found here:
@@ -179,7 +190,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.gzip.GZipMiddleware',
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
