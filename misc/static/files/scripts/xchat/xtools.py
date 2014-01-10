@@ -940,9 +940,9 @@ def cmd_eval(word, word_eol, userdata=None):
             else:
                 # include query -> result in the msg.
                 chanmsg = '{} == {}'.format(queryfmt, captured.output)
-                # add directed message nick if given.
-                if msgnick:
-                    chanmsg = '{}: {}'.format(msgnick, chanmsg)
+            # add directed message nick if given.
+            if msgnick:
+                chanmsg = '{}: {}'.format(msgnick, chanmsg)
             print_tochan(chanmsg)
         else:
             # Print to screen.
