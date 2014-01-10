@@ -363,7 +363,7 @@ def get_paged_args(request, total_count):
     """
 
     # get order_by
-    order_by_ = get_request_arg(request, ['order_by', 'order'], None)
+    order_by_ = get_request_arg(request, ['order_by', 'order'], default=None)
         
     # get max_posts
     max_ = get_request_arg(request,
