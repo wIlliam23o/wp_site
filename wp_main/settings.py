@@ -6,7 +6,7 @@
 #  2.0 is considered a new beginning because the project
 #  is moving towards a backward-incompatible state,
 #  where all python 2 'hacks' will be removed.)
-WPVERSION = '2.0.2'
+WPVERSION = '2.0.3'
 
 # file/path (path joining)
 import os.path
@@ -239,6 +239,8 @@ INSTALLED_APPS = (
     
     # django debug tools (for test-site and local development)
     'debug_toolbar',
+    'django_extensions',
+
     # for making get_user_agent(request) available.
     'wp_user_agents',
     # local apps
