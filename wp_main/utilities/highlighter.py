@@ -133,7 +133,13 @@ def highlight_inline(scode, tag_="pre"):
                         newclass = 'highlighted-inline'
                     else:
                         newclass = lexer
-                    newblock = ['\n<div class=\'{}\'>'.format(newclass),
+                    # left here for testing. TODO: decide and remove this bool.
+                    withclass = False
+                    if withclass:
+                        newheader = '<div class=\'{}\'>'.format(newclass)
+                    else:
+                        newheader = '<div>'
+                    newblock = ['\n{}'.format(newheader),
                                 soldblock,
                                 '</div>\n',
                                 ]
@@ -356,3 +362,5 @@ def get_style_code(stylename):
     """ Retrieves the html needed to format text based on styles like:
         [b]bold text[/b] [i]italic text[/i].
     """
+    # TODO: create styles for [b], [i] format codes.
+    pass
