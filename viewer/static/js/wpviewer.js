@@ -65,6 +65,8 @@ function load_file_data (xhrdata) {
 
 	// Content
     if (file_info.file_content) {
+    	// TODO: use ace-editor, just filecontent.setValue(file_info.file_content)
+    	// All error messages would have to be formatted differently.
 		$("#file-content").html(file_info.file_content);
 	} 
 	else {
