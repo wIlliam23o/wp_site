@@ -20,7 +20,7 @@ import sys
 
 # XChat style version info.
 __module_name__ = 'xtools'
-__module_version__ = '0.2.8'
+__module_version__ = '0.2.9'
 __module_description__ = 'Various tools/commands for extending XChat...'
 # Convenience version str for help commands.
 VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
@@ -395,31 +395,29 @@ def get_flag_args(word, arglist):
 
     # Build default arg info.
     builtarglist = []
+    arginfo = {}
     for argset in arglist:
         if len(argset) < 3:
             shortopt, longopt = argset
-            default = False
+            arginfo[longopt] = False
         elif len(argset) == 3:
             shortopt, longopt, default = argset
+            arginfo[longopt] = default
         else:
             print('\nInvalid arglist for get_flag_args!: '
                   '{}'.format(repr(argset)))
             return {}
         # Add the proper arg info, for parsing.
-        builtarglist.append((shortopt, longopt, default))
+        builtarglist.append((shortopt, longopt))
 
     # Parse args, remove them from word as we go.
     newword = [c for c in word]
-    arginfo = {}
-    for shortarg, longarg, default in builtarglist:
+    for shortarg, longarg in builtarglist:
         if (shortarg in word) or (longarg in word):
             # Remove both short and long options from word.
             safe_remove(newword, [shortarg, longarg])
             # Flag was found, set it.
             arginfo[longarg] = True
-        else:
-            # No short or long, set default.
-            arginfo[longarg] = default
 
     # Return cleaned word, and arg dict.
     return newword, arginfo
@@ -881,9 +879,24 @@ def cmd_eval(word, word_eol, userdata=None):
     """
 
     word, argd = get_flag_args(word, (('-c', '--chat'), ('-r', '--result')))
+    # Remove command from word.
+    word = word[1:]
+    if not word:
+        print_error('No code to evaluate.')
+        return xchat.EAT_ALL
 
-    query = ' '.join(word[1:]) if len(word) > 1 else None
+    # Grab directed nick msg from word if available.
+    msgnick = None
+    if argd['--chat']:
+        firstword = word[0]
+        chanusers = xchat.get_context().get_list('users')
+        if firstword.lower() in [n.nick.lower() for n in chanusers]:
+            # first word is a nick, save it and remove it from the query.
+            msgnick = firstword
+            word = word[1:]
 
+    # Grab code query, if -c and name were only provided its an error.
+    query = ' '.join(word) if word else None
     if not query:
         print_error('No code to evaluate.')
         return xchat.EAT_ALL
@@ -901,39 +914,42 @@ def cmd_eval(word, word_eol, userdata=None):
     # Make a interpreter, replace stdout with chatout if -c is used.
     compiler = InteractiveInterpreter()
 
-    try:
-        if argd['--chat']:
-            # Output will be captured and sent to chat,
-            # stderr will be formatted and printed to screen.
-            with StdErrCatcher() as errors:
-                with StdOutCatcher() as captured:
-                    incomplete = compiler.runsource(query, symbol=mode)
-
-            # Print any errors.
-            if errors.output:
-                errorsfmt = errors.output.replace('\\n', '\n')
-                print_error('Code Error:\n{}'.format(errorsfmt))
-            # Format output for channel msg.
-            elif captured.output:
-                # Send to channel as user.
-                queryfmt = query.replace('\n', '\\n')
-                if argd['--result']:
-                    # don't include the query in the msg.
-                    chanmsg = captured.output
-                else:
-                    # include query -> result in the msg.
-                    chanmsg = '{} --> {}'.format(queryfmt, captured.output)
-                print_tochan(chanmsg)
-            else:
-                print_error('No Output.')
-        else:
-            # Output will only be printed for user.
+    # Output will be captured, for optional chat output.
+    # stderr will always be formatted and printed to screen.
+    with StdErrCatcher() as errors:
+        with StdOutCatcher() as captured:
             incomplete = compiler.runsource(query, symbol=mode)
-    except Exception as ex:
-        print_error('Code Error:', exc=ex)
 
+    # incomplete source.
     if incomplete:
-        print_error('Code Error: Incomplete.', boldtext='Incomplete.')
+        warnmsg = 'Incomplete source.'
+        print_error(warnmsg, boldtext=warnmsg)
+    # Print any errors.
+    elif errors.output:
+        errorsfmt = errors.output.replace('\\n', '\n')
+        print_error('Code Error:\n{}'.format(errorsfmt))
+    # Code had output.
+    elif captured.output:
+        # Format code for chat, or print to screen.
+        if argd['--chat']:
+            # Send to channel as user.
+            queryfmt = query.replace('\n', '\\n')
+            if argd['--result']:
+                # don't include the query in the msg.
+                chanmsg = captured.output
+            else:
+                # include query -> result in the msg.
+                chanmsg = '{} == {}'.format(queryfmt, captured.output)
+                # add directed message nick if given.
+                if msgnick:
+                    chanmsg = '{}: {}'.format(msgnick, chanmsg)
+            print_tochan(chanmsg)
+        else:
+            # Print to screen.
+            print_status('Code Output:')
+            print(captured.output)
+    else:
+        print_error('No Output.')
     return xchat.EAT_ALL
 
 
@@ -1069,20 +1085,11 @@ def cmd_listusers(word, word_eol, userdata=None):
         print(cntstr)
         return xchat.EAT_ALL
 
-    # List users
-    if len(userlist) < 5:
-        indention = ''
-        joiner = ', '
-    else:
-        indention = '    '
-        joiner = '\n    '
-
-    # Finished
-    color_result = lambda u: color_text('blue',
-                                        '{} ({})'.format(u.nick,
-                                                         u.host))
+    # Format results.
+    color_result = lambda u: '{} - ({})'.format(color_text('blue', u.nick),
+                                                color_text('purple', u.host))
     userfmt = [color_result(u) for u in userlist]
-    print('{}{}'.format(indention, joiner.join(userfmt)))
+    print('    {}'.format('\n    '.join(userfmt)))
     print(cntstr)
     return xchat.EAT_ALL
 
@@ -1097,9 +1104,10 @@ def cmd_searchuser(word, word_eol, userdata=None):
         return xchat.EAT_ALL
 
     # Get command args.
-    word, argd = get_flag_args(word, [('-h', '--host', False),
-                              ('-o', '--onlyhost', False),
-        ('-a', '--all', False)])
+    word, argd = get_flag_args(word,
+                               [('-h', '--host', False),
+                                ('-o', '--onlyhost', False),
+                                ('-a', '--all', False)])
 
     match_host = (argd['--host'] or argd['--onlyhost'])
 
@@ -1139,6 +1147,9 @@ def cmd_searchuser(word, word_eol, userdata=None):
 
     # Try compiling the query into regex.
     query = get_cmd_rest(word)
+    if not query:
+        print_error('No query, use /listusers instead.')
+        return xchat.EAT_ALL
     try:
         querypat = re.compile(query)
     except (Exception, re.error) as exre:
@@ -1186,7 +1197,7 @@ def cmd_searchuser(word, word_eol, userdata=None):
         sorted_chans = lambda user: sorted(userchannels[user.nick])
         if match_host:
             # If all_users was used, build a channel list for each nick.
-            if argd['-all'] and userchannels:
+            if argd['--all'] and userchannels:
                 newresults = []
                 for userinf in [n for n in results]:
                     if userinf.nick in userchannels.keys():
@@ -1197,16 +1208,16 @@ def cmd_searchuser(word, word_eol, userdata=None):
                     else:
                         newresults.append((userinf.nick, userinf.host, ''))
                 # Helper function for formatting.
-                formatter = lambda t: '{} ({})\n{}{}'.format(colornick(t[0]),
-                                                             colorhost(t[1]),
-                                                             (' ' * 8),
-                                                             colorchan(t[2]))
+                formatter = lambda t: '{} - ({})\n{}{}'.format(colornick(t[0]),
+                                                               colorhost(t[1]),
+                                                               (' ' * 8),
+                                                               colorchan(t[2]))
                 # Format the new results.
                 resultsfmt = [formatter(i) for i in newresults]
             else:
                 # Current channel only, no host.
-                formatter = lambda u: '{} ({})'.format(colornick(u.nick),
-                                                       colorhost(u.host))
+                formatter = lambda u: '{} - ({})'.format(colornick(u.nick),
+                                                         colorhost(u.host))
                 resultsfmt = [formatter(i) for i in results]
 
         # Don't include host with results string.
@@ -1384,7 +1395,7 @@ def filter_message(word, word_eol, userdata=None):
 commands = {'searchuser': {'desc': 'Find users by name or part of a name.',
                            'func': cmd_searchuser,
                            'enabled': True},
-            'eval': {'desc': 'Evaluate python code. Can sent output to chat.',
+            'eval': {'desc': 'Evaluate python code. Can send output to chat.',
                      'func': cmd_eval,
                      'enabled': True},
             'finduser': {'desc': '',
@@ -1416,12 +1427,28 @@ commands = {'searchuser': {'desc': 'Find users by name or part of a name.',
 
 # Help for commands
 cmd_help = {'eval':
-            ('Usage: /EVAL [-c] [-r] <code>\n'
+            ('Usage: /EVAL [-c [nick]] [-r] <code>\n'
              'Options:\n'
-             '    -c,--chat    : Send output as msg to current channel.\n'
-             '                   Newlines are replaced with \\\\n,\n'
-             '                   and long output is truncated.\n'
-             '    -r,--result  : Send result only, no query is sent.'),
+             '    -c [n],--chat [n] : Send as msg to current channel.\n'
+             '                        Newlines are replaced with \\\\n,\n'
+             '                        and long output is truncated.\n'
+             '                        If a nick (n) is given, mention the\n'
+             '                        nick in the message.\n\n'
+             '                        * Nick must come before eval code,\n'
+             '                          and nick must be present in the\n'
+             '                          current channel.\n'
+             '    -r,--result       : Send result only, no query is sent.\n\n'
+             '    ** Warning: This is an unprotected eval, it will eval\n'
+             '                whatever code you give it. It only accepts\n'
+             '                input from you, so you only have yourself to\n'
+             '                blame when something goes wrong.\n'
+             '                It is smarter than the plain eval() function,\n'
+             '                which makes it more dangerous too.\n\n'
+             '    ** DO NOT import os;os.system(\'rm -rf /\')\n'
+             '    ** DO NOT print(open(\'mypassword.txt\').read())\n'
+             '    ** DO NOT do anything you wouldn\'t do in a python \n'
+             '       interpreter.'
+             ),
             'findtext':
             ('Usage: /FINDTEXT [options]\n'
              'Options:\n'
