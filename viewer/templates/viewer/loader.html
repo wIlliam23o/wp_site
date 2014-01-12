@@ -4,6 +4,11 @@
 <!-- Initial CSS to use -->
 {% block extrastyle %}
 	<style type="text/css">
+	    #file-content {
+	    	height: 600px;
+	    	border-radius: 5px;
+	    	display: none;
+	    }
 		#file-menu { display: none; }
 		#file-info { display: none; }
 		#project-info { display: none; }
@@ -13,6 +18,9 @@
 <!-- Viewer JS -->
 {% block javascript %}
 	<script type="text/javascript" src="/static/js/wpviewer.min.js"></script>
+	<script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
+	<script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
+
 {% endblock %}
 
 <!-- Floating message -->
@@ -63,9 +71,15 @@
     </div>
 
 	<!-- File Content -->
-	<div id="file-content">
-		
+	<div id='file-content-box'>
+		<div id='file-content'>
+			No file loaded yet...
+		</div>
 	</div>
+	<!-- Setup ace editor.. -->
+	<script type='text/javascript'>
+	    setup_ace('{{ file }}');
+	</script>
 {% endblock %}
 
 {% block bodyend %}
