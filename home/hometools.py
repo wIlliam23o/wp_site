@@ -75,12 +75,12 @@ def get_scriptkid_image():
     image_dir = utilities.get_absolute_path("images/scriptkids")
     goodexts = ("jpeg", ".jpg", ".png", ".gif", ".bmp")
     try:
-        images = (img for img in os.listdir(image_dir)
-                  if img[-4:].lower() in goodexts)
+        images = [img for img in os.listdir(image_dir)
+                  if img[-4:].lower() in goodexts]
     except Exception as ex:
         _log.error("can't do listdir() on: " + image_dir + '\n' + str(ex))
         return None
-    if len(images) == 0:
+    if not images:
         _log.error("images was empty!")
         return None
     
