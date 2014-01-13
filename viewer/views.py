@@ -257,8 +257,11 @@ def get_file_info(file_path):
     
 
 def highlight_file(static_path, file_content):
-    """ highlight file content for viewing """
-    
+    """ highlight file content for viewing
+        TODO: Remove this. It is no longer needed now that Ace editor is used.
+    """
+    # TODO: Remove this function, or move it somewhere else.
+    #      Ace Editor is used now, so no highlighting is done server-side.
     # Get pygments lexer
     lexername = get_lexer_name_fromfile(static_path)
     if not lexername:
