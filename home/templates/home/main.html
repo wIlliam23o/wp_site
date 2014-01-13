@@ -258,18 +258,23 @@
 			
 			<!-- Page Surround -->
 	        <div id='page-surround' class="wp-block">
-	        	
-  				<!-- Above Page Content -->
-  				{% block contentabove %}
-  				{% endblock %}
-  				
-  				<!-- Page Content -->
-				{% block content %}
-					{% if main_content %}
-						{{ main_content }}
-					{% endif %}
-				{% endblock %}
-				
+  				{% if request|is_test_site and not request.user.is_staff %}
+  					<!-- No Test Site Access for non-admins. -->
+  					<span style='color: darkred; font-weight: bold;'>
+  						Sorry, you do not have access to the test site.
+  					</span>
+  				{% else %}
+  					<!-- Above Page Content -->
+  					{% block contentabove %}
+  					{% endblock %}
+
+  				    <!-- Actual page content. -->
+					{% block content %}
+						{% if main_content %}
+							{{ main_content }}
+						{% endif %}
+					{% endblock %}
+				{% endif %}
 				<!-- Comments for applicable pages -->
 				{% if enable_comments %}
 					<!-- DISQUS COMMENTS -->

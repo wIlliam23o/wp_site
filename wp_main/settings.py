@@ -34,7 +34,8 @@ else:
     STATIC_PARENT = '/var/www/'
     MEDIA_URL = 'http://127.0.0.1/media/'
     SERVER_LOC = 'local'
-    
+
+
 # Static/Media directories.
 STATIC_ROOT = os.path.join(STATIC_PARENT, "static")
 MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
