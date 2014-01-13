@@ -32,7 +32,7 @@ def view_index(request):
     
     if len(all_projects) == 0:
         alertmsg = 'Sorry, no projects yet.'
-        response = responses.alert_message(alert_msg=alertmsg)
+        response = responses.alert_message(request, alert_msg=alertmsg)
     else:
         context = {'request': request,
                    'extra_style_link_list':
@@ -69,7 +69,8 @@ def view_project(request, project, requested_page, source=None):
                         "<span>Or you could try "
                         "<a href='/search?q={page}'>searching</a>"
                         "...</span>").format(page=str(requested_page))
-        return responses.alert_message(alert_msg=alertmsg,
+        return responses.alert_message(request,
+                                       alert_msg=alertmsg,
                                        body_message=notfound_msg)
     
     # possible matches passed?

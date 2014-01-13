@@ -56,9 +56,10 @@ def clean_template(template_, context_=None, force_=False):
         return None
 
 
-def alert_message(alert_msg, **kwargs):
+def alert_message(request, alert_msg, **kwargs):
     """ Builds an alert message, and returns the HttpResponse object.
         Arguments:
+            request       : The original request
             alert_msg     : What to show in the alert box.
 
         Keyword Arguments:
@@ -86,6 +87,7 @@ def alert_message(alert_msg, **kwargs):
     return clean_response("home/main.html",
                           {'main_content': mark_safe(main_content),
                            'alert_message': mark_safe(alert_msg),
+                           'request': request,
                            })
 
 
@@ -122,12 +124,13 @@ def render_response(template_name, context_dict):
         loads template, renders with context,
         returns HttpResponse.
     """
-    
+    request = context_dict.get('request', None) if context_dict else None
     try:
         rendered = htmltools.render_clean(template_name, context_dict)
         return HttpResponse(rendered)
     except:
-        return alert_message("Sorry, there was an error loading this page.")
+        return alert_message(request,
+                             'Sorry, there was an error loading this page.')
 
 
 def clean_response(template_name, context_dict, **kwargs):
@@ -145,9 +148,10 @@ def clean_response(template_name, context_dict, **kwargs):
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception as ex:
-        _log.error("Unable to render template: {}\n{}".format(template_name,
-                                                              ex))
-        return alert_message("Sorry, there was an error loading this page.")
+        _log.error('Unable to render template: '
+                   '{}\n{}'.format(template_name, ex))
+        return alert_message(request_,
+                             "Sorry, there was an error loading this page.")
     else:
         return HttpResponse(rendered)
 
@@ -174,7 +178,8 @@ def clean_response_req(template_name, context_dict, **kwargs):
     except Exception as ex:
         _log.error('Unable to render template with request context: '
                    '{}\n{}'.format(template_name, ex))
-        return alert_message("Sorry, there was an error loading this page.")
+        return alert_message(request,
+                             "Sorry, there was an error loading this page.")
     else:
         return HttpResponse(rendered)
     

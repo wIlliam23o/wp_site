@@ -260,10 +260,13 @@ def is_test_site(request_object):
         looks for 'test.welbornprod' domains.
         returns True/False.
     """
-    if request_object is None or request_object.META is None:
+    if (request_object is None or
+       request_object.META is None or
+       (not request_object)):
         # happens on errors,
         # Should always do what the live site does in case of error.
         return False
+
     # Get current server name for this instance.
     # Could be the live server, test server, or local server
     # the local server_name changes depending on where it's accessed from.

@@ -80,7 +80,8 @@ def view_post(request, _identifier):
     
     if post_ is None:
         _log.error("Post not found: " + _identifier)
-        response = responses.alert_message("Sorry, I can't find that post.",
+        response = responses.alert_message(request,
+                                           "Sorry, I can't find that post.",
                                            body_message="<a href='/blog'><span>Click here to go back to the blog index.</span></a>")  # noqa
     else:
         # build blog post.
@@ -93,7 +94,8 @@ def view_post(request, _identifier):
         
         # no content found.
         if blogtools.get_post_body(post_) == "":
-            response = responses.alert_message("Sorry, no content found for this post.",
+            response = responses.alert_message(request,
+                                               "Sorry, no content found for this post.",  # noqa
                                                body_message="<a href='/blog'><span>Click here to go back to the blog index.</span></a>")  # noqa
         else:
             # increment view count
