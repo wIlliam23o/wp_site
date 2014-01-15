@@ -3,6 +3,14 @@
 
 {% block title %}- Projects{% endblock %}
 
+{% block extrastyle %}
+	<style type='text/css'>
+		.wpbutton.project-edit-button {
+			position: absolute;
+			right: 10px;
+		}
+	</style>
+{% endblock %}
 
 <!-- Build projects menu -->
 {% block verticalmenu %}
@@ -30,11 +38,11 @@
 				<div class="wp-block project-container">
 					<!-- EDIT -->
 					{% if request|is_staff %}
-						<div class='edit-button'>
-							<a href='/adminprojects/wp_project/{{ project.id }}'>
+						<a href='/adminprojects/wp_project/{{ project.id }}'>
+							<div class='wpbutton project-edit-button'>
 								<span>edit</span>
-							</a>
-						</div>
+							</div>
+						</a>
 					{% endif %}
 					<!-- Header (Name/Link/Version) -->
 					<div class='project-header-box'>

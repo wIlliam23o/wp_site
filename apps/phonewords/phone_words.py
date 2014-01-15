@@ -7,10 +7,11 @@
     -Christopher Welborn 2013
 """
 
-from datetime import datetime
 import itertools
-from multiprocessing import Pool
+import os.path
 import sys
+from datetime import datetime
+from multiprocessing import Pool
 
 from docopt import docopt
 
@@ -35,6 +36,8 @@ usage_str = """phonewords.py
         <word>                  : Word to find phone number for.
         wordfile                : File to grab dictionary words from.
                                   Defaults to {defaultfile}
+                                  ...or any file named 'words' in the current
+                                     directory.
         -d,--debug              : Debug mode, may break normal operation.
         -h,--help               : Show this message.
         -P num,--procs num      : For testing purposes, number of processes
@@ -150,6 +153,12 @@ def do_number(number, wordfile=None, partialmatch=False, showall=False):
         pass
     except Exception as ex:
         print('\nError during search:\n{}'.format(ex))
+        try:
+            if results:
+                pass
+        except:
+            results = None
+            total = 0
 
     if results:
         print('\nFound {} words:'.format(str(len(results))))
@@ -234,6 +243,16 @@ def format_number(s):
         return s
 
 
+def get_defaultwordsfile():
+    """ Retrieves the default filename for words file. """
+    # Use default file.
+    if os.path.isfile('words'):
+        return 'words'
+    elif os.path.isfile('/usr/share/dict/words'):
+        return '/usr/share/dict/words'
+    return None
+
+
 def get_lettercombos(snumber, partialmatch=False, showall=False):
     """ Gets possible letter combinations for a number.
         No -, or spaces please.
@@ -281,6 +300,27 @@ def get_letterset(s):
     return sets
 
 
+def get_phonenumber(word, **kwargs):
+    """ Run the reverse word lookup.
+        Returns phone number for a given word.
+        For library or cmdline use.
+        kwargs isn't used.
+    """
+    numbers = []
+    word = word.lower().strip()
+
+    for c in word:
+        if c in LETTERS.keys():
+            # Convert letter to number.
+            numbers.append(LETTERS[c])
+        else:
+            # Was already a number, just keep it.
+            numbers.append(c)
+    numberstr = ''.join(numbers)
+    return {word: format_number(numberstr)}
+
+
+#@profile
 def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
     """ Same as do_number, but for library use.
         Returns a tuple of: ({letter_combo: word_found}, {stats: value})
@@ -321,20 +361,21 @@ def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
                          'with no letters.')
 
     # Get all possible letter combinations for the number.
-    combos = [w for w in get_lettercombos(number, partialmatch=partialmatch)]
+    combos = [c for c in get_lettercombos(number, partialmatch=partialmatch)]
 
     # Get word list from file.
     if not wordfile:
-        # Use default file.
-        wordfile = '/usr/share/dict/words'
-    wordlist = [w for w in iter_filelines(wordfile, maxlength=len(number))]
-    if not wordlist:
+        wordfile = get_defaultwordsfile()
+        if not wordfile:
+            raise ValueError('No default words file available!')
+
+    try:
+        # Get generator for word list, which WordFinder will handle.
+        wordlist = [w for w in iter_filelines(wordfile, maxlength=len(number))]
+    except ValueError:
         raise ValueError('Empty word list given: {}'.format(wordfile))
 
-    # TODO: Make pool-friendly function, that accepts 1 argument.
-    #      a large iterable, it will retrieve all_combos and number from
-    #      globals or elsewhere.
-
+    # Send to multiprocess pool worker class.
     finder = WordFinder(number, combos, wordlist)
     finder.processes = processes
     foundwords, total = finder.find_words()
@@ -347,26 +388,6 @@ def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
             foundwords.update({cw: cw for cw in combined})
 
     return foundwords, total
-
-
-def get_phonenumber(word, **kwargs):
-    """ Run the reverse word lookup.
-        Returns phone number for a given word.
-        For library or cmdline use.
-        kwargs isn't used.
-    """
-    numbers = []
-    word = word.lower().strip()
-
-    for c in word:
-        if c in LETTERS.keys():
-            # Convert letter to number.
-            numbers.append(LETTERS[c])
-        else:
-            # Was already a number, just keep it.
-            numbers.append(c)
-    numberstr = ''.join(numbers)
-    return {word: format_number(numberstr)}
 
 
 def iter_filelines(filename, minlength=3, maxlength=10):
@@ -383,16 +404,28 @@ def iter_filelines(filename, minlength=3, maxlength=10):
                (not "'" in l)):
                 return True
         return False
-    strip_line = lambda l: l.strip('\n').strip('"')
     with open(filename, 'r', encoding='utf-8') as fread:
         for line in fread:
             # Strip newlines, then strip "
-            line = strip_line(line)
+            line = line.strip('\n').strip('"')
             if good_line(line):
-                if len(line) < 3:
-                    print('Something is wrong!: {}'.format(line))
                 yield line.lower()
     return
+
+
+def iter_listchunk(lst, size=10000):
+    """ Iterate over chunks of a list.
+        Yields a slice of lst with 'size' as the length.
+        Example:
+            for items in iter_listchunk(['a', 'b', 'c', 'd'], size=2):
+                print(repr(items))
+            # prints:
+            # ['a', 'b']
+            # ['c', 'd']
+    """
+
+    for i in range(0, len(lst), size):
+        yield lst[i:i + size]
 
 
 def print_results(d, spacelen=None):
@@ -535,12 +568,23 @@ class WordFinder(object):
     def find_words(self):
         """ Run all words through find_word using Pool.map """
 
-        pool = Pool(processes=self.processes)
-        resultsets = pool.map(self.find_word, self.wordlist)
+        # TODO: make WordFinder take in a generator,
+        #       then feed small blocks from that generator to pool.map
+        #       so pool.map is happy with getting a full list(), and
+        #       the memory won't be so heavy.
+        #       loop over the block updating results as the map functions
+        #       finish.
+        #       If I could do something like that for self.combos also
+        #       that would be great. Although the wordlist outweighs the
+        #       combos by far. It should be split into chunks at least.
         resultsfmt = {}
-        for resultset in resultsets:
-            if resultset:
-                resultsfmt.update(resultset)
+        pool = Pool(processes=self.processes)
+        for wordset in iter_listchunk(self.wordlist):
+            resultsets = pool.map(self.find_word, wordset)
+            # Update all results with this set of results.
+            for resultset in resultsets:
+                if resultset:
+                    resultsfmt.update(resultset)
 
         return resultsfmt, (len(self.wordlist) * len(self.combos))
 

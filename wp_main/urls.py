@@ -57,6 +57,7 @@ urlpatterns = patterns('',
                        # about page
                        url(r'^[Aa]bout/?$',
                            homeviews.view_about),
+
                        )
 
 # Apps views (apps) (see apps.urls)

@@ -1,5 +1,9 @@
+import os.path
+
 # Django decorators
 from django.views.decorators import csrf
+# Settings
+from django.conf import settings
 
 # Local stuff
 from wp_main.utilities import responses, utilities
@@ -22,6 +26,7 @@ def view_index(request):
         # Basic index view.
         context = {'request': request,
                    'version': app_version,
+                   'hasargs': False,
                    'extra_style_link_list':
                    [utilities.get_browser_style(request)],
                    }
@@ -39,23 +44,25 @@ def view_results(request, args):
     total = None
     lookupfunc, query = get_lookup_func(args['query'])
     if lookupfunc:
-        if args['partial']:
-            kw = {'partial': True}
+        # Get wp words file.
+        wordfile = os.path.join(settings.BASE_DIR, 'apps/phonewords/words')
+        if os.path.isfile(wordfile):
+            # Get results.
+            try:
+                rawresults = lookupfunc(query, wordfile=wordfile)
+                results, total = fix_results(rawresults)
+            except ValueError as exval:
+                errors = exval
+            except Exception as ex:
+                _log.error('Error looking up number: {}\n{}'.format(query, ex))
+                errors = ex
         else:
-            kw = {}
-        # Get results.
-
-        try:
-            rawresults = lookupfunc(query, **kw)
-            results, total = fix_results(rawresults)
-        except ValueError as exval:
-            errors = exval
-        except Exception as ex:
-            _log.error('Error looking up number: {}\n{}'.format(query, ex))
-            errors = ex
-
+            _log.error('missing word file: {}'.format(wordfile))
+            errors = ValueError('Can\'t find word file!')
+    # Return response.
     context = {'request': request,
                'version': app_version,
+               'hasargs': True,
                'extra_style_link_list':
                [utilities.get_browser_style(request)],
                'query': args['query'],

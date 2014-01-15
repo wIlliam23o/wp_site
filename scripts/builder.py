@@ -50,7 +50,9 @@ _VERSION = '1.0.0'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 DEBUG = False
 # These strings will always be filtered.
-DEFAULT_FILTERS = ['.min.', '-min.', '_welbornprod.scss']
+#    ace is already minimized. .min and -min is already minimized.
+#    _welbornprod.scss need not be minimized. it is to be human-readable.
+DEFAULT_FILTERS = ['.min.', '-min.', '_welbornprod.scss', 'js/ace']
 # These are the default extensions to use (when build_files() is called)
 DEFAULT_EXTENSIONS = ['.css', '.js', '.scss']
 

@@ -22,10 +22,14 @@ _log = logger('utilities.highlighter').log
 # Regex pattern for wp highlight codes.
 # [language]insert code here[/language]
 # Use .findall() with it.
+# TODO: the [^\[/\]] part needs to be rethought.
+#       it is messing with statements such as:
+#       [python]mycode('/')[/python] because of the / inside.
+#       a character change may be needed.
 HCODEPAT = re.compile(r'(\[[\w\d]+\])([^\[/]+)(\[/[\w\d+]+\])')
 # Regex pattern for grabbing lexer names from:
 # <span class='highlight-embedded LEXERNAME'>
-# SHOULD BE REMOVED AFTER ALL POSTS/PROJECTS SWITCH TO HCODEPAT STYLE.
+# TODO: SHOULD BE REMOVED AFTER ALL POSTS/PROJECTS SWITCH TO HCODEPAT STYLE.
 LEXERPAT = re.compile(r'\w+[ ]highlight-embedded|highlight-embedded[ ]\w+')
 
 # List of valid lexer names.
@@ -133,7 +137,13 @@ def highlight_inline(scode, tag_="pre"):
                         newclass = 'highlighted-inline'
                     else:
                         newclass = lexer
-                    newblock = ['\n<div class=\'{}\'>'.format(newclass),
+                    # left here for testing. TODO: decide and remove this bool.
+                    withclass = False
+                    if withclass:
+                        newheader = '<div class=\'{}\'>'.format(newclass)
+                    else:
+                        newheader = '<div>'
+                    newblock = ['\n{}'.format(newheader),
                                 soldblock,
                                 '</div>\n',
                                 ]
@@ -284,7 +294,12 @@ def highlight_codes(scode):
     """ Highlights embedded wp highlight codes.
         like: [lang]lang code here[/lang]
     """
-
+    # TODO: currently breaks if input contains / characters such as:
+    #      [python]os.system('rm -rf /')[/python]
+    #      ...because the regex matches the first / and decides it is not a
+    #      complete code wrap. Better regex or detection is needed.
+    #      the / character is used all the time in code. Maybe change from:
+    #      [code]..[/code] to [code]..[~code] (i can't think of a good one now)
     if isinstance(scode, (list, tuple)):
         return_list = True
         scode = '\n'.join(scode)
@@ -337,10 +352,11 @@ def highlight_codes(scode):
         langname = get_language(mgroups)
         code = get_code(mgroups)
         if langname in STYLENAMES:
-            # catch basic style codes.
+            # catch basic style codes such as [b] and [i][/i].
             newcode = STYLECODES[langname].format(code)
         else:
-            # Do highlighting.
+            # Do highlighting based on language name [python] or [bash].
+            # (any valid pygments lexer)
             newcode = try_highlight(code, langname)
         # Replace old text with new code.
         oldtext = ''.join(mgroups)
@@ -350,9 +366,3 @@ def highlight_codes(scode):
         return scode.split('\n')
     else:
         return scode
-
-
-def get_style_code(stylename):
-    """ Retrieves the html needed to format text based on styles like:
-        [b]bold text[/b] [i]italic text[/i].
-    """

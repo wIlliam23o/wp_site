@@ -155,6 +155,10 @@
   margin-left: 20px;
   margin-top: 10px; }
 
+/* ensure all usage strings are wrapped with proper font size */
+.misclongdesc .codewrap {
+  font-size: 1em; }
+
 .misc-sub-desc *.title {
   font-size: 1.2em;
   color: #26a1f4; }

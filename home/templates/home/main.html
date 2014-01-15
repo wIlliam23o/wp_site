@@ -136,7 +136,7 @@
 	{% endblock %}
 	
 	<!-- RSS Feed -->
-	<link href='http://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' />
+	<!-- <link href='http://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' /> -->
 	
    	<!-- Debug box -->
 	{% block debug-box %}
@@ -189,122 +189,142 @@
 		
 		<!-- Alert Area -->
 		{% block alert %}
-			{% if alert_content %}
-				<div class='alert'>
-					{{ alert_content }}
-				</div>
-			{% elif alert_message %}
-				<div class='alert'>
-					<span class='alert-message'>{{ alert_message }}</span>
-				</div>
-			{% endif %}
-		{% endblock %}
-		
-		<!-- Floating Box placeholder -->
-		{% block floater %}
-		{% endblock %}
-		
-		<!-- Vertical menu placeholder -->
-		{% block verticalmenu %}
-			{% if vertical_menu %}
-				{{ vertical_menu }}
-			{% endif %}
-		{% endblock %}
-		<div class='wp-container'>
-			<!-- LOGO -->
-			<a href='/'>
-				<div class='wp-block' id='wp-logo'></div>
-			</a>
-
-	    	
-	        <!-- Navigation -->
-	        <div class="wp-block navigation">
-	        	<div class="menubar">
-					<div id="dock">
-						<div class="dock-container" id="dock-box" style="left: 0px;">
-								<a class="dock-item" id='dock-home' href="/">
-									<span>Home</span>
-									<img src="/static/images/dock/wp-home.png" alt="home" />
-								</a> 
-								<a class="dock-item" id='dock-projects' href="/projects">
-									<span>Projects</span>
-									<img src="/static/images/dock/wp-projects.png" alt="projects" />
-								</a>
-								<a class="dock-item" id='dock-misc' href="/misc">
-								    <span>Misc.</span>
-								    <img src="/static/images/dock/wp-misc.png" alt="misc">
-								</a>
-								<a class="dock-item" id='dock-blog' href="/blog">
-									<span>Blog</span>
-									<img src="/static/images/dock/wp-blog.png" alt="blog" />
-								</a> 
-								<a class="dock-item" id='dock-about' href="/about">
-									<span>About</span>
-									<img src="/static/images/dock/wp-about.png" alt="about" />
-								</a> 
-								<a class="dock-item" id='dock-search' href="/search">
-									<span>Search</span>
-									<img src="/static/images/dock/wp-search.png" alt="search" />
-								</a> 
-
-						</div>
-					</div>        						
-	        	</div>
-	        </div>
-			
-			<!-- Page Surround -->
-	        <div id='page-surround' class="wp-block">
-	        	
-  				<!-- Above Page Content -->
-  				{% block contentabove %}
-  				{% endblock %}
-  				
-  				<!-- Page Content -->
-				{% block content %}
-					{% if main_content %}
-						{{ main_content }}
-					{% endif %}
-				{% endblock %}
-				
-				<!-- Comments for applicable pages -->
-				{% if enable_comments %}
-					<!-- DISQUS COMMENTS -->
-					<div class="comments-box" id='comments-box'>
-						<div class='title-box'>
-							<h1 class='title'>Comments</h1>
-						</div>
- 						<div id="disqus_thread">
- 						</div>
-						<!-- Comments Javascript -->
-    					<script type="text/javascript">
-      						var disqus_shortname = 'welbornproductions';
-							{% block disqusvariables %}
-							{% endblock %}
-        					(function() {
-          						var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-          	 					dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-           						(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        						})();
-        					(function () {
-        						var s = document.createElement('script'); s.async = true;
-        						s.type = 'text/javascript';
-        						s.src = '//' + disqus_shortname + '.disqus.com/count.js';
-       				 			(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
-    							}());	
-    					</script>
-						
-    					<noscript>
-    						Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a>
-    					</noscript>
-   				 		<a href="http://disqus.com" class="dsq-brlink">
-   				 			comments powered by <span class="logo-disqus">Disqus</span>
-   				 		</a>
+			{% if request|is_test_site and not request.user.is_staff %}
+			    <!-- Show no access msg for non-admins on test site. -->
+			    <div class='alert'>
+			    	<span class='alert-message'>Permission Denied</span>
+			    </div>
+			{% else %}
+			    <!-- Alert area built based on alert_content or alert_message. -->
+				{% if alert_content %}
+					<div class='alert'>
+						{{ alert_content }}
+					</div>
+				{% elif alert_message %}
+					<div class='alert'>
+						<span class='alert-message'>{{ alert_message }}</span>
 					</div>
 				{% endif %}
+			{% endif %}
+		{% endblock %}
+		
+		{% if request|is_test_site and not request.user.is_staff %}
+			<!-- No Test Site Access for non-admins. -->
+			<div id='page-surround' class='wp-block'>
+				<span style='color: darkred; font-weight: bold;'>
+					Sorry, you do not have access to the test site.
+				</span>
+			</div>
+		{% else %}
+			<!-- Floating Box placeholder -->
+			{% block floater %}
+			{% endblock %}
+			
+			<!-- Vertical menu placeholder -->
+			{% block verticalmenu %}
+				{% if vertical_menu %}
+					{{ vertical_menu }}
+				{% endif %}
+			{% endblock %}
+			
+			<div class='wp-container'>
+				<!-- LOGO -->
+				<a href='/'>
+					<div class='wp-block' id='wp-logo'></div>
+				</a>
 
+		    	
+		        <!-- Navigation -->
+		        <div class="wp-block navigation">
+		        	<div class="menubar">
+						<div id="dock">
+							<div class="dock-container" id="dock-box" style="left: 0px;">
+									<a class="dock-item" id='dock-home' href="/">
+										<span>Home</span>
+										<img src="/static/images/dock/wp-home.png" alt="home" />
+									</a> 
+									<a class="dock-item" id='dock-projects' href="/projects">
+										<span>Projects</span>
+										<img src="/static/images/dock/wp-projects.png" alt="projects" />
+									</a>
+									<a class='dock-item' id='dock-apps' href='/apps'>
+										<span>Apps</span>
+										<img src='/static/images/dock/wp-apps.png' alt='apps'>
+									</a>
+									<a class="dock-item" id='dock-misc' href="/misc">
+									    <span>Misc.</span>
+									    <img src="/static/images/dock/wp-misc.png" alt="misc">
+									</a>
+									<a class="dock-item" id='dock-blog' href="/blog">
+										<span>Blog</span>
+										<img src="/static/images/dock/wp-blog.png" alt="blog" />
+									</a> 
+									<a class="dock-item" id='dock-about' href="/about">
+										<span>About</span>
+										<img src="/static/images/dock/wp-about.png" alt="about" />
+									</a> 
+									<a class="dock-item" id='dock-search' href="/search">
+										<span>Search</span>
+										<img src="/static/images/dock/wp-search.png" alt="search" />
+									</a> 
 
-	    	</div>
-	    </div>
+							</div>
+						</div>        						
+		        	</div>
+		        </div>
+				
+				<!-- Page Surround -->
+		        <div id='page-surround' class="wp-block">
+					<!-- Above Page Content -->
+					{% block contentabove %}
+					{% endblock %}
+
+					<!-- Actual page content. -->
+					{% block content %}
+						{% if main_content %}
+							{{ main_content }}
+						{% endif %}
+					{% endblock %}
+
+					<!-- Comments for applicable pages -->
+					{% if enable_comments %}
+						<!-- DISQUS COMMENTS -->
+						<div class="comments-box" id='comments-box'>
+							<div class='title-box'>
+								<h1 class='title'>Comments</h1>
+							</div>
+	 						<div id="disqus_thread">
+	 						</div>
+							<!-- Comments Javascript -->
+	    					<script type="text/javascript">
+	      						var disqus_shortname = 'welbornproductions';
+								{% block disqusvariables %}
+								{% endblock %}
+	        					(function() {
+	          						var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	          	 					dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	           						(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	        						})();
+	        					(function () {
+	        						var s = document.createElement('script'); s.async = true;
+	        						s.type = 'text/javascript';
+	        						s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+	       				 			(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+	    							}());	
+	    					</script>
+							
+	    					<noscript>
+	    						Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+	    					</noscript>
+	   				 		<a href="http://disqus.com" class="dsq-brlink">
+	   				 			comments powered by <span class="logo-disqus">Disqus</span>
+	   				 		</a>
+						</div>
+					{% endif %}
+
+		    	</div>
+		    </div>
+		{% endif %}
 
 		<!-- Google Ads -->
 		<div id="google-ads-bottom" class="wp-block google-ads">

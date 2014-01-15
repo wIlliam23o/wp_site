@@ -1,15 +1,16 @@
-#Blog Info/Tools
+# Blog Info/Tools
 from blogger.models import wp_blog
 from blogger import blogtools
 
 # Global settings (for getting absolute path)
-from django.conf import settings #@UnusedImport: settings
+# from django.conf import settings  # @UnusedImport: settings
 
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
 from wp_main.utilities.wp_logging import logger
 _log = logger("blog").log
+
 
 def index(request):
     """ index list of all blog posts """
@@ -50,7 +51,7 @@ def index_page(request):
     else:
         # fix posts for listing.
         blog_posts = blogtools.fix_post_list(post_slice)
-        # get last index.     
+        # get last index.
         end_id = str(page_args['start_id'] + len(post_slice))
         
     return responses.clean_response("blogger/index_paged.html",
@@ -66,6 +67,7 @@ def index_page(request):
                                      "extra_style_link_list": [utilities.get_browser_style(request)],
                                      })
 
+
 def view_post(request, _identifier):
     """ view a post by identifier.
         identifier can be:
@@ -78,8 +80,9 @@ def view_post(request, _identifier):
     
     if post_ is None:
         _log.error("Post not found: " + _identifier)
-        response = responses.alert_message("Sorry, I can't find that post.",
-                                           "<a href='/blog'><span>Click here to go back to the blog index.</span></a>")
+        response = responses.alert_message(request,
+                                           "Sorry, I can't find that post.",
+                                           body_message="<a href='/blog'><span>Click here to go back to the blog index.</span></a>")  # noqa
     else:
         # build blog post.
         
@@ -91,8 +94,9 @@ def view_post(request, _identifier):
         
         # no content found.
         if blogtools.get_post_body(post_) == "":
-            response = responses.alert_message("Sorry, no content found for this post.",
-                                               "<a href='/blog'><span>Click here to go back to the blog index.</span></a>")
+            response = responses.alert_message(request,
+                                               "Sorry, no content found for this post.",  # noqa
+                                               body_message="<a href='/blog'><span>Click here to go back to the blog index.</span></a>")  # noqa
         else:
             # increment view count
             post_.view_count += 1
@@ -113,6 +117,7 @@ def view_post(request, _identifier):
                                                  })
     return response
 
+
 def view_tags(request):
     """ list all posts by tags (categories) """
     
@@ -123,7 +128,7 @@ def view_tags(request):
     tag_list = []
     for tag_name in tag_count.keys():
         tag_list.append(blogtools.wp_tag(name_=tag_name,
-                                         count_=tag_count[tag_name], 
+                                         count_=tag_count[tag_name],
                                          size_=tag_sizes[tag_name]))
     
     return responses.clean_response("blogger/tags.html",
@@ -136,7 +141,6 @@ def view_tags(request):
 
 def view_tag(request, _tag):
     """ list all posts with these tags """
-    
     
     tag_name = utilities.trim_special(_tag).replace(',', ' ')
     found_posts = blogtools.get_posts_by_tag(tag_name, starting_index=0, max_posts=-1)
@@ -166,7 +170,7 @@ def tag_page(request, _tag):
     # get request args.
     page_args = responses.get_paged_args(request, post_count)
     # retrieve blog posts slice
-    post_slice = blogtools.get_posts_by_tag(tag_name, 
+    post_slice = blogtools.get_posts_by_tag(tag_name,
                                             starting_index=page_args['start_id'],
                                             max_posts=page_args['max_items'],
                                             _order_by=page_args.get('order_by', None))
@@ -188,12 +192,10 @@ def tag_page(request, _tag):
                                      "extra_style_link_list": [utilities.get_browser_style(request)],
                                      "has_prev": (page_args['start_id'] > 0),
                                      "has_next": (page_args['start_id'] < (post_count - page_args['max_items'])),
-                                     })    
+                                     })
+
+
 def no_identifier(request):
     """ returns a message when user forgets to add an identifier """
     
     return responses.redirect_response('/blog')
-
-
-
-

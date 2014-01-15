@@ -3,10 +3,10 @@
 
 """
           project: utilities.py
-         @summary: various tools/utilities for the welbornproductions.net django site..
+         @summary: various tools/utilities for Welborn Prod.
     
-          @author: Christopher Welborn <cj@welbornproductions.net>
-    @organization: welborn productions <welbornproductions.net>
+          @author: Christopher Welborn <cj@welbornprod.com>
+    @organization: welborn productions <welbornprod.com>
 """
 
 import os
@@ -59,7 +59,10 @@ def prepend_path(prepend_this, prependto_path):
             mypath = prepend_path("/view" , project.source_dir)
     """
     
-    spath = (prepend_this + prependto_path) if prependto_path.startswith('/') else (prepend_this + '/' + prependto_path)
+    if prependto_path.startswith('/'):
+        spath = (prepend_this + prependto_path)
+    else:
+        spath = (prepend_this + '/' + prependto_path)
     return spath.replace("//", '/')
 
 
@@ -71,7 +74,10 @@ def append_path(appendto_path, append_this):
             mypath = append_path("/view" , project.source_dir)
     """
     
-    spath = (appendto_path + append_this) if append_this.startswith('/') else (appendto_path + '/' + append_this)
+    if append_this.startswith('/'):
+        spath = (appendto_path + append_this)
+    else:
+        spath = (appendto_path + '/' + append_this)
     return spath.replace("//", '/')
 
 
@@ -97,11 +103,13 @@ def safe_arg(_url):
 
 def trim_special(source_string):
     """ removes all html, and other code related special chars.
-        so <tag> becomes tag, and javascript.code("write"); becomes javascriptcodewrite.
+        so <tag> becomes tag, and javascript.code("write"); 
+        becomes javascriptcodewrite.
         to apply some sort of safety to functions that generate html strings.
-        if someone did this: 
-            welbornprod.com/blog/tag/<script type="text/javascript">document.write("d");</script>
-        you're gonna have a bad time.
+        incase someone did this (all one line): 
+            welbornprod.com/blog/tag/<script type="text/javascript">
+                document.write("d");
+            </script>
     """
     
     special_chars = "<>/.'" + '"' + "#!;:&"
@@ -147,7 +155,8 @@ def is_mobile(request):
     """
     
     if request is None:
-        # happens on template errors, which hopefully never make it to production.
+        # happens on template errors,
+        # which hopefully never make it to production.
         return False
     
     return (not get_user_agent(request).is_pc)
@@ -177,13 +186,12 @@ def get_absolute_path(relative_file_path):
     if relative_file_path == "":
         return ""
     
-    #if relative_file_path.startswith('/'): relative_file_path = relative_file_path[1:]
     # Guard against ../ tricks.
     if '..' in relative_file_path:
         return ''
     
     sabsolutepath = ""
-    for root, dirs, files in os.walk(settings.STATIC_PARENT):  # @UnusedVariable: dirs, files
+    for root, dirs, files in os.walk(settings.STATIC_PARENT):  # noqa
         spossible = os.path.join(root, relative_file_path)
 
         # dirs allowed
@@ -217,10 +225,11 @@ def debug_allowed(request):
     if not remote_addr:
         return False
     
-    # run address through our quick debug security check (settings.INTERNAL_IPS and settings.DEBUG)
+    # run address through our quick debug security check
+    # (settings.INTERNAL_IPS and settings.DEBUG)
     ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
     # log all invalid ips that try to access debug
-    if not ip_in_settings:
+    if settings.DEBUG and (not ip_in_settings):
         ipwarnmsg = 'Debug not allowed for ip: {}'.format(str(remote_addr))
         ipwarnmsg += '\n    ...DEBUG is {}.'.format(str(settings.DEBUG))
         _log.warn(ipwarnmsg)
@@ -263,40 +272,6 @@ def get_object_safe(objects_, **kwargs):
     return obj
 
 
-def get_objects_if(objects_, attribute, equals, orderby=None):
-    """ Filters objects, returns only objects with 'attribute' == equals.
-        Arguments:
-            objects_  : A query set, or my_Model.objects
-            attribute : Name of an attribute to check (string to be used with getattr())
-            equals    : What the attribute should be to get included.
-                        if getattr(object, attribute) == equals: results.append(object)
-            orderby   : orderby for django's queryset. all() is used if orderby is None
-    """
-    
-    results = None
-    if orderby is None:
-        if hasattr(objects_, 'all'):
-            fetched = objects_.all()
-            try:
-                results = [obj for obj in fetched if getattr(obj, attribute) == equals]
-            except Exception as ex:
-                _log.error("error retrieving results: \n" + str(ex))
-                results = None
-        else:
-            _log.debug(str(objects_) + " has no all()!")
-    else:
-        if hasattr(objects_, 'order_by'):
-            fetched = objects_.order_by(orderby)
-            try:
-                results = [obj for obj in fetched if getattr(obj, attribute) == equals]
-            except Exception as ex:
-                _log.error("error retrieving results: \n" + str(ex))
-                results = None
-        else:
-            _log.debug(str(objects_) + " has no order_by()!")
-    return results
-
-
 def get_remote_host(request):
     """ Returns the HTTP_HOST for this user. """
     
@@ -305,7 +280,9 @@ def get_remote_host(request):
 
 
 def get_remote_ip(request):
-    """ Just returns the IP for this user (for ip.html, is_debug_allowed(), etc.). """
+    """ Just returns the IP for this user
+        (for ip.html, debug_allowed(), etc.)
+    """
     # possible ip forwarding, if available use it.
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', None)
     if x_forwarded_for:

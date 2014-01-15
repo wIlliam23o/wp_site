@@ -12,49 +12,40 @@
 '''
 
 import logging
+from logging.handlers import RotatingFileHandler
 from django.conf import settings
 from os.path import join as pathjoin
 
 
 class logger(object):
 
-    def __init__(self, log_name, use_file_in_debug=True):
+    def __init__(self, logname, use_file_in_debug=True):
         # initialize logger with name (from module)
-        self.log = logging.getLogger(log_name)
+        self.log = logging.getLogger(logname)
         # file will always be used in production site.
-        use_file = True
+        usefile = True
         
         # use file during debug mode?
         if (bool(settings.DEBUG) and (not use_file_in_debug)):
-            use_file = False
+            usefile = False
 
         # prepare file handler.
-        if use_file:
-            # short filename
-            file_name = "welbornprod.log"
-            # add base dir
-            file_name = pathjoin(settings.BASE_DIR, file_name)
-            # build handler
-            self.filehandler = logging.FileHandler(file_name)
+        if usefile:
+            # put log file in base dir.
+            filename = pathjoin(settings.BASE_DIR, 'welbornprod.log')
+            # build rotating file handler
+            # max size is about 2MB, no backups will be made.
+            self.filehandler = RotatingFileHandler(filename,
+                                                   maxBytes=2097152,
+                                                   backupCount=0)
             # format for logging messages
-            log_format = '%(asctime)s - [%(levelname)s] %(name)s.%(funcName)s (%(lineno)d):\n %(message)s\n'
-            self.formatter = logging.Formatter(log_format)
+            logformat = ('%(asctime)s - [%(levelname)s] '
+                         '%(name)s.%(funcName)s (%(lineno)d):\n %(message)s\n')
+            self.formatter = logging.Formatter(logformat)
             self.filehandler.setFormatter(self.formatter)
             self.log.addHandler(self.filehandler)
 
-    # not using these from now on, we will use logger().log.debug(),
-    # to keep better track of funcName and lineno (hopefully),
-    def debug(self, message):
-        self.log.debug(message)
-    
-    def Print(self, message):
-        self.debug(message)
-           
-    def error(self, message):
-        self.log.error(message)
-        
-    def info(self, message):
-        self.log.info(message)
-        
-    def warn(self, message):
-        self.log.warn(message)
+    def setlevel(self, lvl):
+        """ Sets the underlying logging.log level. """
+        self.level = lvl
+        self.log.setLevel(self.level)

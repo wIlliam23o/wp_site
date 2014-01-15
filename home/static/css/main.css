@@ -350,8 +350,10 @@ a.jumpto-nav {
   padding-left: 3px;
   padding-right: 3px; }
 
-/* ReadMore/Comments Box/Button */
-.readmore-box, .comments-button {
+/* Base for a button div.
+   (use @extend .wpbutton; to modify css properties for new button styles)
+*/
+.wpbutton, .readmore-box, .comments-button {
   margin-top: 10px;
   border-style: solid;
   border-radius: 5px;
@@ -361,21 +363,24 @@ a.jumpto-nav {
   border-color: #74afee;
   padding-left: 2px;
   padding-right: 2px;
-  display: inline-block; }
-
-.readmore-box:hover, .comments-button:hover {
-  border-color: #b5ceff; }
-
-.readmore-text, .comments-button-text {
+  display: inline;
   font-size: 0.8em;
   font-weight: bold;
   color: #74afee; }
+  .wpbutton span, .readmore-box span, .comments-button span {
+    font-weight: bold;
+    color: #74afee; }
+    .wpbutton span:hover, .readmore-box span:hover, .comments-button span:hover {
+      border-color: #b5ceff;
+      color: #26a1f4; }
+  .wpbutton:hover, .readmore-box:hover, .comments-button:hover {
+    border-color: #b5ceff;
+    color: #26a1f4; }
 
-.readmore-text:hover, .comments-button-text:hover {
-  color: #26a1f4; }
+.readmore-box {
+  display: inline-block; }
 
 .comments-button {
-  display: inline;
   margin-left: 20px; }
 
 .continued {
@@ -462,63 +467,19 @@ a.jumpto-nav {
   border-right-style: none;
   border-left-style: none;
   box-shadow: 4px 4px 5px black; }
-
-.vertical-menu-item:hover {
-  /*border-color: $borderhover;*/ }
-
-.vertical-menu-item:active {
-  border-color: #74afee; }
+  .vertical-menu-item:active {
+    border-color: #74afee; }
 
 .vertical-menu-link {
   color: #26a1f4; }
-
-.vertical-menu-link:hover {
-  color: #919191; }
+  .vertical-menu-link:hover {
+    color: #919191; }
 
 .vertical-menu-text {
   font-size: 1em;
   padding-left: 5px;
   padding-right: 5px;
   text-transform: lowercase; }
-
-.vertical-menu-text:hover {
-  font-size: 1em; }
-
-/* OLD MENU STYLES (probably safe to delete now, we'll see.) */
-.fusionmenu {
-  /* No Longer Needed */
-  background: url(/static/images/overlays/global/dark-70.png);
-  height: 50px;
-  display: block;
-  border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px; }
-
-.menutop {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  position: relative;
-  display: inline-block;
-  z-index: 1;
-  border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px; }
-
-/* Menu forecolor */
-.menutop li a.item {
-  color: #afafaf; }
-
-/* Menu item BG */
-.menutop li.root {
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  background: transparent; }
-
-/* Menu item hover */
-.menutop li.root:hover {
-  background: #2358a6; }
 
 /* Backgrounds */
 .grad-bottom {
@@ -611,9 +572,8 @@ a.jumpto-nav {
   /* single-image animation */
   background-position: 0 1px;
   background-repeat: no-repeat; }
-
-#wp-totop:hover {
-  background-position: 0 -26px; }
+  #wp-totop:hover {
+    background-position: 0 -26px; }
 
 /* Form Styles */
 .submit-button {
@@ -627,9 +587,8 @@ a.jumpto-nav {
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   padding: 2px; }
-
-.submit-button:hover {
-  color: #4d4d4d; }
+  .submit-button:hover {
+    color: #4d4d4d; }
 
 .input-label {
   font-size: .8em;
@@ -1025,11 +984,6 @@ code, samp {
   padding: 1px; }
 
 /* email spam bot protection */
-/* this only works if you write the email backwards in the HTML */
-.protected-address {
-  unicode-bidi: bidi-override;
-  direction: rtl; }
-
 .wp-address {
   /* empty selector for tagging protected addresses (possibly) */ }
 
@@ -1174,20 +1128,6 @@ code, samp {
   left: 50%;
   position: absolute;
   z-index: 99; }
-
-/* Edit button for admin use only. */
-.edit-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 3px;
-  border-color: rgba(202, 217, 224, 0.5);
-  padding: 2px; }
-
-.edit-button:hover {
-  border-color: #b5ceff; }
 
 /* Global version style. */
 .version {

@@ -13,8 +13,12 @@
   border-width: 2px; }
 
 .phonewords-header {
+  font-size: 2.5em;
+  text-shadow: 2px 2px 4px black; }
+
+.phonewords-results-header {
   font-size: 1.5em;
-  text-shadow: #bac2c7 1px 1px 4px; }
+  text-shadow: #999999 1px 1px 3px; }
 
 .version {
   padding-left: 5px; }
@@ -59,13 +63,6 @@
   overflow: auto; }
 
 .phonewords-total-box {
-  /* border-style: solid;
-  border-width: 1px;
-  border-color: $borderblue;
-  border-radius: 3px; */
-  padding: 5px;
-  color: #313131;
-  font-weight: bold;
   display: inline-block; }
 
 /* Description */

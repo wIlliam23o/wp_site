@@ -6,7 +6,7 @@
 #  2.0 is considered a new beginning because the project
 #  is moving towards a backward-incompatible state,
 #  where all python 2 'hacks' will be removed.)
-WPVERSION = '2.0.1'
+WPVERSION = '2.0.3'
 
 # file/path (path joining)
 import os.path
@@ -34,7 +34,8 @@ else:
     STATIC_PARENT = '/var/www/'
     MEDIA_URL = 'http://127.0.0.1/media/'
     SERVER_LOC = 'local'
-    
+
+
 # Static/Media directories.
 STATIC_ROOT = os.path.join(STATIC_PARENT, "static")
 MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
@@ -101,6 +102,26 @@ else:
                  SECRET_LOCAL_SETTINGS,
                  'exec'),
          globals(), locals())
+
+# Cache Settings
+CACHES = {
+    'cache_db': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'welbornprod_cache',
+    },
+
+    'cache_dummy': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
+# Set which cache to use.
+if 'webapps' in BASE_PARENT and (not 'test' in BASE_PARENT):
+    # Use db cache for live site.
+    CACHES['default'] = CACHES['cache_db']
+else:
+    # Use dummy cache for local development, and test site.
+    CACHES['default'] = CACHES['cache_dummy']
+
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -170,7 +191,9 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.gzip.GZipMiddleware',
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -217,6 +240,8 @@ INSTALLED_APPS = (
     
     # django debug tools (for test-site and local development)
     'debug_toolbar',
+    'django_extensions',
+
     # for making get_user_agent(request) available.
     'wp_user_agents',
     # local apps

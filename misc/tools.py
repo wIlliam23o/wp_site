@@ -65,7 +65,7 @@ def get_screenshots_dir(miscobj):
 def get_visible_objects():
     """ Get all objects that aren't disabled. """
     try:
-        objs = [o for o in wp_misc.objects.all() if not o.disabled]
+        objs = wp_misc.objects.filter(disabled=False).order_by('name')
         return objs
     except wp_misc.DoesNotExist:
         return None

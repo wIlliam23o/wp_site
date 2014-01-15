@@ -4,6 +4,15 @@
 
 {% block title %}- Miscellaneous{% endblock %}
 
+{% block extrastyle %}
+    <style type='text/css'>
+        .wpbutton.misc-edit-button {
+            position: absolute;
+            right: 10px;
+        }
+    </style>
+{% endblock %}
+
 {% block javascript %}
     <script type="text/javascript">        
         $(document).ready( function () {
@@ -45,11 +54,11 @@
                 <div id='{{ misc.alias }}' class="wp-block misc-container">
                     <!-- EDIT -->
                     {% if request|is_staff %}
-                        <div class='edit-button'>
-                            <a href='/adminmisc/wp_misc/{{misc.id}}'>
+                        <a href='/adminmisc/wp_misc/{{misc.id}}'>
+                            <div class='wpbutton misc-edit-button'>
                                 <span>edit</span>
-                            </a>
-                        </div>
+                            </div>
+                        </a>
                     {% endif %}
                     <!-- Header (Name/Link/Version) -->
                     <div class='misc-header-box'>

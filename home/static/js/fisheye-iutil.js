@@ -92,23 +92,41 @@ jQuery.iFisheye = {
 					'mousemove',
 					function(e)
 					{
-						/* The 'money shot', grows images as mouse moves according to proximity -Cj
-						 	(apparently height/y-position has nothing to do with it.)
+						/* Captures mouse position for entire document.
+						   Sizes are set for the fisheye-images based on their
+						   proximity to the mouse pointer.
+
+						   Vertical alignment was WAY off! (since day one)
+						        The mouse should almost touch the image (vertically)
+						        before triggering the 'growth'.
+						        Code was changed for better vertical alignment.
+						   -Cj
 						 */
 						var pointer = jQuery.iUtil.getPointer(e);
 						var toAdd = 0;
 
+						// Figure horizontal alignment based on 'halign' setting.
+						// Only tested with 'center' really, because that's all I need. -Cj
 						if (el.fisheyeCfg.halign && el.fisheyeCfg.halign == 'center')
 							var posx = pointer.x - el.fisheyeCfg.pos.x - (el.offsetWidth - el.fisheyeCfg.itemWidth * el.fisheyeCfg.items.size())/2 - el.fisheyeCfg.itemWidth/2;
 						else if (el.fisheyeCfg.halign && el.fisheyeCfg.halign == 'right')
 							var posx = pointer.x - el.fisheyeCfg.pos.x - el.offsetWidth + el.fisheyeCfg.itemWidth * el.fisheyeCfg.items.size();
 						else 
 							var posx = pointer.x - el.fisheyeCfg.pos.x;
-						var posy = Math.pow(pointer.y - el.fisheyeCfg.pos.y - el.offsetHeight/2,2);
 						
+						// Get Y pos (original code below, since changed for better v-alignment) -Cj
+						//var posy = Math.pow(pointer.y - el.fisheyeCfg.pos.y - el.offsetHeight/2,2);
+
+						// Better vertical alignment with this,
+						// Favors the top a little, but better than favoring the bottom a lot! -Cj
+						var posy_offset = pointer.y - el.fisheyeCfg.pos.y + (el.offsetHeight / 2)
+						var posy = Math.pow(posy_offset, 2);
+
+						// Set image size based on mouse position.
 						el.fisheyeCfg.items.each(
 							function(nr)
 							{
+								// Set the width and height for each image.
 								distance = Math.sqrt(
 									Math.pow(posx - nr*el.fisheyeCfg.itemWidth, 2)
 									+ posy

@@ -12,11 +12,10 @@
 
 {% block extrastyle %}
 	<style type='text/css'>
-		.edit-button {
-			position: relative;
-			display: inline-block;
-			margin-left: 10px;
-			top: 0px;
+		.wpbutton.blog-edit-button {
+			position: absolute;
+			left: 890px;
+			margin-top: 4px;
 		}
 	</style>
 {% endblock %}
@@ -35,14 +34,14 @@
 				<br/>
 				{% if post_count|exceeds_max:"25" %}
 					<a href="/blog/page?start_id=0">
-						<div class="readmore-box" style="margin-left: 5px;">
-							<span class="readmore-text">view all posts</span>
+						<div class="wpbutton" style="margin-left: 5px;">
+							<span>view all posts</span>
 						</div>
 					</a>
 				{% endif %}
 				<a href="/blog/tags">
-					<div class="readmore-box" style="margin-left: 5px; ">
-						<span class="readmore-text">view all tags</span>
+					<div class="wpbutton" style="margin-left: 5px; ">
+						<span>view all tags</span>
 					</div>
 				</a>	
 
@@ -67,11 +66,11 @@
 							{% endif %}	
 							<!-- EDIT -->
 		                    {% if request|is_staff %}
-		                        <div class='edit-button'>
-		                            <a href='/adminblogger/wp_blog/{{ post.id }}'>
+	                            <a href='/adminblogger/wp_blog/{{ post.id }}'>
+			                        <div class='wpbutton blog-edit-button'>
 		                                <span>edit</span>
-		                            </a>
-		                        </div>
+			                        </div>
+	                            </a>
 		                    {% endif %}	
 							<div class="blog-post-date-box">
 								<span class="blog-post-date">{{ post.posted }}</span>

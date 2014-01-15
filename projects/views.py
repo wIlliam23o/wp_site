@@ -1,5 +1,7 @@
 # Mark generated Html as safe to view.
-# from django.utils.safestring import mark_safe # don't escape html with strings marked safe.
+# from django.utils.safestring import mark_safe
+# Django page caching.
+from django.views.decorators.cache import cache_page
 
 # Project Info
 from projects.models import wp_project
@@ -15,31 +17,39 @@ from wp_main.utilities.wp_logging import logger
 _log = logger('projects').log
 
 
+@cache_page(15 * 60)
 def view_index(request):
-    """ Main Project Page (index/listing) [using template instead of hard-coded html] """
+    """ Main Project Page (index/listing)
+        [using template instead of hard-coded html]
+    """
     
     # If i can fix the template properly this will be much shorter
     # and probably faster. The old way was my very first Django view ever.
     # Hince the complication and mess.
     
     # get all projects if project is not disabled
-    all_projects = [p for p in wp_project.objects.order_by('name') if not p.disabled]
+    all_projects = wp_project.objects.filter(disabled=False).order_by('name')
     
     if len(all_projects) == 0:
-        response = responses.alert_message(alert_msg="Sorry, no projects found!")
+        alertmsg = 'Sorry, no projects yet.'
+        response = responses.alert_message(request, alert_msg=alertmsg)
     else:
-        response = responses.clean_response("projects/index.html",
-                                            {'request': request,
-                                             'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                       "/static/css/projects.min.css"],
-                                             'projects': all_projects,
-                                             })
+        context = {'request': request,
+                   'extra_style_link_list':
+                   [utilities.get_browser_style(request),
+                    "/static/css/projects.min.css"],
+                   'projects': all_projects,
+                   }
+        response = responses.clean_response("projects/index.html", context)
+
     return response
 
 
+@cache_page(15 * 60)
 def view_project(request, project, requested_page, source=None):
-    """ Returns project page for individual project. Project object
-        must be passed (usually from request_any() which retrieves projects by name,alias,id)
+    """ Returns project page for individual project. 
+        Project object must be passed 
+        (usually from request_any() which retrieves projects by name,alias,id)
         If a list/tuple of projects is passed as 'project' then it will
         be used as 'possible matches' for bad project name.
     """
@@ -52,10 +62,16 @@ def view_project(request, project, requested_page, source=None):
     
     # no project, no matches found (or error retrieving).
     if not project:
-        notfound_msg = "<a href='/projects'>Click here to visit a listing of my projects.</a><br/>\n" + \
-                       "<span>Or you could try <a href='/search?q={{PAGE}}'>searching</a>...</span>"
-        return responses.alert_message(alert_msg="Sorry, I can't find that project.",
-                                       body_message=notfound_msg.replace('{{PAGE}}', str(requested_page)))
+        alertmsg = 'Sorry, I can\'t find that project.'
+        notfound_msg = ("<a href='/projects'>"
+                        "Click here to visit a listing of my projects."
+                        "</a><br/>\n"
+                        "<span>Or you could try "
+                        "<a href='/search?q={page}'>searching</a>"
+                        "...</span>").format(page=str(requested_page))
+        return responses.alert_message(request,
+                                       alert_msg=alertmsg,
+                                       body_message=notfound_msg)
     
     # possible matches passed?
     matches = project if isinstance(project, (list, tuple)) else None
@@ -71,18 +87,18 @@ def view_project(request, project, requested_page, source=None):
         project.save()
     
     # Grab projects list for vertical menu
-    all_projects = [p for p in wp_project.objects.order_by('name') if not p.disabled]
-
+    all_projects = wp_project.objects.filter(disabled=False).order_by('name')
+    context = {'request': request,
+               'requested_page': requested_page,
+               'extra_style_link_list': extra_style_link_list,
+               'projects': all_projects,
+               'project': project,
+               'matches': matches,
+               'use_screenshots': use_screenshots,
+               }
     return responses.clean_response_req("projects/project.html",
-                                        {'request': request,
-                                         'requested_page': requested_page,
-                                         'extra_style_link_list': extra_style_link_list,
-                                         'projects': all_projects,
-                                         'project': project,
-                                         'matches': matches,
-                                         'use_screenshots': use_screenshots,
-                                         },
-                                        with_request=request)
+                                        context,
+                                        request=request)
 
 
 def request_any(request, identifier):
@@ -117,15 +133,18 @@ def request_name(request, _name):
 
 
 def get_byname(_name):
-    """ safely retrieve project
+    """ safely retrieve project by name
         returns None on failure. """
         
     try:
         proj = wp_project.objects.get(name=_name)
         return proj if not proj.disabled else None
     except wp_project.DoesNotExist:
+        # long search..
+        _name = _name.lower().replace(' ', '')
         for proj in wp_project.objects.all():
-            if proj.name.lower().replace(' ', '') == _name.lower().replace(' ', ''):
+            projname = proj.name.lower().replace(' ', '')
+            if projname == _name:
                 return proj
         return None
     except:
@@ -133,7 +152,7 @@ def get_byname(_name):
     
     
 def get_byalias(_alias):
-    """ safely retrieve project
+    """ safely retrieve project by alias
         returns None on failure. """
         
     try:
@@ -146,7 +165,7 @@ def get_byalias(_alias):
     
         
 def get_byid(_id):
-    """ safely retrieve project
+    """ safely retrieve project by id
         returns None on failure. """
         
     try:
@@ -163,42 +182,64 @@ def get_withmatches(_identifier):
     """
     identifiers = str(_identifier).split(' ')
     
+    # Try alias.
+    proj = get_byalias(identifiers[0])
+    if proj and not proj.disabled:
+        return proj
+
+    # Try name
+    proj = get_byname(' '.join(identifiers))
+    if proj and not proj.disabled:
+        return proj
+
+    # Try id.
     try:
         _id = int(identifiers[0])
         proj = get_byid(_id)
+        if proj and not proj.disabled:
+            return proj
     except:
-        # not an id, try alias.
-        proj = get_byalias(identifiers[0])
-        if proj is None:
-            # Try name
-            proj = get_byname(' '.join(identifiers))
-    
+        pass
+
     # Search for matches
-    if proj is None:
-        lst_matches = []
-        # Try all words in identifier seperately
-        for _word in identifiers:
-            _search = str(_word).lower()
-            _strim = _search.replace(' ', '')
-            # still no project, look for close matches...
-            for project in [p for p in wp_project.objects.order_by('name') if not p.disabled]:
-                _name = project.name.lower()
-                _nametrim = _name.replace(' ', '')
-                _alias = project.alias.lower()
-                _desc = project.description.lower()
-                _desctrim = _desc.replace(' ', '')
-                _id = str(project.id)
-                # try matching in various ways
-                if ((_strim in _nametrim) or
-                   (_nametrim in _strim) or
-                   (_strim in _desctrim) or
-                   (_strim in _alias) or
-                   (_alias in _strim) or
-                   (_strim in _id)):
-                    if not project in lst_matches:
-                        lst_matches.append(project)
-        # return list of matching projects
-        return lst_matches
-    else:
-        # project was found (only show if its not disabled)
-        return proj if not proj.disabled else None
+    return search_projects(identifiers)
+
+
+def match_items(query, items):
+    """ Does 'if query in item or item in query' for each
+        item in items.
+        Ex:
+            matched = match_items('test', ('testing', 'es', 'blah'))
+            # Returns True on 'testing', but would also return true on 'es'
+            # because 'test' is in 'testing', and 'es' is in 'test'.
+    """
+    for item in items:
+        if (query in item) or (item in query):
+            return True
+    return False
+
+
+def search_projects(identifiers):
+    """ Searches all project attributes, trys to match identifiers string.
+        Looks at name, alias, description, and id.
+        All .lower() and trimmed of spaces.
+
+        Returns list of project matches, or [] on no matches.
+    """
+    matches = []
+    # Try all words in identifier seperately
+    for word in identifiers:
+        # look for close matches...
+        getprojects = lambda o: o.filter(disabled=False).order_by('name')
+        for project in getprojects(wp_project.objects):
+            # Attributes to search, lowered and trimmed when applicable.
+            queryitems = (project.name.lower().replace(' ', ''),
+                          project.alias.lower(),
+                          project.description.lower().replace(' ', ''),
+                          str(project.id),
+                          )
+            # try matching in various ways
+            if match_items(str(word).lower(), queryitems):
+                if not project in matches:
+                    matches.append(project)
+    return matches

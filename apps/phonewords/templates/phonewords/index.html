@@ -32,8 +32,8 @@
 
 {% block content %}
     <div class='phonewords-container'>
-        <div class='phonewords-header'>
-            <h3 class='header'>PhoneWords</h3>
+        <div class='phonewords-header-box'>
+            <h3 class='header phonewords-header'>PhoneWords</h3>
             <span class='version'>version {{ version }}</span>
         </div>
         <!-- App container -->
@@ -60,9 +60,9 @@
                     <br>
                     <span>{{ errors }}</span>
                 {% else %}
-                    {% if results %}
+                    {% if hasargs %}
                         <div class='phonewords-results-box'>
-                            <h3 class='header phonewords-header'>
+                            <h3 class='header phonewords-results-header'>
                                 Results:
                             </h3>
                             <span class='phonewords-results-count'>
@@ -70,17 +70,26 @@
                             </span>
                             <div class='phoneword-results-box'>
                                 <!-- Results from lookup function. -->
-                                <textarea id='pw_results' rows={% if results.items|getlength < 40 %} '{{ results.items|getlength|add:"1" }}' {% else %} '40' {% endif %} cols='40' readonly placeholder='Loading results...' class='phonewords-textarea'>
-                                    {% for resnumber, resword in results|sortdict %}
-                                        {{ resnumber }} : {{ resword }}
-                                    {% endfor %}
-                                </textarea>
+                                {% if results %}
+                                    <textarea id='pw_results' rows={% if results.items|getlength < 40 %} '{{ results.items|getlength|add:"1" }}' {% else %} '40' {% endif %} cols='40' readonly placeholder='Loading results...' class='phonewords-textarea'>
+                                        {% for resnumber, resword in results|sortdict %}
+                                            {{ resnumber }} : {{ resword }}
+                                        {% endfor %}
+                                    </textarea>
+                                {% else %}
+                                    <textarea id='pw_results' rows='4' cols='60' readonly placeholder='Loading results...' class='phonewords-textarea'>
+                                        No results found.
+                                        Possibly too many 1s or 0s in the number,
+                                        or just not enough good letters to make a word.
+                                    </textarea>
+                                {% endif %}
                             </div>
                             <!-- Total from get_phonewords() -->
                             {% if total %}
-                                <br>
                                 <div class='phonewords-total-box'>
-                                    <span>Total attempts: {{ total }}</span>
+                                    <span class='phonewords-results-count'>
+                                        Total attempts: {{ total }}
+                                    </span>
                                 </div>
                             {% endif %}
                         </div>
@@ -107,15 +116,14 @@
                                 <br><br>
                                 This is an open-source site, you can look at the source
                                 code for this app at
-                                <a href='http://github.com{{ "phonewords"|gitdir }}' target="_blank">
+                                <a href='http://github.com{{ "phonewords/dev"|gitdir }}' target="_blank">
                                     github.com
                                 </a>.
                             </p>
                             <h3 class='title'>Words:</h3>
                             <p class='desc'>
                                 Any word that is 3 to 7 characters long can be entered,
-                                and any non-alphabetical character will not be converted to
-                                a number.
+                                but non-alphabetical characters will not be converted. 
                                 <h3 class='title'>Word Example:</h3>
                                 <p class='desc'>
                                     If you enter 'niceapp', the response would be <code>niceapp : 642-3277</code>
@@ -123,10 +131,10 @@
                             </p>
                             <h3 class='title'>Numbers:</h3>
                             <p class='desc'>
-                                For numbers, you may use a hyphen but other non-number characters
+                                For numbers you may use a hyphen, but other non-number characters
                                 are rejected. The limit is seven due to the number of comparisons and
                                 combinations that have to be calculated. The limit ensures
-                                some kind of reasonable response time.
+                                some kind of a reasonable response time.
                                 <h3 class='title'>Number Example:</h3>
                                 <p class='desc'>
                                     If you enter '762-7827', the response would include about 70 results

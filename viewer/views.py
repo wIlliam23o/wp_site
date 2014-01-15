@@ -1,7 +1,7 @@
 # File/Path
 import os.path
 # Mark generated html as safe to view.
-from django.utils.safestring import mark_safe  # don't escape html with strings marked safe.
+from django.utils.safestring import mark_safe
 from django.utils.html import escape
 
 # Standard Errors
@@ -23,7 +23,7 @@ from misc import tools as misctools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
 # For source highlighting
-from wp_main.utilities.highlighter import wp_highlighter, get_lexer_name_fromfile, get_lexer_name_fromcontent
+from wp_main.utilities.highlighter import wp_highlighter, get_lexer_name_fromfile, get_lexer_name_fromcontent  # noqa
 # Logging
 from wp_main.utilities.wp_logging import logger
 _log = logger('viewer').log
@@ -61,8 +61,8 @@ def ajax_contents(request):
         # Grab DEBUG and send it.
         file_info['debug'] = settings.DEBUG
         
-        # highlight file
-        file_info['file_content'] = highlight_file(file_info['static_path'], file_info['file_content'])
+        # Send raw file content in response (ace will load it and highlight it)
+        file_info['file_content'] = file_info['file_content']
         
         # override non-serializable project
         project = file_info['project']
@@ -77,16 +77,17 @@ def ajax_contents(request):
             projkey = 'project_' + infoattr
             misckey = 'misc_' + infoattr
             # Set info if its there, otherwise set None
-            file_info[projkey] = getattr(project, infoattr) if project else None
-            file_info[misckey] = getattr(miscobj, infoattr) if miscobj else None
+            file_info[projkey] = getattr(project, infoattr) if project else None  # noqa
+            file_info[misckey] = getattr(miscobj, infoattr) if miscobj else None  # noqa
 
-        # get a short file name that we can use without shortening it in javascript.
-        file_info['file_short'] = utilities.get_filename(file_info['static_path'])
+        # get a short file name that we can use for display.
+        file_info['file_short'] = utilities.get_filename(file_info['static_path'])  # noqa
         # get all project related files (if any, otherwise an empty list)
         if project:
-            file_info['menu_items'] = [(n, utilities.get_filename(n)) for n in get_source_files(project)]
+            file_info['menu_items'] = [(n, utilities.get_filename(n)) for n in get_source_files(project)]  # noqa
         else:
-            # Misc objects need no menu (False is sent to wpviewer.js:load_file_content())
+            # Misc objects need no menu
+            # (False is sent to wpviewer.js:load_file_content())
             file_info['menu_items'] = False
         # send json encoded data.
         return responses.json_response(file_info)
@@ -102,15 +103,17 @@ def view_loader(request):
         with the help of wpviewer.js.
         raises 404 on error or file not found..
     """
-    
+
     if request.REQUEST.get('file', False):
         file_path = request.REQUEST['file'].strip("'").strip('"')
+        context = {'file': file_path,
+                   'extra_style_link_list':
+                   [utilities.get_browser_style(request),
+                    '/static/css/projects.min.css'],
+                   }
+
         return responses.clean_response_req("viewer/loader.html",
-                                            context_dict={'file': file_path,
-                                                          'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                                    '/static/css/projects.min.css',
-                                                                                    '/static/css/highlighter.min.css'],
-                                                          },
+                                            context_dict=context,
                                             with_request=request)
     else:
         raise Http404("No file passed to request.")
@@ -137,13 +140,15 @@ def get_source_files(project):
             else:
                 source_files = []
                 for sfilename in file_names:
-                    srelativepath = utilities.get_relative_path(os.path.join(project.source_dir, sfilename))
+                    srelativepath = utilities.get_relative_path(os.path.join(project.source_dir, sfilename))  # noqa
                     source_files.append(srelativepath)
     return source_files
     
 
 def get_using_paths(dir_path, absolute_path=None, proj=None):
-    """ When given a dir as a path, find out which file is preferred to use first. """
+    """ When given a dir as a path, 
+       find out which file is preferred to use first.
+    """
     
     if absolute_path is None:
         absolute_path = utilities.get_absolute_path(dir_path)
@@ -166,7 +171,7 @@ def get_using_paths(dir_path, absolute_path=None, proj=None):
         # no project, try first file.
         static_path = utilities.append_path(dir_path, files[0])
         absolute_path = utilities.get_absolute_path(static_path)
-        #_log.debug("dir passed: no project for file, using first file: " + absolute_path)
+
     else:
         # has project, see if source_file is good. if so, use it.
         if proj.source_file:
@@ -177,8 +182,7 @@ def get_using_paths(dir_path, absolute_path=None, proj=None):
             # just use first file found.
             static_path = utilities.append_path(dir_path, files[0])
             absolute_path = utilities.get_absolute_path(static_path)
-            #_log.debug("dir passed: no source_file for project, using first file: " + absolute_path)
-    
+
     return (static_path, absolute_path)
 
 
@@ -188,7 +192,8 @@ def get_file_info(file_path):
     static_path = utilities.get_relative_path(file_path)
     # no file to load.
     if not absolute_path:
-        _log.error('Invalid file path for viewer.get_file_content(): {}'.format(file_path))
+        _log.error('Invalid file path for viewer.get_file_content(): '
+                   '{}'.format(file_path))
         raise Http404("Sorry, that file doesn't exist.")
         
     project = ptools.get_project_from_path(absolute_path)
@@ -196,9 +201,11 @@ def get_file_info(file_path):
     # Directory was passed, get files to use. (based on project, dir listing)
     if os.path.isdir(absolute_path):
         if project:
-            static_path, absolute_path = get_using_paths(static_path, absolute_path, project)
+            static_path, absolute_path = get_using_paths(static_path,
+                                                         absolute_path,
+                                                         project)
             if static_path is None or absolute_path is None:
-                # return responses.alert_message("Sorry, there was an error viewing that file.", body_message=alertmsg)
+                # Raise error which will display a 404.
                 raise Http404("Sorry, there was an error viewing that file.")
         else:
             raise Http404("Sorry, that file doesn't exist.")
@@ -218,14 +225,17 @@ def get_file_info(file_path):
             miscobj.view_count += 1
             miscobj.save()
         else:
-            _log.debug('get_file_content: not a project or misc object: {}'.format(file_path))
+            _log.debug('get_file_content: not a project or misc object: '
+                       '{}'.format(file_path))
             
     # Update file tracker
     if os.path.isfile(absolute_path):
         filetracker = dltools.get_file_tracker(absolute_path)
         if filetracker is not None:
             if project is not None:
-                dltools.update_tracker_projects(filetracker, project, dosave=False)
+                dltools.update_tracker_projects(filetracker,
+                                                project,
+                                                dosave=False)
             filetracker.view_count += 1
             filetracker.save()
     
@@ -247,8 +257,11 @@ def get_file_info(file_path):
     
 
 def highlight_file(static_path, file_content):
-    """ highlight file content for viewing """
-    
+    """ highlight file content for viewing
+        TODO: Remove this. It is no longer needed now that Ace editor is used.
+    """
+    # TODO: Remove this function, or move it somewhere else.
+    #      Ace Editor is used now, so no highlighting is done server-side.
     # Get pygments lexer
     lexername = get_lexer_name_fromfile(static_path)
     if not lexername:
@@ -262,7 +275,8 @@ def highlight_file(static_path, file_content):
             highlighter.code = file_content
             file_content = highlighter.highlight()
         except Exception as ex:
-            _log.error("Error highlighting file: " + static_path + '\n' + str(ex))
+            _log.error('Error highlighting file: {}\n'.format(static_path) +
+                       '{}'.format(str(ex)))
     else:
         # No lexer, so no highlighting, still need to format it a bit.
         file_content = escape(file_content).replace('\n', '<br>')

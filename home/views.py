@@ -29,8 +29,10 @@ def index(request):
     return responses.clean_response("home/index.html",
                                     {'request': request,
                                      'blog_post': htools.get_latest_blog(),
-                                     'featured_project': htools.get_featured_project(),
-                                     'extra_style_link_list': [utilities.get_browser_style(request), ],
+                                     'featured_project': htools.get_featured_project(),  # noqa
+                                     'extra_style_link_list':
+                                         [utilities.get_browser_style(request),
+                                         ],
                                      })
     
 
