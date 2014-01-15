@@ -6,7 +6,7 @@ Replace this with more appropriate tests for your application.
 """
 
 from django.test import TestCase
-from misc.tools import MiscTypes, Lang
+from misc.types import MiscTypes, Lang
 from misc.models import wp_misc
 
 

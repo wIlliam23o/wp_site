@@ -10,12 +10,18 @@
  
    start date: May 18, 2013
 '''
+
+# TODO: Test does not currently run under normal pytest/nosetests execution,
+#      nor does it run with ./manage.py test
+#      import wpswitch -> ImportError
+#      Django environment not set up!
 import sys
 import os
 import os.path
 import unittest
 import unittest.main
 import wpswitch
+
 
 # Test data to be used (should be valid, well-formed switch data).
 test_data_local = """
@@ -59,13 +65,17 @@ try:
     with open(TEST_CONF, 'w') as ftestconf:
         ftestconf.write("okay")
         USE_TEST_CONF = True
-    
-except (Exception, OSError, IOError) as exio:
+except Exception as exio:
     print("Cannot create temporary test conf!: " + TEST_CONF + '\n' + str(exio))
     USE_TEST_CONF = False
 
-# create a valid switch manually (can be accessed from any test as an example of a non-parsed, valid switch)
-switch1 = wpswitch.switch("test_switches_target.txt", "testmanualswitch", ("True", "False"), "testswitch =", "a test switch")
+# create a valid switch manually
+# (can be accessed from any test as an example of a non-parsed, valid switch)
+switch1 = wpswitch.switch("test_switches_target.txt",
+                          "testmanualswitch",
+                          ("True", "False"),
+                          "testswitch =",
+                          "a test switch")
 
 # Test Cases
 
@@ -162,8 +172,8 @@ class test_wpswitch(unittest.TestCase):
         # gather all groups from switch list
         groupnames = wpswitch.get_groups(self.switches)
         # make sure they are both tuple lists, because [] != ()
-        test_groupnames = tuple(groupnames)
-        test_expectednames = tuple(GROUP_MEMBERS.keys())
+        test_groupnames = sorted(groupnames)
+        test_expectednames = sorted(list(GROUP_MEMBERS.keys()))
         # test equality, print results on failure
         self.assertEqual(test_groupnames, test_expectednames,
                          msg="switch group names did not match expected groups:\n" +
@@ -194,7 +204,7 @@ class test_wpswitch(unittest.TestCase):
         self.assertNotEqual(self.switches, [],
                             msg="testCanGetGroupNameByList: switches is [], read_lines() failed.")
         # select the last group in expected group data (the first is None, which might not help)
-        testgroupname = GROUP_MEMBERS.keys()[-1]
+        testgroupname = list(GROUP_MEMBERS.keys())[-1]
         groupmembers = wpswitch.get_group_members(testgroupname, self.switches)
         self.assertIsNotNone(groupmembers,
                              msg="testCanGetGroupNameByList: get_group_members(" + testgroupname + ')' +
