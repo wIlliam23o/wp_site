@@ -45,7 +45,8 @@ def view_results(request, args):
     lookupfunc, query = get_lookup_func(args['query'])
     if lookupfunc:
         # Get wp words file.
-        wordfile = os.path.join(settings.BASE_DIR, 'apps/phonewords/words')
+        wordfile = os.path.join(settings.BASE_DIR,
+                                'apps/phonewords/words')
         if os.path.isfile(wordfile):
             # Get results.
             try:
@@ -92,28 +93,47 @@ def fix_results(results):
         return results, 0
 
 
+def get_lookup_cmd(query):
+    """ Determines cmdline args needed to run phonewords,
+        uses -r if a word was given, and normal if a number was given.
+    """
+
+    lookupmethod = get_lookup_method(query)
+    argmap = {'word': [query, '-r', '-p'],
+              'number': [query, '-p'],
+              }
+    return argmap.get(lookupmethod, None), query
+
+
 def get_lookup_func(query):
     """ Determines if this is a word or number lookup,
         returns the proper function.
         If no query is given, returns None.
     """
-    # Trim some characters from the query.
-    query = query.replace('-', '').strip() if query else None
+    lookupmethod = get_lookup_method(query)
+    funcmap = {'word': phone_words.get_phonenumber,
+               'number': phone_words.get_phonewords,
+               }
+    return funcmap.get(lookupmethod, None), query
 
-    # If we still have a query, try to get the lookup function.
+
+def get_lookup_method(query):
+    """ Get lookup args depending query type (number or word)
+        Returns 'number', 'word', or None (for bad-query)
+    """
+    # Trim characters from query.
+    if query:
+        query = query.replace('-', '').strip()
+
+    querytype = None
+    # Still have query after trimming, determine method.
     if query:
         try:
-            # Normal lookup, get phone words.
             intval = int(query)
             query = str(intval)
-        except:
-            # Reverse lookup, get phone number.
-            lookupfunc = phone_words.get_phonenumber
+        except ValueError:
+            querytype = 'word'
         else:
-            # Normal value passed.
-            lookupfunc = phone_words.get_phonewords
-    else:
-        # No query given.
-        lookupfunc = None
+            querytype = 'number'
 
-    return lookupfunc, query
+    return querytype

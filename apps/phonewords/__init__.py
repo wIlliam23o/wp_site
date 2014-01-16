@@ -1,5 +1,5 @@
 app_name = 'PhoneWords'
-app_version = '1.0.0'
+app_version = '1.0.3'
 app_alias = 'phonewords'
 app_description = 'Finds possible words that can be made from a phone number.'
 app_longdesc = """

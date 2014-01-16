@@ -20,23 +20,21 @@ VERSION = '1.0.3'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[1]
 
-# Default word list file to use if none was passed.
-FILENAME = '/usr/share/dict/words'
-
 usage_str = """{verstr}
 
     Usage:
-        {script} <phonenumber> [wordfile] [-d] [-p] [-s]
-        {script} <phonenumber> [wordfile] -T [-d] [-p] [-P num]
+        {script} <phonenumber> [WORDFILE] [-d] [-p] [-s]
+        {script} <phonenumber> [WORDFILE] -T [-d] [-p] [-P num]
         {script} <word> -r [-p]
         {script} -t
-        {script} -w word [wordfile]
+        {script} -w word [WORDFILE]
 
     Options:
         <phonenumber>           : Phone number to check.
         <word>                  : Word to find phone number for.
-        wordfile                : File to grab dictionary words from.
-                                  Defaults to {defaultfile}
+        WORDFILE                : File to grab dictionary words from.
+                                  Defaults to local words file,
+                                  or /usr/share/dict/words.
                                   ...or any file named 'words' in the current
                                      directory.
         -d,--debug              : Debug mode, may break normal operation.
@@ -54,7 +52,7 @@ usage_str = """{verstr}
         -v,--version            : Show version.
         -w word,--wordtest word : Test word list to see if it contains a word.
 
-""".format(verstr=VERSIONSTR, script=SCRIPT, defaultfile=FILENAME)
+""".format(verstr=VERSIONSTR, script=SCRIPT)
 # Global flag for debug mode, gets set with '-d' or '--debug' cmdline arg.
 DEBUG = False
 
@@ -86,7 +84,7 @@ def main(argd):
     DEBUG = argd['--debug']
 
     reverse_mode = argd['--reverse']
-    wordfile = argd['wordfile'] if argd['wordfile'] else FILENAME
+    wordfile = argd['WORDFILE'] if argd['WORDFILE'] else get_defaultwordsfile()
 
     if argd['--test']:
         # Test Run for known matches.
@@ -201,7 +199,7 @@ def do_word(word, parseable=False):
     phonenum = results[list(results.keys())[0]]
     if parseable:
         # Machine-readable format.
-        print(format_number(phonenum))
+        print('{}\t{}'.format(word, format_number(phonenum)))
     else:
         # Human-readable format.
         print('\nFound number: {}'.format(format_number(phonenum)))
@@ -268,9 +266,11 @@ def format_number(s):
 
 def get_defaultwordsfile():
     """ Retrieves the default filename for words file. """
-    # Use default file.
+    # order of preference for default file.
     if os.path.isfile('words'):
         return 'words'
+    elif os.path.isfile('words_trimmed'):
+        return 'words_trimmed'
     elif os.path.isfile('/usr/share/dict/words'):
         return '/usr/share/dict/words'
     return None
@@ -368,10 +368,13 @@ def get_phonewords(number, wordfile=None, processes=2):
         raise ValueError('Empty word list given: {}'.format(wordfile))
 
     # Send to multiprocess pool worker class.
+    # Everything up to this point is relatively quick and small.
+    # What goes on inside of WordFinder needs to be quick as possible.
     finder = WordFinder(number, combos, wordlist)
     finder.processes = processes
 
     # Run find_words to compare words/combos.
+    # This is where the action is, and where the optimizations are needed.
     foundwords, total = finder.find_words()
 
     if foundwords:
@@ -384,22 +387,16 @@ def get_phonewords(number, wordfile=None, processes=2):
     return foundwords, total
 
 
-def iter_filelines(filename, minlength=3, maxlength=10):
+def iter_filelines(filename, maxlength=10):
     """ Iterates over lines in a word file, does not catch errors.
         For library use.
         Skips lines with ' in them (cannot make a word with ' for this app).
         Yields line.lower() with newlines and quotes stripped.
     """
-    # Line is only yielded if it meets this criteria.
-    def good_line(l):
-        if l:
-            llen = len(l)
-            if ((llen <= maxlength) and (llen >= minlength) and
-               (not "'" in l)):
-                return True
-        return False
+    maxlen = (maxlength + 1)
     # Change args to test with stackless/pypy
     openargs = {'encoding': 'utf-8'} if sys.version[0] == '3' else {}
+    good_line = lambda l: l and (2 < len(l) < maxlen)
     with open(filename, 'r', **openargs) as fread:
         for line in fread:
             # Strip newlines, then strip "
@@ -560,6 +557,12 @@ class WordFinder(object):
             Used with Pool.map...
         """
 
+        # Iterating over self.combos (up to ~5184 items)
+        # for every word (up to ~30981 items) for total of
+        # ~160,605,504 iterations really sucks.
+        # There has to be another way,
+        # The requirements are: Check every combo for existence of every word.
+        # Words are checked only once, combos are checked for every word.
         for combo in self.combos:
             if word in combo:
                 filled = fill_number(word, combo, self.number)
@@ -578,10 +581,12 @@ class WordFinder(object):
 
         def format_results(resultsets):
             """ format final results """
-            for resultset in resultsets:
-                if resultset:
-                    resultsfmt.update(resultset)
-        # setup a pool of processes.
+            if resultsets:
+                for resultset in resultsets:
+                    if resultset:
+                        resultsfmt.update(resultset)
+
+        # setup a pool of processes/workers.
         pool = Pool(processes=self.processes)
         # map find_word to the wordlist, and format final results.
         format_results(pool.map(self.find_word, self.wordlist))
