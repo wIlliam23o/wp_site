@@ -10,6 +10,8 @@
  
    start date: Apr 3, 2013
 '''
+# django cache stuff
+from django.views.decorators.cache import never_cache
 # local logging.
 from wp_main.utilities.wp_logging import logger
 _log = logger("sitemaps").log
@@ -22,6 +24,7 @@ from projects.models import wp_project
 from datetime import date
 
 
+@never_cache
 def view_sitemap(request):
     """ delivers sitemap for current domain using sitemap.xml template """
     
@@ -31,12 +34,14 @@ def view_sitemap(request):
                                    })
 
 
+@never_cache
 def view_blank_sitemap(request):
     """ delivers a blank sitemap (for servers that don't need a sitemap like the test-server). """
     
     return responses.text_response("", content_type='application/xml')
 
 
+@never_cache
 def view_byserver(request):
     """ decides which sitemap to deliver according to server.
         sends blank sitemap to server with names starting with 'test.'

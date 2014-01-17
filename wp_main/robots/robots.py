@@ -10,22 +10,25 @@
  
    start date: Apr 9, 2013
 '''
-
+from django.views.decorators.cache import never_cache
 from wp_main.utilities import responses
 
 
+@never_cache
 def view_robots_blockall(request):
     """ block all pages """
     
     return responses.text_response("User-agent: *\nDisallow: /")
 
 
+@never_cache
 def view_robots_any(request):
     """ allow any page """
     
     return responses.text_response("User-agent: *\nAllow: /")
 
 
+@never_cache
 def view_byserver(request):
     """ decide which robots.txt to serve up based on current server.
         currently blocks all for any servername starting with 'test.'
@@ -38,4 +41,3 @@ def view_byserver(request):
     else:
         # normal robots, allow all.
         return view_robots_any(request)
-    
