@@ -1,0 +1,122 @@
+<div class='wp-block feature-list' style='padding-top: 20px;'>
+    <!-- Description -->
+    Python evaluation bot for IRC. PyVal was made to evaluate python code
+    safely (without compromising your own system), and depends on 
+    [l]pypy-sandbox | http://pypy.org[?l]
+    to block certain system calls. 
+    <br><br>
+    Within the PyVal directory, there is also a handy little tool called 
+    'PyValExec', which is used by 'PyValBot', but can be used as a standalone 
+    sandbox for testing purposes.
+    <br>
+    <br>
+    The sandbox uses a 'fake' file system, that contains two directories:
+    [bash]/bin[?bash] and [bash]/tmp[?bash]
+    <br><br>
+    The [bash]/tmp[?bash] directory contains a helper script called 
+    [bash]pyval_sandbox.py[/bash] which by itself does not offer any security.
+    It's main job is to take python code from [bash]stdin[/bash], and compile/run it.
+    The security comes from running this 'helper script' inside the sandbox.
+    <br><br>
+    The [bash]/bin[?bash] directory contains several libraries/modules needed to
+    run [l]pypy-sandbox | http://pypy.org[?l]
+    <br><br>
+    Read access is allowed in these two directories, but any [python]write()[/python]
+    calls are automatically blocked. The sandbox allows you to [python]import[/python]
+    many python modules, but will fail for certain 'critical' modules that are known
+    to be insecure for sandbox purposes.
+</div>
+
+<!-- Article Ad -->
+{{ article_ad }}
+
+<div class='wp-block feature-list'>
+    <!-- Requirements -->
+    <div class='title-box'>
+        <h3 class='title'>Requirements</h3>
+    </div>
+    <ul class='circle blue'>
+        <li class='B'>
+            python-pypy.sandbox or python-pypy.translator.sandbox package
+        </li>
+        <div class='listdesc'>
+            Found in debian/ubuntu distros.<br>
+            This package provides the prebuilt pypy-sandbox executable which is used 
+            by <strong>PyVal</strong> to run code safely.<br>
+            <strong>PyVal</strong> looks for [bash]/usr/bin/pypy-sandbox[?bash].
+        </div>
+        <li class='B'>
+            pastebinit package
+        </li>
+        <div class='listdesc'>
+            cmd-line utility to pastebin content when the output limit for chat is exceeded
+            as of right now, http://paste.pound-python.org is used.<br>
+            <strong>PyVal</strong> looks for [bash]/usr/bin/pastebinit[?bash].
+        </div>
+        <li class='B'>
+            Twisted python module
+        </li>
+        <div class='listdesc'>
+            [python]twisted.internet[/python] is used for the irc bot.
+        </div>
+        <li class='B'>
+            <a class='B' href='http://python.org' target='_blank'>Python 2.7</a>
+        </li>
+        <div class='listdesc'>
+            When [l]Twisted | http://twistedmatrix.com[?l] fully supports
+            [l]Python 3 | http://python.org/download/releases/[?l], this project
+            may be ported over.
+        </div>
+
+    </ul>
+</div>
+
+<!-- Download -->
+<div class='wp-block feature-list'>
+    <div class='title-box'>
+        <h3 class='title'>Download</h3>
+    </div>
+    {{ download_code }}
+</div>
+
+<!-- Source -->
+<div class='wp-block feature-list' id='source'>
+    <div class='title-box'>
+        <h3 class='title'>Source Code</h3>
+    </div>
+    <p>
+        <a href='https://github.com/welbornprod/pyvalbot/tree/dev' target='_blank'>
+            PyVal (github)
+        </a>
+        &nbsp;- current <strong>PyVal</strong> source code at 
+        <a href='http://github.com' target="_blank">github</a>.
+    </p>
+    {{ source_view }}
+</div>
+
+<div class='wp-block feature-list'>
+    <!-- Notes -->
+    <div class='title-box'>
+        <h3 class='title'>Notes</h3>
+    </div>
+    <div>
+        The bot connects to [python]irc.freenode.net[/python].
+        <br><br>
+        Joins [bash]#pyval[/bash] on successful connection.
+        <br><br>
+        Nickname is set to <span class='I'>pyval</span>,
+        which is registered to me so you will want to change that.
+        <br>
+        You can set the nick with the [bash]--nick[/bash] command-line option.
+        <br><br>
+        You are certainly free to take this code and start your own eval bot. 
+        If you change the source in any way, please change the name from 
+        <strong>PyVal</strong> / <strong>PyValBot</strong> to something else.
+        <br><br>
+        If you want to contribute to the original <strong>PyVal</strong>, 
+        you can clone this project on 
+        <a href='https://github.com/welbornprod/pyvalbot/tree/dev' target='_blank'>
+            github.com
+        </a> and send pull requests.
+    </div>
+</div>

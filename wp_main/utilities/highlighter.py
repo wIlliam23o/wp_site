@@ -22,11 +22,11 @@ _log = logger('utilities.highlighter').log
 # Regex pattern for wp highlight codes.
 # [language]insert code here[/language]
 # Use .findall() with it.
-# TODO: the [^\[/\]] part needs to be rethought.
-#       it is messing with statements such as:
-#       [python]mycode('/')[/python] because of the / inside.
-#       a character change may be needed.
 HCODEPAT = re.compile(r'(\[[\w\d]+\])([^\[/]+)(\[/[\w\d+]+\])')
+# This is an alternate method for highlight codes.
+# It uses [language]text[?language] to recognize the codes.
+# Use it for code that contains the '/' character.
+HCODEPAT2 = re.compile(r'(\[[\w\d]+\])([^\[\?]+)(\[\?[\w\d+]+\])')
 # Regex pattern for grabbing lexer names from:
 # <span class='highlight-embedded LEXERNAME'>
 # TODO: SHOULD BE REMOVED AFTER ALL POSTS/PROJECTS SWITCH TO HCODEPAT STYLE.
@@ -38,6 +38,11 @@ LEXERNAMES = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
 # Basic style codes
 STYLECODES = {'b': '<span class=\'B\'>{}</span>',
               'i': '<span class=\'I\'>{}</span>',
+              # This 'l' (link) code requires 2 arguments separated by |.
+              # The first arg is the text, the second is the link target.
+              # Links are opened in a new (blank) window.
+              'l': '<a href=\'{1}\' target=\'_blank\'>{0}</a>',
+              'u': '<span style=\'text-decoration: underline;\'>{}</span>',
               }
 STYLENAMES = list(STYLECODES.keys())
 
@@ -294,12 +299,8 @@ def highlight_codes(scode):
     """ Highlights embedded wp highlight codes.
         like: [lang]lang code here[/lang]
     """
-    # TODO: currently breaks if input contains / characters such as:
-    #      [python]os.system('rm -rf /')[/python]
-    #      ...because the regex matches the first / and decides it is not a
-    #      complete code wrap. Better regex or detection is needed.
-    #      the / character is used all the time in code. Maybe change from:
-    #      [code]..[/code] to [code]..[~code] (i can't think of a good one now)
+    # ...alternate method [code]...[?code] uses ? instead of / to get around
+    #    code with / in it. (uses HCODEPAT2 to find them)
     if isinstance(scode, (list, tuple)):
         return_list = True
         scode = '\n'.join(scode)
@@ -307,7 +308,9 @@ def highlight_codes(scode):
         return_list = False
 
     def get_language(mgroups):
-        """ Retrieve desired language from match groups. """
+        """ Retrieve desired language from match groups.
+            Gets language name from the first group matched: '[language]'
+        """
 
         if mgroups:
             lang = mgroups[0].strip('[').strip(']')
@@ -346,14 +349,25 @@ def highlight_codes(scode):
             _log.debug('highlight_codes: Error highlighting.\n{}'.format(ex))
             return code
 
-    # Search lines..
+    # Search lines for original codes (HCODEPAT)..
     matches = HCODEPAT.findall(scode)
+    newmatches = HCODEPAT2.findall(scode)
+    if newmatches:
+        # New-style matches were found, add them to the 'matches' list.
+        matches.extend(newmatches)
+
     for mgroups in matches:
         langname = get_language(mgroups)
         code = get_code(mgroups)
         if langname in STYLENAMES:
             # catch basic style codes such as [b] and [i][/i].
-            newcode = STYLECODES[langname].format(code)
+            if '|' in code:
+                # This style requires two arguments.
+                styleargs = [s.strip() for s in code.split('|')]
+                newcode = STYLECODES[langname].format(*styleargs)
+            else:
+                # Basic style code, only needs 1 format argument.
+                newcode = STYLECODES[langname].format(code)
         else:
             # Do highlighting based on language name [python] or [bash].
             # (any valid pygments lexer)

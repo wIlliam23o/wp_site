@@ -84,7 +84,9 @@ def ajax_contents(request):
         file_info['file_short'] = utilities.get_filename(file_info['static_path'])  # noqa
         # get all project related files (if any, otherwise an empty list)
         if project:
-            file_info['menu_items'] = [(n, utilities.get_filename(n)) for n in get_source_files(project)]  # noqa
+            file_info['menu_items'] = sorted([(n, utilities.get_filename(n))
+                                              for n in
+                                              get_source_files(project)])  # noqa
         else:
             # Misc objects need no menu
             # (False is sent to wpviewer.js:load_file_content())
