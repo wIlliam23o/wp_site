@@ -49,15 +49,16 @@
             pastebinit package
         </li>
         <div class='listdesc'>
-            cmd-line utility to pastebin content when the output limit for chat is exceeded
-            as of right now, http://paste.pound-python.org is used.<br>
+            Command-line utility to pastebin content when the output limit for chat is exceeded.
+            <br>
+            As of right now, http://paste.pound-python.org is used.<br>
             <strong>PyVal</strong> looks for [bash]/usr/bin/pastebinit[?bash].
         </div>
         <li class='B'>
             Twisted python module
         </li>
         <div class='listdesc'>
-            [python]twisted.internet[/python] is used for the irc bot.
+            The bot uses [python]twisted.internet[/python].
         </div>
         <li class='B'>
             <a class='B' href='http://python.org' target='_blank'>Python 2.7</a>
@@ -103,6 +104,8 @@
         The bot connects to [python]irc.freenode.net[/python].
         <br><br>
         Joins [bash]#pyval[/bash] on successful connection.
+        <br>
+        You can set the auto-join channels with the [bash]--channels[/bash] command-line option.
         <br><br>
         Nickname is set to <span class='I'>pyval</span>,
         which is registered to me so you will want to change that.
