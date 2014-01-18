@@ -36,13 +36,14 @@ def view_index(request):
 
 
 @csrf.csrf_protect
-def view_results(request, args):
+def view_results(request, args=None):
     """ Process number/word given by request args. """
 
     errors = None
     results = None
     total = None
-    lookupfunc, query = get_lookup_func(args['query'])
+    rawquery = args['query']
+    lookupfunc, query = get_lookup_func(rawquery)
     if lookupfunc:
         # Get wp words file.
         wordfile = os.path.join(settings.BASE_DIR,
@@ -51,12 +52,19 @@ def view_results(request, args):
             # Get results.
             try:
                 rawresults = lookupfunc(query, wordfile=wordfile)
-                results, total = fix_results(rawresults)
             except ValueError as exval:
                 errors = exval
             except Exception as ex:
                 _log.error('Error looking up number: {}\n{}'.format(query, ex))
                 errors = ex
+            else:
+                # Good results, fix them.
+                try:
+                    results, total = fix_results(rawresults)
+                except Exception as ex:
+                    _log.error('Error fixing results:\n{}'.format(ex))
+                    errors = Exception('Sorry, there was an error parsing '
+                                       'the results.<br>{}'.format(ex))
         else:
             _log.error('missing word file: {}'.format(wordfile))
             errors = ValueError('Can\'t find word file!')
@@ -98,11 +106,17 @@ def get_lookup_cmd(query):
         uses -r if a word was given, and normal if a number was given.
     """
 
+    if query and ('-' in query):
+        query = query.replace('-', '')
+
     lookupmethod = get_lookup_method(query)
-    argmap = {'word': [query, '-r', '-p'],
-              'number': [query, '-p'],
-              }
-    return argmap.get(lookupmethod, None), query
+    if lookupmethod:
+        argmap = {'word': [query, '-r', '-p'],
+                  'number': [query, '-p'],
+                  }
+        return argmap.get(lookupmethod, None), query
+    # no lookup args for that query.
+    return None, query
 
 
 def get_lookup_func(query):
@@ -110,11 +124,17 @@ def get_lookup_func(query):
         returns the proper function.
         If no query is given, returns None.
     """
+    if query and ('-' in query):
+        query = query.replace('-', '')
+
     lookupmethod = get_lookup_method(query)
-    funcmap = {'word': phone_words.get_phonenumber,
-               'number': phone_words.get_phonewords,
-               }
-    return funcmap.get(lookupmethod, None), query
+    if lookupmethod:
+        funcmap = {'word': phone_words.get_phonenumber,
+                   'number': phone_words.get_phonewords,
+                   }
+        return funcmap.get(lookupmethod, None), query
+    # no lookup method for that query
+    return None, query
 
 
 def get_lookup_method(query):
