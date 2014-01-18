@@ -114,7 +114,7 @@ def main(argd):
 def apache_restart():
     """ Restart the apache server """
     # apache restart locations.
-    remote_apache_path = os.path.join(settings.STATIC_PARENT, 'apache2', 'bin')
+    remote_apache_path = os.path.join(settings.BASE_PARENT, 'apache2', 'bin')
     if os.path.isdir(remote_apache_path):
         apachecmd = ''.join(['. ', remote_apache_path]) + '/'
         use_elevation = False
