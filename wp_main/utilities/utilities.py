@@ -190,15 +190,26 @@ def get_absolute_path(relative_file_path):
     if '..' in relative_file_path:
         return ''
     
-    sabsolutepath = ""
-    for root, dirs, files in os.walk(settings.STATIC_PARENT):  # noqa
-        spossible = os.path.join(root, relative_file_path)
+    sabsolutepath = ''
+    # Remove '/static' from the file path.
+    if relative_file_path.startswith(('static', '/static')):
+        staticparts = relative_file_path.split('/')
+        if len(staticparts) > 1:
+            staticstart = 2 if relative_file_path.startswith('/') else 1
+            staticpath = '/'.join(staticparts[staticstart:])
+            # use new relative path (without /static)
+            relative_file_path = staticpath
+        else:
+            # Don't allow plain '/static'
+            return ''
 
-        # dirs allowed
-        if os.path.isfile(spossible) or os.path.isdir(spossible):
+    # Walk real static dir.
+    for root, dirs, files in os.walk(settings.STATIC_ROOT):  # noqa
+        spossible = os.path.join(root, relative_file_path)
+        if os.path.exists(spossible):
             sabsolutepath = spossible
             break
-    
+
     # Guard against files outside of the public /static dir.
     if not sabsolutepath.startswith(settings.STATIC_ROOT):
         return ''
