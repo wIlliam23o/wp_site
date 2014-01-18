@@ -69,3 +69,10 @@
 .phonewords-warning {
   color: #b90000;
   font-weight: bold; }
+
+/* desc example */
+.phonewords-desc-example {
+  margin-left: -10px; }
+
+.phonewords-desc-example-codewrap {
+  margin-left: 40px; }

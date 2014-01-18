@@ -95,3 +95,16 @@
     color: $redmain;
     font-weight: bold;
 }
+
+/* desc example */
+.phonewords-desc-example {
+    // pushes sub-example of 'desc' to look like a direct child of 'desc'.
+    // without the -10, the 'example' is way too far right.
+    margin-left: -10px;
+}
+
+.phonewords-desc-example-codewrap {
+    // codewrap wants to be margin-left: 0px.
+    // push the desc-example codewrap way over to the right.
+    margin-left: 40px;
+}
