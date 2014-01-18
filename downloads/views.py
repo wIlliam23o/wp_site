@@ -44,7 +44,12 @@ def download(request, file_path):
         static_path = absolute_path.replace(settings.STATIC_PARENT, '')
     else:
         # remote, file is actually located at the static_server dir.
+        # but we will need to forward the user to the /static url.
         static_path = absolute_path.replace(settings.STATIC_ROOT, '')
+        if static_path.startswith('/'):
+            static_path = '/static{}'.format(static_path)
+        else:
+            static_path = '/static/{}'.format(static_path)
 
     if (not static_path.startswith('/')):
         static_path = '/{}'.format(static_path)

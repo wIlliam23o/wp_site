@@ -197,49 +197,6 @@ def get_download_dir_content(project, surl):
     html_.append_line('</div>')
 
     return html_.tostring()
-    
-
-# def prepare_content(project, scontent):
-#    """ prepares project content for final view.
-#        adds screenshots, downloads, ads, etc.
-#        returns injected html string.
-#    """
-#
-# Top of page. Includes project name header.
-#    shead = "<div class='project_container'>\n" + \
-#        "    <div class='project_title'>\n" + \
-#        "        <h1 class='project-header'>" + project.name + "</h1>\n" + \
-#        "    </div>\n"
-# Working copy of html content
-#    html_ = htmltools.html_content(scontent)
-#
-# do article ads.
-#    html_.inject_article_ad()
-#
-# do screenshots.
-#    images_dir = get_screenshots_dir(project)
-# inject screenshots.
-#    if os.path.isdir(images_dir):
-#        html_.inject_screenshots(images_dir)
-#
-# do downloads.
-#    sdownload_content = get_download_content(project)
-#    if sdownload_content != "":
-#        target_ = html_.check_replacement("{{ download_code }}")
-#        html_.replace_if(target_, sdownload_content)
-#
-# do source view.
-#    html_.inject_sourceview(project)
-#
-# do auto source highlighting
-#    html_.highlight()
-#
-# remember to close the project_container div.
-#    html_.prepend(shead)
-#    html_.append('\n</div>\n')
-#
-# returning STRING until the rest of the project starts using html_content.
-#    return html_.tostring()
 
 
 def process_injections(project, request=None):
