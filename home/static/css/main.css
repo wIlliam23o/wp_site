@@ -469,14 +469,20 @@ a.jumpto-nav {
   box-shadow: 4px 4px 5px black; }
   .vertical-menu-item:active {
     border-color: #74afee; }
+  .vertical-menu-item.vertical-menu-item-disabled:active {
+    border-color: white; }
 
 .vertical-menu-link {
   color: #26a1f4; }
   .vertical-menu-link:hover {
     color: #919191; }
+  .vertical-menu-link.vertical-menu-item-disabled {
+    color: #919191; }
+    .vertical-menu-link.vertical-menu-item-disabled:hover {
+      color: #919191; }
 
 .vertical-menu-text {
-  font-size: 1em;
+  font-size: 0.8em;
   padding-left: 5px;
   padding-right: 5px;
   text-transform: lowercase; }

@@ -516,7 +516,13 @@ a.jumpto-nav {
     &:active {
         border-color: $borderblue;
     }
+
+    &.vertical-menu-item-disabled:active {
+        border-color: $borderwhite;
+    }
 }
+
+
 
 .vertical-menu-link {
     color: $bluemain;
@@ -524,10 +530,20 @@ a.jumpto-nav {
     &:hover {
         color: $greymain;
     }
+
+    &.vertical-menu-item-disabled {
+        color: $greymain;
+
+        &:hover {
+            color: $greymain;
+        }
+    }
 }
 
+
+
 .vertical-menu-text {
-    font-size: $fontnormal;
+    font-size: $fontsmall;
     padding-left: 5px;
     padding-right: 5px;
     text-transform: lowercase;
