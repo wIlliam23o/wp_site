@@ -27,21 +27,21 @@ BASE_PARENT = os.path.split(BASE_DIR)[0]
 if 'webapps' in BASE_PARENT:
     # live site directories
     STATIC_PARENT = BASE_PARENT
+    # Static dirs based on test/live site. Set in local_settings.
+    STATIC_ROOT = 'unknown'
     MEDIA_URL = 'http://welbornprod.com/media/'
-    SERVER_LOC = 'remote'
+    SERVER_LOCATION = 'remote'
 else:
     # local development directories
     STATIC_PARENT = '/var/www/'
+    STATIC_ROOT = '/var/www/static'
     MEDIA_URL = 'http://127.0.0.1/media/'
-    SERVER_LOC = 'local'
+    SERVER_LOCATION = 'local'
 
 
 # Static/Media directories.
-STATIC_ROOT = os.path.join(STATIC_PARENT, "static")
 MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
     
-# URL prefix for static files.
-STATIC_URL = '/static/'
 # main app (location of settings.py)
 MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
@@ -92,6 +92,7 @@ DATABASES = {
     }
 }
 
+#------------------ Settings above this may be squashed by settings_local -----
 # Fill in missing settings from local file (not in git).
 SECRET_LOCAL_SETTINGS = os.path.join(BASE_DIR, 'settings_local.py')
 if sysversion < '3':
@@ -276,7 +277,7 @@ LOGGING = {
 
 # Only turn error emails on with the remote server
 # They are driving me nuts when I'm expirimenting locally and DEBUG == False.
-if SERVER_LOC == 'remote':
+if SERVER_LOCATION == 'remote':
     LOGGING['handlers'] = {'mail_admins': {
         'level': 'ERROR',
         'filters': ['require_debug_false'],
