@@ -167,12 +167,17 @@ def get_relative_path(spath):
         if its a '/static' related dir, just trim up to '/static'.
     """
     
-    if settings.STATIC_PARENT in spath:
-        spath = spath.replace(settings.STATIC_PARENT, '')
+    prepend = ''
+    if settings.STATIC_ROOT in spath:
+        spath = spath.replace(settings.STATIC_ROOT, '')
+        prepend = '/static'
     elif settings.BASE_PARENT in spath:
         spath = spath.replace(settings.BASE_PARENT, '')
     if not spath.startswith('/'):
         spath = '/{}'.format(spath)
+
+    if prepend:
+        spath = '{}{}'.format(prepend, spath)
 
     return spath
 
