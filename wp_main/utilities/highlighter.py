@@ -44,6 +44,9 @@ STYLECODES = {'b': '<span class=\'B\'>{}</span>',
               'l': '<a href=\'{1}\' target=\'_blank\'>{0}</a>',
               'u': '<span style=\'text-decoration: underline;\'>{}</span>',
               }
+# Aliases for pygments lexer names. These are switched to the long name
+# before highlighting.
+STYLEALIASES = {'py': 'python'}
 STYLENAMES = list(STYLECODES.keys())
 
 
@@ -371,6 +374,10 @@ def highlight_codes(scode):
         else:
             # Do highlighting based on language name [python] or [bash].
             # (any valid pygments lexer)
+            # Aliases are checked first, and converted to the long name.
+            if langname in STYLEALIASES.keys():
+                langname = STYLEALIASES[langname]
+            # Try highlighting the code with this language/lexer name.
             newcode = try_highlight(code, langname)
         # Replace old text with new code.
         oldtext = ''.join(mgroups)

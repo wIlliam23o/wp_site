@@ -123,3 +123,102 @@
         </a> and send pull requests.
     </div>
 </div>
+
+<div class='wp-block feature-list'>
+    <!-- Bot Usage -->
+    <div class='title-box'>
+        <h3 class='title'>PyValBot Usage:</h3>
+    </div>
+    <div>
+        To run the full pyval irc bot:
+        <br>
+        <code>./pyvalbot.py --nick MyBot --channels #mychan1,#mychan2</code>
+        <br>
+        ...you can also use the [bash]pyval[/bash] symlink.
+        <br><br>
+        To view all options run this:
+        <br>
+        <code>./pyval --help</code>
+    </div>
+</div>
+
+<div class='wp-block feature-list'>
+    <!-- PyValExec Usage -->
+    <div class='title-box'>
+        <h3 class='title'>PyValExec Usage:</h3>
+    </div>
+    <div>
+        The pyval-exec module can be executed by itself from the command line.
+        <br><br>
+        To test the functionality of the sandbox without connecting to irc:
+        <br>
+        <div class='codewrap'>
+            $ ./pyval_exec.py "s = 'test\\\\n';print(s * 3)"<br>
+            Content: s = 'test\\n';print(s * 3)<br>
+            <br>
+            Results (safe_output()):<br>
+            test\ntest\ntest<br>
+        </div>
+        <br><br>
+        Notice the [python]safe_output()[/python]. Newlines are replaced with the 
+        escaped [python]\\n[/python], and long output is truncated.
+        <br><br>
+        Also, when the input is a string (as opposed to a file name),
+        special handling is needed to use the [python]\n[/python] character.<br>
+        PyValExec reads [python]\\n[/python] as a literal newline ([python]\n[/python], 
+        as if you pressed Enter.)<br>
+        To use the escaped newline, you actually have to double-escape it with [py]\\n[/py].
+        <br><br>
+        When sending input to the bot, you would type them exactly as above.
+        <br>
+        However, when running from the shell, the shell also needs escaping.
+        <br>
+        This is why the above code uses [py]\\\\n[/py],
+        so PyValExec actually receives [py]\\n[/py],
+        which is then converted to an actual [py]\n[/py].
+        <br><br>
+        If you want full output, run it with the [bash]-r[/bash] or [bash]--raw[/bash] flag.
+        <br><br>
+        PyValExec also has a symlink, you can use [bash]pyvalexec[/bash], like this:
+        <br>
+        <div class='codewrap'>
+            $ ./pyvalexec "for i in range(3):\\n    print(str(i))" -r<br>
+            Content: for i in range(3):\n    print(str(i))<br>
+            <br>
+            Results (raw output):<br>
+            0<br>
+            1<br>
+            2<br>
+        </div>
+        <br><br>
+        Notice the [python]\\n[/python] which was escaped in the shell to send the two characters
+        [python]\[/python] and [python]n[/python] (an escaped newline in python).<br>
+        PyValExec reads this as an actual newline, and interprets the code as if you
+        had pressed Enter, and then indented four spaces.
+        <br><br>
+        PyValExec will also read code from a file and run it. However, the
+        [python]__name__[/python] is not set to [python]'__main__'[/python],<br>
+        it is instead set to [py]'__pyval__'[/py].<br>
+        This allows you to block scripts from running outside of the sandbox.<br><br>
+        So you can do things like this:<br>
+        <pre class='python'>
+import sys
+if __name__ == '__main__':
+    print('Script cannot be ran outside of the PyValExec sandbox!')
+    sys.exit(1)
+elif __name__ == '__pyval__':
+    print('We are running inside of the sandbox.')
+else:
+    print('This script is not meant to be imported!')
+    sys.exit(1)
+        </pre>
+        I suggest writing code especially for the sandbox, instead of sending your
+        scripts as-is to the sandbox.
+        <br><br>
+        To run code from a file just pass the file name to PyValExec:
+        <br>
+        <code>
+            $ ./pyvalexec myscript.py
+        </code>
+    </div>
+</div>
