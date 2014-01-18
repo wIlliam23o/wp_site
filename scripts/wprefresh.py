@@ -23,7 +23,6 @@ from docopt import docopt
 NAME = 'WpRefresh'
 VERSION = '1.2.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
-
 # Initialize Django stuff.
 try:
     import django_init
@@ -213,7 +212,7 @@ def collect_admin_css(printskipped=False):
     """ Move admin css to proper dir """
     # admin css dirs (source, target)
     admin_css = os.path.join(django_init.project_dir, "home/static/admin/css")
-    admin_css_static = os.path.join(settings.STATIC_PARENT, "static/admin/css")
+    admin_css_static = os.path.join(settings.STATIC_ROOT, "admin/css")
 
     if not admin_css_static.endswith('/'):
         admin_css_static += '/'
