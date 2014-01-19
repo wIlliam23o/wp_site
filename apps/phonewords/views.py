@@ -8,8 +8,17 @@ from django.conf import settings
 # Local stuff
 from wp_main.utilities import responses, utilities
 from wp_main.utilities.wp_logging import logger
-from apps.phonewords import app_version, phone_words
-_log = logger('apps.phonewords').log
+from apps.phonewords import phone_words, pwtools
+
+from apps.models import wp_app
+_log = logger('apps.phonewords.views').log
+
+try:
+    phonewordsapp = wp_app.objects.get(alias='phonewords')
+    app_version = phonewordsapp.version
+except Exception as ex:
+    _log.error('Phonewords has no database entry!\nVersion will be incorrect!')
+    app_version = '1.0.0'
 
 
 @csrf.csrf_protect
@@ -43,7 +52,23 @@ def view_results(request, args=None):
     results = None
     total = None
     rawquery = args['query']
-    lookupfunc, query = get_lookup_func(rawquery)
+    lookupfunc, query, method = get_lookup_func(rawquery)
+    cache_used = False
+    # Try cached results first (for numbers only)
+    if method == 'number':
+        cachedresult = pwtools.lookup_results(query)
+        if cachedresult:
+            cache_used = True
+            _log.debug('Using cached result: {}'.format(cachedresult))
+            total = cachedresult.attempts
+            results = pwtools.get_results(cachedresult)
+            if results:
+                # Cancel lookup, we have cached results.
+                lookupfunc = None
+
+        else:
+            _log.debug('No cached found for: {}'.format(query))
+
     if lookupfunc:
         # Get wp words file.
         wordfile = os.path.join(settings.BASE_DIR,
@@ -65,9 +90,13 @@ def view_results(request, args=None):
                     _log.error('Error fixing results:\n{}'.format(ex))
                     errors = Exception('Sorry, there was an error parsing '
                                        'the results.<br>{}'.format(ex))
+                # Cache these results for later if its a number.
+                if method == 'number' and (not cache_used):
+                    pwtools.save_results(query, results, total)
         else:
             _log.error('missing word file: {}'.format(wordfile))
             errors = ValueError('Can\'t find word file!')
+
     # Return response.
     context = {'request': request,
                'version': app_version,
@@ -114,9 +143,9 @@ def get_lookup_cmd(query):
         argmap = {'word': [query, '-r', '-p'],
                   'number': [query, '-p'],
                   }
-        return argmap.get(lookupmethod, None), query
+        return argmap.get(lookupmethod, None), query, lookupmethod
     # no lookup args for that query.
-    return None, query
+    return None, query, lookupmethod
 
 
 def get_lookup_func(query):
@@ -132,9 +161,9 @@ def get_lookup_func(query):
         funcmap = {'word': phone_words.get_phonenumber,
                    'number': phone_words.get_phonewords,
                    }
-        return funcmap.get(lookupmethod, None), query
+        return funcmap.get(lookupmethod, None), query, lookupmethod
     # no lookup method for that query
-    return None, query
+    return None, query, lookupmethod
 
 
 def get_lookup_method(query):
