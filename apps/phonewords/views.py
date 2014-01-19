@@ -17,7 +17,8 @@ try:
     phonewordsapp = wp_app.objects.get(alias='phonewords')
     app_version = phonewordsapp.version
 except Exception as ex:
-    _log.error('Phonewords has no database entry!\nVersion will be incorrect!')
+    _log.error('Phonewords has no database entry!\n'
+               'Version will be incorrect:\n{}'.format(ex))
     app_version = '1.0.0'
 
 
