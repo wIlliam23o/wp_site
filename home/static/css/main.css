@@ -984,7 +984,7 @@ ul.bullet li {
 .codewrap, .sampwrap {
   margin: 2px;
   display: inline-block;
-  border: 1px solid #7793a7;
+  border: 1px solid rgba(202, 217, 224, 0.5);
   border-radius: 3px;
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
@@ -992,6 +992,10 @@ ul.bullet li {
   color: #4d4d4d;
   font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
   font-size: 0.8em; }
+
+/* This border is usually used with codewrap */
+.bordermain {
+  border-color: rgba(202, 217, 224, 0.5); }
 
 /* simple inline code highlite */
 code, samp {

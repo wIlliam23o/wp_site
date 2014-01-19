@@ -773,7 +773,7 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
 .codewrap,.sampwrap { 
     margin: 2px;
     display: inline-block;
-    border: 1px solid $bordercode;
+    border: 1px solid $borderlighter;
     border-radius: 3px;
     -moz-border-radius: 3px;
     -webkit-border-radius: 3px;
@@ -781,6 +781,11 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
     color: $greydark;
     font-family: $fontsmono;
     font-size:$fontsmall;
+}
+
+/* This border is usually used with codewrap */
+.bordermain {
+    border-color: $bordermain;
 }
 
 /* simple inline code highlite */
