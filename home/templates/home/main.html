@@ -84,6 +84,8 @@
 	<!-- Javascript: jQuery -->
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	<script type="text/javascript" src="/static/js/jquery.cookie.min.js"></script>
+	<!--             jQueryUI (might be removed from here and used per-page) -->
+	<script type="text/javascript" src="/static/js/jqueryui/jquery-ui.min.js"></script>
 	
 	<!-- Javascript: Fisheye Dock -->
 	{% if request|is_mobile %}
@@ -101,33 +103,37 @@
 	<!-- Javascript: Local Tools (email protection) -->
 	<script type="text/javascript" src="/static/js/wptools.min.js"></script>
 
+	<!-- Extra Javascript Files (passed by view) -->
+	{% if extra_js_files %}
+		{% for jsrc in extra_js_files %}
+			<script type='text/javascript' src='{{ jsrc }}'></script>
+		{% endfor %}
+	{% endif %}
+	<!-- EXTRA JAVASCRIPT (per page) -->
+	{% block javascript %}
+	{% endblock %}
 
-<!-- EXTRA JAVASCRIPT (per page) -->
-{% block javascript %}
-{% endblock %}
+	<!-- Google Analytics -->
+	<script type="text/javascript">
 
-<!-- Google Analytics -->
-<script type="text/javascript">
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-33573966-1']);
+	  _gaq.push(['_setDomainName', 'welbornprod.com']);
+	  _gaq.push(['_setAllowLinker', true]);
+	  _gaq.push(['_trackPageview']);
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-33573966-1']);
-  _gaq.push(['_setDomainName', 'welbornprod.com']);
-  _gaq.push(['_setAllowLinker', true]);
-  _gaq.push(['_trackPageview']);
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+	</script>
+	<!-- End of Google Analytics -->
 
-</script>
-<!-- End of Google Analytics -->
-
-
-{% block extrahead %}
-{% endblock %}
-
+	<!-- Extra Head (could be anything) -->
+	{% block extrahead %}
+	{% endblock %}
 </head>
 
 <!-- MAIN PAGE -->

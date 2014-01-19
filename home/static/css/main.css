@@ -981,7 +981,7 @@ ul.bullet li {
   border-top: 1px solid rgba(255, 255, 255, 0.3); }
 
 /* Code wrap. Border with blueish text. (use pre for indention) */
-.codewrap, .sampwrap {
+.codewrap, code, samp, .sampwrap {
   margin: 2px;
   display: inline-block;
   border: 1px solid rgba(202, 217, 224, 0.5);
@@ -993,20 +993,53 @@ ul.bullet li {
   font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
   font-size: 0.8em; }
 
-/* This border is usually used with codewrap */
+code, samp {
+  display: inline; }
+
+.cmdhelp-box {
+  position: relative;
+  display: block;
+  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+  font-size: 0.8em;
+  border-style: solid;
+  border-color: rgba(202, 217, 224, 0.5);
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-width: 1px;
+  padding: 5px; }
+
+.cmditem {
+  display: block;
+  margin-bottom: 5px;
+  border-style: solid;
+  border-color: rgba(202, 217, 224, 0.5);
+  border-width: 1px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  padding: 2px; }
+
+.cmdoption {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 1em; }
+
+.cmdvalue {
+  display: block;
+  margin-left: 70px;
+  color: #919191;
+  font-size: 0.9em; }
+
 .bordermain {
   border-color: rgba(202, 217, 224, 0.5); }
 
-/* simple inline code highlite */
-code, samp {
-  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
-  font-size: 0.8em;
-  color: #4d4d4d;
-  border: 1px solid #7793a7;
-  border-radius: 3px;
-  -moz-border-radius: 3px;
-  -webkit-border-radius: 3px;
-  padding: 1px; }
+.mono {
+  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace; }
 
 /* email spam bot protection */
 .wp-address {

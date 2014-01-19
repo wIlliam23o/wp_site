@@ -1,3 +1,4 @@
+
 <div class='wp-block feature-list' style='padding-top: 20px;'>
     <!-- Description -->
     Python evaluation bot for IRC. PyVal was made to evaluate python code
@@ -233,39 +234,104 @@ PyValAdmin: !adminhelp
             limitrate, msg, part, say, sendline, setattr, shutdown, stats, unban
         </pre>
         <br>
-        There is no [code]!adminhelp cmd[/code] like the regular [code]!help[/code] has.
+        There is no [code]!adminhelp &lt;cmd&gt;[/code] like the regular [code]!help[/code] has.
         <br>
         So I will just give a quick rundown on what some of these commands do.
         <br><br>
         Admin command help:<br>
-        <pre class='codewrap'>
-adminadd [nick]         : Add an administrator by nick.
-adminhelp               : List admin commands.
-adminlist               : List all admin nicks.
-adminreload             : Reload the admin list from the pyval_admins.lst file.
-adminrem [nick]         : Remove an admin (shortcut for adminremove)
-adminremove [nick]      : Remove an admin by nick.
-ban [nick]              : Ban a nick from sending commands. (commands will be ignored)
-banned                  : Show currently banned nicks.
-blacklist [on|off|?]    : Turn PyValExec's blacklist option on/off, or show its status.
-getattr [attribute]     : Show the value of a CommandHandler attribute (ex: admin.blacklist)
-identify [password]     : Identify the bot with NickServ.
-join [#channel]         : Make the bot join a channel.
-limitrate [on|off|?]    : Turn the limit-rate option on/off, or show its status.
-msg [target] [message]  : Send a message to a channel or nick.
-part [channel]          : Part (leave) a channel.
-say [message]           : Make PyValBot mention you with a message (PyValUser, message)
-sendline [data]         : Send a raw message to the irc server.
-setattr [attr] [value]  : Set an attribute of CommandHandler. (ex: admin.blacklist False)
-                          PyValBot will try to parse the string value into the
-                          original attributes type. So 'True' becomes bool(True),
-                          and '1' becomes int(1). If the value cannot be parsed
-                          then nothing is set. This works with the basic builtin types.
-                          datetime.datetime and bool are special cases but they do work.
-shutdown                : Shutdown the bot cleanly and disconnect.
-stats                   : Show 'handled-count' (number of handled commands) and uptime (time since startup).
-unban [nick]            : Unban (remove from banned-list) a nick.
-        </pre>
+        <div class='cmdhelp-box'>
+            <div class='cmditem'>
+                [copt]adminadd &#91;nick&#93;[/copt]
+                [cval]Add an administrator by nick.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]adminhelp[/copt]
+                [cval]List admin commands.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]adminlist[/copt]
+                [cval]List all admin nicks.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]adminreload[/copt]
+                [cval]Reload the admin list from the pyval_admins.lst file.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]adminrem &#91;nick&#93;[/copt]
+                [cval]Remove an admin (shortcut for adminremove)[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]adminremove &#91;nick&#93;[/copt]
+                [cval]Remove an admin by nick.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]ban &#91;nick&#93;[/copt]
+                [cval]Ban a nick from sending commands. (commands will be ignored)[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]banned[/copt]
+                [cval]Show currently banned nicks.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]blacklist &#91;on, off, ?&#93;[/copt]
+                [cval]Turn PyValExec's blacklist option on/off, or show its status.[?cval]
+            </div>
+            <div class='cmditem'>
+                [copt]getattr &#91;attribute&#93;[/copt]
+                [cval]Show the value of a CommandHandler attribute (ex: admin.blacklist)[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]identify &#91;password&#93;[/copt]
+                [cval]Identify the bot with NickServ.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]join &#91;#channel&#93;[/copt]
+                [cval]Make the bot join a channel.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]limitrate &#91;on, off, ?&#93;[/copt]
+                [cval]Turn the limit-rate option on/off, or show its status.[?cval]
+            </div>
+            <div class='cmditem'>
+                [copt]msg &#91;target&#93; &#91;message&#93;[/copt]
+                [cval]Send a message to a channel or nick.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]part &#91;channel&#93;[/copt]
+                [cval]Part (leave) a channel.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]say &#91;message&#93;[/copt]
+                [cval]Make PyValBot mention you with a message (PyValUser, message)[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]sendline &#91;data&#93;[/copt]
+                [cval]Send a raw message to the irc server.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]setattr &#91;attr&#93; &#91;value&#93;[/copt]
+                <div class='cmdvalue'>
+                    Set an attribute of CommandHandler. (ex: admin.blacklist False)
+                    PyValBot will try to parse the string value into the
+                    original attribute's type. So 'True' becomes bool(True),
+                    and '1' becomes int(1). If the value cannot be parsed
+                    then nothing is set. This works with the basic builtin types.
+                    datetime.datetime and bool are special cases but they do work.
+                </div>
+            </div>
+            <div class='cmditem'>
+                [copt]shutdown[/copt]
+                [cval]Shutdown the bot cleanly and disconnect.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]stats[/copt]
+                [cval]Show 'handled-count' (number of handled commands) and uptime (time since startup).[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]unban &#91;nick&#93;[/copt]
+                [cval]Unban (remove from banned-list) a nick.[/cval]
+            </div>
+        </div>
         <br>
         In the future this detailed help will be available from the bot.
 

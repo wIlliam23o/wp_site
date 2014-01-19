@@ -3,17 +3,21 @@
 
 // Borders
 $bordermain: rgba(202,217,224,0.5);
-$borderlighter: rgba(202,217,224,0.5);
+$borderfaint: rgba(202, 217, 224, 0.25);
+// this is not actually 'light', bordermain is lighter than this.
 $borderlight: #AFAFAF;
 $borderhover: #B5CEFF;
 $borderblue: #74AFEE;
 $borderwhite: #FFFFFF;
 $borderred: #B90000;
-$bordercode: #7793A7;
+$bordercode: rgba(202,217,224,0.5);
 
 // Colors
+// blackmain and whitemain seem stupid, but if they are used everywhere instead
+// of #FFFFFF and #000000 then changing the 'white' everywhere would be really easy.
 $blackmain: #000000;
 $whitemain: #FFFFFF;
+// dim the white a little so it doesn't hurt your eyes.
 $whitedull: #FAFAFA;
 // $greybg Matches rgb(49, 49, 49) for linear-gradient used in main bg gradient.
 $greybg: #313131;
@@ -52,3 +56,13 @@ $fontlarge: 3.5em;
 
 // Line Heights
 $lineheightnormal: 1.1em;
+
+// mixins (not everything uses this yet.)
+@mixin border-radius($radius) {
+    // to use this do: .box { @include border-radius(10px); }
+    -webkit-border-radius: $radius;
+       -moz-border-radius: $radius;
+        -ms-border-radius: $radius;
+         -o-border-radius: $radius;
+            border-radius: $radius;
+}
