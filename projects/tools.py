@@ -79,9 +79,19 @@ def get_html_content(project):
     
     sfile = get_html_file(project)
     shtml = htmltools.load_html_file(sfile)
-    
-    if shtml == "":
-        _log.debug("missing html for " + project.name + ": " + sfile)
+
+    # TODO: This would tie the template rendering power into project pages,
+    # but it kills my variables {{ inject_source_view }}...
+    # This all needs to be taken into account and fixed.
+    # The injections could be handled by template rendering too,
+    # but it needs to be told what to do with {{ inject_source_view }},
+    # ...perhaps a new templatetag {{ project|sourceview }}
+    # see: htmltools.load_html_file()
+
+    #sfile = '{}.html'.format(project.alias)
+    #shtml = htmltools.load_html_file(sfile)
+    if not shtml:
+        _log.debug('missing html for {}: {}'.format(project.name, sfile))
     
     return shtml
 

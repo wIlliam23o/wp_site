@@ -190,6 +190,20 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.contrib.auth.context_processors.auth",
 )
 
+TEMPLATE_DIRS = (
+    # Put strings here, like "/home/html/django_templates" or
+    # "C:/www/django/templates".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
+    TEMPLATES_BASE,
+    os.path.join(TEMPLATES_BASE, 'admin/templates'),
+    os.path.join(TEMPLATES_BASE, 'admindoc/templates'),
+    # Include project pages as possible templates.
+    os.path.join(BASE_DIR, 'projects/static/html'),
+    # Include blog pages as possible templates.
+    os.path.join(BASE_DIR, 'blogger/static/html'),
+)
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.gzip.GZipMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
@@ -216,17 +230,6 @@ ROOT_URLCONF = 'wp_main.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'wp_main.wsgi.application'
-
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or
-    # "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    TEMPLATES_BASE,
-    os.path.join(TEMPLATES_BASE, "admin/templates"),
-    os.path.join(TEMPLATES_BASE, "admindoc/templates"),
-)
-
 
 INSTALLED_APPS = (
     'django.contrib.auth',

@@ -51,10 +51,11 @@ def download(request, file_path):
         else:
             static_path = '/static/{}'.format(static_path)
 
+    # used for local only.
     if (not static_path.startswith('/')):
         static_path = '/{}'.format(static_path)
     
-    if absolute_path == "":
+    if not absolute_path:
         # File doesn't exist. Return an error.
         _log.debug("file doesn't exist: " + file_path)
         alert_message = "Sorry, that file doesn't exist."

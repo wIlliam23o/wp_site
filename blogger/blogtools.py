@@ -90,6 +90,9 @@ def get_post_body(post_):
         if loading fails, or it is not set, we will use post.body.
     """
     
+    # TODO: Html content needs to be tied into template render.
+    #       see: htmltools.load_html_file(), projects.tools.get_html_content(),
+    #            misc.tools.get_long_desc()
     if post_ is None:
         _log.error("post_ = None!")
         return ""

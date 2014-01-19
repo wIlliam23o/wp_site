@@ -24,6 +24,9 @@ def get_long_desc(miscobj):
         otherwise it uses .content.
     """
 
+    # TODO: Html content needs the power of template rendering.
+    #       see: htmltools.load_html_file(), projects.tools.get_html_content()
+    #            blogtools.get_post_body()...
     # Try html file first.
     htmlfile = htmltools.get_html_file(miscobj)
     content = ''
@@ -101,6 +104,11 @@ def get_by_filename(filename):
     """ Retrieve a misc object by its file. """
 
     if filename:
+        # Trim leading /, filenames are never stored that way.
+        # it would break os.path.join if they were.
+        if filename.startswith('/'):
+            filename = filename[1:]
+
         obj = utilities.get_object_safe(wp_misc, filename=filename)
         if obj:
             return obj

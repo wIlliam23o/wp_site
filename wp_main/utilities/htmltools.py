@@ -357,18 +357,6 @@ class html_content(object):
 
         return self
 
-    # TODO: Remove this when all objects use highlight_codes() style.
-#    def highlight_embedded(self):
-#        """ highlight all embedded lines in content (if any)
-# Soon to be deprecated in favor of highlight_codes().#
-#
-#        """
-#
-#        if self.contains("highlight-embedded"):
-#            self.content = highlighter.highlight_embedded(self.content)
-#
-#        return self
-
     def hide_email(self):
         """ base64 encodes all email addresses for use with
             wptool.js reveal functions.
@@ -453,7 +441,8 @@ class html_content(object):
         return addresses_
 
 
-# These were going to be 'auto-linked' but that idea was scrapped.
+# These are used on the About page,
+# they are used to create links out of certain words.
 auto_link_list = (
     ("Windows", "http://www.windows.com"),
     ("Mint", "http://linuxmint.com"),
@@ -602,7 +591,7 @@ def auto_link_line(str_, link_list, **kwargs):
                         # use first non-named group
                         link_text = re_match.groups()[0]
                 # Replace the text with a link
-                new_link = ''.join(['< a href="{}" '.format(link_href),
+                new_link = ''.join(['<a href="{}" '.format(link_href),
                                     'title="{}" '.format(link_text),
                                     '{}>'.format(attr_string),
                                     '{}</a>'.format(link_text),
@@ -668,14 +657,57 @@ def get_html_file(wpobj):
     return html_file
 
 
-def load_html_file(sfile):
-    """ loads html content from file.
+def load_html_file(sfile, request=None, context=None):
+    """ Trys loading a template by name,
+        If context is passed it is used to render the template.
+        If a request was passed then RequestContext is used,
+        otherwise Context is used.
+        If no template is found, it trys loading html content from file.
         returns string with html content.
     """
 
-    # TODO: This needs to be tied in with template.render() somehow,
-    #       so project/app/blog descriptions have the power of the
-    #       django template language.
+    # TODO: project pages and blogs don't need to use the old style
+    #       {{ inject_something }} tags. They need a new templatetag like:
+    #       {{ post|injectsomething }} or {{ project|sourceview }}.
+    # Template code is disabled until then.
+    # see: projects.tools.get_html_content()
+
+    # try:
+    #    template = loader.get_template(sfile)
+    # except Exception:
+    #    template = None
+    #
+    # if template:
+    # Found template for this file, use it.
+    #    if context:
+    #        if request:
+    # Try creating a request context.
+    #            try:
+    #                contextobj = RequestContext(request, context)
+    #            except Exception as ex:
+    #                _log.error('Error creating request context from: '
+    #                           '{}\n{}'.format(request, ex))
+    #                return ''
+    #        else:
+    # No request, use normal context.
+    #            contextobj = Context(context)
+    #    else:
+    # No context dict given, use empty context.
+    #        contextobj = Context({})
+    #
+    # Have context, try rendering.
+    #    try:
+    #        content = template.render(contextobj)
+    # Good content, return it.
+    #        return content
+    #    except Exception as ex:
+    #        _log.error(''.join(['Error rendering template: {} '.format(sfile),
+    #                            'Context: {}'.format(context),
+    #                            '\n{}'.format(ex),
+    #                            ]))
+    #        return ''
+
+    # no template, probably a filename. check it:
     if not os.path.isfile(sfile):
         # try getting absolute path
         spath = utilities.get_absolute_path(sfile)
@@ -683,22 +715,26 @@ def load_html_file(sfile):
             sfile = spath
         else:
             # no file found.
-            _log.debug("no file found at: " + sfile)
-            return ""
+            _log.debug('No file found at: {}'.format(sfile))
+            return ''
 
     try:
         with open(sfile) as fhtml:
+            # Successful file open, return the contents.
             return fhtml.read()
+
     except IOError as exIO:
-        _log.error("Cannot open file: {}\n{}".format(sfile, exIO))
-        return ""
+        _log.error('Cannot open file: {}\n{}'.format(sfile, exIO))
+        return ''
+
     except OSError as exOS:
-        _log.error("Possible bad permissions opening file: {}".format(sfile) +
-                   "{}".format(exOS))
-        return ""
+        _log.error('Possible bad permissions opening file: {}'.format(sfile) +
+                   '{}'.format(exOS))
+        return ''
+
     except Exception as ex:
-        _log.error("General error opening file: {}\n{}".format(sfile, ex))
-        return ""
+        _log.error('General error opening file: {}\n{}'.format(sfile, ex))
+        return ''
 
 
 def check_replacement(source_string, target_replacement):
@@ -1323,7 +1359,7 @@ def render_clean(template_name, **kwargs):
     """ runs render_html() through clean_html().
         renders template by name and context dict,
         RequestContext is used if with_request is True.
-        Keyword Arguments:
+        Keyword Arguments (same as render_html()):
               context_dict : dict to be used by Context() or RequestContext()
               with_request : HttpRequest() object passed on to RequestContext()
                  link_list : link_list to be used with htmltools.auto_link()
