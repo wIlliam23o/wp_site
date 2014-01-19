@@ -154,8 +154,10 @@
     User1: How can I make a dict out the first and last items in a list of lists?
 PyValUser: !py {l[0]:l[-1] for l in [['a', 'b', 'c', 'd'], ['e', 'f', 'g', 'h']]}
     pyval: PyValUser, {'a': 'd', 'e': 'h'}
-        </pre>
-        <br><br>
+        </pre><br>
+
+        <!-- Chat Help -->
+        <h2 class='title'>chat help</h2>
         To get a list of commands use [code]!help[/code] or [code]!py help()[/code]:<br>
         <pre class='codewrap'>
 PyValUser: !help
@@ -163,14 +165,16 @@ PyValUser: !help
 
 PyValUser: !py help()
     pyval: PyValUser, commands: help, py, python, pyval, uptime, version
-        </pre>
-        <br><br>
+        </pre><br>
+
+        <!-- Builtins -->
+        <h2 class='title'>builtins</h2>
         PyValBot also has a builtin [py]modules()[/py] function that lists builtin modules:<br>
         <pre class='codewrap'>
 PyValUser: !py modules()
     pyval: PyValUser, 'modules are: math, re'
-        </pre>
-        <br>
+        </pre><br>
+
         This function will probably just return a [py]list[/py] of modules in the future,
         but for right now it returns a [py]str[/py].
         <br>
@@ -184,29 +188,36 @@ PyValUser: !py modules()
         <h3 class='title'>Advanced Chat Usage</h3>
     </div>
     <div>
+
+        <!-- NewLines -->
+        <h2 class='title'>NewLines</h2>
         To insert newlines in more advanced code:
         <br>
         <pre class='codewrap'>
 PyValUser: !py x = 5\nfor i in range(x):\n    print(str(i))
     pyval: PyValUser,  0\n1\n2\n3\n4
-        </pre>
-        <br>
+        </pre><br>
+
         [py]print()[/py] must be used because this is not simple [py]eval()[/py] code. 
         Even with lines like [py]x=5\nprint(x)[/py].
-        <br><br>
+        
+        <!-- Escaped NewLines -->
+        <h2 class='title'>Escaped NewLines</h2>
         To escape newlines in more advanced code:<br>
         <pre class='codewrap'>
 PyValUser: !py print('\\n'.join(['test', 'this']))
     pyval: PyValUser, test\nthis
-        </pre>
-        <br><br>
+        </pre><br>
+
+        <!-- Long Output -->
+        <h2 class='title'>Long Output</h2>
         To get long output (there is a time limit on executing code):<br>
         <pre class='codewrap'>
 PyValUser: !py for i in range(65):\n    print('test' * 55)
     pyval: cjwelborn, testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
            full: http://paste.pound-python.org/show/AcDrJg9NszeyXmxcOKBI/
-        </pre>
-        <br><br>
+        </pre><br>
+
         Long output is sent to a pastebin, but even then it is truncated.
         You can get up to 65 lines of output, each line must not exceed ~240 characters.
         <br><br>
@@ -225,15 +236,17 @@ PyValUser: !py for i in range(65):\n    print('test' * 55)
     </div>
     <div>
         Administrators of PyValBot have a bigger set of commands to work with.
-        <br>
-        To get a list of these commands you must be an admin and type [code]!adminhelp[/code]:<br>
+        
+        <!-- Admin Help -->
+        <h2 class='title'>Admin Help</h2>
+        To get a list of admin-commands you must be an admin and type [code]!adminhelp[/code]:<br>
         <pre class='codewrap'>
 PyValAdmin: !adminhelp
      pyval: PyValAdmin, commands: adminadd, adminhelp, adminlist, adminreload, 
             adminrem, adminremove, ban, banned, blacklist, getattr, identify, join,
             limitrate, msg, part, say, sendline, setattr, shutdown, stats, unban
-        </pre>
-        <br>
+        </pre><br>
+        
         There is no [code]!adminhelp &lt;cmd&gt;[/code] like the regular [code]!help[/code] has.
         <br>
         So I will just give a quick rundown on what some of these commands do.
@@ -358,28 +371,31 @@ PyValAdmin: !adminhelp
         <br><br>
         Notice the [python]safe_output()[/python]. Newlines are replaced with the 
         escaped [python]\\n[/python], and long output is truncated.
-        <br><br>
-        Also, when the input is a string (as opposed to a file name),
-        special handling is needed to use the [python]\n[/python] character.<br>
-        PyValExec reads [python]\\n[/python] as a literal newline ([python]\n[/python], 
-        as if you pressed Enter.)<br>
-        To use the escaped newline, you actually have to double-escape it with [py]\\n[/py].
-        <br><br>
-        When sending input to the bot, you would type them exactly as above.
         <br>
-        However, when running from the shell, the shell also needs escaping.
+        If you want full output, run it with the [bash]-r[/bash] or [bash]--raw[/bash] flag.
+        
+        <!-- PyValExec NewLines -->
+        <h2 class='title'>NewLines</h2>
+        When the input is a string (as opposed to a file),
+        special handling is needed to use the [python]\n[/python] character.<br>
+        PyValExec reads [python]\n[/python] as a literal newline 
+        (as if you pressed Enter.)<br>
+        To use the newline character, you actually have to double-escape it with [py]\\n[/py].<br>
+        This is how you should treat newlines when sending input to the bot.
+        <br><br>
+        However, when running from the shell, it needs even more escaping.
         <br>
         This is why the above code uses [py]\\\\n[/py],
         so PyValExec actually receives [py]\\n[/py],
-        which is then converted to an actual [py]\n[/py].
-        <br><br>
-        If you want full output, run it with the [bash]-r[/bash] or [bash]--raw[/bash] flag.
-        <br><br>
-        PyValExec also has a symlink, you can use [bash]pyvalexec[/bash], like this:
+        which is then converted to [py]\n[/py].
+        
+        <!-- PyValExec Symlink / Multi-line Code -->
+        <h2 class='title'>PyValExec Symlink / Multi-line Code</h2>
+        PyValExec also has a symlink, you can use [bash]pyvalexec[/bash] like this:
         <br>
         <div class='codewrap'>
-            $ ./pyvalexec "for i in range(3):\\n    print(str(i))" -r<br>
-            Content: for i in range(3):\n    print(str(i))<br>
+            $ ./pyvalexec "for i in range(3):\\n&nbsp;&nbsp;&nbsp;&nbsp;print(str(i))" -r<br>
+            Content: for i in range(3):\n&nbsp;&nbsp;&nbsp;&nbsp;print(str(i))<br>
             <br>
             Results (raw output):<br>
             0<br>
@@ -390,12 +406,15 @@ PyValAdmin: !adminhelp
         Notice the [python]\\n[/python] which was escaped in the shell to send the two characters
         [python]\[/python] and [python]n[/python] (an escaped newline in python).<br>
         PyValExec reads this as an actual newline, and interprets the code as if you
-        had pressed Enter, and then indented four spaces.
-        <br><br>
+        had pressed Enter. Four spaces were added here to indent the next line.
+        
+        <!-- Script Files -->
+        <h2 class='title'>Script Files</h2>
         PyValExec will also read code from a file and run it. However, the
         [python]__name__[/python] is not set to [python]'__main__'[/python],<br>
-        it is instead set to [py]'__pyval__'[/py].<br>
+        it is instead set to [py]'__pyval__'[/py].
         This allows you to block scripts from running outside of the sandbox.<br><br>
+
         So you can do things like this:<br>
         <pre class='python'>
 import sys
@@ -407,16 +426,16 @@ elif __name__ == '__pyval__':
 else:
     print('This script is not meant to be imported!')
     sys.exit(1)
-        </pre>
-        <br><br>
+        </pre><br>
+
         Or just this:<br>
         <pre class='python'>
 import sys
 if __name__ != '__pyval__':
     print('Script cannot run outside of PyValExec!')
     sys.exit(1)
-        </pre>
-        <br>
+        </pre><br>
+
         I suggest writing code especially for the sandbox, instead of sending your
         scripts as-is to the sandbox.
         <br><br>

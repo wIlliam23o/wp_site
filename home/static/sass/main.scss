@@ -77,7 +77,6 @@ h1, h2, .module-title h2, h3, h4, h5 {
     
 /* These two should have the same style, different sizes. */
 h2.title, h1.title {
-    padding-left: 0px;
     margin-left: 0px;
     margin-bottom: 5px;
     margin-top: 10px;
@@ -95,7 +94,8 @@ h4 {
 }
 h5 {
     font-family: $fontsnormal;
-    text-transform: lowercase;font-size: 100%;
+    text-transform: lowercase;
+    font-size: 100%;
 }
 blockquote {  
     background: none;  
