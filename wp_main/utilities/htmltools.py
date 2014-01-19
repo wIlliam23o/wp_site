@@ -673,6 +673,9 @@ def load_html_file(sfile):
         returns string with html content.
     """
 
+    # TODO: This needs to be tied in with template.render() somehow,
+    #       so project/app/blog descriptions have the power of the
+    #       django template language.
     if not os.path.isfile(sfile):
         # try getting absolute path
         spath = utilities.get_absolute_path(sfile)
@@ -1088,8 +1091,13 @@ def find_mailtos(source_string):
 
     """
     # TODO: Continue cleaning up this code, starting here (go down)
-    # regex pattern for finding href tag with 'mailto:??????' and a wp-address class
-    s_mailto = r'<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]wp-address[\'"][ ]href[ ]?\=[ ]?["\']((mailto:)?' + re_email_address + ')'
+    # regex pattern for finding href tag with 'mailto:??????'
+    # and a wp-address class
+    s_mailto = ''.join([r'<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]wp-address',
+                        r'[\'"][ ]href[ ]?\=[ ]?["\']((mailto:)?',
+                        re_email_address,
+                        ')',
+                        ])
     re_pattern = re.compile(s_mailto)
     raw_matches = re.findall(re_pattern, source_string)
     mailtos_ = []
@@ -1100,10 +1108,17 @@ def find_mailtos(source_string):
 
 
 def find_email_addresses(source_string):
-    """ finds all instances of email@addresses.com inside a wp-address classed tag. for hide_email() """
+    """ finds all instances of email@addresses.com inside a wp-address
+        classed tag.
+        for hide_email().
+    """
 
     # regex pattern for locating an email address.
-    s_addr = r"(<\w+(?!>)[ ]class[ ]?\=[ ]?['\"]wp-address['\"])(.+)?[ >](" + re_email_address + ")"
+    s_addr = ''.join([r'(<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]wp-address',
+                      r'[\'"])(.+)?[ >](',
+                      re_email_address,
+                      ')',
+                      ])
     re_pattern = re.compile(s_addr)
     raw_matches = re.findall(re_pattern, source_string)
     addresses_ = []
@@ -1144,7 +1159,6 @@ def fix_open_tags(source):
         if you put a string in, you get a string back.
 
     """
-    # TODO: Fix new wp highlight codes open tags. [python] some stuff... oops.
     try:
         if hasattr(source, 'encode'):
             if '\n' in source:
@@ -1194,7 +1208,8 @@ def fix_open_tags(source):
         # Incomplete start tag (no '>')
         if incomplete and not opening:
             # try fixing the opening tag.
-            line = line.replace(incomplete.group(), incomplete.group() + '>')
+            line = line.replace(incomplete.group(),
+                                '{}>'.format(incomplete.group()))
             opening_tags.append(incomplete.group())
         # Good tag
         elif incomplete and opening:
@@ -1207,7 +1222,8 @@ def fix_open_tags(source):
         # Incomplete closing tag (no '>')
         if closing_inc and not closing:
             # find it's start tag, and use it to build a 'fixed' end tag.
-            expecting = opening_tags[len(opening_tags) - 1].replace('<', '</') + '>'
+            closestart = opening_tags[len(opening_tags) - 1].replace('<', '</')
+            expecting = '{}>'.format(closestart)
             line = line.replace(closing_inc.group(), expecting)
             tag_opening = find_opening(expecting)
             if tag_opening:
@@ -1240,10 +1256,11 @@ def clean_html(source_string):
     """ runs the proper remove_ functions. on the source string """
 
     # these things have to be done in a certain order to work correctly.
-    # hide_email, fix p spaces, remove_comments, remove_whitespace, remove_newlines
+    # hide_email, fix p spaces, remove_comments,
+    # remove_whitespace, remove_newlines
     if source_string is None:
         _log.debug("None object passed as source_string!")
-        return ""
+        return ''
 
     return remove_whitespace(
         remove_comments(
@@ -1255,7 +1272,8 @@ def render_html(template_name, **kwargs):
         returns the resulting html.
         Keyword arguments are:
             context_dict : Context or RequestContext dict to be used
-                           RequestContext is used if a request is passed into 'with_request'
+                           RequestContext is used if a request is passed into 
+                           'with_request'. 
                            Default: {}
             with_request : HttpRequest object to pass on to RequestContext
                            Default: False (causes Context to be used)
@@ -1264,9 +1282,12 @@ def render_html(template_name, **kwargs):
                            see: htmltools.auto_link()
                            Default: False (disables auto_link())
           auto_link_args : dict containing arguments for auto_link()
-                           ex: render_html("mytemplate",
-                                           link_list = my_link_list,
-                                           auto_link_args = {"target":"_blank", "class":"my-link-class"})
+                           ex: 
+                           render_html("mytemplate",
+                                       link_list=my_link_list,
+                                       auto_link_args={"target":"_blank",
+                                                       "class":"my-link-class",
+                                                       })
                            Default: {}
     """
     context_dict = kwargs.get('context_dict', {})
@@ -1277,7 +1298,10 @@ def render_html(template_name, **kwargs):
     try:
         tmplate = loader.get_template(template_name)
         if isinstance(context_dict, dict):
-            context_ = RequestContext(with_request, context_dict) if with_request else Context(context_dict)
+            if with_request:
+                context_ = RequestContext(with_request, context_dict)
+            else:
+                context_ = Context(context_dict)
         else:
             # whole Context was passed
             context_ = context_dict
@@ -1301,10 +1325,10 @@ def render_clean(template_name, **kwargs):
         RequestContext is used if with_request is True.
         Keyword Arguments:
               context_dict : dict to be used by Context() or RequestContext()
-              with_request : HttpRequest() object to pass on to RequestContext()
+              with_request : HttpRequest() object passed on to RequestContext()
                  link_list : link_list to be used with htmltools.auto_link()
                              Default: False
-            auto_link_args : A dict containing keyword arguments for auto_link()
+            auto_link_args : A dict containing kw arguments for auto_link()
                              Default: {}
             For these arguments, see: htmltools.render_html()
         passes resulting html through clean_html(),
