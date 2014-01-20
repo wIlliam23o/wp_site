@@ -116,7 +116,7 @@ def view_loader(request):
 
         return responses.clean_response_req("viewer/loader.html",
                                             context_dict=context,
-                                            with_request=request)
+                                            request=request)
     else:
         raise Http404("No file passed to request.")
 
