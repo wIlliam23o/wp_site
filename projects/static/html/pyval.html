@@ -243,13 +243,11 @@ PyValUser: !py for i in range(65):\n    print('test' * 55)
         <pre class='codewrap'>
 PyValAdmin: !adminhelp
      pyval: PyValAdmin, commands: adminadd, adminhelp, adminlist, adminreload, 
-            adminrem, adminremove, ban, banned, blacklist, getattr, identify, join,
-            limitrate, msg, part, say, sendline, setattr, shutdown, stats, unban
+            adminrem, adminremove, ban, banned, blacklist, channels, getattr, identify, join,
+            limitrate, msg, part, partall, say, sendline, setattr, shutdown, stats, unban
         </pre><br>
         
-        There is no [code]!adminhelp &lt;cmd&gt;[/code] like the regular [code]!help[/code] has.
-        <br>
-        So I will just give a quick rundown on what some of these commands do.
+        Here is a list of admin
         <br><br>
         Admin command help:<br>
         <div class='cmdhelp-box'>
@@ -258,8 +256,8 @@ PyValAdmin: !adminhelp
                 [cval]Add an administrator by nick.[/cval]
             </div>
             <div class='cmditem'>
-                [copt]adminhelp[/copt]
-                [cval]List admin commands.[/cval]
+                [copt]adminhelp &#91;cmd&#93;[/copt]
+                [cval]List admin commands, or show description for a command.[/cval]
             </div>
             <div class='cmditem'>
                 [copt]adminlist[/copt]
@@ -290,6 +288,10 @@ PyValAdmin: !adminhelp
                 [cval]Turn PyValExec's blacklist option on/off, or show its status.[?cval]
             </div>
             <div class='cmditem'>
+                [copt]channels[/copt]
+                [cval]List all current channels pyval is in.[/cval]
+            </div>
+            <div class='cmditem'>
                 [copt]getattr &#91;attribute&#93;[/copt]
                 [cval]Show the value of a CommandHandler attribute (ex: admin.blacklist)[/cval]
             </div>
@@ -299,7 +301,7 @@ PyValAdmin: !adminhelp
             </div>
             <div class='cmditem'>
                 [copt]join &#91;#channel&#93;[/copt]
-                [cval]Make the bot join a channel.[/cval]
+                [cval]Make the bot join a channel, or a comma-separated list of channels.[/cval]
             </div>
             <div class='cmditem'>
                 [copt]limitrate &#91;on, off, ?&#93;[/copt]
@@ -311,7 +313,15 @@ PyValAdmin: !adminhelp
             </div>
             <div class='cmditem'>
                 [copt]part &#91;channel&#93;[/copt]
-                [cval]Part (leave) a channel.[/cval]
+                [cval]Part (leave) a channel, or a comma-separated list of channels[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]partall[/copt]
+                <div class='cmdvalue'>
+                    Part all channels the pyval is currently in.
+                    The only way to re-join channels is to send a message to pyval
+                    with the 'join' command, or by restarting the bot.
+                </div>
             </div>
             <div class='cmditem'>
                 [copt]say &#91;message&#93;[/copt]
@@ -345,9 +355,6 @@ PyValAdmin: !adminhelp
                 [cval]Unban (remove from banned-list) a nick.[/cval]
             </div>
         </div>
-        <br>
-        In the future this detailed help will be available from the bot.
-
     </div>
 </div>
 
@@ -460,3 +467,45 @@ if __name__ != '__pyval__':
         test the execution of code inside the sandbox, and test IRC input / output.
     </div>
 </div>
+
+<!-- Updates -->
+<div class='wp-block feature-list'>
+    <div id='updates' class='title-box'>
+        <h3 class='title'>
+            Updates
+        </h3>
+    </div>
+    
+    <div class='update-box'>
+        <span class='update-title'>
+            Update: version 1.0.6
+        </span>
+        <ul class='circle blue'>
+            <li>
+                Added channel tracking, admins can now use the [code]channels[/code] command.
+            </li>
+            <li>
+                Changed [code]join[/code]/[code]part[/code] commands to accept a
+                comma-separated list of multiple channels.
+            </li>
+            <li>
+                Added [code]partall[/code] admin command to part all current channels.
+            </li>
+            <li>
+                Added better logging, NOTICE and NickServ message are automatically logged.
+            </li>
+            <li>
+                Added the ability to load script files with PyValExec.
+            </li>
+            <div class='listdesc'>
+                You can now pass a file name to [code]./pyvalexec[?code]<br>
+                [py]__name__[/py] is not set to [py]'__main__'[/py],
+                it is instead set to [py]'__pyval__'[/py].
+                This allows you to detect if a script is running through PyValExec,
+                Python, or is being imported.
+            </div>
+        </ul>
+    </div>
+</div>
+
+    
