@@ -20,7 +20,7 @@ import sys
 
 # XChat style version info.
 __module_name__ = 'xtools'
-__module_version__ = '0.2.9'
+__module_version__ = '0.3.1'
 __module_description__ = 'Various tools/commands for extending XChat...'
 # Convenience version str for help commands.
 VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
@@ -31,6 +31,7 @@ try:
 except ImportError:
     print('\nThis cannot be ran outside of XChat!\n')
     sys.exit(1)
+
 
 # Preload single digit numbers. (for removing leading numbers)
 # (remove_leading_numbers())
@@ -47,9 +48,14 @@ SETTINGS = {}
 # {'nick2': {'index': 1, 'pattern': <SRE_Pattern>},
 #  'nick1': {'index': 0, 'pattern': <SRE_Pattern>}}
 IGNORED_NICKS = {}
-
 # Deque of ignored messages, only for this session. Max length is set.
 IGNORED_MESSAGES = deque(maxlen=250)
+
+# Dict of msg catchers (regex/text to catch and save msgs)
+MSG_CATCHERS = {}
+# Deque of caught messages, only for this session.
+MAX_CAUGHT_MSGS = 250
+CAUGHT_MSGS = {}
 
 
 class StdOutCatcher(object):
@@ -158,6 +164,66 @@ def add_ignored_nick(nickstr):
     return []
 
 
+def add_catcher(catcherstr):
+    """ Add a catcher to the catchers list. """
+    global MSG_CATCHERS
+    msg_catchers = []
+
+    def compile_re(restr):
+        try:
+            compiled = re.compile(restr)
+        except Exception as ex:
+            return False, ex
+        else:
+            return compiled, None
+
+    # This will accept several nicks separated by spaces.
+    for msg in catcherstr.split():
+        if msg in MSG_CATCHERS.keys():
+            # Skip nick already on the list.
+            print_status('{} is already caught.'.format(msg))
+            continue
+        repat, reerr = compile_re(msg)
+        if not repat:
+            # Skip bad regex.
+            print_error(('Invalid regex pattern for that catcher: '
+                        '{}'.format(msg)),
+                        boldtext=msg,
+                        exc=reerr)
+            continue
+        MSG_CATCHERS[msg] = {'index': len(MSG_CATCHERS),
+                             'pattern': repat,
+                             }
+
+        msg_catchers.append(msg)
+
+    # Fix indexes so they are sorted.
+    build_catcher_indexes()
+    if msg_catchers and save_catchers() and save_prefs():
+        return msg_catchers
+    # Failure saving.
+    return []
+
+
+def add_caught_msg(msginfo):
+    """ add a message to the caught-msgs dict, if it doesn't exist. """
+    global CAUGHT_MSGS
+    msgid = generate_msg_id(msginfo)
+    existingmsg = CAUGHT_MSGS.get(msgid, None)
+    if existingmsg:
+        return False
+
+    # This would be really slow, if the msg len has exceeded the max and
+    # a lot of msgs are being added.
+    if len(CAUGHT_MSGS) >= MAX_CAUGHT_MSGS:
+        # pop the first item from caught msgs.
+        sortbytime = lambda msgid: CAUGHT_MSGS[msgid]['time']
+        firstkey = list(sorted(CAUGHT_MSGS.keys(), key=sortbytime))[0]
+        CAUGHT_MSGS.pop(firstkey)
+    CAUGHT_MSGS[msgid] = msginfo
+    return True
+
+
 def bool_mode(modestr):
     """ Translates common words to bool values.
         Acceptable values for modestr:
@@ -183,6 +249,13 @@ def bool_mode(modestr):
         print_error(invalidmsg, boldtext=modestr)
         return xchat.EAT_ALL
     return mode
+
+
+def build_catcher_indexes():
+    """ Builds indexes for msg catchers. """
+    global MSG_CATCHERS
+    for index, msg in enumerate(sorted(MSG_CATCHERS.keys())):
+        MSG_CATCHERS[msg]['index'] = index
 
 
 def build_ignored_indexes():
@@ -226,6 +299,32 @@ def build_color_table():
     colors['gray'] = colors['grey']
 
     return colors
+
+
+def clear_catchers():
+    """ Clears all catchers """
+    global MSG_CATCHERS
+
+    if not MSG_CATCHERS:
+        print_error('The catch-msg list is already empty.')
+        return False
+
+    MSG_CATCHERS = {}
+    if save_catchers() and save_prefs():
+        return True
+    return False
+
+
+def clear_caught_msgs():
+    """ Clears all caught msgs. """
+    global CAUGHT_MSGS
+
+    if not CAUGHT_MSGS:
+        print_error('No messages have been caught.')
+        return False
+
+    CAUGHT_MSGS = {}
+    return True
 
 
 def clear_ignored_nicks():
@@ -289,6 +388,16 @@ def color_text(color=None, text=None, bold=False, underline=False):
         strcodes.insert(0, boldcode)
 
     return '{}{}'.format(''.join(strcodes), normal)
+
+
+def generate_msg_id(msginfo):
+    """ Generate a unique msg id for caught msgs. """
+
+    chan = remove_mirc_color(msginfo['channel'])
+    nick = remove_mirc_color(msginfo['nick'])
+    msg = ' '.join([remove_mirc_color(w) for w in msginfo['msg'].split()])
+
+    return hash('{}{}{}'.format(chan, nick, msg))
 
 
 def get_all_users(channels=None):
@@ -433,6 +542,44 @@ def get_pref(opt):
     return None
 
 
+def load_catchers():
+    """ Loads msg-catchers from preferences. """
+    global MSG_CATCHERS
+
+    def try_compile(restr):
+        try:
+            compiled = re.compile(restr)
+        except Exception as ex:
+            return None, ex
+        else:
+            return compiled, None
+
+    catcher_str = get_pref('msg_catchers')
+    if catcher_str:
+        catchers = [s.strip() for s in catcher_str.split('{|}')]
+    else:
+        catchers = []
+
+    # Validate nicks.
+    valid = {}
+    for msg in catchers:
+        repat, reerr = try_compile(msg)
+        if reerr:
+            print_error('Invalid regex pattern for msg-catcher in config: '
+                        '{}'.format(msg),
+                        boldtext=msg,
+                        exc=reerr)
+            continue
+        # Have good nick pattern, add it.
+        valid[msg] = {'index': len(valid), 'pattern': repat}
+
+    # Save to global.
+    MSG_CATCHERS.update(valid)
+    # Rebuild indexes
+    build_catcher_indexes()
+    return True
+
+
 def load_ignored_nicks():
     """ Loads ignored nicks from preferences. """
     global IGNORED_NICKS
@@ -539,6 +686,52 @@ def parse_scrollback_line(line):
         text = None
 
     return timedate, nick, text
+
+
+def print_catchers():
+    """ Prints all msg catchers. """
+
+    if not MSG_CATCHERS:
+        print_status('No msg catchers have been set.')
+        return True
+
+    catchlen = str(len(MSG_CATCHERS))
+    caughtlen = str(len(CAUGHT_MSGS))
+    statusmsg = ('Message Catchers ({} catchers - {} caught msgs):'.format(
+        color_text('blue', catchlen),
+        color_text('blue', caughtlen))
+    )
+    print_status(statusmsg)
+    msgsortkey = lambda k: MSG_CATCHERS[k]['index']
+    for msg in sorted(MSG_CATCHERS.keys(), key=msgsortkey):
+        istr = str(MSG_CATCHERS[msg]['index'] + 1)
+        line = '    {}: {}'.format(color_text('blue', istr, bold=True),
+                                   color_text('blue', msg))
+        print(line)
+    return True
+
+
+def print_caught_msgs():
+    """ Prints all caught messages for this session. """
+
+    if CAUGHT_MSGS:
+        # Print ignored messages.
+        msglen = len(CAUGHT_MSGS)
+        msglenstr = color_text('blue', str(msglen), bold=True)
+        msgplural = 'message' if msglen == 1 else 'messages'
+        print_status('You have {} caught {}:\n'.format(msglenstr, msgplural))
+        sortkey = lambda k: CAUGHT_MSGS[k]['time']
+        for msgid in sorted(CAUGHT_MSGS, key=sortkey):
+            print_saved_msg(CAUGHT_MSGS[msgid])
+        return True
+    else:
+        # print 'no messages' warning.
+        catchlen = len(MSG_CATCHERS)
+        catchlenstr = color_text('blue', str(catchlen))
+        catchplural = 'msg-catcher' if catchlen == 1 else 'msg-catchers'
+        catcherstr = '({} {} set.)'.format(catchlenstr, catchplural)
+        print_status('No messages have been caught. {}'.format(catcherstr))
+        return False
 
 
 def print_cmdhelp(cmdname=None):
@@ -682,6 +875,59 @@ def print_error(msg, exc=None, boldtext=None):
         print(color_text('red', '\n{}'.format(exc)))
 
 
+def print_evalresult(cquery, coutput, **kwargs):
+    """ Format eval code-output for chat before sending,
+        or format for screen output.
+    """
+    chat = kwargs.get('chat', False)
+    chatnick = kwargs.get('chatnick', None)
+    resultonly = kwargs.get('resultonly', False)
+    if chat:
+        # Send to channel as user.
+        queryfmt = cquery.replace('\n', '\\n')
+        # Ensure ; is at the end of the query, to help separate lines like:
+        # 5 == 5; == True, instead of 5 == 5 == True (which reads as False.)
+        if not queryfmt.endswith(';'):
+            queryfmt = '{};'.format(queryfmt)
+
+        if resultonly:
+            # don't include the query in the msg.
+            chanmsg = coutput
+        else:
+            # include query; == result in the msg.
+            chanmsg = '{} == {}'.format(queryfmt, coutput)
+        # add directed message nick if given.
+        if chatnick:
+            chanmsg = '{}: {}'.format(chatnick, chanmsg)
+        print_tochan(chanmsg)
+    else:
+        # Print to screen.
+        print_status('Code Output:')
+        print(coutput)
+
+
+def print_evalerror(cquery, eoutput, **kwargs):
+    """ Format eval error msg for chat before sending,
+        or format for printing to screen.
+    """
+    chat = kwargs.get('chat', False)
+    chatnick = kwargs.get('chatnick', None)
+    resultonly = kwargs.get('resultonly', False)
+    if chat:
+        # Format chat msg, so its not too long.
+        lastline = eoutput.split('\\n')[-1]
+        # send to usual output printer/displayer.
+        print_evalresult(cquery,
+                         lastline,
+                         chat=chat,
+                         chatnick=chatnick,
+                         resultonly=resultonly)
+    else:
+        # Not a chat send, no trimming is needed.
+        errorsfmt = eoutput.replace('\\n', '\n')
+        print_error('Code Error:\n{}'.format(errorsfmt))
+
+
 def print_ignored_msgs():
     """ Prints all ignored messages for this session. """
 
@@ -693,10 +939,9 @@ def print_ignored_msgs():
     msglenstr = color_text('blue', str(len(IGNORED_MESSAGES)), bold=True)
     msgplural = 'message' if len(IGNORED_MESSAGES) == 1 else 'messages'
     print_status('You have {} ignored {}:\n'.format(msglenstr, msgplural))
-    for msg in IGNORED_MESSAGES:
-        nick = msg['nick'].rjust(20)
-        msgtext = msg['msg']
-        print('{}{}: {}'.format(nick, color_text('reset', ''), msgtext))
+    sortkey = lambda k: k['time']
+    for msg in sorted(IGNORED_MESSAGES, key=sortkey):
+        print_saved_msg(msg)
     return True
 
 
@@ -708,7 +953,12 @@ def print_ignored_nicks():
         return True
 
     ignorelenstr = str(len(IGNORED_NICKS))
-    print_status('Ignoring {} nicks:'.format(color_text('blue', ignorelenstr)))
+    msglenstr = str(len(IGNORED_MESSAGES))
+    statusmsg = ('Ignoring {} nicks ({} ignored msgs):'.format(
+        color_text('blue', ignorelenstr),
+        color_text('blue', msglenstr))
+    )
+    print_status(statusmsg)
     nicksortkey = lambda k: IGNORED_NICKS[k]['index']
     for nick in sorted(IGNORED_NICKS.keys(), key=nicksortkey):
         istr = str(IGNORED_NICKS[nick]['index'] + 1)
@@ -733,6 +983,22 @@ def print_tochan(msg):
     xchat.command('MSG {} {}'.format(chan, msg))
 
 
+def print_saved_msg(msg):
+    """ Print a single saved msg from IGNORED_MSGS, or CAUGHT_MSGS.
+        Must be the actual msg, not the msg id.
+        from IGNORED_MSGS, or CAUGHT_MSGS[msgid].
+    """
+    msgtime = '({})'.format(color_text('grey', msg['time']))
+    chan = '[{}]'.format(color_text('green', msg['channel'])).ljust(15)
+    # strip color from nick, and add our own.
+    nick = remove_mirc_color(msg['nick'])
+    nick = color_text('red', nick.ljust(16))
+    print('{} {} {}: {}'.format(msgtime,
+                                chan,
+                                nick,
+                                msg['msg']))
+
+
 def print_status(msg):
     """ Print an xtools status message. """
 
@@ -744,6 +1010,48 @@ def print_version():
     """ Print xtools version. """
 
     print(color_text('blue', VERSIONSTR, bold=True))
+
+
+def remove_catcher(catcherstr):
+    """ Removes a msg-catcher by string. """
+    global MSG_CATCHERS
+
+    def get_key(kstr):
+        if kstr in MSG_CATCHERS.keys():
+            return kstr
+        else:
+            # Try by index.
+            try:
+                intval = int(kstr)
+            except:
+                return None
+            for msg in MSG_CATCHERS.keys():
+                msgindex = MSG_CATCHERS[msg]['index']
+                if msgindex == (intval - 1):
+                    return msg
+
+            return None
+
+    removed_catchers = []
+    for msg in catcherstr.split():
+        msgkey = get_key(msg)
+        if msgkey:
+            # Good key, remove it.
+            MSG_CATCHERS.pop(msgkey)
+            removed_catchers.append(msgkey)
+        else:
+            print_error('Can\'t find that in the msg-catcher list: '
+                        '{}'.format(msg),
+                        boldtext=msg)
+            continue
+
+    # Fix indexes
+    build_catcher_indexes()
+    # Return status.
+    if removed_catchers and save_catchers() and save_prefs():
+        return removed_catchers
+    else:
+        return False
 
 
 def remove_ignored_nick(nickstr):
@@ -811,6 +1119,20 @@ def remove_mirc_color(text, _resubpat=mirc_sub_pattern):
     return _resubpat('', text)
 
 
+def save_catchers():
+    """ Save msg-catchers in preferences. """
+    global SETTINGS
+
+    if MSG_CATCHERS:
+        catcher_str = '{|}'.join(list(MSG_CATCHERS.keys()))
+        SETTINGS['msg_catchers'] = catcher_str
+    else:
+        # no msg catchers
+        if 'msg_catchers' in SETTINGS.keys():
+            SETTINGS.pop('msg_catchers')
+    return True
+
+
 def save_ignored_nicks():
     """ Save ignored nicks in preferences. """
     global SETTINGS
@@ -863,7 +1185,44 @@ def validate_int_str(intstr, minval=5, maxval=60):
     return intval
 
 
-# Commands
+# Commands -------------------------------------------------------------------
+
+def cmd_catch(word, word_eol, userdata=None):
+    """ Handles the /CATCH command to add/remove or list caught msgs. """
+
+    word, argd = get_flag_args(word, [('-c', '--clear', False),
+                                      ('-d', '--delete', False),
+                                      ('-l', '--list', False),
+                                      ('-m', '--msgs', False),
+                                      ('-r', '--remove', False),
+                                      ])
+    cmdargs = get_cmd_rest(word)
+
+    if argd['--clear']:
+        if clear_catchers():
+            print_status('Catch list cleared.')
+    elif argd['--delete']:
+        if clear_caught_msgs():
+            print_status('Caught messages cleared.')
+    elif argd['--list']:
+        print_catchers()
+    elif argd['--msgs']:
+        print_caught_msgs()
+    elif argd['--remove']:
+        removed = remove_catcher(cmdargs)
+        if removed:
+            remstr = color_text('blue', ', '.join(removed), bold=True)
+            print_status('Removed {} from the catch-msg list.'.format(remstr))
+    elif cmdargs:
+        added = add_catcher(cmdargs)
+        if added:
+            addedstr = color_text('blue', ', '.join(added), bold=True)
+            print_status('Added {} to the catch-msg list.'.format(addedstr))
+    else:
+        # default
+        print_caught_msgs()
+
+    return xchat.EAT_ALL
 
 
 def cmd_eval(word, word_eol, userdata=None):
@@ -878,7 +1237,10 @@ def cmd_eval(word, word_eol, userdata=None):
             # prints "private output" to your chat window only.
     """
 
-    word, argd = get_flag_args(word, (('-c', '--chat'), ('-r', '--result')))
+    # Get args from command.
+    word, argd = get_flag_args(word, (('-c', '--chat'),
+                                      ('-r', '--result'),
+                                      ('-e', '--errors')))
     # Remove command from word.
     word = word[1:]
     if not word:
@@ -902,7 +1264,11 @@ def cmd_eval(word, word_eol, userdata=None):
         return xchat.EAT_ALL
 
     # Fix newlines
+    # allow users to type \\n to escape real newlines,
+    # but use \n as an actual newline (as if ENTER had been pressed)
+    query = query.replace('\\\\n', '${nl}')
     query = query.replace('\\n', '\n')
+    query = query.replace('${nl}', '\\n')
     # Choose exec mode.
     if '\n' in query:
         mode = 'exec'
@@ -911,44 +1277,37 @@ def cmd_eval(word, word_eol, userdata=None):
     else:
         mode = 'single'
 
-    # Make a interpreter, replace stdout with chatout if -c is used.
+    # Make an interpreter to run the code.
     compiler = InteractiveInterpreter()
 
-    # Output will be captured, for optional chat output.
-    # stderr will always be formatted and printed to screen.
+    # stdout/stderr will be captured, for optional chat output.
     with StdErrCatcher() as errors:
         with StdOutCatcher() as captured:
+            # execute/evaluate the code.
             incomplete = compiler.runsource(query, symbol=mode)
 
     # incomplete source.
     if incomplete:
+        # Code will not compile.
         warnmsg = 'Incomplete source.'
         print_error(warnmsg, boldtext=warnmsg)
     # Print any errors.
     elif errors.output:
-        errorsfmt = errors.output.replace('\\n', '\n')
-        print_error('Code Error:\n{}'.format(errorsfmt))
+        # Send error output. Only send to chat if the -c flag is given AND
+        # the --errors flag is given. Otherwise print to screen.
+        print_evalerror(query, errors.output,
+                        chat=(argd['--chat'] and argd['--errors']),
+                        chatnick=msgnick,
+                        resultonly=argd['--result'])
     # Code had output.
     elif captured.output:
-        # Format code for chat, or print to screen.
-        if argd['--chat']:
-            # Send to channel as user.
-            queryfmt = query.replace('\n', '\\n')
-            if argd['--result']:
-                # don't include the query in the msg.
-                chanmsg = captured.output
-            else:
-                # include query -> result in the msg.
-                chanmsg = '{} == {}'.format(queryfmt, captured.output)
-            # add directed message nick if given.
-            if msgnick:
-                chanmsg = '{}: {}'.format(msgnick, chanmsg)
-            print_tochan(chanmsg)
-        else:
-            # Print to screen.
-            print_status('Code Output:')
-            print(captured.output)
+        # Send good output to screen or chat (with or without nick or query)
+        print_evalresult(query, captured.output,
+                         chat=argd['--chat'],
+                         chatnick=msgnick,
+                         resultonly=argd['--result'])
     else:
+        # No command output, user didn't print() or something.
         print_error('No Output.')
     return xchat.EAT_ALL
 
@@ -1362,16 +1721,38 @@ def filter_chanmsg(word, word_eol, userdata=None):
     """ Filter Channel Messages. """
     global IGNORED_MESSAGES
 
-    # TODO: Filter /me messages next.
+    # Ignoring messages is easy, just save it and return EAT_ALL.
     msgnick = word[0]
     for nickkey in IGNORED_NICKS.keys():
         nickpat = IGNORED_NICKS[nickkey]['pattern']
         if nickpat.search(msgnick):
             # Ignore this message.
-            msg = {'nick': msgnick, 'msg': word_eol[1]}
+            chan = xchat.get_context().get_info('channel')
+            msgtime = datetime.now()
+            msg = {'nick': msgnick,
+                   'time': msgtime.time().strftime('%H:%M:%S'),
+                   'date': msgtime.date().strftime('%m-%d-%Y'),
+                   'channel': chan,
+                   'msg': word_eol[1]}
             IGNORED_MESSAGES.append(msg)
             return xchat.EAT_ALL
 
+    # Catch messages, need to have a unique id for each caught msg,
+    # or else it will cause double msgs, or recursion in some cases.
+    # hince the need for add_caught_msg(), which generates and checks
+    # duplicate msg ids.
+    for catchmsg in MSG_CATCHERS.keys():
+        msgpat = MSG_CATCHERS[catchmsg]['pattern']
+        if msgpat.search(word_eol[1]):
+            chan = xchat.get_context().get_info('channel')
+            msgtime = datetime.now()
+            msg = {'nick': msgnick,
+                   'time': msgtime.time().strftime('%H:%M:%S'),
+                   'date': msgtime.date().strftime('%m-%d-%Y'),
+                   'channel': chan,
+                   'msg': word_eol[1]}
+            add_caught_msg(msg)
+            return xchat.EAT_NONE
     # Nothing will be done to this message.
     return xchat.EAT_NONE
 
@@ -1380,6 +1761,9 @@ def filter_message(word, word_eol, userdata=None):
     """ Filters all channel messages. """
 
     filter_funcs = {'Channel Message': filter_chanmsg,
+                    'Channel Message Hilight': filter_chanmsg,
+                    'Action Message': filter_chanmsg,
+                    'Action Message Hilight': filter_chanmsg,
                     }
 
     if userdata in filter_funcs.keys():
@@ -1392,42 +1776,62 @@ def filter_message(word, word_eol, userdata=None):
 
 # List of command names/functions
 # (all keys should also be in cmd_help, and vice versa)
-commands = {'searchuser': {'desc': 'Find users by name or part of a name.',
-                           'func': cmd_searchuser,
-                           'enabled': True},
-            'eval': {'desc': 'Evaluate python code. Can send output to chat.',
+commands = {
+    'catch': {'desc': 'Catch messages based on content.',
+                      'func': cmd_catch,
+                      'enabled': True},
+    'eval': {'desc': 'Evaluate python code. Can send output to chat.',
                      'func': cmd_eval,
                      'enabled': True},
-            'finduser': {'desc': '',
+    'finduser': {'desc': '',
                          'func': cmd_searchuser,
                          'enabled': True},
-            'findtext': {'desc': 'Search chat text to see who said what.',
+    'findtext': {'desc': 'Search chat text to see who said what.',
                          'func': cmd_findtext,
                          'enabled': True},
-            'whosaid': {'desc': '',
-                        'func': cmd_findtext,
-                        'enabled': True},
-            'listusers': {'desc': 'List users in all rooms or current room.',
+    'listusers': {'desc': 'List users in all rooms or current room.',
                           'func': cmd_listusers,
                           'enabled': True},
-            'wash': {'desc': 'alias',
+    'searchuser': {'desc': 'Find users by name or part of a name.',
+                           'func': cmd_searchuser,
+                           'enabled': True},
+    'wash': {'desc': 'alias',
                      'func': cmd_whitewash,
                      'enabled': True},
-            'whitewash': {'desc': ('Prints a lot of whitespace to clear the '
-                                   'chat window.'),
-                          'func': cmd_whitewash,
-                          'enabled': True},
-            'xignore': {'desc': 'Add/Remove or list ignored nicks.',
+    'whitewash': {'desc': ('Prints a lot of whitespace to clear the '
+                           'chat window.'),
+                  'func': cmd_whitewash,
+                  'enabled': True},
+    'whosaid': {'desc': '',
+                        'func': cmd_findtext,
+                        'enabled': True},
+    'xignore': {'desc': 'Add/Remove or list ignored nicks.',
                         'func': cmd_xignore,
                         'enabled': True},
-            'xtools': {'desc': 'Show command info or xtools version.',
+    'xtools': {'desc': 'Show command info or xtools version.',
                        'func': cmd_xtools,
                        'enabled': True},
-            }
+}
 
 # Help for commands
-cmd_help = {'eval':
-            ('Usage: /EVAL [-c [nick]] [-r] <code>\n'
+cmd_help = {'catch':
+            ('Usage: /CATCH <pattern>\n'
+             '       /CATCH -r <pattern>\n'
+             '       /CATCH [-c | -d | -l | -m]\n'
+             'Options:\n'
+             '    <pattern>    : A word or regex pattern, if found in\n'
+             '                   a message it causes the msg to be\n'
+             '                   saved. You can retrieve the msgs with\n'
+             '                   the -m flag.\n'
+             '    -c,--clear   : Clear the msg-catcher list.\n'
+             '    -d,--delete  : Delete all caught messages.\n'
+             '    -l,--list    : List all msg-catcher patterns.\n'
+             '    -m,--msgs    : Print all caught messages.\n'
+             '    -r,--remove  : Remove msg-catcher by number or text.\n'
+             '\n    * With no arguments passed, all caught msgs are listed.'
+             '\n    * You can pass several space-separated catchers.'),
+            'eval':
+            ('Usage: /EVAL [-c [nick] [-e] [-r]] <code>\n'
              'Options:\n'
              '    -c [n],--chat [n] : Send as msg to current channel.\n'
              '                        Newlines are replaced with \\\\n,\n'
@@ -1437,7 +1841,14 @@ cmd_help = {'eval':
              '                        * Nick must come before eval code,\n'
              '                          and nick must be present in the\n'
              '                          current channel.\n'
-             '    -r,--result       : Send result only, no query is sent.\n\n'
+             '    -e,--errors       : Force send any errors to chat.\n'
+             '                        This overrides default behavior of\n'
+             '                        cancelling chat-sends when exceptions\n'
+             '                        are raised.\n'
+             '                        Sends the last line of the error msg\n'
+             '                        to chat, usually the Exception string.\n'
+             '    -r,--result       : When chat-sending, send result only.\n'
+             '                        The original query is not sent.\n\n'
              '    ** Warning: This is an unprotected eval, it will eval\n'
              '                whatever code you give it. It only accepts\n'
              '                input from you, so you only have yourself to\n'
@@ -1517,6 +1928,7 @@ COLORS = build_color_table()
 # Load Preferences
 load_prefs()
 load_ignored_nicks()
+load_catchers()
 
 # Fix help and descriptions for aliases
 for aliasname in cmd_aliases.keys():
@@ -1538,7 +1950,8 @@ for cmdname in commands.keys():
                            help=cmd_help[cmdname])
 
 # Hook into channel msgs
-for eventname in ('Channel Message', 'Channel Msg Hilight', 'Your Message'):
+for eventname in ('Channel Message', 'Channel Msg Hilight',
+                  'Channel Action', 'Channel Action Hilight', 'Your Message'):
     xchat.hook_print(eventname, filter_message, userdata=eventname)
 
 # Load Status Message
