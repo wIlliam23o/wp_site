@@ -129,14 +129,13 @@ def highlight_inline(scode, tag_="pre"):
                    'will not be highlighted.')
         return scode
     slines = scode.split('\n')
-    sclass = ""
+    sclass = ''
     inblock = False
     current_block = []
     lexer = None
     formatter = formatters.html.HtmlFormatter(linenos=False, style="default")
     sfinished = scode
-    # Styles that won't be highlighted, but wrapped in their own class,
-    # none will get at least a 'highlighted-inline' class.
+    # Styles that won't be highlighted, but wrapped in a div
     basic_styles = ('none', 'codewrap', 'sampwrap', 'highlighted-inline')
     for sline in slines:
         strim = sline.replace(' ', '').replace('\t', '')
@@ -150,22 +149,20 @@ def highlight_inline(scode, tag_="pre"):
                 # class = 'none or 'codewrap', etc. was used, just wrap it.
                 if lexer in basic_styles:
                     # No highlighting, just wrap it.
+                    # if pre class='codewrap' was used, the 'codewrap' style
+                    # will still be applied to the pre tag.
+                    # if pre class='none' was used, the 'highlighted-inline'
+                    # class will be applied.
                     if lexer == 'none':
-                        newclass = 'highlighted-inline'
+                        newblock = ''.join(['<div class="highlighted-inline">',
+                                            '{}'.format(soldblock),
+                                            '</div>'])
                     else:
-                        newclass = lexer
-                    # left here for testing. TODO: decide and remove this bool.
-                    withclass = False
-                    if withclass:
-                        newheader = '<div class=\'{}\'>'.format(newclass)
-                    else:
-                        newheader = '<div>'
-                    newblock = ['\n{}'.format(newheader),
-                                soldblock,
-                                '</div>\n',
-                                ]
-                    sfinished = sfinished.replace(soldblock,
-                                                  '\n'.join(newblock))
+                        # plain div, the parent tag applied some style.
+                        newblock = '<div>\n{}\n</div>'.format(soldblock)
+                    # newlines for human-readable source.
+                    newblock = '\n{}\n'.format(newblock)
+                    sfinished = sfinished.replace(soldblock, newblock)
                 # must have valid lexer for highlighting
                 elif lexer is not None:
                     # Highlight the old block of text.

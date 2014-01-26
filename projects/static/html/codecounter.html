@@ -171,77 +171,102 @@ Finished analyzing: codecount.py...
 			Updates
 		</h3>
 	</div>
-	
-	<span class="update-title">
-		Update: version 2.0.1
-	</span>
-	<p>
-		fixed small re-factoring error in printreport()...
-	</p>
-	<span class="update-title">
-		Update: version 2.0
-	</span>
-	<p>
-		Completely refactored code! Module is now importable, and can be used like this:
-	</p>
-	<pre class="python">
+	<div class='update-box'>
+        <!-- Update 2.0.1 -->
+    	<span class="update-title">
+    		Update: version 2.0.1
+    	</span>
+    	<ul class='blue circle'>
+            <li>
+    		  fixed small re-factoring error in printreport()...
+    	   </li>
+        </ul>
+
+        <!-- Update 2.0 -->
+    	<span class="update-title">
+    		Update: version 2.0
+    	</span>
+    	<ul class='blue circle'>
+            <li>
+    		  Completely refactored code! Module is now importable, and can be used like this:
+    	    </li>
+            <div class='listdesc'>
+    	       <pre class="python">
 import codecount
 cc = codecount.codecounter()
 myresults = cc.filechecker("myscript_to_check.py")
 cc.printtotals(myresults)
 cc.printimports(myresults)
-	</pre>
-	<p>
-		...if directory is passed to main() codecount.py will print seperate results for all .py files found.<br/>
-		...new printing style, use -t to print only the basic totals for a file.
-	</p>
-	
-	<span class="update-title">
-		Update: version 1.8
-	</span>
-	<p>
-		Fixed import detection, now recognizes all import styles like:
-	</p>
-	<pre class="python">
+    	       </pre>
+            </div>
+    	    <li>
+    		    if directory is passed to main() codecount.py will print seperate results for all .py files found.<br/>
+    		</li>
+            <li>
+                new printing style, use -t to print only the basic totals for a file.
+    	    </li>
+        </ul>
+    	
+        <!--Update 1.8 -->
+    	<span class="update-title">
+    		Update: version 1.8
+    	</span>
+    	<ul class='blue circle'>
+    	    <li>
+        	   Fixed import detection, now recognizes all import styles like:
+    	    </li>
+            <div class='listdesc'>
+    	        <pre class="python">
 import sys
 import sys,os,re
 import pango as p
 from sys import *
 from sys import path,platform
-	</pre>
-	<span class="update-title">
-		Update: version 1.6
-	</span>
-	<p>
-		Fixed DocString handling, now works better. Recognizes DocStrings like:
-	</p>
-	<pre class="python">
-""" This is my Doc String """
-	</pre>
-	<p>
-		-or-
-	</p>
-	<pre class="python">
-"""
-This is my DocString
-"""
-	</pre>
-	<p>
-		...also has the ability to list all DocStrings found with the -s argument. 
-		(You might want to use -sd if you want the list to make sense)
-	</p>
-	
-	<span class="update-title">
-		Update: version 1.5
-	</span>
-	<p>
-		CodeCounter works on single files, or whole directories. It looks for .py files to analyze 
-		them and generates a report with a total from all the files. It can now handle Doc Strings, 
-		"Quote Comments",  and multiple variable declarations on the same line. Better error handling 
-		was added, and overall performance was improved.
-	</p>
+    	        </pre>
+            </div>
+        </ul>
 
+        <!-- Update 1.6 -->
+    	<span class="update-title">
+    		Update: version 1.6
+    	</span>
+        <ul class='blue circle'>
+            <li>
+    		  Fixed DocString handling, now works better. Recognizes DocStrings like:
+    	    </li>
+            <div class='listdesc'>
+    	        <pre class='python'>
+""" This is my single-line Doc String """
+                </pre>
+                <pre class='python'>
+"""
+This is my multi-line DocString
+"""
+    	        </pre>
+            		...also has the ability to list all DocStrings found with the -s argument. 
+            		(You might want to use -sd if you want the list to make sense)
+            </div>
+        </ul>
+    	
+        <!-- Update 1.5 -->
+    	<span class="update-title">
+    		Update: version 1.5
+    	</span>
+        <ul class='blue circle'>
+        	<li>
+        		CodeCounter works on single files, or whole directories.
+            </li>
+            <div class='listdesc'>
+                It looks for .py files to analyze 
+        		them and generates a report with a total from all the files. It can now handle Doc Strings, 
+        		"Quote Comments",  and multiple variable declarations on the same line. Better error handling 
+        		was added, and overall performance was improved.
+        	</div>
+        </ul>
+    </div>
 </div>
+
+<!-- Usage -->
 <div class="wp-block feature-list">
 	<div class="title-box">
 		<h3 class="title">

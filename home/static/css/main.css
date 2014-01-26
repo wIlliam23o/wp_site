@@ -132,10 +132,10 @@ ul.menu {
 a .header:hover, a .header.featured-name:hover {
   color: #74afee; }
 
-p.indented {
+.indented, .indented-subtext {
   margin-left: 15px; }
 
-p.subtext {
+.subtext, .indented-subtext {
   font-size: 0.8em; }
 
 .desc {
@@ -201,9 +201,11 @@ p.subtext {
 /* Containers */
 .wp-container {
   position: relative;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   background: transparent;
   margin-top: 0;
   margin-bottom: 0;
@@ -214,17 +216,21 @@ p.subtext {
 .wp-block {
   position: relative;
   margin: 15px 0;
-  border-radius: 5px;
+  -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
-  -webkit-border-radius: 5px; }
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px; }
 
 .contentbox {
   padding: 10px;
   margin-bottom: 10px;
   background-color: #fafafa;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.17); }
 
 .bottom {
@@ -243,7 +249,11 @@ p.subtext {
   padding: 10px;
   position: relative;
   overflow: hidden;
-  border-radius: 5px 5px 5px 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   box-shadow: #eeeeee 0px 0px 20px;
   margin-bottom: 20px;
   min-height: 240px;
@@ -253,9 +263,11 @@ p.subtext {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #afafaf;
-  border-radius: 15px;
-  -moz-border-radius: 15px;
   -webkit-border-radius: 15px;
+  -moz-border-radius: 15px;
+  -ms-border-radius: 15px;
+  -o-border-radius: 15px;
+  border-radius: 15px;
   border-left-style: solid;
   border-left-width: 2px;
   border-left-color: #afafaf;
@@ -266,18 +278,26 @@ p.subtext {
 
 .comments-box {
   background: white;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
   padding: 5px;
-  box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
   -moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-  -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13); }
+  -ms-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
+  -o-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
+  box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13); }
 
 .img-rounded {
   border-style: solid;
   border-width: 1px;
   border-color: rgba(202, 217, 224, 0.5);
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
   padding: 5px;
   background: white;
@@ -294,9 +314,17 @@ p.subtext {
   color: #4d4d4d;
   background: white;
   border: 2px solid rgba(202, 217, 224, 0.5);
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -o-border-radius: 10px;
   border-radius: 10px;
   z-index: 99999;
   display: none;
+  -webkit-box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+  -moz-box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+  -ms-box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+  -o-box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
   box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
   /* top: 20px; */ }
 
@@ -317,9 +345,11 @@ p.subtext {
   margin-top: 20px;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   border-width: 1px;
   border-style: solid;
   border-color: rgba(202, 217, 224, 0.5);
@@ -336,9 +366,11 @@ p.subtext {
   margin-top: 5px; }
 
 a.jumpto-nav {
-  border-radius: 5px;
-  -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   border-style: solid;
   border-color: #afafaf;
   border-bottom-color: #26a1f4;
@@ -355,9 +387,11 @@ a.jumpto-nav {
 .wpbutton, .readmore-box, .comments-button {
   margin-top: 10px;
   border-style: solid;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   border-width: 1px;
   border-color: #74afee;
   padding-left: 2px;
@@ -452,9 +486,11 @@ a.jumpto-nav {
   list-image-style: none; }
 
 .vertical-menu-item {
-  border-radius: 10px;
-  -moz-border-radius: 10px;
   -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -o-border-radius: 10px;
+  border-radius: 10px;
   background: white;
   border-style: solid;
   border-width: 2px;
@@ -465,6 +501,10 @@ a.jumpto-nav {
   padding-right: 6px;
   border-right-style: none;
   border-left-style: none;
+  -webkit-box-shadow: 4px 4px 5px black;
+  -moz-box-shadow: 4px 4px 5px black;
+  -ms-box-shadow: 4px 4px 5px black;
+  -o-box-shadow: 4px 4px 5px black;
   box-shadow: 4px 4px 5px black; }
   .vertical-menu-item:active {
     border-color: #74afee; }
@@ -588,9 +628,11 @@ a.jumpto-nav {
   font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
   font-weight: bold;
   border: 1px solid rgba(202, 217, 224, 0.5);
-  border-radius: 5px;
-  -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   padding: 2px; }
   .submit-button:hover {
     color: #4d4d4d; }
@@ -604,6 +646,10 @@ a.jumpto-nav {
   color: #919191;
   font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
   border-color: #afafaf;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
   border-width: 1px;
   width: 200px;
@@ -918,6 +964,10 @@ ul.bullet li {
 /* List items with description text */
 .listdesc {
   font-size: .85em;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
   border-color: rgba(202, 217, 224, 0.5);
   border-width: 1px;
@@ -983,9 +1033,11 @@ ul.bullet li {
   margin: 2px;
   display: inline-block;
   border: 1px solid rgba(202, 217, 224, 0.5);
-  border-radius: 3px;
-  -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  -o-border-radius: 3px;
+  border-radius: 3px;
   padding: 2px;
   color: #4d4d4d;
   font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
@@ -1045,9 +1097,11 @@ code, samp {
 
 /* 404 page styles */
 .notfound-box {
-  border-radius: 5px;
-  -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   background: white;
   border-style: solid;
   border-width: 2px;
@@ -1072,9 +1126,11 @@ code, samp {
   text-align: center; }
 
 .notfound-image {
-  border-radius: 30px;
-  -moz-border-radius: 30px;
   -webkit-border-radius: 30px;
+  -moz-border-radius: 30px;
+  -ms-border-radius: 30px;
+  -o-border-radius: 30px;
+  border-radius: 30px;
   border-width: 4px;
   border-style: dashed;
   border-color: rgba(202, 217, 224, 0.5);
@@ -1089,9 +1145,11 @@ code, samp {
   margin-bottom: 5px; }
 
 .debug-button {
-  border-radius: 5px;
-  -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   border-style: solid;
   border-width: 2px;
   border-color: rgba(202, 217, 224, 0.5);
@@ -1119,6 +1177,10 @@ code, samp {
   right: 33%;
   /* positioned by wpTools.js */
   z-index: 99999;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
   border-style: solid;
   border-width: 1px;
@@ -1151,6 +1213,10 @@ code, samp {
   border-style: solid;
   border-color: #b90000;
   border-width: 2px;
+  -webkit-border-radius: 15px;
+  -moz-border-radius: 15px;
+  -ms-border-radius: 15px;
+  -o-border-radius: 15px;
   border-radius: 15px;
   margin-bottom: 20px; }
 
@@ -1165,6 +1231,10 @@ code, samp {
 
 .tooltip:hover:after {
   background: #313131;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
   bottom: 26px;
   color: #fff;
