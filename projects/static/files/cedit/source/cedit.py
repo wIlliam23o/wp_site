@@ -14,18 +14,20 @@
     If you are using Python2 the pip command can install requirements, 
     otherwise pip3 or a Python3-compatible package installer should be used.
     
-    Requires: easysettings 
-                  saves configuration, to install: pip3 install easysettings
-              docopt 
-                  parses arguments, to install: pip3 install docopt
+    Requires: 
+        easysettings 
+                saves configuration, to install: pip3 install easysettings
+        docopt 
+                parses arguments, to install: pip3 install docopt
     
     Installation:
-    To install cedit as a global terminal command you can use the 'install' command.
-    For installing for a single user run:
-        ./cedit.py --install --user
-    
-    For installing in /usr/bin (for all users) run:
-        sudo ./cedit.py --install
+        To install cedit as a global terminal command you can use 
+        the 'install' command.
+        For installing for a single user run:
+            ./cedit.py --install --user
+        
+        For installing in /usr/bin (for all users) run:
+            sudo ./cedit.py --install
 
     Created on Jan 19, 2013
 
@@ -41,21 +43,24 @@ import subprocess
 # enable/disable debug mode
 DEBUG = False
 # determine python version (for better help on required packages/pip)
-PYTHON3 = not sys.version < '3'
+PYTHON3 = (sys.version[0] == '3')
 # determine input function.
 if not PYTHON3:
     input = raw_input  # noqa
 
-# Current version
-_VERSION = '1.3.1'
 # Name, also used in creating symlinks in cmd_install()
-_NAME = 'cedit'
-_SCRIPTFILE = sys.argv[0][2:] if sys.argv[0].startswith('./') else sys.argv[0]
-# looks better in help to have the real user name, if not found then just use 'user'
-_USER = os.environ.get('USER', 'user')
+NAME = 'cedit'
+# Current version
+VERSION = '1.3.1'
+VERSIONX = '1'
+VERSIONSTR = '{} v. {}-{}'.format(NAME, VERSION, VERSIONX)
+SCRIPT = sys.argv[0][2:] if sys.argv[0].startswith('./') else sys.argv[0]
+# looks better in help to have the real user name,
+# if not found then just use 'user'
+USER = os.environ.get('USER', 'user')
 
 # Usage string
-usage_str = """{name} v.{version} (running on Python {pyversion})
+usage_str = """{verstr} (running on Python {pyversion})
 
     Usage:
         cedit -h | -a | -v
@@ -66,25 +71,44 @@ usage_str = """{name} v.{version} (running on Python {pyversion})
         cedit -r
         
     Options:
-        -a,--about                      : show message about cedit.
-        -c filepath,--elevcmd filepath  : set favorite elevation command, where filepath is the path to your elevation command.
-        -d,--debug                      : for development, prints random msgs.
-        -e filepath,--editor filepath   : set favorite editor, where filepath is the path to your editor.
-        -h,--help                       : show this help message.
-        -i,--install                    : install cedit, creates symlink in /usr/local/bin, /usr/bin, or home (see -u and -p)
-                                          if /usr/local/bin is found in $PATH, it is used. otherwise /usr/bin is used.
-                                          if -u or -p is passed also, the install path is determined by the flag.
-                                          cedit will ask for confirmation before installing.
-        -l,--list                       : list current cedit settings (editor/elevcmd)
-        -p dir,--path dir               : when installing, install to specified directory.
-        -r,--remove                     : remove the installed symlink for cedit if installed. (may require permissions)
-        -s,--shellall                   : shell one process per file, instead of sending all file names at once.
-        -u,--user                       : when installing, only install for user.                                       
-                                          $PATH is searched for dirs like /home/{user}/bin.
-                                          without $PATH, common dirs are looked for. 
-        -v,--version                    : show version.
-        filename                        : file to open.
-                                         
+        -a,--about              : show message about cedit.
+        -c file,--elevcmd file  : set favorite elevation command, where
+                                  filepath is the path to your
+                                  elevation command.
+        -d,--debug              : for development, prints random msgs.
+        -e file,--editor file   : set favorite editor, where filepath
+                                  is the path to your editor.
+        -h,--help               : show this help message.
+        -i,--install            : install cedit, creates symlink in
+                                  /usr/local/bin, /usr/bin, or home
+                                  (see -u and -p)
+                                  if /usr/local/bin is found in $PATH,
+                                  it is used. otherwise /usr/bin is used.
+                                  if -u or -p is passed also, the install path
+                                  is determined by the flag.
+                                  cedit will ask for confirmation before
+                                  installing.
+        -l,--list               : list current cedit settings (editor/elevcmd)
+        -p dir,--path dir       : when installing, install to specified
+                                  directory.
+        -r,--remove             : remove the installed symlink for cedit if
+                                  installed. (may require permissions)
+        -s,--shellall           : shell one process per file, instead of
+                                  sending all file names at once.
+        -u,--user               : when installing, only install for user.                                       
+                                  $PATH is searched for dirs like
+                                  /home/{user}/bin.
+                                  without $PATH, common dirs are looked for. 
+        -v,--version            : show version.
+        filename                : file to open.
+    
+    Notes:
+        You can pass arguments on to the editor using the '--' option.
+        Any arguments after the '--' are passed on to your editor.
+        Example:
+            cedit -- --help
+            ..this would send the --help flag to your editor.
+                                     
     Settings:
         editor   : path to favorite editor.
         elevcmd  : path to favorite elevation command.
@@ -94,10 +118,12 @@ usage_str = """{name} v.{version} (running on Python {pyversion})
             ...opens myfile.txt, using elevation command if needed.
 
         cedit myfile1.txt myfile2.txt
-            ...opens both files with your editor, using elevation command if at least 1 file needs it.
+            ...opens both files with your editor, using elevation command if
+               at least 1 file needs it.
 
         cedit *.py
-            ...uses your shells expansion to open all .py files in the current directory.
+            ...uses your shells expansion to open all .py files in
+               the current directory.
 
         cedit --editor gedit
             ...sets favorite editor to 'gedit'
@@ -105,12 +131,13 @@ usage_str = """{name} v.{version} (running on Python {pyversion})
         cedit --elevcmd kdesudo
             ...sets favorite elevation command to 'kdesudo'
             
-""".format(name=_NAME, version=_VERSION, pyversion=sys.version.split()[0], user=_USER)
+""".format(verstr=VERSIONSTR, pyversion=sys.version.split()[0], user=USER)
 
 
 # I hate putting these functions here, but for better help I will.
 def cmd_exists(shortname):
-    """ Determines if link/alias/shortname of command is available using 'which' command.
+    """ Determines if link/alias/shortname of command
+        is available using 'which' command.
         returns True, False
     """
 
@@ -120,11 +147,12 @@ def cmd_exists(shortname):
 
 
 def get_pip_name():
-    """ determine if pip is installed, if it is find whether or not pip3 is installed.
+    """ determine if pip is installed,
+        if it is find whether or not pip3 is installed.
         return string containing desired pip version, or '' if none is found.
     """
-    pip3versions = '3', '3.1', '3.2', '3.3'
-    pip2versions = '', '2', '2.7'
+    pip3versions = '3', '3.1', '3.2', '3.3', '3.4', '3.5'
+    pip2versions = '', '2', '2.6', '2.7'
     pip2exes = []
     for pver in pip2versions:
         pip2exes.append('pip{}'.format(pver))
@@ -153,15 +181,15 @@ def warn_module(importname, pipver):
     """ Module couldn't be imported, show a message about it
         with recommended pip version for install instructions.
     """
-    modulewarning = ['You need to have {propername} installed to use cedit.'.format(propername=importname)]
+    modulewarning = [''.join(['You need to have {} '.format(importname),
+                              'installed to use cedit.'])]
     if pipver:
         modulewarning.append('To install it run:')
     else:
         # no pip installed
         modulewarning.append('After installing a python-package manager,')
         modulewarning.append('Install the module with:')
-    modulewarning.append('{pip} install {pkgname}'.format(pip=pipver,
-                                                          pkgname=importname.lower()))
+    modulewarning.append('{} install {}'.format(pipver, importname.lower()))
     print('\n'.join(modulewarning))
 
 
@@ -169,8 +197,10 @@ def warn_pip(importname):
     """ Module couldn't be imported, so show a message about it.
         Also, show a warning about needing pip installed if it isn't already, 
         or having only pip2 installed while using Python3.
-        If all pip requirements are met, it doesn't show a warning about it, just the module.
-        Returns: True if warning was printed, False if not. (return isn't used right now)
+        If all pip requirements are met,
+        it doesn't show a warning about it, just the module.
+        Returns: True if warning was printed, False if not.
+        (return isn't used right now)
     """
 
      # Check pip info
@@ -180,8 +210,12 @@ def warn_pip(importname):
 
     # No pip installed.
     if not pipname:
-        print('You don\'t have pip installed, you can install packages using something else if you want,\n' +
-              'but I would recommend installing {pippkgver} to get the required packages for cedit.'.format(pippkgver=pypkg))
+        print(''.join(['You don\'t have pip installed, ',
+                       'you can install packages using something ',
+                       'else if you want,\n',
+                       'but I would recommend installing ',
+                       '{} '.format(pypkg),
+                       'to get the required packages for cedit.']))
         warn_module(importname, pipsuggested)
         return True
 
@@ -194,8 +228,12 @@ def warn_pip(importname):
     pyver = 'Python{}'.format(ver)
 
     if not ver in pipname and (not noversionokay):
-        print('You have \'pip\' installed, but it doesn\'t look like a {pyver}-compatible version.\n'.format(pyver=pyver) +
-              'You may need to install {pippkgver} (if \'pip\' already points to a valid version ignore this.)'.format(pippkgver=pypkg))
+        print(''.join(['You have \'pip\' installed, ',
+                       'but it doesn\'t look like a ',
+                       '{}-compatible version.\n'.format(pyver),
+                       'You may need to install {} '.format(pypkg),
+                       '(if \'pip\' already points to a valid ',
+                       'version ignore this.)']))
         warn_module(importname, pipname)
         return True
 
@@ -265,7 +303,9 @@ def cmd_list():
     
     alloptions = settings.list_options()
     if not alloptions:
-        print('no settings yet.\nuse cedit -e (or -c) to set your favorite editor or elevation command.')
+        print(''.join(['no settings yet.\n'
+                       'use {} -e (or -c) '.format(SCRIPT),
+                       'to set your favorite editor or elevation command.']))
         return 1
 
     namelengths = [len(o) for o in alloptions]
@@ -319,10 +359,11 @@ def cmd_install(userdir=None):
             location = userdir
 
         if not os.path.isdir(location):
-            print('not a directory: ' + location + '\n' +
-                  'create the directory and try again.\n' +
-                  'also make sure the directory is included in your PATH environment variable.\n' +
-                  'otherwise, the symlink won\'t work.')
+            print(''.join(['not a directory: {}\n'.format(location),
+                           'create the directory and try again.\n',
+                           'also make sure the directory is included ',
+                           'in your PATH environment variable.\n',
+                           'otherwise, the symlink won\'t work.']))
             return 1
     else:
         # Global
@@ -332,35 +373,40 @@ def cmd_install(userdir=None):
             location = '/usr/bin'
 
     # already installed?
-    finalname = os.path.join(location, _NAME)
-    installedloc = cmd_location(_NAME)
+    finalname = os.path.join(location, NAME)
+    installedloc = cmd_location(NAME)
     if not installedloc:
         # Try full path.
         installedloc = cmd_location(finalname)
     if installedloc:
-        print('it seems that cedit is already installed at: ' + installedloc + '\n' +
-              'you will need to remove it if you want to re-install cedit.\n')
+        print(''.join(['it seems that cedit is already '
+                       'installed at: {}\n'.format(installedloc),
+                       'you will need to remove it if you want '
+                       'to re-install cedit.\n']))
         return 1
 
     # Confirm installation.
-    doinstall = input('cedit will install to: {}\ncontinue with installation? (yes/no): '.format(location))
+    doinstall = input(''.join(['cedit will install to: {}\n'.format(location),
+                               'continue with installation? (yes/no): ']))
     if not doinstall.lower().strip().strip('\t').startswith('y'):
         print('\ninstallation canceled.\n')
         return 1
 
     # Try Installation.
     try:
-        print('trying to create symlink in: ' + location)
+        print('trying to create symlink in: {}'.format(location))
         os.symlink(scriptfile, finalname)
-        print('success!\n' +
-              '...you may have to restart your terminal to use the command \'' + _NAME + '\'')
+        print(''.join(['success!\n',
+                       '...you may have to restart your terminal to use ',
+                       'the command \'{}\''.format(NAME)]))
     except OSError as exos:
-        print('error:\n' + str(exos) + '\n\n' +
-              'try running \'cedit install\' as root for global installation.\n' +
-              'example: sudo cedit install\n')
+        print(''.join(['error:\n{}\n\n'.format(exos),
+                       'try running \'{} install\' '.format(SCRIPT),
+                       'as root for global installation.\n',
+                       'example: sudo {} install\n'.format(SCRIPT)]))
         return 1
     except Exception as ex:
-        print('unable to create symlink with: ' + finalname + '\n' + str(ex))
+        print('unable to create symlink with: {}\n{}'.format(finalname, ex))
         return 1
     
     return 0
@@ -369,15 +415,17 @@ def cmd_install(userdir=None):
 def cmd_remove():
     """ Trys to uninstall/remove the cedit symlink (if any exists) """
 
-    loc = cmd_location(_NAME)
+    loc = cmd_location(NAME)
     if not loc:
-        print('\ncan\'t finc {} installed anywhere.\n'.format(_NAME))
+        print('\ncan\'t finc {} installed anywhere.\n'.format(NAME))
         return 1
 
     # Confirm removal.
-    doremove = input('this will remove {} from: {}\n'.format(_NAME, loc) +
-                     'you will need to have the permissions required to do this.\n' +
-                     '\ncontinue with removal? (yes/no): ')
+    doremove = input(''.join(['this will remove {} from: ',
+                              '{}\n'.format(NAME, loc),
+                              'you will need to have the permissions ',
+                              'required to do this.\n\n',
+                              'continue with removal? (yes/no): ']))
     if not doremove.lower().strip().strip('\t').startswith('y'):
         print('\nremoval canceled.\n')
         return 1
@@ -386,11 +434,11 @@ def cmd_remove():
     try:
         os.remove(loc)
     except OSError as exos:
-        print('\nunable to remove {}!:\n{}'.format(_NAME, exos))
+        print('\nunable to remove {}!:\n{}'.format(NAME, exos))
         return 1
 
     # Success.
-    print('\n{} was successfully removed from: {}\n'.format(_NAME, loc))
+    print('\n{} was successfully removed from: {}\n'.format(NAME, loc))
     return 0
 
 
@@ -483,15 +531,17 @@ def get_username():
 def get_editor():
     if not settings.get('editor', ''):
         # no editor set
-        print('Be sure to set your favorite editor with: cedit --editor path_to_editor')
+        print('Be sure to set your favorite editor with: '
+              '{} --editor path_to_editor'.format(SCRIPT))
         # look for common editor
         lst_editors = ['kate', 'gedit', 'leafpad', 'kwrite']
         for editor in lst_editors:
             spath = os.path.join('/usr/bin/', editor)
             if os.path.isfile(spath) or os.path.islink(spath):
-                print('Found common editor: ' + spath)
+                print('Found common editor: {}'.format(spath))
                 return spath
-        print('No common editors found! You must set one using the above command.')
+        print('No common editors found! '
+              'You must set one using the above command.')
         sys.exit(1)
     else:
         editor = settings.get('editor')
@@ -502,23 +552,25 @@ def get_editor():
             spath = os.path.join('/usr/bin', editor)
             if os.path.isfile(spath) or os.path.islink(spath):
                 return spath
-        print('Cannot find editor! Make sure you set a valid editor with:\n' +
-              'cedit set editor=[editor or /path/to/editor]')
+        print('Cannot find editor! Make sure you set a valid editor with:\n'
+              '{} set editor=[editor or /path/to/editor]'.format(SCRIPT))
         sys.exit(1)
 
         
 def get_elevcmd():
     if not settings.get('elevcmd', ''):
         # no editor set
-        print('Be sure to set your favorite elevation command with: cedit --elevcmd path_to_elevation_command')
+        print('Be sure to set your favorite elevation command with: '
+              '{} --elevcmd path_to_elevation_command'.format(SCRIPT))
         # look for common elevation command
         lst_elevs = ['kdesudo', 'gksudo', 'sudo']
         for elevcmd in lst_elevs:
             spath = os.path.join('/usr/bin/', elevcmd)
             if os.path.isfile(spath) or os.path.islink(spath):
-                print('Found common elevation cmd: ' + spath)
+                print('Found common elevation cmd: {}'.format(spath))
                 return spath
-        print('No common elevation commands found! You must set one using the above command.')
+        print('No common elevation commands found! '
+              'You must set one using the above command.')
         sys.exit(1)
     else:
         elevcmd = settings.get('elevcmd')
@@ -529,13 +581,17 @@ def get_elevcmd():
             spath = os.path.join('/usr/bin', elevcmd)
             if os.path.isfile(spath) or os.path.islink(spath):
                 return spath
-        print('Cannot find elevcmd! Make sure you set a valid elevation command with:\n' +
-              'cedit set elevcmd=[elevcmd or /path/to/elevcmd]')
+        print('Cannot find elevcmd! '
+              'Make sure you set a valid elevation command with:\n'
+              '{} set elevcmd=[elevcmd or /path/to/elevcmd]'.format(SCRIPT))
         sys.exit(1)
 
 
 def good_return(returnvalue):
-    """ Just returns True if returnvalue == 0, used in list comprehension in main() """
+    """ Just returns True if returnvalue == 0,
+        used in list comprehension in main()
+    """
+    # This is kinda dumb, should be replaced.
     goodret = True if returnvalue == 0 else False
     return goodret
 
@@ -575,11 +631,18 @@ def needs_root(sfilename):
 
 def print_debug(s):
     if DEBUG:
-        print('DEBUG: ' + s)
+        print('DEBUG: {}'.format(s))
 
     
-def printdict(dict_):
-    print(str(dict_).replace(',', '\n').strip('{').strip('}'))
+def printdict(d, indention=0):
+    if isinstance(d, dict):
+        for k, v in d.items():
+            if isinstance(v, dict):
+                printdict(v, indention=indention + 4)
+            else:
+                print('{}{}: {}'.format((' ' * indention), k, v))
+    else:
+        print('{}{}'.format((' ' * indention), d))
 
              
 def run_exec(cmdlist):
@@ -591,7 +654,9 @@ def run_exec(cmdlist):
     try:
         # use subprocess so cedit can return control to the user.
         ret = subprocess.Popen(cmdlist)
-    except:
+    except Exception as exsub:
+        print('Error running with subprocess:\n{}'.format(exsub))
+        print('Falling back to system call.')
         try:
             # try system-command method. (does not return control)
             ret = os.system(' '.join(cmdlist))
@@ -603,7 +668,7 @@ def run_exec(cmdlist):
 
 def set_setting_safe(opt, val):
     """ Sets a setting, but not if its already set to the same thing,
-        and not if the value (which is a filepath to editor/elevcmd) doesn't exist.
+        and not if the value, the filepath to editor/elevcmd, doesn't exist.
     """
     oldval = settings.get(opt)
     if oldval == val:
@@ -641,16 +706,22 @@ def shell_file(filenames):
 
     # Start building command args.
     finalcmd = [editor]
-    # See if it needs root.
-    for filename in filenames:
-        if needs_root(filename):
-            # root style.
-            elevcmd = get_elevcmd()
-            finalcmd.insert(0, elevcmd)
-            print('Using elevation command: {}\nFile needs root: {}\n'.format(elevcmd, filename))
-            break
-    # Append list of filenames.
-    finalcmd = finalcmd + filenames
+    if filenames:
+        # See if it needs root.
+        for filename in filenames:
+            if needs_root(filename):
+                # root style.
+                elevcmd = get_elevcmd()
+                finalcmd.insert(0, elevcmd)
+                print('\n'.join(['Using elevation command: {}'.format(elevcmd),
+                                 'File needs root: {}\n'.format(filename)]))
+                break
+        # Append list of filenames.
+        finalcmd = finalcmd + filenames
+
+    # Append editor args (from -- cmdline switch)
+    if editorargs:
+        finalcmd = finalcmd + editorargs
     cmdstr = ' '.join(finalcmd)
     try:
         # try running
@@ -658,7 +729,7 @@ def shell_file(filenames):
         print('Ran: {}'.format(cmdstr))
     except Exception as ex:
         print('Unable to run command: {}'.format(cmdstr))
-        print('Error:\n{}'.format(str(ex)))
+        print('Error:\n{}'.format(ex))
         return 1
     return 0
 
@@ -674,10 +745,6 @@ def main(argd):
     # show about message?
     if argd['--about']:
         print(__doc__)
-        return 0
-    # show version?
-    elif argd['--version']:
-        print(_NAME + ' version ' + _VERSION)
         return 0
     # install
     elif argd['--install']:
@@ -705,30 +772,47 @@ def main(argd):
 
     # get filenames, check existence
     filenames = argd['<filename>']
-    if not filenames:
-        print('No file to open!')
-        return 1
-        
-    # Open files separately (where some stupid editors don't support multi-file opening.)
-    if argd['--shellall']:
-        returns = []
-        for filename in filenames:
-            if check_file(filename):
-                returns.append(good_return(shell_file([filename])))
-            else:
-                returns.append(1)
-        return 0 if all(returns) else 1
+    if '!ARGPASS' in filenames:
+        filenames.pop(filenames.index('!ARGPASS'))
 
-    # Send all file names to one process.
-    if check_files(filenames):
-        return shell_file(filenames)
+    if filenames:
+        # Open files separately
+        # (where some editors don't support multi-file opening.)
+        if argd['--shellall']:
+            returns = []
+            for filename in filenames:
+                if check_file(filename):
+                    returns.append(good_return(shell_file([filename])))
+                else:
+                    returns.append(1)
+            return 0 if all(returns) else 1
 
+        # Send all file names to one process.
+        if check_files(filenames):
+            return shell_file(filenames)
+    else:
+        if editorargs:
+            # Just pass editors arg on, and execute it.
+            return shell_file(None)
+        else:
+            print('No file to open!')
+            return 1
 
 if __name__ == '__main__':
-    mainargd = docopt(usage_str, version='cedit v. {}'.format(_VERSION))
+    if '--' in sys.argv:
+        ceditargs = sys.argv[1:sys.argv.index('--')]
+        if not ceditargs:
+            ceditargs = ['!ARGPASS']
+        editorargs = sys.argv[sys.argv.index('--') + 1:]
+    else:
+        ceditargs = sys.argv[1:]
+        editorargs = []
+
+    mainargd = docopt(usage_str, argv=ceditargs, version=VERSIONSTR)
     # Initialize config
-    settings = easysettings.easysettings(os.path.join(sys.path[0], 'cedit.conf'))
-    settings.name = 'cedit'
-    settings.version = _VERSION
+    configfile = os.path.join(sys.path[0], '{}.conf'.format(NAME))
+    settings = easysettings.easysettings(configfile)
+    settings.name = NAME
+    settings.version = VERSION
     mainret = main(mainargd)
     sys.exit(mainret)
