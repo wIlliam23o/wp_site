@@ -28,7 +28,7 @@ __module_name__ = 'xtools'
 __module_version__ = '0.3.2'
 __module_description__ = 'Various tools/commands for extending XChat...'
 # really minor changes bump this 'versionx'
-VERSIONX = '1'
+VERSIONX = '2'
 # Convenience version str for help commands.
 VERSIONSTR = '{} v. {}-{}'.format(__module_name__,
                                   __module_version__,
@@ -228,15 +228,30 @@ def add_ignored_nick(nickstr):
 def add_catcher(catcherstr):
     """ Add a catcher to the catchers list. """
     global MSG_CATCHERS
-    msg_catchers = []
 
-    if ((catcherstr.startswith('"') and catcherstr.endswith('"')) or
-       (catcherstr.endswith("'") and catcherstr.endswith("'"))):
-        # quoted spaces...
-        catchers = catcherstr[1:-1]
+    msg_catchers = []
+    # regex to grab quoted spaces.
+    quotepat = re.compile('(["][^"]+["])|([\'][^\']+[\'])')
+    quoted = quotepat.findall(catcherstr)
+    if quoted:
+        # gather quoted strings, and left overs.
+        catchers = []
+        for grp1, grp2 in quoted:
+            if grp1:
+                catchers.append(grp1.strip('"'))
+                catcherstr = catcherstr.replace(grp1, '')
+            if grp2:
+                catchers.append(grp2.strip("'"))
+                catcherstr = catcherstr.replace(grp2, '')
+
+        # look for leftovers
+        nonquoted = [s.strip() for s in catcherstr.split() if s]
+        if nonquoted:
+            catchers.extend(nonquoted)
     else:
         # This will accept several catchers separated by spaces.
         catchers = catcherstr.split()
+
     for msg in catchers:
         if msg in MSG_CATCHERS.keys():
             # Skip nick already on the list.
@@ -573,12 +588,9 @@ def get_channels_users(channels=None):
 def get_cmd_rest(word):
     """ Return the rest of a command. (removing /COMMAND) """
 
-    if word:
-        if len(word) == 1:
-            return ''
-        else:
-            rest = word[1:]
-            return ' '.join(rest)
+    if word and (len(word) > 1):
+        return ' '.join(word[1:])
+    # no args, only the cmdname.
     return ''
 
 
@@ -2006,8 +2018,10 @@ cmd_help = {'catch':
              '    -l,--list    : List all msg-catcher patterns.\n'
              '    -m,--msgs    : Print all caught messages.\n'
              '    -r,--remove  : Remove msg-catcher by number or text.\n'
-             '\n    * With no arguments passed, all caught msgs are listed.'
-             '\n    * You can pass several space-separated catchers.'),
+             '\n    * With no arguments passed, all caught msgs are listed.\n'
+             '    * You can pass several space-separated catchers.\n'
+             '    * To include a catcher with spaces, wrap it in\n'
+             '      single-quotes.'),
             'catchers':
             ('Usage: /CATCHERS [/catch args]\n'
              '    ...shortcut for /CATCH --list, lists all msg-catchers.\n'
