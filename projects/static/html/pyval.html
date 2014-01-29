@@ -245,10 +245,9 @@ PyValAdmin: !adminhelp
      pyval: PyValAdmin, commands: adminadd, adminhelp, adminlist, adminreload, 
             adminrem, adminremove, ban, banned, blacklist, channels, getattr, identify, join,
             limitrate, msg, part, partall, say, sendline, setattr, shutdown, stats, unban
-        </pre><br>
-        
-        Here is a list of admin
-        <br><br>
+        </pre>
+        <br>
+        <br>
         Admin command help:<br>
         <div class='cmdhelp-box'>
             <div class='cmditem'>
@@ -308,11 +307,15 @@ PyValAdmin: !adminhelp
                 [cval]Turn the limit-rate option on/off, or show its status.[?cval]
             </div>
             <div class='cmditem'>
-                [copt]msg &#91;target&#93; &#91;message&#93;[/copt]
+                [copt]me &lt;channel&gt; &lt;action&gt;[/copt]
+                [cval]Perform an irc action as pyval. (/me &lt;action&gt;)[?cval]
+            </div>
+            <div class='cmditem'>
+                [copt]msg &lt;target&gt; &lt;message&gt;[/copt]
                 [cval]Send a message to a channel or nick.[/cval]
             </div>
             <div class='cmditem'>
-                [copt]part &#91;channel&#93;[/copt]
+                [copt]part &lt;channel&gt;[/copt]
                 [cval]Part (leave) a channel, or a comma-separated list of channels[/cval]
             </div>
             <div class='cmditem'>
