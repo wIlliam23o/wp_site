@@ -8,6 +8,11 @@
     not normally found in xchat/irc, or /commands that enhance the
     xchat experience.
 
+    This script is now over 2000+ lines, and I really wish it weren't so.
+    It's time to shut this little project down before it requires a
+    RAM upgrade. I really wanted this to be a single script project, but
+    things like cmd_help, and non-xchat functions really need their own home.
+
     -Christopher Welborn
 """
 
@@ -17,29 +22,39 @@ from datetime import datetime
 import os
 import re
 import sys
-
+from threading import Thread
 # XChat style version info.
 __module_name__ = 'xtools'
 __module_version__ = '0.3.2'
 __module_description__ = 'Various tools/commands for extending XChat...'
+# really minor changes bump this 'versionx'
+VERSIONX = '1'
 # Convenience version str for help commands.
-VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
+VERSIONSTR = '{} v. {}-{}'.format(__module_name__,
+                                  __module_version__,
+                                  VERSIONX)
 
 try:
     # import actual xchat module (from within xchat)
     import xchat
 except ImportError:
-    print('\nThis cannot be ran outside of XChat!\n')
+    print('\nThis cannot be used outside of XChat!\n')
     sys.exit(1)
 
-
+# TODO: Remove dead (commented-code here, and remove_leading_numbers)
 # Preload single digit numbers. (for removing leading numbers)
-# (remove_leading_numbers())
-DIGITS = range(0, 10)
-DIGITSTR = [str(i) for i in DIGITS]
+# (remove_leading_numbers(), is called on every filtered msg.)
+#DIGITS = range(0, 10)
+#DIGITSTR = [str(i) for i in DIGITS]
 
 # Default config file.
-CONFIG_FILE = os.path.join(os.getcwd(), 'xtools.conf')
+XCHAT_DIR = os.path.expanduser('~/.xchat2')
+if os.path.isdir(XCHAT_DIR):
+    CONFIG_FILE = os.path.join(XCHAT_DIR, 'xtools.conf')
+else:
+    # Can't find xchat dir, just use CWD.
+    CONFIG_FILE = os.path.join(os.getcwd(), 'xtools.conf')
+
 # Dict to hold settings. (loaded from preferences if available)
 SETTINGS = {}
 # Dict of ignored nicks. (loaded from preferences if available)
@@ -57,6 +72,9 @@ MSG_CATCHERS = {}
 # Deque of caught messages, only for this session.
 MAX_CAUGHT_MSGS = 250
 CAUGHT_MSGS = {}
+
+# Title for the xtools tab/window..
+XTOOLS_TAB_TITLE = '[xtools]'
 
 
 class StdOutCatcher(object):
@@ -122,6 +140,49 @@ class StdErrCatcher(StdOutCatcher):
 
     def __exit__(self, type, value, traceback):
         sys.stderr = self.oldstderr
+
+
+class TabWaiter(object):
+
+    """ Waits for a user-defined amount of time for
+        a certain tab to become focused.
+        Use with caution!
+    """
+
+    def __init__(self, tabtitle=None, timeout=5):
+        self.tabtitle = tabtitle if tabtitle else XTOOLS_TAB_TITLE
+        self.timeout = timeout
+        self._context = None
+
+    def check_tab(self):
+        """ This must run in a seperate thread, or xchat will lock up. """
+        foundtab = xchat.find_context(channel=self.tabtitle)
+        while not foundtab:
+            foundtab = xchat.find_context(channel=self.tabtitle)
+        # set result.
+        self._context = foundtab
+
+    def ensure_tab(self):
+        """ ensure that this tab is opened.
+            times out after self.timeout seconds.
+            returns the tab's context on success, or None on timeout.
+        """
+        tabcontext = xchat.find_context(channel=self.tabtitle)
+        if tabcontext:
+            # tab already opened
+            return tabcontext
+        # open and wait for tab.
+        self.open_tab()
+        return self.wait_for_tab()
+
+    def open_tab(self):
+        xchat.command('QUERY {}'.format(self.tabtitle))
+
+    def wait_for_tab(self):
+        finder = Thread(target=self.check_tab, name='TabWaiter')
+        finder.start()
+        finder.join(timeout=self.timeout)
+        return self._context
 
 
 def add_ignored_nick(nickstr):
@@ -200,12 +261,18 @@ def add_catcher(catcherstr):
     if msg_catchers and save_catchers() and save_prefs():
         return msg_catchers
     # Failure saving.
+    print_error('Unable to save catchers...')
     return []
 
 
 def add_caught_msg(msginfo):
     """ add a message to the caught-msgs dict, if it doesn't exist. """
     global CAUGHT_MSGS
+    # Caught messages need to have a unique id for each caught msg,
+    # or else it will cause double msgs, or recursion in some cases.
+    # hince the need for add_caught_msg(), which generates and checks
+    # duplicate msg ids.
+
     msgid = generate_msg_id(msginfo)
     existingmsg = CAUGHT_MSGS.get(msgid, None)
     if existingmsg:
@@ -220,6 +287,46 @@ def add_caught_msg(msginfo):
         CAUGHT_MSGS.pop(firstkey)
     CAUGHT_MSGS[msgid] = msginfo
     return True
+
+
+def add_message(addfunc, nick, msgtext, msgtype=None):
+    """ Uses the given 'add function' to add a filtered/saved msg.
+        This builds a universal message format that should be used
+        anywhere a message is saved.
+        ex:
+            add_message(IGNORED_MSGS.append, 'user1', 'my message')
+            # or
+            add_message(add_caught_msg, 'user2', 'my msg')
+        .. will use IGNORED_MSGS.append, or add_caught_msg to save the message.
+        The function has to receive a single argument, which is a msg in the
+        universal format.
+    """
+    chan = xchat.get_context().get_info('channel')
+    msgtime = datetime.now()
+    if msgtype:
+        # set message type (channelmessage, channelaction, etc.)
+        msgtype = msgtype.lower().replace(' ', '')
+    else:
+        # no message type set.
+        msgtype = ''
+    msg = {'nick': nick,
+           'time': msgtime.time().strftime('%H:%M:%S'),
+           'date': msgtime.date().strftime('%m-%d-%Y'),
+           'channel': chan,
+           'type': msgtype,
+           'msg': msgtext}
+    try:
+        addfunc(msg)
+        return True
+    except Exception as ex:
+        if hasattr(addfunc, '__name__'):
+            addfuncname = addfunc.__name__
+        else:
+            addfuncname = repr(addfunc)
+        print_error('Error adding saved msg with: {}'.format(addfuncname),
+                    exc=ex,
+                    boldtext=addfuncname)
+        return False
 
 
 def bool_mode(modestr):
@@ -553,6 +660,16 @@ def get_pref(opt):
     return None
 
 
+def get_xtools_window():
+    """ Open the xtools tab, and wait for it to be focused.
+        Returns the xtools-tab context (unless it times out, then None)
+    """
+
+    tabwaiter = TabWaiter(tabtitle=XTOOLS_TAB_TITLE)
+    xchatwin = tabwaiter.ensure_tab()
+    return xchatwin
+
+
 def load_catchers():
     """ Loads msg-catchers from preferences. """
     global MSG_CATCHERS
@@ -644,6 +761,10 @@ def load_prefs():
     return True
 
 
+def longest(lst):
+    return len(max(lst, key=len))
+
+
 def parse_scrollback_line(line):
     """ Parses info out of a xchat scrollback.txt.
         Returns:
@@ -714,10 +835,15 @@ def print_caught_msgs():
         msglen = len(CAUGHT_MSGS)
         msglenstr = color_text('blue', str(msglen), bold=True)
         msgplural = 'message' if msglen == 1 else 'messages'
+        chanspace = longest([CAUGHT_MSGS[m]['channel'] for m in CAUGHT_MSGS])
+        nickspace = longest([CAUGHT_MSGS[m]['nick'] for m in CAUGHT_MSGS])
+
         print_status('You have {} caught {}:\n'.format(msglenstr, msgplural))
         sortkey = lambda k: CAUGHT_MSGS[k]['time']
         for msgid in sorted(CAUGHT_MSGS, key=sortkey):
-            print_saved_msg(CAUGHT_MSGS[msgid])
+            print_saved_msg(CAUGHT_MSGS[msgid],
+                            chanspace=chanspace,
+                            nickspace=nickspace)
         return True
     else:
         # print 'no messages' warning.
@@ -935,8 +1061,10 @@ def print_ignored_msgs():
     msgplural = 'message' if len(IGNORED_MSGS) == 1 else 'messages'
     print_status('You have {} ignored {}:\n'.format(msglenstr, msgplural))
     sortkey = lambda k: k['time']
+    chanspace = longest([k['channel'] for k in IGNORED_MSGS])
+    nickspace = longest([k['nick'] for k in IGNORED_MSGS])
     for msg in sorted(IGNORED_MSGS, key=sortkey):
-        print_saved_msg(msg)
+        print_saved_msg(msg, chanspace=chanspace, nickspace=nickspace)
     return True
 
 
@@ -981,20 +1109,34 @@ def print_tochan(msg, channel=None):
     xchat.command('MSG {} {}'.format(channel, msg))
 
 
-def print_saved_msg(msg):
+def print_saved_msg(msg, chanspace=16, nickspace=16):
     """ Print a single saved msg from IGNORED_MSGS, or CAUGHT_MSGS.
         Must be the actual msg, not the msg id.
         from IGNORED_MSGS, or CAUGHT_MSGS[msgid].
     """
+
     msgtime = '({})'.format(color_text('grey', msg['time']))
-    chan = '[{}]'.format(color_text('green', msg['channel'])).ljust(16)
+    chan = '[{}]'.format(color_text('green', msg['channel'])).ljust(chanspace)
     # strip color from nick, and add our own.
     nick = remove_mirc_color(msg['nick'])
-    nick = color_text('red', nick.ljust(16))
+    if 'action' in msg['type']:
+        nick = color_text('darkblue', nick.ljust(nickspace))
+        # user action, add a big * on it.
+        nick = '{}{}'.format(color_text('red', '*', bold=True), nick)
+    else:
+        # normal channel msg
+        nick = color_text('darkblue', nick.ljust(nickspace + 1))
+
+    if 'hilight' in msg['type']:
+        # highlighted msg.
+        msgtext = color_text('red', msg['msg'])
+    else:
+        # normal
+        msgtext = msg['msg']
     print('{} {} {}: {}'.format(msgtime,
                                 chan,
                                 nick,
-                                msg['msg']))
+                                msgtext))
 
 
 def print_status(msg):
@@ -1008,6 +1150,19 @@ def print_version():
     """ Print xtools version. """
 
     print(color_text('blue', VERSIONSTR, bold=True))
+
+
+def print_xtools(s):
+    """ Print to the [xchat] tab/window """
+
+    # Find existing xchat tab, or open a new one.
+    context = get_xtools_window()
+    if context is None:
+        # Can't find xtools tab (timed out), print to the current tab.
+        print(s)
+    else:
+        # print to xtools tab.
+        context.prnt(s)
 
 
 def remove_catcher(catcherstr):
@@ -1094,27 +1249,9 @@ def remove_ignored_nick(nickstr):
         return False
 
 
-def remove_leading_numbers(text):
-    """ Removes ALL leading numbers, not just single mirc colors. """
-
-    if text:
-        while text[0] in DIGITSTR:
-            text = text[1:]
-    return text
-
-
-# Helper function for remove_mirc_color (for preloading sub function)
-mirc_color_regex = re.escape('\x03') + r'(?:(\d{1,2})(?:,(\d{1,2}))?)?'
-mirc_sub_pattern = re.compile(mirc_color_regex).sub
-
-
-def remove_mirc_color(text, _resubpat=mirc_sub_pattern):
+def remove_mirc_color(text):
     """ Removes color code from text
-        (idea borrowed from nosklos clutterless.py)
-        Sub pattern is preloaded on function definition,
-        like nosklos (but more readable i think)
     """
-    # return _resubpat('', text)
     # This function can be replaced with xchat.strip everywhere its called
     return xchat.strip(text)
 
@@ -1300,14 +1437,14 @@ def cmd_eval(word, word_eol, userdata=None):
 
     # Make an interpreter to run the code.
     compiler = InteractiveInterpreter()
-
+    
     # stdout/stderr will be captured, for optional chat output.
     with StdErrCatcher() as errors:
         with StdOutCatcher() as captured:
             # execute/evaluate the code.
             incomplete = compiler.runsource(query, symbol=mode)
 
-    # incomplete source.
+    # Incomplete source code.
     if incomplete:
         # Code will not compile.
         warnmsg = 'Incomplete source.'
@@ -1347,7 +1484,13 @@ def cmd_findtext(word, word_eol, userdata=None):
         return xchat.EAT_ALL
     # Get cmd args
     word, argd = get_flag_args(word, [('-a', '--all'),
+                                      ('-h', '--help'),
                                       ('-n', '--nick')])
+
+    cmdname = word[0]
+    if argd['--help']:
+        print_cmdhelp(cmdname)
+        return xchat.EAT_ALL
 
     # Search query (regex)
     query = get_cmd_rest(word)
@@ -1393,7 +1536,7 @@ def cmd_findtext(word, word_eol, userdata=None):
             if None in (timedate, nick):
                 continue
             # Nick without colors/codes.
-            nickraw = remove_leading_numbers(nick)
+            nickraw = xchat.strip(nick)
             # Check for feedback from server/script output.
             noticemsg = (nickraw == '*')
             if noticemsg or (not text):
@@ -1442,8 +1585,13 @@ def cmd_listusers(word, word_eol, userdata=None):
     """ List all users, with a count also. """
 
     # Get args
-    word, argd = get_flag_args(word, [('-a', '--all', False),
-                                      ('-c', '--count', False)])
+    word, argd = get_flag_args(word, [('-a', '--all'),
+                                      ('-h', '--help'),
+                                      ('-c', '--count')])
+    cmdname = word[0]
+    if argd['--help']:
+        print_cmdhelp(cmdname)
+        return xchat.EAT_ALL
 
     if argd['--all']:
         print(color_text('blue', '\nGathering users...\n'))
@@ -1485,9 +1633,14 @@ def cmd_searchuser(word, word_eol, userdata=None):
 
     # Get command args.
     word, argd = get_flag_args(word,
-                               [('-h', '--host', False),
-                                ('-o', '--onlyhost', False),
-                                ('-a', '--all', False)])
+                               [('-H', '--host'),
+                                ('-h', '--help'),
+                                ('-o', '--onlyhost'),
+                                ('-a', '--all')])
+    cmdname = word[0]
+    if argd['--help']:
+        print_cmdhelp(cmdname)
+        return xchat.EAT_ALL
 
     match_host = (argd['--host'] or argd['--onlyhost'])
 
@@ -1648,7 +1801,7 @@ def cmd_searchuser(word, word_eol, userdata=None):
 def cmd_whitewash(word, word_eol, userdata=None):
     """ Prints a lot of whitespace to 'clear' the chat window. """
 
-    word, argd = get_flag_args(word, ('-h', '--help', False))
+    word, argd = get_flag_args(word, ('-h', '--help'))
     cmdname = word[0]
     cmdargs = get_cmd_rest(word)
     if argd['--help']:
@@ -1721,10 +1874,10 @@ def cmd_xignore(word, word_eol, userdata=None):
 def cmd_xtools(word, word_eol, userdata=None):
     """ Shows info about xtools. """
 
-    word, argd = get_flag_args(word, [('-v', '--version', False),
-                                      ('-d', '--desc', False),
-                                      ('-h', '--help', False),
-                                      ('-cd', '--colordemo', False),
+    word, argd = get_flag_args(word, [('-v', '--version'),
+                                      ('-d', '--desc'),
+                                      ('-h', '--help'),
+                                      ('-cd', '--colordemo'),
                                       ])
     cmdargs = get_cmd_rest(word)
 
@@ -1763,31 +1916,17 @@ def filter_chanmsg(word, word_eol, userdata=None):
         nickpat = IGNORED_NICKS[nickkey]['pattern']
         if nickpat.search(msgnick):
             # Ignore this message.
-            chan = xchat.get_context().get_info('channel')
-            msgtime = datetime.now()
-            msg = {'nick': msgnick,
-                   'time': msgtime.time().strftime('%H:%M:%S'),
-                   'date': msgtime.date().strftime('%m-%d-%Y'),
-                   'channel': chan,
-                   'msg': word_eol[1]}
-            IGNORED_MSGS.append(msg)
+            add_message(IGNORED_MSGS.append,
+                        msgnick, word_eol[1], msgtype=userdata)
             return xchat.EAT_ALL
 
-    # Catch messages, need to have a unique id for each caught msg,
-    # or else it will cause double msgs, or recursion in some cases.
-    # hince the need for add_caught_msg(), which generates and checks
-    # duplicate msg ids.
+    # Caught msgs, needs add_caught_msg because of other scripts emitting
+    # duplicate msgs. The add_caught_msg function handles this.
     for catchmsg in MSG_CATCHERS.keys():
         msgpat = MSG_CATCHERS[catchmsg]['pattern']
         if msgpat.search(word_eol[1]):
-            chan = xchat.get_context().get_info('channel')
-            msgtime = datetime.now()
-            msg = {'nick': msgnick,
-                   'time': msgtime.time().strftime('%H:%M:%S'),
-                   'date': msgtime.date().strftime('%m-%d-%Y'),
-                   'channel': chan,
-                   'msg': word_eol[1]}
-            add_caught_msg(msg)
+            add_message(add_caught_msg,
+                        msgnick, word_eol[1], msgtype=userdata)
             return xchat.EAT_NONE
     # Nothing will be done to this message.
     return xchat.EAT_NONE
@@ -1797,9 +1936,9 @@ def filter_message(word, word_eol, userdata=None):
     """ Filters all channel messages. """
 
     filter_funcs = {'Channel Message': filter_chanmsg,
-                    'Channel Message Hilight': filter_chanmsg,
-                    'Action Message': filter_chanmsg,
-                    'Action Message Hilight': filter_chanmsg,
+                    'Channel Msg Hilight': filter_chanmsg,
+                    'Channel Action': filter_chanmsg,
+                    'Channel Action Hilight': filter_chanmsg,
                     }
 
     if userdata in filter_funcs.keys():
@@ -1924,7 +2063,7 @@ cmd_help = {'catch':
              '                     Regex is allowed.\n'
              '    -a, --all      : Searches all current channels, not\n'
              '                     just the current channel.\n'
-             '    -h,--host      : Search host also.\n' +
+             '    -H,--host      : Search host also.\n' +
              '    -o,--onlyhost  : Only search hosts, not nicks.\n'),
             'whitewash':
             ('Usage: /WHITEWASH [number_of_lines]\n'
