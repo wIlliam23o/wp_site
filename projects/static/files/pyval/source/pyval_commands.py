@@ -14,7 +14,7 @@ import os
 from sys import version as sysversion
 from datetime import datetime
 import subprocess
-
+from twisted.python import log
 
 from pyval_exec import ExecBox, TempInput, TimedOut
 from pyval_util import NAME, VERSION, VERSIONX
@@ -72,13 +72,13 @@ def load_json_object(filename):
         with open(filename, 'r') as fjson:
             rawjson = fjson.read()
     except (OSError, IOError) as exio:
-        print('\nError loading json from: {}\n{}'.format(filename, exio))
+        log.msg('\nError loading json from: {}\n{}'.format(filename, exio))
         return {}
 
     try:
         jsonobj = json.loads(rawjson)
     except Exception as ex:
-        print('\nError parsing json from: {}\n{}'.format(filename, ex))
+        log.msg('\nError parsing json from: {}\n{}'.format(filename, ex))
         return {}
 
     return jsonobj
@@ -88,14 +88,13 @@ class AdminHandler(object):
 
     """ Handles admin functions like bans/admins/settings. """
 
-    def __init__(self, nick=None, help_info=None):
+    def __init__(self, help_info=None):
         # Set startup time.
         self.starttime = datetime.now()
         # Current channels the bot is in.
         self.channels = []
-        # Set command character and nick.
-        self.command_char = '!'
-        self.nickname = nick or 'pyval'
+        # This command char is overwritten by PyValIRCClient.
+        self.cmdchar = '!'
         # Whether or not to use PyVal.ExecBoxs blacklist.
         self.blacklist = False
         # Monitoring options. (privmsgs, all recvline, include ips)
@@ -125,9 +124,10 @@ class AdminHandler(object):
         self.help_info = help_info if help_info else self.load_help()
         if self.help_info:
             if (not help_info):
-                print('\nHelp info file loaded: {}'.format(HELPFILE))
+                # Print a message if help was loaded from file
+                log.msg('Help info file loaded: {}'.format(HELPFILE))
         else:
-            print('\nNo help commands will be available.')
+            log.msg('No help commands will be available.')
 
     def admins_add(self, nick):
         """ Add an admin to the list and save it. """
@@ -148,7 +148,7 @@ class AdminHandler(object):
         """ Load admins from list. """
 
         if not os.path.exists(ADMINFILE):
-            print('No admins list, defaults will be used.')
+            log.msg('No admins list, defaults will be used.')
             # cj is the default admin.
             return ['cjwelborn']
 
@@ -158,7 +158,7 @@ class AdminHandler(object):
             with open('pyval_admins.lst') as fread:
                 admins = [l.strip('\n') for l in fread.readlines()]
         except (IOError, OSError) as ex:
-            print('Unable to load admins list:\n{}'.format(ex))
+            log.msg('Unable to load admins list:\n{}'.format(ex))
             pass
 
         return admins
@@ -183,7 +183,7 @@ class AdminHandler(object):
                 fwrite.write('\n')
                 return True
         except (IOError, OSError) as ex:
-            print('Error saving admin list:\n{}'.format(ex))
+            log.msg('Error saving admin list:\n{}'.format(ex))
             return False
 
     def ban_add(self, nick, permaban=False):
@@ -219,13 +219,14 @@ class AdminHandler(object):
         """ Load banned nicks if any are available. """
 
         banned = []
-        if os.path.isfile(BANFILE):
-            try:
-                with open(BANFILE) as fread:
-                    banned = [l.strip('\n') for l in fread.readlines()]
-            except (IOError, OSError) as exos:
-                print('\nUnable to load banned file: {}\n{}'.format(BANFILE,
-                                                                    exos))
+        if not os.path.isfile(BANFILE):
+            return banned
+
+        try:
+            with open(BANFILE) as fread:
+                banned = [l.strip('\n') for l in fread.readlines()]
+        except (IOError, OSError) as exos:
+            log.msg('Unable to load banned file: {}\n{}'.format(BANFILE, exos))
         return banned
 
     def ban_save(self):
@@ -235,7 +236,7 @@ class AdminHandler(object):
                 fwrite.write('\n'.join(self.banned))
                 return True
         except (IOError, OSError) as exos:
-            print('\nUnable to save banned file: {}\n{}'.format(BANFILE, exos))
+            log.msg('Unable to save banned file: {}\n{}'.format(BANFILE, exos))
         return False
 
     def ban_remove(self, nick):
@@ -262,6 +263,16 @@ class AdminHandler(object):
         self.handlingcount += 1
         self.handlinglock.release()
 
+    def identify(self, pw):
+        """ Send an IDENTIFY msg to NickServ. """
+        log.msg('Identifying with nickserv...')
+        if not pw:
+            return 'no password supplied.'
+
+        self.sendLine('PRIVMSG NickServ :IDENTIFY '
+                      '{} {}'.format(self.nickname, pw))
+        return None
+
     def load_help(self):
         """ Load help from json file. """
 
@@ -284,7 +295,6 @@ class CommandHandler(object):
         self.defer = kwargs.get('defer_', None)
         self.reactor = kwargs.get('reactor_', None)
         self.task = kwargs.get('task_', None)
-        self.command_char = '!'
         self.commands = CommandFuncs(defer_=self.defer,
                                      reactor_=self.reactor,
                                      task_=self.task,
@@ -294,7 +304,7 @@ class CommandHandler(object):
         """ Parse a message, return corresponding command function if found,
             otherwise, return None.
         """
-        command, sep, rest = msg.lstrip(self.command_char).partition(' ')
+        command, sep, rest = msg.lstrip(self.admin.cmdchar).partition(' ')
         # Retrieve function related to this command.
         func = getattr(self.commands, 'cmd_' + command, None)
         # Check admin command.
@@ -308,34 +318,34 @@ class CommandHandler(object):
         return func
  
     def parse_data(self, user, channel, msg):
-        """ Parse raw data from prvmsg()... hands off to proper functions.
+        """ Parse raw data from privmsg().
+            Logs messages if 'monitor' or 'monitorips' is set.
+            Returns parse_command(msg) if it is a command,
+            otherwise it returns None.
+
             Arguments:
-                user        : (str) - user from IRCClient.privmsg()
-                channel     : (str) - channel from IRCClient.privmsg()
-                msg         : (str) - message from IRCClient.privmsg()
+                user        : (str) - user string (full nick!host format).
+                channel     : (str) - channel where the msg came from.
+                msg         : (str) - content of the message.
         """
        
+        # Parse irc name, ip address from user.
+        username, ipstr = self.parse_username(user)
         # Monitor incoming messages?
         if self.admin.monitor:
-            # Parse irc name, ip address from user.
-            username, ipstr = self.parse_username(user)
             # Include ip address in print info?
             if self.admin.monitorips:
                 userstr = '{} ({})'.format(username, ipstr)
             else:
                 userstr = username
-            print('[{}]\t{}:\t{}'.format(channel, userstr, msg))
-        
-        # Handle message
-        return self.parse_message(msg, username=self.parse_username(user)[0])
+            log.msg('[{}]\t{}:\t{}'.format(channel, userstr, msg))
+        elif (channel == self.admin.nickname):
+            if not msg.startswith(self.admin.cmdchar):
+                # normal private msg sent directly to pyval.
+                log.msg('Message from {}: {}'.format(username, msg))
 
-    def parse_message(self, msg, username=None):
-        """ Parse a message, return corresponding command function if found,
-            otherwise return None
-        """
-        
-        # Handle user command string.
-        if msg.startswith(self.admin.command_char):
+        # Handle message
+        if msg.startswith(self.admin.cmdchar):
             return self.parse_command(msg, username=username)
 
         # Not a command.
@@ -449,7 +459,7 @@ class CommandFuncs(object):
     def admin_getattr(self, rest):
         """ Return value for attribute. """
         if not rest.strip():
-            return 'usage: getattr <attribute>'
+            return 'usage: {}getattr <attribute>'.format(self.admin.cmdchar)
 
         parent, attrname, attrval = self.parse_attrstr(rest)
         if attrname is None:
@@ -461,16 +471,15 @@ class CommandFuncs(object):
         return '{} = {}'.format(rest, attrval)
 
     @basic_command
+    def admin_id(self, rest):
+        """ Shortcut for admin_identify """
+        return self.admin.identify(rest)
+
+    @basic_command
     def admin_identify(self, rest):
         """ Identify with nickserv, expects !identify password """
 
-        print('Identifying with nickserv...')
-        if not rest:
-            return 'no password supplied.'
-
-        self.admin.sendLine('PRIVMSG NickServ :IDENTIFY '
-                            '{} {}'.format(self.admin.nickname, rest))
-        return None
+        return self.admin.identify(rest)
 
     @basic_command
     def admin_join(self, rest):
@@ -491,7 +500,7 @@ class CommandFuncs(object):
                 # already in that channel, send a msg in a moment.
                 alreadyin.append(chan)
             else:
-                print('Joining: {}'.format(chan))
+                log.msg('Joining: {}'.format(chan))
                 self.admin.sendLine('JOIN {}'.format(chan))
 
             if alreadyin:
@@ -525,7 +534,7 @@ class CommandFuncs(object):
         """ Perform an irc action, /ME <channel> <text> """
         cmdargs = rest.split()
         if len(cmdargs) < 2:
-            return 'usage: !me <channel> <text>'
+            return 'usage: {}me <channel> <text>'.format(self.admin.cmdchar)
         channel, text = cmdargs[0], ' '.join(cmdargs[1:])
         if not channel.startswith('#'):
             channel = '#{}'.format(channel)
@@ -563,7 +572,7 @@ class CommandFuncs(object):
                 chan = '#{}'.format(chan)
 
             if chan in self.admin.channels:
-                print('Parting from: {}'.format(chan))
+                log.msg('Parting from: {}'.format(chan))
                 self.admin.sendLine('PART {}'.format(chan))
             else:
                 # not in that channel, send a msg in a moment.
@@ -589,13 +598,13 @@ class CommandFuncs(object):
     @basic_command
     def admin_say(self, rest):
         """ Send chat message back to person. """
-        print('Saying: {}'.format(rest))
+        log.msg('Saying: {}'.format(rest))
         return rest
 
     @basic_command
     def admin_sendline(self, rest):
         """ Send raw line as pyval. """
-        print('Sending line: {}'.format(rest))
+        log.msg('Sending line: {}'.format(rest))
         self.admin.sendLine(rest)
         return None
 
@@ -648,7 +657,7 @@ class CommandFuncs(object):
     @simple_command
     def admin_shutdown(self):
         """ Shutdown the bot. """
-        print('Shutting down...')
+        log.msg('Shutting down...')
         self.admin.quit(message='shutting down...')
         return None
 
@@ -731,7 +740,8 @@ class CommandFuncs(object):
             if self.admin.handlingcount > 1:
                 # Delay this pastebin call based on the handling count.
                 timeout = 3 * self.admin.handlingcount
-                print('Delaying pastebin call for {} seconds.'.format(timeout))
+                log.msg('Delaying pastebin call for '
+                        '{} seconds.'.format(timeout))
                 # Create a deferred that will be called at a later time.
                 deferredurl = self.task.deferLater(self.reactor,
                                                    timeout,
@@ -759,11 +769,13 @@ class CommandFuncs(object):
     def cmd_pyval(self, rest, nick=None):
         """ Someone addressed 'pyval' directly. """
         if rest.replace(' ', '').replace('\t', ''):
-            print('Message from {}: {}'.format(nick, rest))
+            log.msg('Message from {}: {}'.format(nick, rest))
             # Don't reply to this valid msg.
             return None
         else:
-            return 'try !help, !py help, or !help py'
+            return ' '.join(['try {cc}help,'
+                             '{cc}py help,'
+                             'or {cc}help py']).format(cc=self.admin.cmdchar)
 
     @basic_command
     def _cmd_saylater(self, rest):
@@ -771,15 +783,15 @@ class CommandFuncs(object):
         when, sep, msg = rest.partition(' ')
         try:
             when = int(when)
-        except:
-            when = 0
+        except ValueError:
+            return 'usage: {}saylater <seconds>'.format(self.admin.cmdchar)
         
         d = self.defer.Deferred()
         # A small example of how to defer the reply from a command. callLater
         # will callback the Deferred with the reply after so many seconds.
         self.reactor.callLater(when, d.callback, msg)
         # Returning the Deferred here means that it'll be returned from
-        # maybeDeferred in privmsg.
+        # maybeDeferred in pyvalbot.PyValIRCProtocol.privmsg.
         return d
     
     @simple_command
@@ -854,12 +866,12 @@ class CommandFuncs(object):
             if cmdname in self.admin.help_info[role]:
                 cmdhelp = self.admin.help_info[role][cmdname]
                 if cmdhelp['args']:
-                    return '{}{} {}: {}'.format(self.admin.command_char,
+                    return '{}{} {}: {}'.format(self.admin.cmdchar,
                                                 cmdname,
                                                 cmdhelp['args'],
                                                 cmdhelp['desc'])
                 else:
-                    return '{}{}: {}'.format(self.admin.command_char,
+                    return '{}{}: {}'.format(self.admin.cmdchar,
                                              cmdname,
                                              cmdhelp['desc'])
             else:
@@ -940,7 +952,7 @@ class CommandFuncs(object):
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
         except Exception as ex:
-            print('Error running pastebinit:\n{}'.format(ex))
+            log.msg('Error running pastebinit:\n{}'.format(ex))
             return None
 
         output = self.proc_output(proc)

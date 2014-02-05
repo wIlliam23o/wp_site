@@ -28,8 +28,8 @@ from docopt import docopt
 
 # App Info
 NAME = 'SearchPat'
-__VERSION__ = '3.5.0'
-VERSIONSTR = '{} v. {}'.format(NAME, __VERSION__)
+VERSION = '3.5.1'
+VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 # Save actual script filename, and use that as the name in help.
 SCRIPTFILE = sys.argv[0]
 if '/' in SCRIPTFILE:
@@ -41,6 +41,7 @@ DEFAULT_FILETYPES = ('.py', '.pl', '.sh', '.js',
                      '.txt', '.log',
                      '.c', '.h', '.cpp', '.hpp',
                      '.css', '.html', '.htm',
+                     '.rst', '.md'
                      )
 
 # Usage/Help string for docopt (and whoever is reading this.)
@@ -100,7 +101,7 @@ usage_str = """{filename} v. {version}
             executable that will successfully do 'import stackless'.
         
 """.format(filename=SCRIPTFILE,
-           version=__VERSION__,
+           version=VERSION,
            filetypes=', '.join(DEFAULT_FILETYPES),
            cwd=os.getcwd())
 
