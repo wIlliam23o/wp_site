@@ -1409,11 +1409,13 @@ def remove_ignored_nick(nickstr):
 def remove_mirc_color(text):
     """ Removes color code from text
     """
-    badchars = '{}<'.format(chr(8))
-    if badchars in text:
-        text = text.replace(badchars, '')
-    text = text.replace(chr(8), '')
-    return xchat.strip(text)
+    badchars = ['{}<'.format(chr(8)), chr(8), chr(15)]
+    for badchar in badchars:
+        if badchar in text:
+            text = text.replace(badchar, '')
+
+    text = xchat.strip(text)
+    return text
 
 
 def save_catchers():
@@ -2131,21 +2133,22 @@ def filter_chanmsg(word, word_eol, userdata=None):
 
     # Ignoring messages is easy, just save it and return EAT_ALL.
     msgnick = word[0]
+    msg = ' '.join(word[1:]).strip('@').strip()
     for nickkey in xtools.ignored_nicks.keys():
         nickpat = xtools.ignored_nicks[nickkey]['pattern']
         if nickpat.search(msgnick):
             # Ignore this message.
             add_message(xtools.ignored_msgs.append,
-                        msgnick, word_eol[1], msgtype=userdata)
+                        msgnick, msg, msgtype=userdata)
             return xchat.EAT_ALL
 
     # Caught msgs, needs add_caught_msg because of other scripts emitting
     # duplicate msgs. The add_caught_msg function handles this.
     for catchmsg in xtools.msg_catchers.keys():
         msgpat = xtools.msg_catchers[catchmsg]['pattern']
-        if msgpat.search(word_eol[1]):
+        if msgpat.search(msg):
             add_message(add_caught_msg,
-                        msgnick, word_eol[1], msgtype=userdata)
+                        msgnick, msg, msgtype=userdata)
             return xchat.EAT_NONE
     # Nothing will be done to this message.
     return xchat.EAT_NONE
