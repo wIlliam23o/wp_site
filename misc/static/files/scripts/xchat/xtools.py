@@ -1115,11 +1115,8 @@ def print_evalresult(cquery, coutput, **kwargs):
     newtab = kwargs.get('newtab', False)
     if chat:
         # Send to channel as user.
-        queryfmt = cquery.replace('\n', '\\n')
-        # Ensure ; is at the end of the query, to help separate lines like:
-        # 5 == 5; == True, instead of 5 == 5 == True (which reads as False.)
-        if not queryfmt.endswith(';'):
-            queryfmt = '{};'.format(queryfmt)
+        # Wrap it in () to separate it from the result.
+        queryfmt = '({})'.format(cquery.replace('\n', '\\n'))
 
         if resultonly:
             # don't include the query in the msg.
@@ -1267,7 +1264,9 @@ def print_saved_msg(msg, chanspace=16, nickspace=16,
     msglabel = '{} {} {}: '.format(msgtime, chan, nick)
     # Figure label length for spacing without colors.
     msgspace = len(remove_mirc_color(msglabel))
-    maxmsglen = 160 - msgspace
+    # Figure maximum width for label + msg, and for msg alone.
+    maxoverall = 160 if redirect else 130
+    maxmsglen = maxoverall - msgspace
     # Function to add proper space for a long wrapped line.
     fmtline = lambda s: '{}{}'.format((' ' * msgspace), s)
 
