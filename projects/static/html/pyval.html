@@ -283,6 +283,10 @@ PyValAdmin: !adminhelp
                 [cval]Show currently banned nicks.[/cval]
             </div>
             <div class='cmditem'>
+                [copt]banwarns[/copt]
+                [cval]Show ban-warning counts.[/cval]
+            </div>
+            <div class='cmditem'>
                 [copt]blacklist &#91;on, off, ?&#93;[/copt]
                 [cval]Turn PyValExec's blacklist option on/off, or show its status.[?cval]
             </div>
@@ -484,6 +488,27 @@ if __name__ != '__pyval__':
             Update: version 1.0.6
         </span>
         <ul class='circle blue'>
+            <li>
+                Fixed auto-bans.
+            </li>
+            <div class='listdesc'>
+                The auto-bans for 'too many commands' works now. You can set the
+                time-limit in between messages, and the max-warning-count through
+                the AdminHandler. Users that send too many commands, too fast,
+                will automatically be banned from using the bot.
+            </div>
+            <li>
+                Added [code]banwarns[?code] command for admins, to show all
+                ban warnings issued.
+            </li>
+            <li>
+                Added custom command-character to command line options.
+            </li>
+            <div class='listdesc'>
+                You can now set the 'command character' using the [code]-C[/code]
+                flag from the command line.
+            </div>
+
             <li>
                 Added channel tracking, admins can now use the [code]channels[/code] command.
             </li>
