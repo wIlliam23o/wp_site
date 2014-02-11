@@ -7,10 +7,40 @@
     elevation command when needed for permissions.
     Keeps you from seeing 'no permissions' messages, and instead asks you
     for your password.
+
     If no 'favorites' are set yet, cedit will look for 'popular' editors and
     elevation commands. It will use the first one found.
     If none of the 'popular' commands are found, you have to set your own.
-    They can be set using the 'set' command. (see --help).
+    They can be set using the 'set' flags (-e, -c). (see --help).
+
+    Search paths are now included, so you can save typing long paths for your
+    most commonly used directories. Set your 'favorite' directories with the
+    -d flag, and cedit will check those dirs when a file name isn't found in
+    the current dir, or relative to the current dir.
+    Example:
+        # Current dir contains 'myfile2.py'
+        $ ls
+        $     myfile2.py
+
+        # Project dir contains 'myfile1.py' and 'myfile2.py'
+        $ ls /home/me/workspace/myproject/src
+        $     myfile1.py    myfile2.py    myfile3.py
+
+        # Add project dir to cedit search paths
+        $ cedit -d "/home/me/workspace/myproject/src"
+
+        # open /home/me/workspace/myproject/src/myfile1.py
+        $ cedit myfile1.py
+
+        # open ./myfile2.py (current dir)
+        $ cedit myfile2.py
+
+        # open /home/me/workspace/myproject/src/myfile2.py
+        # (provided the the parent dir doesn't also contain a 'myfile2.py')
+        $ cd ..
+        $ cedit myfile2.py
+
+
     If you are using Python2 the pip command can install requirements, 
     otherwise pip3 or a Python3-compatible package installer should be used.
     
@@ -23,6 +53,7 @@
     Installation:
         To install cedit as a global terminal command you can use 
         the 'install' command.
+
         For installing for a single user run:
             ./cedit.py --install --user
         
@@ -51,35 +82,57 @@ if not PYTHON3:
 # Name, also used in creating symlinks in cmd_install()
 NAME = 'cedit'
 # Current version
-VERSION = '1.3.1'
-VERSIONX = '1'
+VERSION = '1.4.0'
+VERSIONX = '0'
 VERSIONSTR = '{} v. {}-{}'.format(NAME, VERSION, VERSIONX)
-SCRIPT = sys.argv[0][2:] if sys.argv[0].startswith('./') else sys.argv[0]
+SCRIPT = os.path.split(sys.argv[0])[1]
+
 # looks better in help to have the real user name,
 # if not found then just use 'user'
 USER = os.environ.get('USER', 'user')
 
+# List of dirs to search for files in, before giving up with 'File Not Found'.
+# The current dir, or an existing full path always comes first.
+# These dirs are searched after those fail.
+CEDITPATHS = []
+
+# Usage string args (for formatting, filling in blanks.)
+usage_args = {
+    'verstr': VERSIONSTR,
+    'name': NAME,
+    'script': SCRIPT,
+    'pyversion': sys.version.split()[0],
+    'user': USER
+}
 # Usage string
 usage_str = """{verstr} (running on Python {pyversion})
 
     Usage:
-        cedit -h | -a | -v
-        cedit <filename>... [options]
-        cedit -e path_to_editor | -c path_to_elevcmd
-        cedit -i [-u | -p dir]
-        cedit -l
-        cedit -r
+        {script} -h | -a | -v
+        {script} <filename>... [options]
+        {script} -d directories [-o]
+        {script} -e path_to_editor | -c path_to_elevcmd
+        {script} -i [-u | -p dir]
+        {script} -l
+        {script} -r
         
     Options:
-        -a,--about              : show message about cedit.
+        -A,--about              : show message about {name}.
         -c file,--elevcmd file  : set favorite elevation command, where
                                   filepath is the path to your
                                   elevation command.
-        -d,--debug              : for development, prints random msgs.
+        -D,--debug              : for development, prints random msgs.
+        -d dirs,--dirs dirs     : comma-separated list of directories to
+                                  search for files.
+                                  current dir or an existing full path always
+                                  has priority. dirs are searched when those
+                                  fail.
+                                  you can pass 'none' or '-' to clear dirs,
+                                  or just edit the config file.
         -e file,--editor file   : set favorite editor, where filepath
                                   is the path to your editor.
         -h,--help               : show this help message.
-        -i,--install            : install cedit, creates symlink in
+        -i,--install            : install {name}, creates symlink in
                                   /usr/local/bin, /usr/bin, or home
                                   (see -u and -p)
                                   if /usr/local/bin is found in $PATH,
@@ -88,10 +141,12 @@ usage_str = """{verstr} (running on Python {pyversion})
                                   is determined by the flag.
                                   cedit will ask for confirmation before
                                   installing.
-        -l,--list               : list current cedit settings (editor/elevcmd)
+        -l,--list               : list current {name} settings.
+        -o,--overwrite          : when setting dirs with -d, overwrite the
+                                  current settings.
         -p dir,--path dir       : when installing, install to specified
                                   directory.
-        -r,--remove             : remove the installed symlink for cedit if
+        -r,--remove             : remove the installed symlink for {name} if
                                   installed. (may require permissions)
         -s,--shellall           : shell one process per file, instead of
                                   sending all file names at once.
@@ -106,7 +161,7 @@ usage_str = """{verstr} (running on Python {pyversion})
         You can pass arguments on to the editor using the '--' option.
         Any arguments after the '--' are passed on to your editor.
         Example:
-            cedit -- --help
+            {script} -- --help
             ..this would send the --help flag to your editor.
                                      
     Settings:
@@ -130,8 +185,11 @@ usage_str = """{verstr} (running on Python {pyversion})
 
         cedit --elevcmd kdesudo
             ...sets favorite elevation command to 'kdesudo'
+
+        cedit --dirs /home/{user},/home/{user}/dump
+            ...adds 2 directories to cedit's search path.
             
-""".format(verstr=VERSIONSTR, pyversion=sys.version.split()[0], user=USER)
+""".format(**usage_args)
 
 
 # I hate putting these functions here, but for better help I will.
@@ -151,8 +209,11 @@ def get_pip_name():
         if it is find whether or not pip3 is installed.
         return string containing desired pip version, or '' if none is found.
     """
-    pip3versions = '3', '3.1', '3.2', '3.3', '3.4', '3.5'
-    pip2versions = '', '2', '2.6', '2.7'
+
+    # Support python 3 pip-executables for many years to come :P
+    pip3versions = ['3'] + ['3.{}'.format(i) for i in range(10)]
+    # py2 pip-executables to support.
+    pip2versions = ['', '2', '2.6', '2.7']
     pip2exes = []
     for pver in pip2versions:
         pip2exes.append('pip{}'.format(pver))
@@ -227,7 +288,7 @@ def warn_pip(importname):
         noversionokay = True
     pyver = 'Python{}'.format(ver)
 
-    if not ver in pipname and (not noversionokay):
+    if (ver not in pipname) and (not noversionokay):
         print(''.join(['You have \'pip\' installed, ',
                        'but it doesn\'t look like a ',
                        '{}-compatible version.\n'.format(pyver),
@@ -248,7 +309,7 @@ try:
 except ImportError as ex_es:
     warn_pip('EasySettings')
     sys.exit(1)
-# Try importing Docopt, I doubt that anyone has this either.
+# Try importing Docopt, some people still prefer the old ways.
 try:
     from docopt import docopt
 except ImportError as ex_es:
@@ -280,7 +341,7 @@ def check_files(filenames):
     for filename in filenames:
         if not check_file(filename):
             return False
-    # All existed, or all were created.
+    # All existed, or some/all were created.
     return True
 
 
@@ -298,28 +359,54 @@ def check_path(sdir):
     return False
 
 
+def clear_cedit_paths():
+    """ Remove cedit search paths from settings. (if any are set.) """
+    global CEDITPATHS
+
+    if CEDITPATHS:
+        CEDITPATHS = []
+        success = settings.setsave('paths', '')
+        if success:
+            print('\nCleared all cedit search directories.')
+            return 0
+
+        # Error saving settings.
+        print('\nUnable to save cleared search directories.')
+        return 1
+
+    # No paths set  yet.
+    print('\nNo cedit search directories set yet.\n'
+          'use {} -d /my/dir to set some.'.format(SCRIPT))
+    return 1
+
+
 def cmd_list():
     """ list command. """
     
-    alloptions = settings.list_options()
+    alloptions = sorted(settings.list_options())
     if not alloptions:
         print(''.join(['no settings yet.\n'
                        'use {} -e (or -c) '.format(SCRIPT),
                        'to set your favorite editor or elevation command.']))
         return 1
 
-    namelengths = [len(o) for o in alloptions]
-    longestnamelen = max(namelengths)
+    longestnamelen = len(max(alloptions, key=len))
 
     # print current settings
     print('current settings:')
     for optname in alloptions:
         val = settings.get(optname)
+        if optname == 'paths':
+            # Special care taken when printing paths (if paths are set).
+            if val:
+                print('  {} :'.format(optname.ljust(longestnamelen)))
+                for p in sorted(val.split(':')):
+                    print('  {}   {}'.format((' ' * longestnamelen), p))
+                continue
+        # Normal setting. print opt : val.
         if not val:
             val = '(not set yet!)'
-        spacinglen = (longestnamelen - len(optname)) + 1
-        spacing = (' ' * spacinglen)
-        print('  {}{}: {}'.format(optname, spacing, val))
+        print('  {} : {}'.format(optname.ljust(longestnamelen), val))
     return 0
             
 
@@ -440,6 +527,51 @@ def cmd_remove():
     # Success.
     print('\n{} was successfully removed from: {}\n'.format(NAME, loc))
     return 0
+
+
+def find_dir(s):
+    """ Uses os.path.expanduser and os.path.abspath to get actual dir names
+        from paths like: "~/cedit/.."
+        Example:
+            ~ == '/home/me'
+            print(find_dir('~/cedit/../../'))
+            # prints: '/home'
+    """
+    if '~' in s:
+        # Expand user, then parse relative paths.
+        return os.path.abspath(os.path.expanduser(s))
+    else:
+        # No home needed, and expanduser without ~ returns relative to home.
+        return os.path.abspath(s)
+
+
+def find_filename(s):
+    """ Finds a file path by filename.
+        Checks current dir/full existing path:
+            If os.path.exists(s), return s.
+        Checks CEDITPATHS:
+            If os.path.exists(path + s for path in CEDITPATHS), return path + s
+        Returns s (original filename) on failure to match any of these.
+    """
+    if os.path.exists(s):
+        return s
+
+    for ceditpath in [os.path.join(p, s) for p in CEDITPATHS]:
+        print_debug('Checking against cedit path: {}'.format(ceditpath))
+        if os.path.exists(ceditpath):
+            return ceditpath
+
+    # Couldn't find it.
+    return s
+
+
+def get_cedit_paths():
+    """ Retrieve current config for cedit paths. """
+
+    configstr = settings.get('paths', None)
+    if not configstr:
+        return []
+    return sorted(configstr.split(':'))
 
 
 def get_userpath():
@@ -629,6 +761,11 @@ def needs_root(sfilename):
         return True
 
 
+def plural(word, number):
+    """ Return word if number == 1, else word + 's' """
+    return word if number == 1 else '{}s'.format(word)
+
+
 def print_debug(s):
     if DEBUG:
         print('DEBUG: {}'.format(s))
@@ -664,6 +801,66 @@ def run_exec(cmdlist):
             raise Exception(ex)
         
     return ret
+
+
+def set_cedit_paths(s, overwrite=False):
+    """ Add to current cedit paths, or create a new list of paths.
+        Saves the paths in config.
+
+        Arguments:
+            s          : Comma-separated string of paths/dirs to set.
+            overwrite  : Overwrite any current settings.
+                         Default: False
+    """
+    global CEDITPATHS
+    # Shortcut for clearing all paths if '-' or 'none' is passed.
+    if s.lower() in ('-', 'none'):
+        return clear_cedit_paths()
+
+    if overwrite:
+        # Start a new set of paths.
+        paths, oldpaths = [], []
+    else:
+        # Append to current settings, compare changes later.
+        paths, oldpaths = CEDITPATHS[:], CEDITPATHS[:]
+
+    newpaths = []
+    for userpath in [find_dir(p.strip()) for p in s.split(',')]:
+        if not os.path.isdir(userpath):
+            print('Invalid directory: {}'.format(userpath))
+            continue
+        elif userpath in paths:
+            print('Already set: {}'.format(userpath))
+            continue
+        paths.append(userpath)
+        newpaths.append(userpath)
+
+    if not paths:
+        # No paths.
+        print('\nNo cedit paths are set.')
+        return 1
+    elif not newpaths:
+        print('\nNo changes were made to the cedit search directories.')
+        return 1
+
+    if paths:
+        # Have paths to save.
+        CEDITPATHS = sorted(list(set(paths[:])))
+        success = settings.setsave('paths', ':'.join(CEDITPATHS))
+        if success:
+            newlen = len(newpaths)
+            pathstr = plural('path', newlen)
+            print('\nSaved {} new cedit {}:'.format(newlen, pathstr))
+            print('    {}'.format('\n    '.join(sorted(newpaths))))
+            if oldpaths:
+                oldlen = len(oldpaths)
+                pathstr = plural('path', oldlen)
+                print('\nAnd {} existing cedit {}:'.format(oldlen, pathstr))
+                print('    {}'.format('\n    '.join(sorted(oldpaths))))
+            return 0
+        else:
+            print('\nUnable to save cedit paths.')
+            return 1
 
 
 def set_setting_safe(opt, val):
@@ -739,8 +936,10 @@ def main(argd):
     """ Main entry point for cedit.
         Expects docopt argument dict.
     """
-    global DEBUG
+    global DEBUG, CEDITPATHS
     DEBUG = argd['--debug']
+
+    CEDITPATHS = get_cedit_paths()
 
     # show about message?
     if argd['--about']:
@@ -757,6 +956,9 @@ def main(argd):
         else:
             # Global dir.
             return cmd_install()
+    # set dirs
+    elif argd['--dirs']:
+        return set_cedit_paths(argd['--dirs'], overwrite=argd['--overwrite'])
     # set editor
     elif argd['--editor']:
         return set_setting_safe('editor', argd['--editor'])
@@ -772,10 +974,14 @@ def main(argd):
 
     # get filenames, check existence
     filenames = argd['<filename>']
+    # Hack around docopt to pass args on to the editor.
+    # editorargs has already been set, now we need to remove this ARGPASS flag.
     if '!ARGPASS' in filenames:
         filenames.pop(filenames.index('!ARGPASS'))
 
     if filenames:
+        # Use cedit search paths to locate some files. Others are left alone.
+        filenames = [find_filename(f) for f in filenames]
         # Open files separately
         # (where some editors don't support multi-file opening.)
         if argd['--shellall']:
@@ -791,20 +997,23 @@ def main(argd):
         if check_files(filenames):
             return shell_file(filenames)
     else:
+        # No cedit args, possibly editor args though.
         if editorargs:
-            # Just pass editors arg on, and execute it.
+            # Just pass editors args on, and execute it.
             return shell_file(None)
         else:
-            print('No file to open!')
+            print('Missing arguments, see: {} --help'.format(SCRIPT))
             return 1
 
 if __name__ == '__main__':
     if '--' in sys.argv:
+        # Hack around docopt to pass args onto the actual editor app.
         ceditargs = sys.argv[1:sys.argv.index('--')]
         if not ceditargs:
             ceditargs = ['!ARGPASS']
         editorargs = sys.argv[sys.argv.index('--') + 1:]
     else:
+        # Normal cedit args.
         ceditargs = sys.argv[1:]
         editorargs = []
 
