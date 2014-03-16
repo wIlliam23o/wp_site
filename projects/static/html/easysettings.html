@@ -5,7 +5,7 @@
 		application settings. Tested with Python 2.7 and 3.2.<br/>
 	</p>
 	<p>
-		Easy Settings allows you to easily save and retrieve simple application settings.
+		EasySettings allows you to easily save and retrieve simple application settings.
 		Handles non-string types like [python]bool[/python], [python]int[/python], [python]long[/python],
 		[python]list[/python], as well as normal [python]str[/python] settings. No sections needed,
 		just [python]es.set()[/python], [python]es.get()[/python], and [python]es.save()[/python].
@@ -35,6 +35,7 @@
 	</span>
 	{{ source_view }}
 </div>
+
 <!-- Installation -->
 <div class="wp-block feature-list">
 	<div class="title-box">
@@ -62,11 +63,12 @@
 		allow you to import it into your projects using:
 	</p>
 	<div class="codewrap">
-			from easysettings import easysettings<br/>
-			mysettings = easysettings.easysettings('myconfigfile.conf')<br/>
+			from easysettings import EasySettings<br/>
+			mysettings = EasySettings('myconfigfile.conf')<br/>
 	</div>
 	</p>
 </div>
+
 <!-- PYPI Package -->
 <div class="wp-block feature-list">
 		
@@ -112,60 +114,96 @@
 	<div class="sampwrap">
 			sudo pip-3.2 install easysettings<br/>
 	</div>
-	<p>
+	<div>
 		[code]easy_install[?code] also works for people that prefer the [code]easy_install[?code]
 		method.
-	</p>
-</div>
-<!-- Bug Fixes -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Bug Fixes</h3>
+		<br>
+		...and as always you can use the [code]pip install easysettings --user[?code] method
+		to install per-user without using sudo.
 	</div>
-	<p>
-		Version 1.8.1 fixes a small bug with the has_value() function, it now uses the proper
-		method to search for values, instead of the old pickled string method.
-	</p>
-	<p>	
-		Now supports Python 3.3! The major difference was in the <strong>pickle</strong> library.
-		<strong>Pickle</strong> used strings in python 2.7, and bytes in python 3. All pickled objects
-		are now using a string format in EasySettings, with the help of 3 little conversion
-		functions. You will never have to use these functions, they're really internal use
-		only. But if you want to see how to return a string from [python]pickle.dumps()[/python] in python 3,
-		look at the [python]safe_pickle_str()[/python] function. To load from a string, instead of bytes, in
-		python 3's [python]pickle.loads()[/python], look at [python]safe_pickle_obj()[/python].
-	</p>
-	<p>
-		The non-string saving method has been enhanced so debug printing will be
-		'prettier'. Example of 'debug printing' settings:
-	</p>
-	<pre class='python'>
-from easysettings import easysettings
-settings = easysettings.easysettings('myconfigfile.conf')
+</div>
+
+<!-- Updates -->
+<div class="wp-block feature-list">
+	<div id='updates' class="title-box">
+		<h3 class="title">Updates</h3>
+	</div>
+    <div class='update-box'>
+    	<!-- 1.8.9 -->
+        <span class='update-title'>Update: Version 1.8.9</span>
+        <ul class='circle blue'>
+            <li>
+                Small changes were made to help compatibility issues between the old and new
+                package layouts.
+            </li>
+            <div class='listdesc'>
+                You can still do: [code]from easysettings import easysettings[?code] and
+                then [code]easysettings.easysettings()[?code] if you have to. The new method
+                is much better though.
+            </div>
+        </ul>
+
+        <!-- 1.8.7 -->
+        <span class='update-title'>Update: Version 1.8.7</span>
+        <ul class='circle blue'>
+        	<li>
+        		Changed package layout.
+        	</li>
+        	<div class='listdesc'>
+        		Instead of [code]from easysettings.easysettings import easysettings[?code],
+				the simple form of [code]from easysettings import EasySettings[?code] can be used.
+				<br>
+				The main class has been given a proper class name.
+			</div>
+		</ul>
+
+		<!-- 1.8.6 -->
+		<span class='update-title'>Update: Version 1.8.6</span>
+		<ul class='circle blue'>
+			<li>
+				Fixed small bug in `setsave()` where `setsave('opt', False)` caused errors.
+			</li>
+		</ul>
+        
+        <!-- 1.8.3 -->
+        <span class='update-title'>Update: Version 1.8.3</span>
+        <ul class='circle blue'>
+        	<li>
+				Non-string types were not being loaded or saved
+				properly. All issues are resolved.
+			</li>
+			<div class='listdesc'>
+				The method has been enhanced so debug printing will be
+				'prettier'. Example of 'debug printing' settings:
+				<pre class='python'>
+from easysettings import EasySettings
+settings = EasySettings('myconfigfile.conf')
 settings.set('option', True)
 settings.set('option2', ['cjw', 'amy', 'joseph'])
-print settings
+print(settings)
 # this will now print as:
-# 	{'option': True, 'option2', ['cjw', 'amy', 'joseph']}
+#       {'option': True, 'option2', ['cjw', 'amy', 'joseph']}
 # instead of pickle's messed up looking strings like:
-#	{'option': I01\n.  (for a True boolean value), ... }
-	</pre>
-	
-	<p>
-		This fix also allows you to save values with the newline character in them. So code like
-		this will work:
-	</p>
-	<pre class='python'>
+#       {'option': I01\n.  (for a True boolean value), ... }
+               </pre>
+               <br>
+
+				This fix also allows you to save values with the newline
+				character in them. So code like his will work:
+				<pre class='python'>
 settings.set('mytext', 'this\nstring\n\has\nnewlines.')
 print settings.get('mytext')
 # this will result in:
-# 	this
-#	string
-#	has
-#	newlines.
-	</pre>
-	
+#       this
+#       string
+#       has
+#       newlines.
+				</pre>
+			</div>
+		</ul>
+    </div>
 </div>
+
 <!-- Example Usage -->
 <div class="wp-block feature-list">
 	<div class="title-box">
@@ -180,13 +218,13 @@ print settings.get('mytext')
 #!/usr/bin/env python
 # --------------- Creation ----------------
 	
-from easysettings import easysettings
+from easysettings import EasySettings
 
-settings = easysettings.easysettings("myconfigfile.conf")
+settings = EasySettings("myconfigfile.conf")
 
 # configfile_exists() checks for existing config, and creates one if needed.
-# ** this function is called automatically now when a filename is passed to easysettings. **
-# if you wish to disable it, just do: settings = easysettings.easysettings() and set
+# ** this function is called automatically now when a filename is passed to EasySettings. **
+# if you wish to disable it, just do: settings = EasySettings() and set
 # settings.configfile later.
 
 # ------------- Basic Functions -----------
@@ -211,6 +249,7 @@ settings.save()
 settings.setsave("homedir", "/myuserdir")
  	</pre>
 
+
 	<h2 class="title">
 		Other Features
 	</h2>
@@ -234,12 +273,13 @@ settings.clear()
 settings.clear_values()
 	</pre>
 
+
 	<h2 class="title">
 		Comparison
 	</h2>
 	<pre class='python'>
 # compare two settings objects
-settings2 = easysettings.easysettings('myconfigfile2.conf')
+settings2 = EasySettings('myconfigfile2.conf')
 
 if settings.compare_opts(settings2):
 	print "these have the same exact options, values may differ"
@@ -258,6 +298,7 @@ if settings > settings2:
 #     the = features are based on option names and values.
 	</pre>
 
+
 	<h2 class="title">
 		Features
 	</h2>
@@ -272,10 +313,10 @@ if settings > settings2:
 	</p>
 	<p>
 		Easy Settings uses a dictionary to store settings before writing to disk, so you can
-		also access settings like a dictionary object using [python]easysettings.settings[/python]. The
+		also access settings like a dictionary object using [python]mysettings.settings[/python]. The
 		[python]setsave()[/python] function will save every time you set an option, and [python]is_saved()[/python] will
 		tell you whether or not the file has been saved to disk yet. Code is documented for a
-		newbie, so a [python]help('EasySettings')[/python] in the python console will get you started.
+		newbie, so a [python]help('easysettings')[/python] in the python console will get you started.
 	</p>
 	<p>
 		The search_query argument in the list functions lets you find settings, options, and values by search string:
@@ -291,7 +332,7 @@ settings.clear_values(mydebugoptions)
 	All of these values will be retrieved as the same type that was set:
 	</p>
 	<pre class='python'>
-es = easysettings.easysettings('myconfigfile.conf)
+es = EasySettings('myconfigfile.conf)
 	
 # Boolean
 es.set("newuser", True)
@@ -311,33 +352,10 @@ es.set('users', ['cjw', 'joseph', 'amy']) # lists as settings, very convenient
 for suser in es.get('users'):
 	print "retrieved user name: " + suser
 	
-# i won't do them all, but if you can pickle it, you can use it with easysettings.
+# i won't do them all, but if you can pickle it, you can use it with EasySettings.
 	</pre>
-	<p>
-	You can setup an auto load of the whole easysettings instance using the
-	new pickle features like this:
-	</p>
-	<pre class='python'>
-from easysettings import easysettings
-es = easysettings.easysettings().load_pickle('myconfigfile.pkl')
-if es is None:
-	# first time run, need to make an easysettings object.
-	es = easysettings.easysettings() # uses default configfile if none is passed
-	es.name = "My Project"
-	es.version = "1.0"
-	es.set("firstrun", False)
-	es.save_pickle()
-else:
-	# pickle file was found, everything from the last save_pickle() was loaded.
-	print "Loaded name, version, configfile, and all settings/options/values"
-	
-# now all you need to do is make sure to save_pickle() before your program exits,
-# everything you set in easysettings will be retrieved next time.
 
-# This is experimental, and not really needed right now because you can pickle your
-# own settings object without these functions. The functions are there for possible
-# future purposes.
-	</pre>
+<!-- Errors -->
 	<p>
 		Errors are more descriptive and can be caught using their proper names:
 	</p>
@@ -350,17 +368,18 @@ except Exception as exEx:
 	print "General Error!"
 	</pre>
 
+<!-- Automatic Creation -->
 	<h2 class='title'>
 		Automatic Creation
 	</h2>
 
 	<p>
-		If you pass a file name to easysettings(), the [python]configfile_exists()[/python] function is called. This
+		If you pass a file name to EasySettings(), the [python]configfile_exists()[/python] function is called. This
 		function will create a blank config file if the file doesn't exist, otherwise it will return [python]True[/python].
 		To use the 'automatic creation' do this:
 	</p>
 	<pre class='python'>
-settings = easysettings.easysettings('myconfigfile.conf')
+settings = EasySettings('myconfigfile.conf')
 # if file exists, all settings were loaded.
 # if file did not exist, it was created.
 # No permissions, disk-full, and other errors are still possible of course
@@ -371,7 +390,7 @@ settings = easysettings.easysettings('myconfigfile.conf')
 		like this:
 	</p>
 	<pre class='python'>
-settings = easysettings.easysettings()
+settings = EasySettings()
 settings.configfile = 'myconfigfile.conf'
 # file has not been created or loaded. 
 # file must exist before calling 'load_file'
@@ -384,7 +403,7 @@ else:
 		This will work in the same way to disable the automatic creation:
 	</p>
 	<pre class='python'>
-settings = easysettings.easysettings()
+settings = EasySettings()
 # file has not been created or loaded.
 # file 'myconfigfile.conf' must exist before calling load_file()
 if settings.load_file('myconfigfile.conf'):
