@@ -878,7 +878,9 @@ def inject_screenshots(source_string, images_dir, **kwargs):
 # TODO: This is ugly, too many kw arguments, something needs to be done.
 
 
-def inject_sourceview(project, source_string, request=None, link_text=None, desc_text=None, target_replacement="{{ source_view }}"):  # noqa
+def inject_sourceview(project, source_string,
+                      request=None, link_text=None, desc_text=None,
+                      target_replacement="{{ source_view }}"):
     """ injects code for source viewing.
         needs wp_project (project) passed to gather info.
         if target_replacement is not found, returns source_string.

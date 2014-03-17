@@ -1263,3 +1263,32 @@ code, samp {
   font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
   text-align: right;
   padding-left: 0%; }
+
+/* Video related styles (video titles, video descriptions) */
+.video-box {
+  padding: 10px; }
+
+.video-info {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-color: rgba(202, 217, 224, 0.5);
+  border-width: 1px;
+  border-style: solid;
+  padding: 5px;
+  margin-bottom: 10px; }
+
+.video-title {
+  font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
+  font-size: 1.2em;
+  color: #26a1f4;
+  text-transform: lowercase;
+  padding: 5px; }
+
+.video-desc {
+  font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
+  font-size: 0.8em;
+  border-color: rgba(202, 217, 224, 0.5);
+  padding: 5px; }

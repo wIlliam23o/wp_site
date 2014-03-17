@@ -981,3 +981,45 @@ code, samp {
     text-align: right;
     padding-left: 0%;
 }
+
+/* Video related styles (video titles, video descriptions) */
+.video-box {
+    padding: 10px;
+    //@include border-radius(5px);
+    //border-color: $bordermain;
+    //border-width: 1px;
+    //border-style: solid;
+}
+
+.video-info {
+    // Container for both video-title and video-desc.
+    @include border-radius(5px);
+    border-color: $bordermain;
+    border-width: 1px;
+    border-style: solid;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+.video-title {
+    // Title for video (seated above the video desc.) 
+    font-family: $fontsnormal;
+    font-size: $fontbigger;
+    color: $bluemain;
+    //text-shadow: $shadowtext;
+    text-transform: lowercase;
+    //@include border-radius(5px);
+    //border-color: $bordermain;
+    padding: 5px;
+}
+
+.video-desc {
+    // Short description for video (seated above the video)
+    font-family: $fontsnormal;
+    font-size: $fontsmall;
+    //@include border-radius(5px);
+    border-color: $bordermain;
+    padding: 5px;
+}
+
+

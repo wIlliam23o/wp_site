@@ -10,9 +10,12 @@
  
    start date: Mar 29, 2013
 '''
-
+# For insert_video, building a mimetype from file extension.
+import os
+# Django stuff
 from django import template
 from django.conf import settings
+# Local tools
 from wp_main.utilities import htmltools
 from wp_main.utilities import utilities
 from wp_main.utilities.highlighter import wp_highlighter
@@ -80,7 +83,7 @@ def disabled_css(item):
     else:
         # grab object.
         if len(obj_match.groups()) == 4:
-            # beginning of a tag (<a href)
+            # beginning of a tag (<a href) (Not used right now)
             tag = obj_match.groups()[0]  # noqa
             # type of object (wp_blog/1)
             otype = obj_match.groups()[2].strip('/')
@@ -218,6 +221,47 @@ def highlight_python(scontent):
         _log.error('Error in highlight_python:\n{}'.format(ex))
         results = scontent
     return results
+
+
+def insert_video(videourl, posterimg=None, id_=None):
+    """ Return a Video.js video player with a url to a video.
+        video.css and video.js must be included in <head>!
+        ****************************************************************
+        ** This has not been tested, and won't be until
+        ** the project, blog, etc. pages use template-rendering to load.
+        ** see: htmltools.load_html_file()
+        ****************************************************************
+    """
+    if not videourl:
+        return ''
+    # Build arg dict for basehtml.format()
+    formatargs = {'videourl': videourl}
+
+    # Grab mimetype.
+    fileext = os.path.splitext(videourl)[-1]
+    # Should be 'video/{file extension without .}' (works for mp4 and webm)
+    formatargs['mimetype'] = 'video/{}'.format(fileext.strip('.'))
+
+    if posterimg:
+        # Build poster tag.
+        formatargs['postertag'] = 'poster="{}" '.format(posterimg)
+    else:
+        formatargs['postertag'] = ''
+
+    # Use custom tag id if wanted.
+    if id_:
+        formatargs['videoid'] = id_
+    else:
+        formatargs['videoid'] = 'videoplayer'
+
+    # Base template for all videos.
+    basehtml = ('\n<video id="{videoid}" class="video-js vjs-default-skin" '
+                'controls preload="auto" width="640" height="264" '
+                '{postertag}data-setup="{{}}">'
+                '\n<source src="{videourl}" type=\'{mimetype}\'>'
+                '\n</video>\n')
+    # Format basehtml and return it.
+    return basehtml.format(**formatargs)
 
 
 def is_disabled(model_obj):
@@ -358,6 +402,7 @@ registered_filters = (
     get_remote_host,
     get_remote_ip,
     highlight_python,
+    insert_video,
     is_disabled,
     is_false,
     is_mobile,

@@ -4,12 +4,20 @@
 {% block title %}- Projects{% endblock %}
 
 {% block extrastyle %}
+	<!-- Style for Video.js -->
+    <link rel='stylesheet' href='/static/css/video-js.css' rel='stylesheet' type='text/css'/>
+
 	<style type='text/css'>
 		.wpbutton.project-edit-button {
 			position: absolute;
 			right: 10px;
 		}
 	</style>
+{% endblock %}
+
+{% block javascript %}
+	<!-- Video.js video player. -->
+    <script type='text/javascript' src='/static/js/video/video.js'></script>
 {% endblock %}
 
 <!-- Build projects menu -->
