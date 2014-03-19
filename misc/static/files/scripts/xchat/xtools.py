@@ -26,10 +26,10 @@ import sys
 from threading import Thread
 # XChat style version info.
 __module_name__ = 'xtools'
-__module_version__ = '0.3.3'
+__module_version__ = '0.3.4'
 __module_description__ = 'Various tools/commands for extending XChat...'
 # really minor changes bump this 'versionx'
-VERSIONX = '3'
+VERSIONX = '0'
 # Convenience version str for help commands.
 VERSIONSTR = '{} v. {}-{}'.format(__module_name__,
                                   __module_version__,
@@ -641,18 +641,19 @@ def get_channels_users(channels=None):
     return channelusers
 
 
-def get_cmd_args(word, arglist):
+def get_cmd_args(word_eol, arglist):
     """ Combination of get_cmd_restm and get_flag_args.
         Returns commandname, nonflagdata, argdict
         Example:
             word = '/TEST this stuff -d'
-            cmdname, cmdargs, argd = get_cmd_args(word, ('-d', '--debug'))
+            cmdname, cmdargs, argd = get_cmd_args(word_eol, ('-d', '--debug'))
             # returns:
             #   cmdname == '/TEST'
             #   cmdargs == 'this stuff'
             #      argd == {'--debug': True}
     """
-
+    # Make my own 'word', because the py-plugin removes extra spaces in word.
+    word = word_eol[0].split(' ')
     cmdname = word[0]
     word, argd = get_flag_args(word, arglist)
     cmdargs = get_cmd_rest(word)
@@ -661,11 +662,27 @@ def get_cmd_args(word, arglist):
 
 def get_cmd_rest(word):
     """ Return the rest of a command. (removing /COMMAND) """
-
     if word and (len(word) > 1):
         return ' '.join(word[1:])
     # no args, only the cmdname.
     return ''
+
+
+def get_eval_comment(s):
+    """ Retrieve comment from single line of code.
+        Return the comment text if any, otherwise return None.
+    """
+    if not s:
+        return None
+
+    quotedpat = re.compile('[\'"](.+)?#(.+?)[\'"]')
+    # remove quoted # characters.
+    parsed = quotedpat.sub('', s)
+    # Still has comment char.
+    if '#' in parsed:
+        return parsed[parsed.index('#') + 1:]
+    else:
+        return None
 
 
 def get_flag_args(word, arglist):
@@ -731,6 +748,11 @@ def get_flag_args(word, arglist):
             safe_remove(newword, [shortarg, longarg])
             # Flag was found, set it.
             arginfo[longarg] = True
+
+    while newword and (newword[0] == ''):
+        newword.pop(0)
+    while newword and (newword[-1] == ''):
+        newword.pop(len(newword) - 1)
 
     # Return cleaned word, and arg dict.
     return newword, arginfo
@@ -1108,11 +1130,28 @@ def print_error(msg, exc=None, boldtext=None, newtab=False):
 def print_evalresult(cquery, coutput, **kwargs):
     """ Format eval code-output for chat before sending,
         or format for screen output.
+        Arguments:
+            cquery      : Original code evaled.
+            coutput     : Output when code was ran.
+
+        Keyword Arguments:
+            chat        : Send to chat?
+                          Default: False
+            chatnick    : Nick to mention in chat msg.
+                          Default: None
+            comment     : Comment after the result.
+                          Default: None
+            newtab      : Send output to new xchat tab?
+                          Default: False
+            resultonly  : Don't include original code, only the result.
+                          Default: False
     """
     chat = kwargs.get('chat', False)
     chatnick = kwargs.get('chatnick', None)
+    comment = kwargs.get('comment', None)
     resultonly = kwargs.get('resultonly', False)
     newtab = kwargs.get('newtab', False)
+
     if chat:
         # Send to channel as user.
         # Wrap it in () to separate it from the result.
@@ -1127,9 +1166,17 @@ def print_evalresult(cquery, coutput, **kwargs):
         # add directed message nick if given.
         if chatnick:
             chanmsg = '{}: {}'.format(chatnick, chanmsg)
+        # add comment to the end of the result.
+        if comment:
+            chanmsg = '{} # {}'.format(chanmsg, comment)
+        # Output.
         print_tochan(chanmsg)
     else:
         # Print to screen.
+        # Add comment to the end of the result.
+        if comment:
+            coutput = '{}\n# {}'.format(coutput, comment)
+        # Output.
         print_status('Code Output:', newtab=newtab)
         print_(coutput, newtab=newtab)
 
@@ -1137,11 +1184,28 @@ def print_evalresult(cquery, coutput, **kwargs):
 def print_evalerror(cquery, eoutput, **kwargs):
     """ Format eval error msg for chat before sending,
         or format for printing to screen.
+        Arguments:
+            cquery      : Original code evaled.
+            eoutput     : Output when code was ran.
+
+        Keyword Arguments:
+            chat        : Send to chat?
+                          Default: False
+            chatnick    : Nick to mention in chat msg.
+                          Default: None
+            comment     : Comment after the result.
+                          Default: None
+            newtab      : Send output to new xchat tab?
+                          Default: False
+            resultonly  : Don't include original code, only the result.
+                          Default: False
     """
     chat = kwargs.get('chat', False)
     chatnick = kwargs.get('chatnick', None)
+    comment = kwargs.get('comment', None)
     resultonly = kwargs.get('resultonly', False)
     newtab = kwargs.get('newtab', False)
+
     if chat:
         # Format chat msg, so its not too long.
         lastline = eoutput.split('\\n')[-1]
@@ -1150,11 +1214,16 @@ def print_evalerror(cquery, eoutput, **kwargs):
                          lastline,
                          chat=chat,
                          chatnick=chatnick,
+                         comment=comment,
                          resultonly=resultonly,
                          newtab=newtab)
     else:
         # Not a chat send, no trimming is needed.
         errorsfmt = eoutput.replace('\\n', '\n')
+        # Add comment to end of output.
+        if comment:
+            errorsfmt = '{}\n# {}'.format(errorsfmt, comment)
+        # Output.
         print_error('Code Error:\n{}'.format(errorsfmt), newtab=newtab)
 
 
@@ -1505,16 +1574,16 @@ def validate_int_str(intstr, minval=5, maxval=60):
 def cmd_catch(word, word_eol, userdata=None):
     """ Handles the /CATCH command to add/remove or list caught msgs. """
 
-    cmdname, cmdargs, argd = get_cmd_args(word, [('-c', '--clear'),
-                                                 ('-d', '--delete'),
-                                                 ('-f', '--filter'),
-                                                 ('-h', '--help'),
-                                                 ('-l', '--list'),
-                                                 ('-m', '--msgs'),
-                                                 ('-p', '--print'),
-                                                 ('-r', '--remove'),
-                                                 ('-t', '--tab')
-                                                 ])
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-c', '--clear'),
+                                                     ('-d', '--delete'),
+                                                     ('-f', '--filter'),
+                                                     ('-h', '--help'),
+                                                     ('-l', '--list'),
+                                                     ('-m', '--msgs'),
+                                                     ('-p', '--print'),
+                                                     ('-r', '--remove'),
+                                                     ('-t', '--tab')
+                                                     ))
     if argd['--help']:
         print_cmdhelp(cmdname, newtab=argd['--tab'])
         return xchat.EAT_ALL
@@ -1586,14 +1655,19 @@ def cmd_eval(word, word_eol, userdata=None):
     """
 
     # Get args from command.
-    cmdname, query, argd = get_cmd_args(word, (('-c', '--chat'),
-                                               ('-h', '--help'),
-                                               ('-r', '--result'),
-                                               ('-e', '--errors'),
-                                               ('-t', '--tab')))
+    cmdname, query, argd = get_cmd_args(word_eol,
+                                        (('-c', '--chat'),
+                                         ('-h', '--help'),
+                                         ('-k', '--code'),
+                                         ('-r', '--result'),
+                                         ('-e', '--errors'),
+                                         ('-t', '--tab')))
+
     if argd['--help']:
         print_cmdhelp(cmdname, newtab=argd['--tab'])
         return xchat.EAT_ALL
+
+    query = query.strip()
 
     if not query:
         print_error('No code to evaluate.', newtab=argd['--tab'])
@@ -1602,14 +1676,22 @@ def cmd_eval(word, word_eol, userdata=None):
     # Grab directed nick msg from word if available.
     msgnick = None
     if argd['--chat']:
-        queryparts = query.split()
+        queryparts = query.split(' ')
         firstword = queryparts[0]
+
         chanusers = xchat.get_context().get_list('users')
         if firstword.lower() in [n.nick.lower() for n in chanusers]:
             # first word is a nick, save it and remove it from the query.
             msgnick = firstword
             query = ' '.join(queryparts[1:])
 
+    # Grab comment if any, trim it from the code.
+    comment = get_eval_comment(query)
+    if comment:
+        query = query.replace(comment, '').strip('#').strip()
+        # Strip extra space from comment for formatting later.
+        comment = comment.strip()
+    
     # Grab code query, if -c and name were only provided its an error.
     if not query:
         print_error('No code to evaluate.', newtab=argd['--tab'])
@@ -1632,6 +1714,10 @@ def cmd_eval(word, word_eol, userdata=None):
     # Make an interpreter to run the code.
     compiler = InteractiveInterpreter()
     
+    # Print formatted/parsed code to window....
+    if argd['--code']:
+        print_status('Running Code:\n{}'.format(query))
+
     # stdout/stderr will be captured, for optional chat output.
     with StdErrCatcher() as errors:
         with StdOutCatcher() as captured:
@@ -1650,6 +1736,7 @@ def cmd_eval(word, word_eol, userdata=None):
         print_evalerror(query, errors.output,
                         chat=(argd['--chat'] and argd['--errors']),
                         chatnick=msgnick,
+                        comment=comment,
                         resultonly=argd['--result'],
                         newtab=argd['--tab'])
     # Code had output.
@@ -1658,6 +1745,7 @@ def cmd_eval(word, word_eol, userdata=None):
         print_evalresult(query, captured.output,
                          chat=argd['--chat'],
                          chatnick=msgnick,
+                         comment=comment,
                          resultonly=argd['--result'],
                          newtab=argd['--tab'])
     else:
@@ -1679,10 +1767,10 @@ def cmd_findtext(word, word_eol, userdata=None):
         print('Error, no scrollback dir found in: {}'.format(scrollbackdir))
         return xchat.EAT_ALL
     # Get cmd args
-    cmdname, query, argd = get_cmd_args(word, [('-a', '--all'),
-                                               ('-h', '--help'),
-                                               ('-n', '--nick'),
-                                               ('-t', '--tab')])
+    cmdname, query, argd = get_cmd_args(word_eol, (('-a', '--all'),
+                                                   ('-h', '--help'),
+                                                   ('-n', '--nick'),
+                                                   ('-t', '--tab')))
 
     if argd['--help']:
         print_cmdhelp(cmdname)
@@ -1807,10 +1895,10 @@ def cmd_listusers(word, word_eol, userdata=None):
     """ List all users, with a count also. """
 
     # Get args
-    cmdname, cmdargs, argd = get_cmd_args(word, [('-a', '--all'),
-                                                 ('-h', '--help'),
-                                                 ('-c', '--count'),
-                                                 ('-t', '--tab')])
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-a', '--all'),
+                                                     ('-h', '--help'),
+                                                     ('-c', '--count'),
+                                                     ('-t', '--tab')))
 
     if argd['--help']:
         print_cmdhelp(cmdname)
@@ -1848,11 +1936,11 @@ def cmd_searchuser(word, word_eol, userdata=None):
         expects: word = /searchuser [-a] usernickregex
     """
     # Get command args.
-    cmdname, query, argd = get_cmd_args(word, [('-H', '--host'),
-                                               ('-h', '--help'),
-                                               ('-o', '--onlyhost'),
-                                               ('-a', '--all'),
-                                               ('-t', '--tab')])
+    cmdname, query, argd = get_cmd_args(word_eol, (('-H', '--host'),
+                                                   ('-h', '--help'),
+                                                   ('-o', '--onlyhost'),
+                                                   ('-a', '--all'),
+                                                   ('-t', '--tab')))
 
     if argd['--help']:
         print_cmdhelp(cmdname)
@@ -2025,7 +2113,7 @@ def cmd_searchuser(word, word_eol, userdata=None):
 def cmd_whitewash(word, word_eol, userdata=None):
     """ Prints a lot of whitespace to 'clear' the chat window. """
 
-    cmdname, cmdargs, argd = get_cmd_args(word, (('-h', '--help'),))
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-h', '--help'),))
 
     if argd['--help']:
         print_cmdhelp(cmdname)
@@ -2055,14 +2143,14 @@ def cmd_whitewash(word, word_eol, userdata=None):
 def cmd_xignore(word, word_eol, userdata=None):
     """ Handles the /XIGNORE command to add/remove or list ignored nicks. """
 
-    cmdname, cmdargs, argd = get_cmd_args(word, [('-c', '--clear'),
-                                                 ('-d', '--delete'),
-                                                 ('-h', '--help'),
-                                                 ('-l', '--list'),
-                                                 ('-m', '--msgs'),
-                                                 ('-r', '--remove'),
-                                                 ('-t', '--tab')
-                                                 ])
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-c', '--clear'),
+                                                     ('-d', '--delete'),
+                                                     ('-h', '--help'),
+                                                     ('-l', '--list'),
+                                                     ('-m', '--msgs'),
+                                                     ('-r', '--remove'),
+                                                     ('-t', '--tab')
+                                                     ))
     if argd['--clear']:
         if clear_ignored_nicks():
             print_status('Ignore list cleared.', newtab=argd['--tab'])
@@ -2097,11 +2185,11 @@ def cmd_xignore(word, word_eol, userdata=None):
 def cmd_xtools(word, word_eol, userdata=None):
     """ Shows info about xtools. """
 
-    cmdname, cmdargs, argd = get_cmd_args(word, [('-v', '--version'),
-                                                 ('-d', '--desc'),
-                                                 ('-h', '--help'),
-                                                 ('-cd', '--colordemo'),
-                                                 ])
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-v', '--version'),
+                                                     ('-d', '--desc'),
+                                                     ('-h', '--help'),
+                                                     ('-cd', '--colordemo'),
+                                                     ))
     # Version only
     if argd['--version']:
         print_version()
@@ -2201,8 +2289,8 @@ commands = {
             '\n'
             '    * With no arguments passed, all caught msgs are listed.\n'
             '    * You can pass several space-separated catchers.\n'
-            '    * To include a catcher with spaces, wrap it in\n'
-            '      single-quotes.')},
+            '    * To include a catcher with spaces, wrap it in quotes.\n'
+        )},
     'catchers': {
         'desc': 'Shortcut for /CATCH --list, lists all msg-catchers',
         'func': cmd_catchers,
@@ -2217,8 +2305,8 @@ commands = {
         'func': cmd_eval,
         'enabled': True,
         'help': (
-            'Usage: /EVAL [-c [nick] [-e] [-r]] <code>\n'
-            '       /EVAL [-t] <code>'
+            'Usage: /EVAL [-c [nick] [-e] [-r]] [-k] <code>\n'
+            '       /EVAL [-k] [-t] <code>'
             'Options:\n'
             '    -c [n],--chat [n] : Send as msg to current channel.\n'
             '                        Newlines are replaced with \\\\n,\n'
@@ -2234,6 +2322,9 @@ commands = {
             '                        are raised.\n'
             '                        Sends the last line of the error msg\n'
             '                        to chat, usually the Exception string.\n'
+            '    -k,--code         : Print parsed code to window with\n'
+            '                        formatted newlines. Prints before code\n'
+            '                        is evaluated.\n'
             '    -r,--result       : When chat-sending, send result only.\n'
             '                        The original query is not sent.\n'
             '    -t,--tab          : Show output in the xtools tab\n\n'
