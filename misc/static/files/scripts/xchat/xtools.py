@@ -2334,8 +2334,6 @@ commands = {
             '                blame when something goes wrong.\n'
             '                It is smarter than the plain eval() function,\n'
             '                which makes it more dangerous too.\n\n'
-            '     * XChat strips quoted strings that use the " character,\n'
-            '       so use \' instead for strings.\n'
             '    ** DO NOT import os;os.system(\'rm -rf /\')\n'
             '    ** DO NOT print(open(\'mypassword.txt\').read())\n'
             '    ** DO NOT do anything you wouldn\'t do in a python \n'
