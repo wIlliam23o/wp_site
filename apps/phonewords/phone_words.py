@@ -284,6 +284,11 @@ def get_lettercombos(snumber):
     """
     numberlen = len(snumber)
     words = []
+    # Using product() because the positions of the letters matter.
+    # This will create every possible letter combination while retaining order.
+    # Ex:
+    #    numberset = [['a', 'b', 'c'], ['d', 'e', '']]
+    #    ..reveals combinations like: 'abc', 'aec', 'dbc', 'dec'
     for combos in itertools.product(*get_letterset(snumber)):
         combostr = ''.join(combos)
         if len(combostr) == numberlen:

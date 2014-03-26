@@ -6,12 +6,16 @@
 #  2.0 is considered a new beginning because the project
 #  is moving towards a backward-incompatible state,
 #  where all python 2 'hacks' will be removed.)
-WPVERSION = '2.0.5'
+WPVERSION = '2.1.0'
 
 # file/path (path joining)
 import os.path
 from sys import version as sysversion
 SYSVERSION = sysversion
+
+# Django messages framework, message-levels
+from django.contrib.messages import constants as message_constants
+MESSAGE_LEVEL = message_constants.ERROR
 
 # DEBUG is in settings_local...
 
@@ -145,7 +149,7 @@ USE_I18N = True
 USE_L10N = True
 
 # If you set this to False, Django will not use timezone-aware datetimes.
-USE_TZ = True
+USE_TZ = False
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -184,10 +188,11 @@ TEMPLATE_LOADERS = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.core.context_processors.request",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.media",
-    "django.contrib.auth.context_processors.auth",
+    'django.core.context_processors.request',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.media',
+    'django.contrib.auth.context_processors.auth',
+    'django.contrib.messages.context_processors.messages',
 )
 
 TEMPLATE_DIRS = (
@@ -259,6 +264,7 @@ INSTALLED_APPS = (
     'misc',
     'apps',  # handles urls for all sub-apps.
     'apps.phonewords',
+    'apps.paste',
     
 )
 

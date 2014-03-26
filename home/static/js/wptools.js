@@ -75,6 +75,23 @@ var wptools = {
         return input_.search(regex_) > -1;
     },
 
+    is_emptystr : function (s) {
+        if (s) {
+            // we have a string or something. Try replacing whitespace.
+            if (s.replace && (s.replace(/\s/g, '') === '')) {
+                // It was an empty string (whitespace doesn't count)
+                return true;
+            }
+        } else {
+            if (!s) {
+                // Falsey values pass as empty string.
+                return true;
+            }
+        }
+        // Was not empty string, or it is some other truthy object.
+        return false;
+    },
+
     set_display : function (selector_, display_property) {
         /* sets display property for element */
         // uses first element in query, so choose selectors wisely.
@@ -108,6 +125,15 @@ var wptools = {
             this.hide_debug();
         }
 
+    },
+
+    trim_whitespace : function (s) {
+        /* Trim all whitespace from a string. */
+        if (s.replace) {
+            return s.replace(/\s/g, '');
+        }
+        // not a string.
+        return s
     },
         
     center_element : function (selector, usevertical) {

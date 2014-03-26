@@ -4,8 +4,12 @@ from apps import views as appviews
 
 # Patterns for apps.
 urlpatterns = patterns('',
-                       # index.
+                       # apps index
                        url(r'^/?$', appviews.view_index),
                        # phonewords
-                       url(r'^phonewords', include('apps.phonewords.urls')),
+                       url(r'^[Pp]hone[Ww]ords/?',
+                           include('apps.phonewords.urls')),
+                       # paste
+                       url(r'^[Pp]aste/?',
+                           include('apps.paste.urls')),
                        )

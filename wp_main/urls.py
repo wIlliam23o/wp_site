@@ -57,13 +57,15 @@ urlpatterns = patterns('',
                        # about page
                        url(r'^[Aa]bout/?$',
                            homeviews.view_about),
-
                        )
 
 # Apps views (apps) (see apps.urls)
 urlpatterns += patterns('',
                         url(r'^[Aa]pps/?',
                             include('apps.urls')),
+                        # shortcut for /apps/paste
+                        url(r'^[Pp]aste/?',
+                            include('apps.paste.urls')),
                         )
 
 # Projects view (projects)

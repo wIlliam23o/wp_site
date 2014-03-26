@@ -526,6 +526,13 @@ a.jumpto-nav {
   padding-right: 5px;
   text-transform: lowercase; }
 
+.vertical-menu-title {
+  font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
+  font-size: 1.5em;
+  text-transform: lowercase;
+  text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5);
+  color: #919191; }
+
 /* Backgrounds */
 .grad-bottom {
   position: absolute;
@@ -1096,6 +1103,12 @@ code, samp {
   /* empty selector for tagging protected addresses (possibly) */ }
 
 /* 404 page styles */
+.msg-framework-error {
+  color: #b90000;
+  display: block;
+  font-weight: bold;
+  font-size: 1.5em; }
+
 .notfound-box {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -1292,3 +1305,7 @@ code, samp {
   font-size: 0.8em;
   border-color: rgba(202, 217, 224, 0.5);
   padding: 5px; }
+
+.warning-msg {
+  color: #b90000;
+  font-weight: bold; }

@@ -6,14 +6,26 @@
 		<div class='notfound-image-box'>
 			<img class='notfound-image' src='/static/images/404.png'>
 		</div>
-		<span class='notfound-message'>
-			Sorry, I can't find this page:
-		</span>
-		<br/>
-		<span class='notfound-path'>
-			{{ request_path }}
-		</span>
-		<br/>
+		{# Show messages from the messages framework #}
+		{% if messages %}
+			    {% for message in messages %}
+			    	{% if message.tags == 'error' %}
+			    		<div class="msg-framework-error">
+			    			{{ message }}
+			    		</div>
+			    	{% endif %}
+			    {% endfor %}
+		{% else %}
+			{# Typical 404 message #}
+			<div class='notfound-message'>
+				Sorry, I can't find this page:
+			</div>
+
+			<div class='notfound-path'>
+				{{ request_path }}
+			</div>
+
+		{% endif %}
 		<span class='notfound-home-message'>
 			<br/>
 			<a href='/'>Click here to go to the home page</a>,

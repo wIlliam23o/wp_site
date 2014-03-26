@@ -12,6 +12,7 @@
 '''
 # For insert_video, building a mimetype from file extension.
 import os
+
 # Django stuff
 from django import template
 from django.conf import settings
@@ -24,6 +25,9 @@ from wp_main.utilities.wp_logging import logger
 from blogger.models import wp_blog
 from projects.models import wp_project
 from misc.models import wp_misc
+from apps.models import wp_app
+from apps.phonewords.models import pw_result
+from apps.paste.models import wp_paste
 
 _log = logger("wp_main.tags").log
 
@@ -32,14 +36,16 @@ register = template.Library()
 
 # for admin change_list filtering.
 import re
-#                           tag         adminpage   object  name/title
-disabled_patstr = r'(<a href).+("/admin\w+)/(.+)/">([\(\)\!\-\w\d\. ]+)</a>'
+#                               adminpage type  id     str()
+disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
+#disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
+#disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
 
 
 def comments_button(value):
     """ returns comments button for this blog post. """
-    
+    # TODO: Put this is blogger_tags where it belongs..!
     return mark_safe(htmltools.comments_button('/blog/view/' + value.slug))
 
 
@@ -79,43 +85,49 @@ def disabled_css(item):
  
     obj_match = disabled_pat.search(item)
     if obj_match is None:
+        # This is not an object link.
         return item
     else:
         # grab object.
         if len(obj_match.groups()) == 4:
             # beginning of a tag (<a href) (Not used right now)
-            tag = obj_match.groups()[0]  # noqa
-            # type of object (wp_blog/1)
-            otype = obj_match.groups()[2].strip('/')
+            # tag = obj_match.groups()[0]  # noqa
+            # type of object (wp_blog)
+            otype = obj_match.groups()[1].strip('/')
+            idstr = obj_match.groups()[2]
+            try:
+                objid = int(idstr)
+            except Exception as ex:
+                _log.error('Failed to parsed disable-item id: '
+                           '{}\n{}'.format(idstr, ex))
+                return item
+
             # name/title of object (My Blog Post)
             name = obj_match.groups()[3]
         else:
             # failed to match our pattern exactly.
             _log.debug("Incorrect number of items in match: " + str(item))
             return item
-    # tag, type, & name should be set now, parse them
-    if name.startswith('(!)'):
-        name = name[3:]
-    if 'v. ' in name:
-        name = name[:name.index('v. ')]
-    name = name.strip(' ')
-    # parse type
-    if '/' in otype:
-        otype = otype[:otype.index('/')]
     
     # convert to object
-    if 'wp_blog' in otype:
-        obj = utilities.get_object_safe(wp_blog.objects, title=name)
-    elif 'wp_project' in otype:
-        obj = utilities.get_object_safe(wp_project.objects, name=name)
-    elif 'wp_misc' in otype:
-        obj = utilities.get_object_safe(wp_misc.objects, name=name)
-    else:
-        _log.debug("Object type not filtered yet: " + otype)
-        obj = None
-    # no object found
+    objectsets = {
+        'wp_app': wp_app.objects,
+        'wp_blog': wp_blog.objects,
+        'wp_project': wp_project.objects,
+        'wp_misc': wp_misc.objects,
+        'wp_paste': wp_paste.objects,
+        'pw_result': pw_result.objects,
+    }
+    obj = None
+    for objname, objects in objectsets.items():
+        if objname == otype:
+            obj = utilities.get_object_safe(objects, id=objid)
+            break
+
+    # no object found for this type.
     if obj is None:
-        _log.debug("No object found for: " + name + " [" + otype + "]")
+        _log.debug('Admin-disable: Can\'t find: '
+                   '{} [{}]'.format(name, otype))
         return item
     
     # item is disabled?
@@ -290,6 +302,11 @@ def is_mobile(request_object):
     return utilities.is_mobile(request_object)
 
 
+def is_none(obj):
+    """ Return whether a value is actually None (not falsey) """
+    return obj is None
+
+
 def is_staff(request):
     """ Returns true if the user is an admin. """
 
@@ -387,6 +404,18 @@ def str_(object_):
     return str(object_)
 
 
+def subtract(val, otherval=None):
+    """ Do subtraction in a template. """
+    if otherval is None:
+        return val
+
+    try:
+        answer = val - int(otherval)
+        return answer
+    except ValueError:
+        return val
+
+
 # tuple of filters to register.
 registered_filters = (
     comments_button,
@@ -406,6 +435,7 @@ registered_filters = (
     is_disabled,
     is_false,
     is_mobile,
+    is_none,
     is_staff,
     is_test_site,
     is_true,
@@ -416,6 +446,11 @@ registered_filters = (
     sortitems,
     starts,
     str_,
+    subtract,
+    utilities.get_date,
+    utilities.get_datetime,
+    utilities.get_time,
+    utilities.get_time_since,
 )
 
 # register all filters in the registered tuple.

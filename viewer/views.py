@@ -23,7 +23,11 @@ from misc import tools as misctools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
 # For source highlighting
-from wp_main.utilities.highlighter import wp_highlighter, get_lexer_name_fromfile, get_lexer_name_fromcontent  # noqa
+from wp_main.utilities.highlighter import (
+    wp_highlighter,
+    get_lexer_name_fromfile,
+    get_lexer_name_fromcontent)
+
 # Logging
 from wp_main.utilities.wp_logging import logger
 _log = logger('viewer').log
@@ -43,7 +47,7 @@ def ajax_contents(request):
     """ retrieves file contents per an ajax request. """
     
     if not request.is_ajax():
-        return response_error(Http404("File not found, sorry."))
+        return responses.json_response_err(Http404("File not found, sorry."))
     
     get_data = responses.json_get_request(request)
     
@@ -54,9 +58,13 @@ def ajax_contents(request):
         try:
             file_info = get_file_info(get_data['file'])
         except Exception as ex:
-            return response_error(ex)
+            return responses.json_response_err(ex)
+            
         if not file_info:
-            return response_error(Http404('File not found, sorry.'))
+            badfile = get_data.get('file', '<No Filename>')
+            _log.error('ajax_contents(): File not found: {}'.format(badfile))
+            exc = Http404('File not found, sorry.')
+            return responses.json_response_err(exc)
         
         # Grab DEBUG and send it.
         file_info['debug'] = settings.DEBUG
@@ -94,7 +102,8 @@ def ajax_contents(request):
         # send json encoded data.
         return responses.json_response(file_info)
     else:
-        return response_error(Http404("No file name provided!"))
+        _log.error('ajax_contents(): No file name provided.')
+        return responses.json_response_err(Http404("No file name provided!"))
 
     
 @csrf_protect
@@ -120,7 +129,7 @@ def view_loader(request):
     else:
         raise Http404("No file passed to request.")
 
-    
+
 def get_source_files(project):
     """ returns list of all source files for a project, if any.
         uses relative static path. (/static/files/project/source/file.py)
@@ -284,10 +293,3 @@ def highlight_file(static_path, file_content):
         file_content = escape(file_content).replace('\n', '<br>')
         
     return mark_safe(file_content)
-
-
-def response_error(ex):
-    """ Respond with contents of error message. """
-    
-    _log.error('view_error: {}'.format(ex))
-    return responses.json_response({'status': 'error', 'message': str(ex)})

@@ -24,6 +24,7 @@ from wp_main.utilities.utilities import get_browser_style
 from wp_main.utilities.wp_logging import logger
 _log = logger("utilities.responses").log
 # Template loading, and Contexts
+from django.contrib import messages
 from django.http import HttpResponse, HttpResponseNotFound, Http404  # noqa
 from django.template import RequestContext, Context, loader  # noqa
 # JSON stuff
@@ -216,6 +217,11 @@ def json_response(data):
     return HttpResponse(data, content_type='application/json')
 
 
+def json_response_err(ex):
+    """ Respond with contents of error message using JSON. """
+    return json_response({'status': 'error', 'message': str(ex)})
+
+
 def json_get(data):
     """ Retrieves a dict from json data string. """
     
@@ -247,6 +253,7 @@ def get_request_arg(request, arg_names, **kwargs):
 
         Keyword Arguments:
             default    : default value for argument if it's not found.
+                         Default: None
             min_val    : minimum value for int args.
             max_val    : maximum vlaue for int args.
                          Default: 999999
@@ -256,7 +263,7 @@ def get_request_arg(request, arg_names, **kwargs):
     min_val = kwargs.get('min_val', 0)
     max_val = kwargs.get('max_val', 999999)
     # blank value to start with. (until we confirm it exists)
-    val = ""
+    val = ''
     if isinstance(arg_names, (list, tuple)):
         # list of arg aliases was passed, try them all.
         for arg_ in arg_names:
@@ -466,3 +473,15 @@ def default_dict(request=None, extradict=None):
                 # Assigns extra keys to the defaults.
                 defaults[keyname] = keyval
     return defaults
+
+
+def error_response(request, message=None):
+    """ Raise a 404, but pass an optional message through the messages
+        framework.
+    """
+
+    if message:
+        messages.error(request, message)
+        raise Http404(message)
+    else:
+        raise Http404()

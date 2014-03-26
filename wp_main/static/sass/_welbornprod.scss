@@ -35,10 +35,13 @@ $greenmain: #01941E;
 // Shadows
 $shadowbig:  #EEEEEE 0px 0px 20px;
 $shadowmedium: #bac2c7 0px 0px 15px;
-$shadownormal: 4px 4px 4px rgba(0,0,0,0.07);
+$shadownormal: 4px 4px 4px rgba(0, 0, 0, 0.07);
+$shadowbox: 2px 2px 3px rgba(0, 0, 0, 0.4);
 $shadowsmall: #bac2c7 1px 1px 4px;
 $shadowtext: 2px 2px 4px rgba(0, 0, 0, 1);
 $shadowtextsmall:  #999999 1px 1px 3px;
+$shadowtextmedium: 1px 1px 2px rgba(0, 0, 0, 0.5);
+$shadowtextbig: 2px 2px 3px rgba(0, 0, 0, 0.5);
 
 // Font Stacks
 $fontssmall: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
@@ -46,6 +49,7 @@ $fontsnormal: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberatio
 $fontsmono: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
 
 // Font Sizes
+$fontsmaller: 0.75em;
 $fontsmall: 0.8em;
 $fontinline: 0.9em;
 $fontnormal: 1em;

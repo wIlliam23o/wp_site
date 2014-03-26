@@ -1,0 +1,292 @@
+{% extends "home/main.html" %}
+{% load wp_tags %}
+{% load paste_tags %}
+{% block title %}- Paste{% endblock %}
+
+<!-- Initial CSS to use -->
+{% block extrastyle %}
+    <link type="text/css" rel="stylesheet" href="/static/css/paste.min.css"/>
+    <style type="text/css">
+        #paste-content {
+            height: 400px;
+            border-radius: 5px;
+            /*display: none;*/
+        }
+        /* #floater { display: none;} */
+    </style>
+{% endblock %}
+
+<!-- Viewer JS -->
+{% block javascript %}
+    <script type="text/javascript" src="/static/js/wppaste.min.js"></script>
+    <script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
+    <script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
+
+{% endblock %}
+
+<!-- Floating message -->
+{% block floater %}
+    <div id="floater" onclick='javascript: kill_message();'>
+        <p id="floater-msg">
+            Loading...
+        </p>
+    </div>
+{% endblock %}
+<!-- File browser menu -->
+{% block verticalmenu %}
+    <div id="reply-menu" class="vertical-menu">
+        {% if replies %}
+            <ul id="reply-menu-items" class="vertical-menu-main">
+                <div class='vertical-menu-title'>
+                    {% if replycount == 1 %}
+                        Reply:
+                    {% else %}
+                        Replies: 
+                    {% endif %}
+                    {# Show actual reply count, but only link to the latest. #}
+                    <div class='vertical-menu-reply-count'>
+                        (
+                        <span class='vertical-menu-reply-int'>
+                            {{ replycount }}
+                        </span>
+                        )
+                    </div>
+                </div>
+                {% if replycount > replymax %}
+                    <a class='vertical-menu-link' href='/paste/replies/?id={{ paste.paste_id }}'>
+                        <div class='vertical-menu-item vertical-menu-reply-all'>
+                            <div class='vertical-menu-text'>
+                                View All Replies...
+                            </div>
+                        </div>
+                    </a>
+                {% endif %}
+                {% for reply in replies %}
+                    <a class='vertical-menu-link' href='/paste/?id={{ reply.paste_id }}'>
+                        <li class='vertical-menu-item'>
+                            <div class='vertical-menu-text'>
+                                {{ reply.title|trim_reply_title }}
+                            </div>
+                            <div class='vertical-menu-reply-date'>
+                                {{ reply.publish_date|paste_time:"true" }}
+                            </div>
+                        </li>
+                    </a>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+{% endblock %}
+
+<!-- Paste Content -->
+{% block content %}
+    <!-- Header -->
+    <div class='paste-page-header'>
+        <div class='paste-page-header-title'>
+            <h3 class='header'>
+                Paste
+            </h3>
+        </div>
+        <div class='paste-page-header-text'>
+            {% if not paste %}
+                {% if not replyto %}
+                    Type in some code or text and click 'paste it!'.
+                    The paste will be deleted some time after one day.
+                {% else %}
+                    Edit this paste, or start all over.
+                {% endif %}
+            {% else %}
+                This paste will be deleted in about one day.
+            {% endif %}
+        </div>
+    </div>
+    <!-- Paste Info -->
+    <div id='paste-content-box'>
+        <div class='paste-header-box'>
+            <div class='paste-header'>
+                <div class='paste-title-box'>
+                    {% if not paste %}
+                        {# New Paste #}
+                        <div class='paste-title-label'>
+                            Title:
+                        </div>
+                        <input id='paste-title-entry' type='text' class='input-text' value='{% if replyto.title %}re: {{ replyto.title }}{% endif %}'/>
+                    {% else %}
+                        {# Existing paste #}
+                        <span class='paste-title-label'>
+                            Title:
+                        </span>
+                        <div class='paste-title-date'>
+                            <span class='header paste-title'>
+                                {% if paste.title %}
+                                    {{ paste.title }}
+                                {% else %}
+                                    Untitled
+                                {% endif %}
+                            </span>
+
+                            {% if paste.publish_date %}
+                                <div class='paste-date-box'>
+                                    <span class='paste-date'>
+                                        {{ paste.publish_date|paste_time }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+                {% if paste %}
+                    {# Grab author from paste if available #}
+                    {% if paste.author %}
+                        <div class='paste-author-box'>
+                            <div class='paste-author-label'>
+                                Author:
+                            </div>
+                            <div class='paste-author'>
+                                {{ paste.author }}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    {# Show author box for new pastes, or replytos #}
+                    <div class='paste-author-box'>
+                        <div class='paste-author-label'>
+                            Author:
+                        </div>
+                        <input id='paste-author-entry' type='text' class='input-text' value=''/>
+                    </div>
+                {% endif %}
+                <div class='paste-replyto-box'>
+                    {% if replyto %}
+                        {# Paste is a reply to another paste. #}
+                        <span class='paste-replyto-label'>
+                            Reply To:
+                        </span>
+                        <div class='paste-title-date'>
+                            <a href='/paste/?id={{ replyto.paste_id }}'>
+                                <span class='paste-replyto-title'>
+                                    {{ replyto.title }}
+                                </span>
+                            </a>
+                            <div class='paste-date-box'>
+                                <span class='paste-date'>
+                                    {{ replyto.publish_date|paste_time }}
+                                </span>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class='paste-lang-box'>
+                <span class='paste-lang-label'>
+                    Language:
+                </span>
+                <select id='langselect' onchange='javascript: wppaste.on_mode_change();'>
+                </select>
+            </div>
+            <!-- Control Box for pastes -->
+            <div class='paste-button-box'>
+                {% if not paste %}
+                    <a href='javascript: void(0);' onclick='javascript: wppaste.submit_paste();'>
+                        <div id='paste-btn' class='wpbutton paste-button'>
+                            {% if replyto %}
+                                Paste Reply!
+                            {% else %}
+                                Paste It!
+                            {% endif %}
+                        </div>
+                    </a>
+                {% else %}
+                    <a href='/paste/?replyto={{ paste.paste_id }}'>
+                        <div id='reply-btn' class='wpbutton paste-button'>
+                            Reply..
+                        </div>
+                    </a>
+                {% endif %}
+                <!-- New paste button -->
+                <a href='/paste'>
+                    <div id='paste-new' class='wpbutton paste-button'>
+                        New Paste..
+                    </div>
+                </a>
+                <!-- View latest -->
+                <a href='/paste/latest'>
+                    <div class='wpbutton paste-button'>
+                        View Latest
+                    </div>
+                </a>
+                <!-- View top -->
+                <a href='/paste/top'>
+                    <div class='wpbutton paste-button'>
+                        View Top
+                    </div>
+                </a>
+
+            </div>
+        </div>
+        
+        <!-- Ace Editor content for pastes -->
+        <div id='paste-content'>
+        </div>
+        <!-- Hidden replyto id -->
+        {% if replyto %}
+            <input id='replyto-id' type='hidden' value='{{ replyto.paste_id }}'/>
+        {% endif %}
+
+        <!-- Hidden paste-content. -->       
+        {# paste content is used if available, otherwise replyto content #}
+        {# no line breaks/tabs, so no unwanted blanks are introduced. #}
+        <pre id='hidden-content' style='display: none;'>{% if paste.content %}{{ paste.content }}{% elif replyto.content %}{{ replyto.content }}{% endif %}</pre>
+    </div>
+
+    <!-- Setup ace editor.. -->
+    <script type='text/javascript'>
+
+        var doreadonly = {% if paste %}true{% else %}false{% endif %};
+
+        // setup basic settings for ace.
+        setup_ace(doreadonly);
+        wppaste.build_lang_menu();
+
+        // setup individual-paste-related settings.
+        {% if paste.language %}
+            wppaste.set_selected_mode('{{ paste.language }}');
+        {% elif replyto.language %}
+            wppaste.set_selected_mode('{{ replyto.language }}');
+            wppaste.load_paste_settings({'nolangset': true});
+        {% else %}
+            // Try loading cookie info to set ace mode.
+            wppaste.load_paste_settings();
+        {% endif %}
+
+        {% if paste.content or replyto.content %}
+            {# Load paste content.. #}
+            var content = $('#hidden-content').text();
+            wp_content.getSession().setValue(content);
+        {% else %}
+            {# Clear editor #}
+            wp_content.getSession().setValue('');
+        {% endif %}
+
+    </script>
+{% endblock content %}
+
+{% block bodyend %}
+    <script type="text/javascript">
+        
+        $(document).ready( function () {
+            
+            // position floater
+            wptools.center_element('#floater', true);
+            // setup ajax
+            wptools.pre_ajax();
+
+        });
+
+        window.onresize = function () {
+            wptools.center_element('#floater', true);
+        };
+
+        
+    </script>
+{% endblock %}
