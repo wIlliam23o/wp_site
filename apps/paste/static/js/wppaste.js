@@ -5,11 +5,14 @@ var wppaste = {
         var modelen = wp_modelist.modes.length;
         var modecur;
         var modeopt;
+        // create a doc fragment to build on.
+        var menufrag = document.createDocumentFragment();
+
         // create a None mode, should be at the top.
         var nonemode = document.createElement('option');
         $(nonemode).attr({'val': ''});
         $(nonemode).text('[none]');
-        $('#langselect').append(nonemode);
+        $(menufrag).append(nonemode);
 
         // iterate over all known modes.
         for (var i=0; i < modelen; i++) {
@@ -19,9 +22,11 @@ var wppaste = {
             modeopt = document.createElement('option');
             $(modeopt).attr({'val': modecur.mode});
             $(modeopt).text(modecur.name);
-            // add the new element to the <select>
-            $('#langselect').append(modeopt);
+            // add the new option to doc fragment.
+            $(menufrag).append(modeopt);
         }
+        // Add whole menu fragment to the <select> tag.
+        $('#langselect').append(menufrag);
     },
 
     get_mode_byname : function (name) {

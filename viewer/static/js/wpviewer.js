@@ -6,46 +6,6 @@
 // Store current relative filename here. The template sends it on the first
 // page load, and then it is set with JS when doing ajax calls. 
 var wpviewer = {
-    // add a menu item to the vertical menu.
-    add_menu_item : function (menuname, menufilename, disabledval) {
-        /* menuname      : short file name (file.py)
-           menufilename  : relative file name (/static/blah/file.py)
-           disabledval   : 'true', or 'false' (sent to onclick: view_file() )
-                           must be string value. default is 'false'
-        */
-        if (!disabledval) { disabledval = 'false'; }
-
-        var menulink = document.createElement('a');
-       
-        $(menulink).attr('href', 'javascript: void(0);');
-        $(menulink).attr('class', 'vertical-menu-link');
-        // add child list element/name
-        var menuitem = document.createElement('li');
-        $(menuitem).addClass('vertical-menu-item');
-        if (disabledval == 'true') {
-            $(menuitem).addClass('vertical-menu-item-disabled');
-        }
-        // add child span element/name
-        var menutext = document.createElement('span');
-        $(menutext).addClass('vertical-menu-text');
-        // make text a child of list, which is a child of the link.
-        $(menutext).text(menuname);
-        $(menuitem).append(menutext);
-        $(menulink).append(menuitem);
-
-        $(menulink).attr('onclick', 'javascript: ' + 
-                                    'view_file(' +
-                                        '\'' + menufilename + '\',' + 
-                                        disabledval + 
-                                    ');');
-        // needs disabled class?
-        if (disabledval == 'true') {
-            $(menulink).addClass('vertical-menu-item-disabled');
-        }
-        // add this menu item
-        $("#file-menu-items").append(menulink);        
-    },
-
     // current relative path for file. (/static/file.py)
     current_file : '',
     // current short name (file.py)
@@ -85,6 +45,45 @@ var wpviewer = {
                 return true;
             }
         }
+    },
+
+    make_menu_item : function (menuname, menufilename, disabledval) {
+        /* Create a menu item/link from a name, filename, and enabled/disabled value.
+            Arguments:
+                menuname      : short file name (file.py)
+                menufilename  : relative file name (/static/blah/file.py)
+                disabledval   : 'true', or 'false' (sent to onclick: view_file() )
+                                must be string value. default is 'false'
+        */
+        if (!disabledval) { disabledval = 'false'; }
+
+        var menulink = document.createElement('a');
+       
+        $(menulink).attr('href', 'javascript: void(0);');
+        $(menulink).attr('class', 'vertical-menu-link');
+        // add child list element/name
+        var menuitem = document.createElement('li');
+        $(menuitem).addClass('vertical-menu-item');
+        if (disabledval == 'true') {
+            $(menuitem).addClass('vertical-menu-item-disabled');
+        }
+        // add child span element/name
+        var menutext = document.createElement('span');
+        $(menutext).addClass('vertical-menu-text');
+        // make text a child of list, which is a child of the link.
+        $(menutext).text(menuname);
+        $(menuitem).append(menutext);
+        $(menulink).append(menuitem);
+
+        $(menulink).attr('onclick', 
+            'javascript: view_file(\'' + menufilename + '\', ' + disabledval + ');');
+        
+        // needs disabled class?
+        if (disabledval == 'true') {
+            $(menulink).addClass('vertical-menu-item-disabled');
+        }
+        // return menu link item
+        return menulink;        
     },
 
     set_current_file : function (filename) {
@@ -172,6 +171,8 @@ function load_file_data (xhrdata) {
         var menuname;
         // Build the menu from scratch if this is the first load.
         if (existing_length === 0 && menu_length > 0 ) {
+            var menufrag = document.createDocumentFragment();
+            var menuitem;
             $.each(menu_items, function () {
                 menufilename = this[0].replace(/[ ]/g, '/');
                 menuname = this[1];
@@ -181,8 +182,11 @@ function load_file_data (xhrdata) {
                     // this item is disabled.
                     disabledval = 'true';
                 }
-                wpviewer.add_menu_item(menuname, menufilename, disabledval);
+                menuitem = wpviewer.make_menu_item(menuname, menufilename, disabledval);
+                $(menufrag).append(menuitem);
             });
+            // Add final menu and show it.
+            $('#file-menu-items').append(menufrag);
             $('#file-menu').fadeIn();
         } else {
             // Re-mark current file (disable current file in menu)
