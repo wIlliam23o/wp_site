@@ -8,6 +8,12 @@
     not normally found in xchat/irc, or /commands that enhance the
     xchat experience.
 
+    This script is now over 2000+ lines, and I really wish it weren't so.
+    It's time to shut this little project down before it requires a
+    RAM upgrade. I really wanted this to be a single script project, but
+    things like command help, and non-xchat functions really need 
+    their own home.
+
     -Christopher Welborn
 """
 
@@ -17,39 +23,59 @@ from datetime import datetime
 import os
 import re
 import sys
-
+from threading import Thread
 # XChat style version info.
 __module_name__ = 'xtools'
-__module_version__ = '0.2.9'
+__module_version__ = '0.3.4'
 __module_description__ = 'Various tools/commands for extending XChat...'
+# really minor changes bump this 'versionx'
+VERSIONX = '0'
 # Convenience version str for help commands.
-VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
+VERSIONSTR = '{} v. {}-{}'.format(__module_name__,
+                                  __module_version__,
+                                  VERSIONX)
 
 try:
     # import actual xchat module (from within xchat)
     import xchat
 except ImportError:
-    print('\nThis cannot be ran outside of XChat!\n')
+    print('\nThis cannot be used outside of XChat!\n')
     sys.exit(1)
 
-# Preload single digit numbers. (for removing leading numbers)
-# (remove_leading_numbers())
-DIGITS = range(0, 10)
-DIGITSTR = [str(i) for i in DIGITS]
 
-# Default config file.
-CONFIG_FILE = os.path.join(os.getcwd(), 'xtools.conf')
-# Dict to hold settings. (loaded from preferences if available)
-SETTINGS = {}
-# Dict of ignored nicks. (loaded from preferences if available)
-# Contains nicks as keys, {'index': ?, 'pattern', ?} as values.
-# Index is the alphabetically sorted index, pattern is a compiled regex pattern
-# {'nick2': {'index': 1, 'pattern': <SRE_Pattern>},
-#  'nick1': {'index': 0, 'pattern': <SRE_Pattern>}}
-IGNORED_NICKS = {}
+class XToolsConfig(object):
 
-# Deque of ignored messages, only for this session. Max length is set.
-IGNORED_MESSAGES = deque(maxlen=250)
+    """ Class for global configuration and session-settings container """
+
+    def __init__(self):
+        self.xchat_dir = os.path.expanduser('~/.xchat2')
+        # Default config file.
+        if os.path.isdir(self.xchat_dir):
+            self.config_file = os.path.join(self.xchat_dir, 'xtools.conf')
+        else:
+            self.config_file = os.path.join(os.getcwd(), 'xtools.conf')
+
+        # Titles for extra tabs.
+        self.xtools_tab_title = '[xtools]'
+        self.msgs_tab_title = '[caught-msgs]'
+
+        # Default settings. (prefs file overrides these)
+        self.settings = {'redirect_msgs': False}
+
+        # Ignored nicks (loaded from prefs if available)
+        # contains nicks as keys, {'index': 0, 'pattern': repattern} as values.
+        self.ignored_nicks = {}
+        self.max_ignored_msgs = 250
+        self.ignored_msgs = deque(maxlen=self.max_ignored_msgs)
+
+        # Msg catchers (regex/text to catch and save msgs)
+        self.msg_catchers = {}
+        self.max_caught_msgs = 250
+        self.caught_msgs = {}
+        # When redirected, these are updated to be the latest maximum needed.
+        self.format_settings = {'chanspace': 7, 'nickspace': 3}
+# Global settings/containers
+xtools = XToolsConfig()
 
 
 class StdOutCatcher(object):
@@ -117,22 +143,162 @@ class StdErrCatcher(StdOutCatcher):
         sys.stderr = self.oldstderr
 
 
+class TabWaiter(object):
+
+    """ Waits for a user-defined amount of time for
+        a certain tab to become focused.
+        Use with caution!
+    """
+
+    def __init__(self, tabtitle=None, timeout=5, focus=True):
+        self.tabtitle = tabtitle if tabtitle else xtools.xtools_tab_title
+        self.timeout = timeout
+        self.focus = focus
+        self._context = None
+
+    def check_tab(self):
+        """ This must run in a seperate thread, or xchat will lock up. """
+        foundtab = xchat.find_context(channel=self.tabtitle)
+        while not foundtab:
+            foundtab = xchat.find_context(channel=self.tabtitle)
+        # set result.
+        self._context = foundtab
+
+    def ensure_tab(self):
+        """ ensure that this tab is opened.
+            times out after self.timeout seconds.
+            returns the tab's context on success, or None on timeout.
+        """
+        tabcontext = xchat.find_context(channel=self.tabtitle)
+        if tabcontext:
+            # tab already opened
+            return tabcontext
+        # open and wait for tab.
+        self.open_tab()
+        return self.wait_for_tab()
+
+    def open_tab(self):
+        if self.focus:
+            xchat.command('QUERY {}'.format(self.tabtitle))
+        else:
+            xchat.command('QUERY -nofocus {}'.format(self.tabtitle))
+
+    def wait_for_tab(self):
+        finder = Thread(target=self.check_tab, name='TabWaiter')
+        finder.start()
+        finder.join(timeout=self.timeout)
+        return self._context
+
+
+def add_catcher(catcherstr):
+    """ Add a catcher to the catchers list. """
+
+    msg_catchers = []
+    # regex to grab quoted spaces.
+    quotepat = re.compile('(["][^"]+["])|([\'][^\']+[\'])')
+    quoted = quotepat.findall(catcherstr)
+    if quoted:
+        # gather quoted strings, and left overs.
+        catchers = []
+        for grp1, grp2 in quoted:
+            if grp1:
+                catchers.append(grp1.strip('"'))
+                catcherstr = catcherstr.replace(grp1, '')
+            if grp2:
+                catchers.append(grp2.strip("'"))
+                catcherstr = catcherstr.replace(grp2, '')
+
+        # look for leftovers
+        nonquoted = [s.strip() for s in catcherstr.split() if s]
+        if nonquoted:
+            catchers.extend(nonquoted)
+    else:
+        # This will accept several catchers separated by spaces.
+        catchers = catcherstr.split()
+
+    for msg in catchers:
+        if msg in xtools.msg_catchers.keys():
+            # Skip nick already on the list.
+            print_status('{} is already caught.'.format(msg))
+            continue
+        repat, reerr = compile_re(msg)
+        if not repat:
+            # Skip bad regex.
+            print_error(('Invalid regex pattern for that catcher: '
+                        '{}'.format(msg)),
+                        boldtext=msg,
+                        exc=reerr)
+            continue
+        xtools.msg_catchers[msg] = {'index': len(xtools.msg_catchers),
+                                    'pattern': repat,
+                                    }
+
+        msg_catchers.append(msg)
+
+    # Fix indexes so they are sorted.
+    build_catcher_indexes()
+    if msg_catchers and save_catchers() and save_prefs():
+        return msg_catchers
+    # Failure saving.
+    print_error('Unable to save catchers...')
+    return []
+
+
+def add_caught_msg(msginfo):
+    """ add a message to the caught-msgs dict, if it doesn't exist. """
+    # Caught messages need to have a unique id for each caught msg,
+    # or else it will cause double msgs, or recursion in some cases.
+    # hince the need for add_caught_msg(), which generates and checks
+    # duplicate msg ids.
+
+    msgid = generate_msg_id(msginfo)
+    existingmsg = xtools.caught_msgs.get(msgid, None)
+    if existingmsg:
+        return False
+
+    # This would be really slow, if the msg len has exceeded the max and
+    # a lot of msgs are being added.
+    if len(xtools.caught_msgs) >= xtools.max_caught_msgs:
+        # pop the first item from caught msgs.
+        sortbytime = lambda msgid: xtools.caught_msgs[msgid]['time']
+        firstkey = list(sorted(xtools.caught_msgs.keys(), key=sortbytime))[0]
+        xtools.caught_msgs.pop(firstkey)
+    xtools.caught_msgs[msgid] = msginfo
+
+    # Print to caught-msgs tab?
+    if xtools.settings.get('redirect_msgs', False):
+        # Check latest channel/nick lengths. Update spacing for msgs as needed.
+        # It will eventually max out.
+        chanspace = longest(get_channel_names())
+        nickspace = len(remove_mirc_color(msginfo['nick']))
+        if chanspace > xtools.format_settings['chanspace']:
+            xtools.format_settings['chanspace'] = chanspace
+        if nickspace > xtools.format_settings['nickspace']:
+            xtools.format_settings['nickspace'] = nickspace
+        # Print this saved message as a 'redirected' message.
+        print_saved_msg(msginfo,
+                        chanspace=xtools.format_settings['chanspace'],
+                        nickspace=xtools.format_settings['nickspace'],
+                        focus=False,
+                        redirect=True)
+
+    return True
+
+
 def add_ignored_nick(nickstr):
     """ Add a nick to the ignored list. """
-    global IGNORED_NICKS
     ignored_nicks = []
 
-    def compile_re(restr):
-        try:
-            compiled = re.compile(restr)
-        except Exception as ex:
-            return False, ex
-        else:
-            return compiled, None
-
-    # This will accept several nicks separated by spaces.
-    for nick in nickstr.split():
-        if nick in IGNORED_NICKS.keys():
+    if ((nickstr.startswith('"') and nickstr.endswith('"')) or
+       (nickstr.endswith("'") and nickstr.endswith("'"))):
+        # quoted spaces..
+        nicks = nickstr[1:-1]
+    else:
+        # This will accept several nicks separated by spaces.
+        nicks = nickstr.split()
+    
+    for nick in nicks:
+        if nick in xtools.ignored_nicks.keys():
             # Skip nick already on the list.
             print_status('{} is already ignored.'.format(nick))
             continue
@@ -143,9 +309,9 @@ def add_ignored_nick(nickstr):
                         boldtext=nick,
                         exc=reerr)
             continue
-        IGNORED_NICKS[nick] = {'index': len(IGNORED_NICKS),
-                               'pattern': repat,
-                               }
+        xtools.ignored_nicks[nick] = {'index': len(xtools.ignored_nicks),
+                                      'pattern': repat,
+                                      }
 
         ignored_nicks.append(nick)
 
@@ -156,6 +322,47 @@ def add_ignored_nick(nickstr):
         return ignored_nicks
     # Failure saving.
     return []
+
+
+def add_message(addfunc, nick, msgtext, msgtype=None):
+    """ Uses the given 'add function' to add a filtered/saved msg.
+        This builds a universal message format that should be used
+        anywhere a message is saved.
+        ex:
+            add_message(xtools.ignored_msgs.append, 'user1', 'my message')
+            # or
+            add_message(add_caught_msg, 'user2', 'my msg')
+            .. will use xtools.ignored_msgs.append, or add_caught_msg
+               to save the message.
+        The function has to receive a single argument, which is a msg in the
+        universal format.
+    """
+    chan = xchat.get_context().get_info('channel')
+    msgtime = datetime.now()
+    if msgtype:
+        # set message type (channelmessage, channelaction, etc.)
+        msgtype = msgtype.lower().replace(' ', '')
+    else:
+        # no message type set.
+        msgtype = ''
+    msg = {'nick': nick,
+           'time': msgtime.time().strftime('%H:%M:%S'),
+           'date': msgtime.date().strftime('%m-%d-%Y'),
+           'channel': chan,
+           'type': msgtype,
+           'msg': msgtext}
+    try:
+        addfunc(msg)
+        return True
+    except Exception as ex:
+        if hasattr(addfunc, '__name__'):
+            addfuncname = addfunc.__name__
+        else:
+            addfuncname = repr(addfunc)
+        print_error('Error adding saved msg with: {}'.format(addfuncname),
+                    exc=ex,
+                    boldtext=addfuncname)
+        return False
 
 
 def bool_mode(modestr):
@@ -185,11 +392,16 @@ def bool_mode(modestr):
     return mode
 
 
+def build_catcher_indexes():
+    """ Builds indexes for msg catchers. """
+    for index, msg in enumerate(sorted(xtools.msg_catchers.keys())):
+        xtools.msg_catchers[msg]['index'] = index
+
+
 def build_ignored_indexes():
     """ Builds indexes for ignored nicks. """
-    global IGNORED_NICKS
-    for index, nick in enumerate(sorted(IGNORED_NICKS.keys())):
-        IGNORED_NICKS[nick]['index'] = index
+    for index, nick in enumerate(sorted(xtools.ignored_nicks.keys())):
+        xtools.ignored_nicks[nick]['index'] = index
 
 
 def build_color_table():
@@ -228,15 +440,38 @@ def build_color_table():
     return colors
 
 
+def clear_catchers():
+    """ Clears all catchers """
+
+    if not xtools.msg_catchers:
+        print_error('The catch-msg list is already empty.')
+        return False
+
+    xtools.msg_catchers = {}
+    if save_catchers() and save_prefs():
+        return True
+    return False
+
+
+def clear_caught_msgs():
+    """ Clears all caught msgs. """
+
+    if not xtools.caught_msgs:
+        print_error('No messages have been caught.')
+        return False
+
+    xtools.caught_msgs = {}
+    return True
+
+
 def clear_ignored_nicks():
     """ Clears all ignored nicks. """
-    global IGNORED_NICKS
 
-    if not IGNORED_NICKS:
+    if not xtools.ignored_nicks:
         print_error('The ignore list is already empty.')
         return False
 
-    IGNORED_NICKS = {}
+    xtools.ignored_nicks = {}
     if save_ignored_nicks() and save_prefs():
         return True
     return False
@@ -246,7 +481,7 @@ def color_code(color):
     """ Returns a color code by name or mIRC number. """
 
     try:
-        code = COLORS[color]['code']
+        code = xtools.colors[color]['code']
     except:
         # Try number.
         try:
@@ -263,11 +498,22 @@ def color_code(color):
         print_error('Script error: Invalid color for color_code: '
                     '{}'.format(str(color)),
                     boldtext=str(color))
-        return COLORS['reset']['code']
+        return xtools.colors['reset']['code']
 
 
-def color_text(color=None, text=None, bold=False, underline=False):
+def colormulti(color=None, words=None, bold=False, underline=False):
+    """ Same as colorstr, but it accepts a list of strings, 
+        and returns a list of colorized strings.
+    """
+
+    return [colorstr(color=color, text=s, bold=bold, underline=underline)
+            for s in words]
+
+
+def colorstr(color=None, text=None, bold=False, underline=False):
     """ return a color coded word.
+        the text argument is automatically str() wrapped,
+        so colorstr('red', len(list)) is fine.
         Keyword Arguments:
             color      : Named color, or mIRC color number.
             text       : Text to be colored.
@@ -281,7 +527,7 @@ def color_text(color=None, text=None, bold=False, underline=False):
     normal = ''
     code = color_code(color)
     # initial text items (basic coloring)
-    strcodes = [code, text]
+    strcodes = [code, str(text)]
     # Handle extra formatting (bold, underline)
     if underline:
         strcodes.insert(0, underlinecode)
@@ -289,6 +535,58 @@ def color_text(color=None, text=None, bold=False, underline=False):
         strcodes.insert(0, boldcode)
 
     return '{}{}'.format(''.join(strcodes), normal)
+
+
+def compile_re(restr):
+    """ Try compiling a regex, returns (repat, exception)
+        so it fails, it returns (None, exception)
+        if it succeeds, it returns (repat, None)
+    """
+    try:
+        compiled = re.compile(restr)
+    except Exception as ex:
+        return False, ex
+    else:
+        return compiled, None
+
+
+def filter_caught_msgs(filtertxt):
+    """ Filter/remove caught msgs that contain filtertxt.
+        filtertxt is compiled to a regex pattern.
+        Returns None on empty msgs or bad regex.
+        Returns filtered count otherwise.
+    """
+
+    if not xtools.caught_msgs:
+        print_error('No messages have been caught.')
+        return None
+
+    try:
+        repat = re.compile(filtertxt)
+    except Exception as ex:
+        print_error('Invalid pattern for filter: {}'.format(filtertxt),
+                    exc=ex, boldtext=filtertxt)
+        return None
+
+    filtercnt = 0
+    matchtext = lambda k: repat.search(xtools.caught_msgs[k]['msg'])
+    matchnick = lambda k: repat.search(xtools.caught_msgs[k]['nick'])
+    isfiltered = lambda k: matchtext(k) or matchnick(k)
+    filtered = filter(isfiltered, xtools.caught_msgs)
+    for msgid in filtered:
+        xtools.caught_msgs.pop(msgid)
+        filtercnt += 1
+    return filtercnt
+
+
+def generate_msg_id(msginfo):
+    """ Generate a unique msg id for caught msgs. """
+
+    chan = xchat.strip(msginfo['channel'])
+    nick = xchat.strip(msginfo['nick'])
+    msg = xchat.strip(msginfo['msg'])
+
+    return hash('{}{}{}'.format(chan, nick, msg))
 
 
 def get_all_users(channels=None):
@@ -343,16 +641,48 @@ def get_channels_users(channels=None):
     return channelusers
 
 
+def get_cmd_args(word_eol, arglist):
+    """ Combination of get_cmd_restm and get_flag_args.
+        Returns commandname, nonflagdata, argdict
+        Example:
+            word = '/TEST this stuff -d'
+            cmdname, cmdargs, argd = get_cmd_args(word_eol, ('-d', '--debug'))
+            # returns:
+            #   cmdname == '/TEST'
+            #   cmdargs == 'this stuff'
+            #      argd == {'--debug': True}
+    """
+    # Make my own 'word', because the py-plugin removes extra spaces in word.
+    word = word_eol[0].split(' ')
+    cmdname = word[0]
+    word, argd = get_flag_args(word, arglist)
+    cmdargs = get_cmd_rest(word)
+    return cmdname, cmdargs, argd
+
+
 def get_cmd_rest(word):
     """ Return the rest of a command. (removing /COMMAND) """
-
-    if word:
-        if len(word) == 1:
-            return ''
-        else:
-            rest = word[1:]
-            return ' '.join(rest)
+    if word and (len(word) > 1):
+        return ' '.join(word[1:])
+    # no args, only the cmdname.
     return ''
+
+
+def get_eval_comment(s):
+    """ Retrieve comment from single line of code.
+        Return the comment text if any, otherwise return None.
+    """
+    if not s:
+        return None
+
+    quotedpat = re.compile('[\'"](.+)?#(.+?)[\'"]')
+    # remove quoted # characters.
+    parsed = quotedpat.sub('', s)
+    # Still has comment char.
+    if '#' in parsed:
+        return parsed[parsed.index('#') + 1:]
+    else:
+        return None
 
 
 def get_flag_args(word, arglist):
@@ -419,6 +749,11 @@ def get_flag_args(word, arglist):
             # Flag was found, set it.
             arginfo[longarg] = True
 
+    while newword and (newword[0] == ''):
+        newword.pop(0)
+    while newword and (newword[-1] == ''):
+        newword.pop(len(newword) - 1)
+
     # Return cleaned word, and arg dict.
     return newword, arginfo
 
@@ -428,22 +763,62 @@ def get_pref(opt):
         Returns None if it's not available.
     """
 
-    if opt in SETTINGS.keys():
-        return SETTINGS[opt]
+    if opt in xtools.settings.keys():
+        return xtools.settings[opt]
     return None
+
+
+def get_window(tabtitle, focus=True):
+    """ Open a tab, and wait for it to be available.
+        Returns the tab's context (unless it times out, then None)
+    """
+
+    tabwaiter = TabWaiter(tabtitle=tabtitle, focus=focus)
+    xchatwin = tabwaiter.ensure_tab()
+    return xchatwin
+
+
+def get_xtools_window(focus=True):
+    """ Open the xtools tab, and wait for it to be focused.
+        Returns the xtools-tab context (unless it times out, then None)
+    """
+
+    tabwaiter = TabWaiter(tabtitle=xtools.xtools_tab_title, focus=focus)
+    xchatwin = tabwaiter.ensure_tab()
+    return xchatwin
+
+
+def load_catchers():
+    """ Loads msg-catchers from preferences. """
+
+    catcher_str = get_pref('msg_catchers')
+    if catcher_str:
+        catchers = [s.strip() for s in catcher_str.split('{|}')]
+    else:
+        catchers = []
+
+    # Validate nicks.
+    valid = {}
+    for msg in catchers:
+        repat, reerr = compile_re(msg)
+        if reerr:
+            print_error('Invalid regex pattern for msg-catcher in config: '
+                        '{}'.format(msg),
+                        boldtext=msg,
+                        exc=reerr)
+            continue
+        # Have good nick pattern, add it.
+        valid[msg] = {'index': len(valid), 'pattern': repat}
+
+    # Save to global.
+    xtools.msg_catchers.update(valid)
+    # Rebuild indexes
+    build_catcher_indexes()
+    return True
 
 
 def load_ignored_nicks():
     """ Loads ignored nicks from preferences. """
-    global IGNORED_NICKS
-
-    def try_compile(restr):
-        try:
-            compiled = re.compile(restr)
-        except Exception as ex:
-            return None, ex
-        else:
-            return compiled, None
 
     ignored_str = get_pref('ignored_nicks')
     if ignored_str:
@@ -457,7 +832,7 @@ def load_ignored_nicks():
     # Validate nicks.
     valid = {}
     for nick in ignored:
-        repat, reerr = try_compile(nick)
+        repat, reerr = compile_re(nick)
         if reerr:
             print_error('Invalid regex pattern for nick in config: '
                         '{}'.format(nick),
@@ -468,7 +843,7 @@ def load_ignored_nicks():
         valid[nick] = {'index': len(valid), 'pattern': repat}
 
     # Save to global.
-    IGNORED_NICKS.update(valid)
+    xtools.ignored_nicks.update(valid)
     # Rebuild indexes
     build_ignored_indexes()
     return True
@@ -476,30 +851,33 @@ def load_ignored_nicks():
 
 def load_prefs():
     """ Load all preferences (if available). """
-    global SETTINGS
 
     try:
-        with open(CONFIG_FILE, 'r') as fread:
+        with open(xtools.config_file, 'r') as fread:
             configlines = fread.readlines()
     except (IOError, OSError) as exio:
-        if not os.path.isfile(CONFIG_FILE):
+        if not os.path.isfile(xtools.config_file):
             return False
         # Actual error, alert the user.
-        print_error('Can\'t open config file: {}'.format(CONFIG_FILE),
-                    boldtext=CONFIG_FILE,
+        print_error('Can\'t open config file: {}'.format(xtools.config_file),
+                    boldtext=xtools.config_file,
                     exc=exio)
         return False
 
     # Have config lines.
     for line in configlines:
-        line = line.strip('\n').strip()
+        line = line.strip()
         if line.startswith('#') or (line.count('=') != 1):
             # Skip comment/bad config line.
             continue
         # Have good config line.
         opt, val = [s.strip() for s in line.split('=')]
-        SETTINGS[opt] = val
+        xtools.settings[opt] = val
     return True
+
+
+def longest(lst):
+    return len(max(lst, key=len))
 
 
 def parse_scrollback_line(line):
@@ -541,7 +919,71 @@ def parse_scrollback_line(line):
     return timedate, nick, text
 
 
-def print_cmdhelp(cmdname=None):
+def print_(s, newtab=False, focus=True):
+    """ Just a wrapper for print, to ensure it is a function (py 2) """
+    if newtab:
+        print_xtools(s, focus=focus)
+    else:
+        print(s)
+
+
+def print_catchers(newtab=False):
+    """ Prints all msg catchers. """
+
+    if not xtools.msg_catchers:
+        print_status('No msg catchers have been set.', newtab=newtab)
+        return True
+
+    catchlen, caughtlen = colormulti('blue',
+                                     [len(xtools.msg_catchers),
+                                      len(xtools.caught_msgs)])
+    statusmsg = ('Message Catchers '
+                 '({} catchers - {} caught msgs):'.format(catchlen, caughtlen))
+    
+    print_status(statusmsg, newtab=newtab)
+    msgsortkey = lambda k: xtools.msg_catchers[k]['index']
+    for msg in sorted(xtools.msg_catchers.keys(), key=msgsortkey):
+        index = xtools.msg_catchers[msg]['index'] + 1
+        line = '    {}: {}'.format(colorstr('blue', index, bold=True),
+                                   colorstr('blue', msg))
+        print_(line, newtab=newtab)
+    return True
+
+
+def print_caught_msgs(newtab=False):
+    """ Prints all caught messages for this session. """
+
+    if xtools.caught_msgs:
+        # Print ignored messages.
+        msglen = len(xtools.caught_msgs)
+        msglenstr = colorstr('blue', msglen, bold=True)
+        msgplural = 'message' if msglen == 1 else 'messages'
+        chanspace = longest((xtools.caught_msgs[m]['channel']
+                             for m in xtools.caught_msgs))
+        nickspace = longest((xtools.caught_msgs[m]['nick']
+                             for m in xtools.caught_msgs))
+
+        print_status('You have {} caught {}:\n'.format(msglenstr, msgplural),
+                     newtab=newtab)
+        sortkey = lambda k: xtools.caught_msgs[k]['time']
+        for msgid in sorted(xtools.caught_msgs, key=sortkey):
+            print_saved_msg(xtools.caught_msgs[msgid],
+                            chanspace=chanspace,
+                            nickspace=nickspace,
+                            newtab=newtab)
+        return True
+    else:
+        # print 'no messages' warning.
+        catchlen = len(xtools.msg_catchers)
+        catchlenstr = colorstr('blue', catchlen)
+        catchplural = 'msg-catcher' if catchlen == 1 else 'msg-catchers'
+        catcherstr = '({} {} set.)'.format(catchlenstr, catchplural)
+        print_status('No messages have been caught. {}'.format(catcherstr),
+                     newtab=newtab)
+        return False
+
+
+def print_cmdhelp(cmdname=None, newtab=False):
     """ Prints help for a command based on the name.
         If no cmdname is given, all help is shown.
         For /xtools <cmdname>.
@@ -556,12 +998,12 @@ def print_cmdhelp(cmdname=None):
             if ':' in line:
                 # Color code 'arg : description'
                 helpparts = line.split(':')
-                argfmt = color_text('blue', helpparts[0])
-                descfmt = color_text('darkgrey', helpparts[1])
+                argfmt = colorstr('blue', helpparts[0])
+                descfmt = colorstr('darkgrey', helpparts[1])
                 line = ':'.join([argfmt, descfmt])
             else:
                 # Default color for other lines.
-                line = color_text('darkgrey', line)
+                line = colorstr('darkgrey', line)
             # Add indented help line.
             fmthelp.append('    {}'.format(line))
         return '\n'.join(fmthelp)
@@ -569,30 +1011,29 @@ def print_cmdhelp(cmdname=None):
     def formatcmd(cname):
         """ Format header and help for a command. """
         header = '\nHelp for {}:'.format(cname)
-        helpstr = formathelp(cmd_help[cname])
+        helpstr = formathelp(commands[cname]['help'])
         return '{}\n{}\n'.format(header, helpstr)
 
     if cmdname:
         # Single command
         cmdname = cmdname.lower().strip('/')
-        if cmdname in cmd_help.keys():
+        if cmdname in commands.keys():
             helplist = [formatcmd(cmdname)]
         else:
             print_error('No command named {}'.format(cmdname),
-                        boldtext=cmdname)
+                        boldtext=cmdname,
+                        newtab=newtab)
             return False
     else:
         # All commands.
-        helplist = []
-        for cmdname in sorted(cmd_help.keys()):
-            helplist.append(formatcmd(cmdname))
+        helplist = [formatcmd(cname) for cname in sorted(commands.keys())]
 
     # Print the list of help lines.
-    print(''.join(helplist))
+    print_(''.join(helplist), newtab=newtab)
     return True
 
 
-def print_cmddesc(cmdname=None):
+def print_cmddesc(cmdname=None, newtab=False):
     """ Prints the description for a command or all commands. """
 
     # Calculate space needed for formatting, and make a helper function.
@@ -602,8 +1043,8 @@ def print_cmddesc(cmdname=None):
     def formatdesc(cname, cdesc):
         """ Format a single description with color codes and spacing. """
         return '{}{} : {}'.format(getspacing(cname),
-                                  color_text('blue', cname),
-                                  color_text('darkgrey', cdesc))
+                                  colorstr('blue', cname),
+                                  colorstr('darkgrey', cdesc))
 
     if cmdname:
         # Single description, name passed from user.
@@ -611,11 +1052,13 @@ def print_cmddesc(cmdname=None):
         try:
             cmddesc = commands[cmdname]['desc']
             desclist = [formatdesc(cmdname, cmddesc)]
-            print('\nCommand description for {}:'.format(color_text('blue',
-                                                                    cmdname)))
+            cmdheader = ('\nCommand description for '
+                         '{}:'.format(colorstr('blue', cmdname)))
+            print_(cmdheader, newtab=newtab)
         except KeyError:
             print_error('No command named {}'.format(cmdname),
-                        boldtext=cmdname)
+                        boldtext=cmdname,
+                        newtab=newtab)
             return False
     else:
         # All descriptions.
@@ -624,30 +1067,32 @@ def print_cmddesc(cmdname=None):
         for cname in sorted(commands.keys()):
             if commands[cname]['enabled']:
                 desclist.append(formatdesc(cname, commands[cname]['desc']))
-        print('\nCommand descriptions for {}:'.format(VERSIONSTR))
+        print_('\nCommand descriptions for {}:'.format(VERSIONSTR),
+               newtab=newtab)
 
     # Print command descriptions.
-    print('\n{}\n'.format('\n'.join(desclist)))
+    print_('\n{}\n'.format('\n'.join(desclist)), newtab=newtab)
 
 
 def print_colordemo():
     """ A test of color_code and therefor build_color_table also... """
 
-    print('\nTesting colors:\n')
-    for cname in sorted(COLORS.keys(), key=lambda k: COLORS[k]['index']):
-        cindex = str(COLORS[cname]['index'])
-        demotxt = color_text(color=cname, text='{} : {}'.format(cindex, cname))
-        print(demotxt)
-    print('')
+    print_xtools('\nTesting colors:\n')
+    for cname in sorted(xtools.colors.keys(),
+                        key=lambda k: xtools.colors[k]['index']):
+        cindex = xtools.colors[cname]['index']
+        demotxt = colorstr(color=cname, text='{} : {}'.format(cindex, cname))
+        print_xtools(demotxt)
+    print_xtools('')
 
 
-def print_error(msg, exc=None, boldtext=None):
+def print_error(msg, exc=None, boldtext=None, newtab=False):
     """ Prints a red formatted error msg.
         Arguments:
             msg       : Normal message to print in red.
             exc       : Exception() object to print (or None)
             boldtext  : Text that should be in Bold (or None)
-
+            newtab    : Print output to xtools tab (default: False)
         Ex:
             print_error('Error in: Main', exc=None, boldtext='Main')
     """
@@ -659,99 +1104,299 @@ def print_error(msg, exc=None, boldtext=None):
         # Copy of the boldtext, formatted.
         # If it is an integer, special handling is needed.
         try:
-            intval = int(boldtext)  # noqa
-            boldfmt = color_text('red', '({})'.format(boldtext), bold=True)
+            int(boldtext)
+            boldfmt = colorstr('red', '({})'.format(boldtext), bold=True)
         except ValueError:
             # normal handling.
-            boldfmt = color_text('red', boldtext, bold=True)
+            boldfmt = colorstr('red', boldtext, bold=True)
         # Formatted normal message parts.
-        msgfmt = [color_text('red', s) if s else '' for s in msgpart]
+        msgfmt = (colorstr('red', s) if s else '' for s in msgpart)
         # Final formatted message.
         msg = boldfmt.join(msgfmt)
     else:
         # Normal message.
-        msg = '{}\n'.format(color_text('red', msg))
+        msg = '{}\n'.format(colorstr('red', msg))
 
     # Append xtools so you know where this error is coming from.
-    msg = '\n{}{}'.format(color_text('grey', 'xtools: '), msg)
+    msg = '\n{}{}'.format(colorstr('grey', 'xtools: '), msg)
     # Print formatted message.
-    print(msg)
+    print_(msg, newtab=newtab)
 
     # Print exception.
     if exc:
-        print(color_text('red', '\n{}'.format(exc)))
+        print_(colorstr('red', '\n{}'.format(exc)), newtab=newtab)
 
 
-def print_ignored_msgs():
+def print_evalresult(cquery, coutput, **kwargs):
+    """ Format eval code-output for chat before sending,
+        or format for screen output.
+        Arguments:
+            cquery      : Original code evaled.
+            coutput     : Output when code was ran.
+
+        Keyword Arguments:
+            chat        : Send to chat?
+                          Default: False
+            chatnick    : Nick to mention in chat msg.
+                          Default: None
+            comment     : Comment after the result.
+                          Default: None
+            newtab      : Send output to new xchat tab?
+                          Default: False
+            resultonly  : Don't include original code, only the result.
+                          Default: False
+    """
+    chat = kwargs.get('chat', False)
+    chatnick = kwargs.get('chatnick', None)
+    comment = kwargs.get('comment', None)
+    resultonly = kwargs.get('resultonly', False)
+    newtab = kwargs.get('newtab', False)
+
+    if chat:
+        # Send to channel as user.
+        # Wrap it in () to separate it from the result.
+        queryfmt = '({})'.format(cquery.replace('\n', '\\n'))
+
+        if resultonly:
+            # don't include the query in the msg.
+            chanmsg = coutput
+        else:
+            # include query; == result in the msg.
+            chanmsg = '{} == {}'.format(queryfmt, coutput)
+        # add directed message nick if given.
+        if chatnick:
+            chanmsg = '{}: {}'.format(chatnick, chanmsg)
+        # add comment to the end of the result.
+        if comment:
+            chanmsg = '{} # {}'.format(chanmsg, comment)
+        # Output.
+        print_tochan(chanmsg)
+    else:
+        # Print to screen.
+        # Add comment to the end of the result.
+        if comment:
+            coutput = '{}\n# {}'.format(coutput, comment)
+        # Output.
+        print_status('Code Output:', newtab=newtab)
+        print_(coutput, newtab=newtab)
+
+
+def print_evalerror(cquery, eoutput, **kwargs):
+    """ Format eval error msg for chat before sending,
+        or format for printing to screen.
+        Arguments:
+            cquery      : Original code evaled.
+            eoutput     : Output when code was ran.
+
+        Keyword Arguments:
+            chat        : Send to chat?
+                          Default: False
+            chatnick    : Nick to mention in chat msg.
+                          Default: None
+            comment     : Comment after the result.
+                          Default: None
+            newtab      : Send output to new xchat tab?
+                          Default: False
+            resultonly  : Don't include original code, only the result.
+                          Default: False
+    """
+    chat = kwargs.get('chat', False)
+    chatnick = kwargs.get('chatnick', None)
+    comment = kwargs.get('comment', None)
+    resultonly = kwargs.get('resultonly', False)
+    newtab = kwargs.get('newtab', False)
+
+    if chat:
+        # Format chat msg, so its not too long.
+        lastline = eoutput.split('\\n')[-1]
+        # send to usual output printer/displayer.
+        print_evalresult(cquery,
+                         lastline,
+                         chat=chat,
+                         chatnick=chatnick,
+                         comment=comment,
+                         resultonly=resultonly,
+                         newtab=newtab)
+    else:
+        # Not a chat send, no trimming is needed.
+        errorsfmt = eoutput.replace('\\n', '\n')
+        # Add comment to end of output.
+        if comment:
+            errorsfmt = '{}\n# {}'.format(errorsfmt, comment)
+        # Output.
+        print_error('Code Error:\n{}'.format(errorsfmt), newtab=newtab)
+
+
+def print_ignored_msgs(newtab=False):
     """ Prints all ignored messages for this session. """
 
-    if not IGNORED_MESSAGES:
-        print_status('No messages have been ignored.')
+    if not xtools.ignored_msgs:
+        print_status('No messages have been ignored.', newtab=newtab)
         return False
 
     # Print ignored messages.
-    msglenstr = color_text('blue', str(len(IGNORED_MESSAGES)), bold=True)
-    msgplural = 'message' if len(IGNORED_MESSAGES) == 1 else 'messages'
-    print_status('You have {} ignored {}:\n'.format(msglenstr, msgplural))
-    for msg in IGNORED_MESSAGES:
-        nick = msg['nick'].rjust(20)
-        msgtext = msg['msg']
-        print('{}{}: {}'.format(nick, color_text('reset', ''), msgtext))
+    msglen = len(xtools.ignored_msgs)
+    msglenstr = colorstr('blue', msglen, bold=True)
+    msgplural = 'message' if msglen == 1 else 'messages'
+    print_status('You have {} ignored {}:\n'.format(msglenstr, msgplural),
+                 newtab=newtab)
+    sortkey = lambda k: k['time']
+    chanspace = longest((k['channel'] for k in xtools.ignored_msgs))
+    nickspace = longest((k['nick'] for k in xtools.ignored_msgs))
+    for msg in sorted(xtools.ignored_msgs, key=sortkey):
+        print_saved_msg(msg,
+                        chanspace=chanspace,
+                        nickspace=nickspace,
+                        newtab=newtab)
     return True
 
 
-def print_ignored_nicks():
+def print_ignored_nicks(newtab=False):
     """ Prints all ignored nicks. """
 
-    if not IGNORED_NICKS:
-        print_status('No nicks are being ignored.')
+    if not xtools.ignored_nicks:
+        print_status('No nicks are being ignored.', newtab=newtab)
         return True
 
-    ignorelenstr = str(len(IGNORED_NICKS))
-    print_status('Ignoring {} nicks:'.format(color_text('blue', ignorelenstr)))
-    nicksortkey = lambda k: IGNORED_NICKS[k]['index']
-    for nick in sorted(IGNORED_NICKS.keys(), key=nicksortkey):
-        istr = str(IGNORED_NICKS[nick]['index'] + 1)
-        line = '    {}: {}'.format(color_text('blue', istr, bold=True),
-                                   color_text('blue', nick))
-        print(line)
+    ignorelenstr = str(len(xtools.ignored_nicks))
+    msglenstr = str(len(xtools.ignored_msgs))
+    statusmsg = ('Ignoring {} nicks ({} ignored msgs):'.format(
+        colorstr('blue', ignorelenstr),
+        colorstr('blue', msglenstr))
+    )
+    print_status(statusmsg, newtab=newtab)
+    nicksortkey = lambda k: xtools.ignored_nicks[k]['index']
+    for nick in sorted(xtools.ignored_nicks.keys(), key=nicksortkey):
+        istr = str(xtools.ignored_nicks[nick]['index'] + 1)
+        line = '    {}: {}'.format(colorstr('blue', istr, bold=True),
+                                   colorstr('blue', nick))
+        print_(line, newtab=newtab)
     return True
 
 
-def print_tochan(msg):
-    """ Prints a message as the user to the current channel. """
+def print_tochan(msg, channel=None):
+    """ Prints a message as the user to a channel. 
+        If no channel is given, the current channel is used.
+    """
 
     if not msg:
         print_error('No msg to send to channel.')
         return False
 
-    chan = xchat.get_context().get_info('channel')
-    if not chan:
+    if not channel:
+        channel = xchat.get_context().get_info('channel')
+
+    if not channel:
         print_error('No channel to send msg to.')
         return False
 
-    xchat.command('MSG {} {}'.format(chan, msg))
+    xchat.command('MSG {} {}'.format(channel, msg))
 
 
-def print_status(msg):
+def print_totab(tabtitle, msg, focus=True):
+    """ Print to any tab, opens the tab if not available.
+        Prints to current tab if opening fails.
+    """
+    # Find existing xchat tab, or open a new one.
+    context = get_window(tabtitle, focus=focus)
+    if context is None:
+        # Can't find xtools tab (timed out), print to the current tab.
+        print(msg)
+    else:
+        # print to xtools tab.
+        context.prnt(msg)
+
+
+def print_saved_msg(msg, chanspace=16, nickspace=16,
+                    newtab=False, focus=True, redirect=False):
+    """ Print a single saved msg from xtools.ignored_msgs,
+        or xtools.caught_msgs.
+        Must be the actual msg, not the msg id.
+        from xtools.ignored_msgs, or xtools.caught_msgs[msgid].
+    """
+
+    msgtime = '({})'.format(colorstr('grey', msg['time']))
+    chan = '[{}]'.format(colorstr('green', msg['channel']))
+    # manually get channel spacing, instead of .ljust() including color codes
+    chan = '{}{}'.format(chan, (' ' * (chanspace - len(msg['channel']))))
+    # strip color from nick, and add our own.
+    nick = remove_mirc_color(msg['nick'])
+    if 'action' in msg['type']:
+        nick = colorstr('darkblue', nick.ljust(nickspace))
+        # user action, add a big * on it.
+        nick = '{}{}'.format(colorstr('red', '*', bold=True), nick)
+    else:
+        # normal channel msg
+        nick = colorstr('darkblue', nick.ljust(nickspace + 1))
+
+    # Format long messages
+    msglabel = '{} {} {}: '.format(msgtime, chan, nick)
+    # Figure label length for spacing without colors.
+    msgspace = len(remove_mirc_color(msglabel))
+    # Figure maximum width for label + msg, and for msg alone.
+    maxoverall = 160 if redirect else 130
+    maxmsglen = maxoverall - msgspace
+    # Function to add proper space for a long wrapped line.
+    fmtline = lambda s: '{}{}'.format((' ' * msgspace), s)
+
+    def msglines(s):
+        """ Chunk a msg, add space to all but the first line. """
+        msgchunks = [s[x:x + maxmsglen] for x in range(0, len(s), maxmsglen)]
+        return [fmtline(l) if i else l for i, l in enumerate(msgchunks)]
+
+    # Wrap long lines with msglines() if needed, colorize highlighted msgs.
+    if 'hilight' in msg['type']:
+        # highlighted msg.
+        msgtext = '\n'.join([colorstr('red', s) for s in msglines(msg['msg'])])
+    else:
+        # normal msg.
+        msgtext = '\n'.join(msglines(msg['msg']))
+
+    # Build final message.
+    msgfmt = '{}{}'.format(msglabel, msgtext)
+
+    # Print it to the correct tab.
+    if redirect:
+        # This is a redirected msg, print to the xtools-msgs tab.
+        print_totab(xtools.msgs_tab_title, msgfmt, focus=False)
+    else:
+        # This could be an ignored msg, or a caught msg.
+        # Whether or not it's printed to the xtools tab is determined
+        # by the user with the --tab argument (which sets newtab)
+        print_(msgfmt, newtab=newtab, focus=focus)
+
+
+def print_status(msg, newtab=False):
     """ Print an xtools status message. """
 
-    finalmsg = '\n{} {}'.format(color_text('grey', 'xtools:'), msg)
-    print(finalmsg)
+    finalmsg = '\n{} {}'.format(colorstr('grey', 'xtools:'), msg)
+    print_(finalmsg, newtab=newtab)
 
 
-def print_version():
+def print_version(newtab=False):
     """ Print xtools version. """
 
-    print(color_text('blue', VERSIONSTR, bold=True))
+    print_(colorstr('blue', VERSIONSTR, bold=True), newtab=newtab)
 
 
-def remove_ignored_nick(nickstr):
-    """ Removes an ignored nick by name. """
-    global IGNORED_NICKS
+def print_xtools(s, focus=True):
+    """ Print to the [xchat] tab/window """
+
+    # Find existing xchat tab, or open a new one.
+    context = get_xtools_window(focus=focus)
+    if context is None:
+        # Can't find xtools tab (timed out), print to the current tab.
+        print(s)
+    else:
+        # print to xtools tab.
+        context.prnt(s)
+
+
+def remove_catcher(catcherstr):
+    """ Removes a msg-catcher by string. """
 
     def get_key(kstr):
-        if kstr in IGNORED_NICKS.keys():
+        if kstr in xtools.msg_catchers.keys():
             return kstr
         else:
             # Try by index.
@@ -759,8 +1404,49 @@ def remove_ignored_nick(nickstr):
                 intval = int(kstr)
             except:
                 return None
-            for nick in IGNORED_NICKS.keys():
-                nickindex = IGNORED_NICKS[nick]['index']
+            for msg in xtools.msg_catchers.keys():
+                msgindex = xtools.msg_catchers[msg]['index']
+                if msgindex == (intval - 1):
+                    return msg
+
+            return None
+
+    removed_catchers = []
+    for msg in catcherstr.split():
+        msgkey = get_key(msg)
+        if msgkey:
+            # Good key, remove it.
+            xtools.msg_catchers.pop(msgkey)
+            removed_catchers.append(msgkey)
+        else:
+            print_error('Can\'t find that in the msg-catcher list: '
+                        '{}'.format(msg),
+                        boldtext=msg)
+            continue
+
+    # Fix indexes
+    build_catcher_indexes()
+    # Return status.
+    if removed_catchers and save_catchers() and save_prefs():
+        return removed_catchers
+    else:
+        return False
+
+
+def remove_ignored_nick(nickstr):
+    """ Removes an ignored nick by name. """
+
+    def get_key(kstr):
+        if kstr in xtools.ignored_nicks.keys():
+            return kstr
+        else:
+            # Try by index.
+            try:
+                intval = int(kstr)
+            except:
+                return None
+            for nick in xtools.ignored_nicks.keys():
+                nickindex = xtools.ignored_nicks[nick]['index']
                 if nickindex == (intval - 1):
                     return nick
 
@@ -771,7 +1457,7 @@ def remove_ignored_nick(nickstr):
         nickkey = get_key(nick)
         if nickkey:
             # Good key, remove it.
-            IGNORED_NICKS.pop(nickkey)
+            xtools.ignored_nicks.pop(nickkey)
             removed_nicks.append(nickkey)
         else:
             print_error('Can\'t find that in the ignored list: '
@@ -788,59 +1474,79 @@ def remove_ignored_nick(nickstr):
         return False
 
 
-def remove_leading_numbers(text):
-    """ Removes ALL leading numbers, not just single mirc colors. """
+def remove_mirc_color(text):
+    """ Removes color code from text
+    """
+    badchars = ['{}<'.format(chr(8)), chr(8), chr(15)]
+    for badchar in badchars:
+        if badchar in text:
+            text = text.replace(badchar, '')
 
-    if text:
-        while text[0] in DIGITSTR:
-            text = text[1:]
+    text = xchat.strip(text)
     return text
 
 
-# Helper function for remove_mirc_color (for preloading sub function)
-mirc_color_regex = re.escape('\x03') + r'(?:(\d{1,2})(?:,(\d{1,2}))?)?'
-mirc_sub_pattern = re.compile(mirc_color_regex).sub
+def save_catchers():
+    """ Save msg-catchers in preferences. """
 
-
-def remove_mirc_color(text, _resubpat=mirc_sub_pattern):
-    """ Removes color code from text
-        (idea borrowed from nosklos clutterless.py)
-        Sub pattern is preloaded on function definition,
-        like nosklos (but more readable i think)
-    """
-    return _resubpat('', text)
+    if xtools.msg_catchers:
+        catcher_str = '{|}'.join(list(xtools.msg_catchers.keys()))
+        xtools.settings['msg_catchers'] = catcher_str
+    else:
+        # no msg catchers
+        if 'msg_catchers' in xtools.settings.keys():
+            xtools.settings.pop('msg_catchers')
+    return True
 
 
 def save_ignored_nicks():
     """ Save ignored nicks in preferences. """
-    global SETTINGS
 
-    if IGNORED_NICKS:
-        ignored_str = ','.join(list(IGNORED_NICKS.keys()))
-        SETTINGS['ignored_nicks'] = ignored_str
+    if xtools.ignored_nicks:
+        ignored_str = ','.join(list(xtools.ignored_nicks.keys()))
+        xtools.settings['ignored_nicks'] = ignored_str
     else:
         # nick list is empty.
-        if 'ignored_nicks' in SETTINGS.keys():
-            SETTINGS.pop('ignored_nicks')
+        if 'ignored_nicks' in xtools.settings.keys():
+            xtools.settings.pop('ignored_nicks')
 
     return True
 
 
 def save_prefs():
-    """ Saves SETTINGS to preferences file. """
+    """ Saves xtools.settings to preferences file. """
     try:
-        with open(CONFIG_FILE, 'w') as fwrite:
-            for opt, val in SETTINGS.items():
+        with open(xtools.config_file, 'w') as fwrite:
+            for opt, val in xtools.settings.items():
                 if val:
                     fwrite.write('{} = {}\n'.format(opt, val))
             fwrite.flush()
         return True
     except (IOError, OSError) as exio:
         # Error writing/opening preferences.
-        print_error('Can\'t save preferences to: {}'.format(CONFIG_FILE),
-                    boldtext=CONFIG_FILE,
+        print_error('Can\'t save preferences to: '
+                    '{}'.format(xtools.config_file),
+                    boldtext=xtools.config_file,
                     exc=exio)
         return False
+
+
+def toggle_redirect_msgs(newtab=False):
+    """ Toggle the 'redirect_msgs' setting,
+        print it's status (to the xtools tab if newtab=True)
+    """
+    redirectmsgs = (not xtools.settings.get('redirect_msgs', False))
+    xtools.settings['redirect_msgs'] = redirectmsgs
+    # set color coded status msg.
+    statuscolr = 'green' if redirectmsgs else 'red'
+    redirectstate = colorstr(statuscolr, redirectmsgs, bold=True)
+
+    enablestr = colorstr('blue', 'Caught-msg printer enabled')
+    if save_prefs():
+        statusmsg = 'Saved message printer setting.\n    {}: {}'
+    else:
+        statusmsg = '{}: {}'
+    print_status(statusmsg.format(enablestr, redirectstate), newtab=newtab)
 
 
 def validate_int_str(intstr, minval=5, maxval=60):
@@ -863,7 +1569,77 @@ def validate_int_str(intstr, minval=5, maxval=60):
     return intval
 
 
-# Commands
+# Commands -------------------------------------------------------------------
+
+def cmd_catch(word, word_eol, userdata=None):
+    """ Handles the /CATCH command to add/remove or list caught msgs. """
+
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-c', '--clear'),
+                                                     ('-d', '--delete'),
+                                                     ('-f', '--filter'),
+                                                     ('-h', '--help'),
+                                                     ('-l', '--list'),
+                                                     ('-m', '--msgs'),
+                                                     ('-p', '--print'),
+                                                     ('-r', '--remove'),
+                                                     ('-t', '--tab')
+                                                     ))
+    if argd['--help']:
+        print_cmdhelp(cmdname, newtab=argd['--tab'])
+        return xchat.EAT_ALL
+    elif argd['--clear']:
+        if clear_catchers():
+            print_status('Catch list cleared.', newtab=argd['--tab'])
+    elif argd['--delete']:
+        if clear_caught_msgs():
+            print_status('Caught messages cleared.', newtab=argd['--tab'])
+    elif argd['--filter']:
+        if not cmdargs:
+            print_error('No filter pattern supplied. See \'/help catch\'...')
+            return xchat.EAT_ALL
+        filtered = filter_caught_msgs(cmdargs)
+        if filtered is None:
+            # no msgs, or bad regex/text supplied.
+            return xchat.EAT_ALL
+        msgplural = 'message' if filtered == 1 else 'messages'
+        filtered = colorstr('blue', filtered, bold=True)
+        print_status('Filtered {} caught {}.'.format(filtered, msgplural),
+                     newtab=argd['--tab'])
+        return xchat.EAT_ALL
+    elif argd['--list']:
+        print_catchers(newtab=argd['--tab'])
+    elif argd['--msgs']:
+        print_caught_msgs(newtab=argd['--tab'])
+    elif argd['--print']:
+        toggle_redirect_msgs(newtab=argd['--tab'])
+    elif argd['--remove']:
+        removed = remove_catcher(cmdargs)
+        if removed:
+            remstr = colorstr('blue', ', '.join(removed), bold=True)
+            print_status('Removed {} from the catch-msg list.'.format(remstr),
+                         newtab=argd['--tab'])
+    elif cmdargs:
+        added = add_catcher(cmdargs)
+        if added:
+            addedstr = colorstr('blue', ', '.join(added), bold=True)
+            print_status('Added {} to the catch-msg list.'.format(addedstr),
+                         newtab=argd['--tab'])
+    else:
+        # default
+        print_caught_msgs(newtab=argd['--tab'])
+
+    return xchat.EAT_ALL
+
+
+def cmd_catchers(word, word_eol, userdata=None):
+    """ Shortcut command for /catch --list """
+    if word[1:]:
+        # If the command has args its just an alias for /CATCH
+        return cmd_catch(word, word_eol, userdata=userdata)
+    else:
+        # No args, default action is to list catchers instead of caught msgs.
+        print_catchers(newtab=(('-t' in word) or ('--tab' in word)))
+        return xchat.EAT_ALL
 
 
 def cmd_eval(word, word_eol, userdata=None):
@@ -878,31 +1654,55 @@ def cmd_eval(word, word_eol, userdata=None):
             # prints "private output" to your chat window only.
     """
 
-    word, argd = get_flag_args(word, (('-c', '--chat'), ('-r', '--result')))
-    # Remove command from word.
-    word = word[1:]
-    if not word:
-        print_error('No code to evaluate.')
+    # Get args from command.
+    cmdname, query, argd = get_cmd_args(word_eol,
+                                        (('-c', '--chat'),
+                                         ('-h', '--help'),
+                                         ('-k', '--code'),
+                                         ('-r', '--result'),
+                                         ('-e', '--errors'),
+                                         ('-t', '--tab')))
+
+    if argd['--help']:
+        print_cmdhelp(cmdname, newtab=argd['--tab'])
+        return xchat.EAT_ALL
+
+    query = query.strip()
+
+    if not query:
+        print_error('No code to evaluate.', newtab=argd['--tab'])
         return xchat.EAT_ALL
 
     # Grab directed nick msg from word if available.
     msgnick = None
     if argd['--chat']:
-        firstword = word[0]
+        queryparts = query.split(' ')
+        firstword = queryparts[0]
+
         chanusers = xchat.get_context().get_list('users')
         if firstword.lower() in [n.nick.lower() for n in chanusers]:
             # first word is a nick, save it and remove it from the query.
             msgnick = firstword
-            word = word[1:]
+            query = ' '.join(queryparts[1:])
 
+    # Grab comment if any, trim it from the code.
+    comment = get_eval_comment(query)
+    if comment:
+        query = query.replace(comment, '').strip('#').strip()
+        # Strip extra space from comment for formatting later.
+        comment = comment.strip()
+    
     # Grab code query, if -c and name were only provided its an error.
-    query = ' '.join(word) if word else None
     if not query:
-        print_error('No code to evaluate.')
+        print_error('No code to evaluate.', newtab=argd['--tab'])
         return xchat.EAT_ALL
 
     # Fix newlines
+    # allow users to type \\n to escape real newlines,
+    # but use \n as an actual newline (as if ENTER had been pressed)
+    query = query.replace('\\\\n', '${nl}')
     query = query.replace('\\n', '\n')
+    query = query.replace('${nl}', '\\n')
     # Choose exec mode.
     if '\n' in query:
         mode = 'exec'
@@ -911,45 +1711,46 @@ def cmd_eval(word, word_eol, userdata=None):
     else:
         mode = 'single'
 
-    # Make a interpreter, replace stdout with chatout if -c is used.
+    # Make an interpreter to run the code.
     compiler = InteractiveInterpreter()
+    
+    # Print formatted/parsed code to window....
+    if argd['--code']:
+        print_status('Running Code:\n{}'.format(query))
 
-    # Output will be captured, for optional chat output.
-    # stderr will always be formatted and printed to screen.
+    # stdout/stderr will be captured, for optional chat output.
     with StdErrCatcher() as errors:
         with StdOutCatcher() as captured:
+            # execute/evaluate the code.
             incomplete = compiler.runsource(query, symbol=mode)
 
-    # incomplete source.
+    # Incomplete source code.
     if incomplete:
+        # Code will not compile.
         warnmsg = 'Incomplete source.'
-        print_error(warnmsg, boldtext=warnmsg)
+        print_error(warnmsg, boldtext=warnmsg, newtab=argd['--tab'])
     # Print any errors.
     elif errors.output:
-        errorsfmt = errors.output.replace('\\n', '\n')
-        print_error('Code Error:\n{}'.format(errorsfmt))
+        # Send error output. Only send to chat if the -c flag is given AND
+        # the --errors flag is given. Otherwise print to screen.
+        print_evalerror(query, errors.output,
+                        chat=(argd['--chat'] and argd['--errors']),
+                        chatnick=msgnick,
+                        comment=comment,
+                        resultonly=argd['--result'],
+                        newtab=argd['--tab'])
     # Code had output.
     elif captured.output:
-        # Format code for chat, or print to screen.
-        if argd['--chat']:
-            # Send to channel as user.
-            queryfmt = query.replace('\n', '\\n')
-            if argd['--result']:
-                # don't include the query in the msg.
-                chanmsg = captured.output
-            else:
-                # include query -> result in the msg.
-                chanmsg = '{} == {}'.format(queryfmt, captured.output)
-            # add directed message nick if given.
-            if msgnick:
-                chanmsg = '{}: {}'.format(msgnick, chanmsg)
-            print_tochan(chanmsg)
-        else:
-            # Print to screen.
-            print_status('Code Output:')
-            print(captured.output)
+        # Send good output to screen or chat (with or without nick or query)
+        print_evalresult(query, captured.output,
+                         chat=argd['--chat'],
+                         chatnick=msgnick,
+                         comment=comment,
+                         resultonly=argd['--result'],
+                         newtab=argd['--tab'])
     else:
-        print_error('No Output.')
+        # No command output, user didn't print() or something.
+        print_error('No Output.', newtab=argd['--tab'])
     return xchat.EAT_ALL
 
 
@@ -966,13 +1767,39 @@ def cmd_findtext(word, word_eol, userdata=None):
         print('Error, no scrollback dir found in: {}'.format(scrollbackdir))
         return xchat.EAT_ALL
     # Get cmd args
-    word, argd = get_flag_args(word, [('-a', '--all'),
-                                      ('-n', '--nick')])
+    cmdname, query, argd = get_cmd_args(word_eol, (('-a', '--all'),
+                                                   ('-h', '--help'),
+                                                   ('-n', '--nick'),
+                                                   ('-t', '--tab')))
 
-    # Search query (regex)
-    query = get_cmd_rest(word)
+    if argd['--help']:
+        print_cmdhelp(cmdname)
+        return xchat.EAT_ALL
+
     if not query:
-        print(cmd_help[word[0].strip('/')])
+        # Print help when no query is present.
+        print_cmdhelp(cmdname)
+        return xchat.EAT_ALL
+
+    # Get channels pertaining to this search
+    if argd['--all']:
+        channelnames = get_channel_names()
+        chanquery = None
+    else:
+        # Check for channel arg.
+        queryparts = query.split()
+        chanquery = queryparts[0]
+        if chanquery in get_channel_names():
+            query = ' '.join(queryparts[1:])
+            channelnames = [chanquery]
+        else:
+            # Do current channel.
+            channelnames = [xchat.get_context().get_info('channel')]
+            chanquery = None
+
+    if not query:
+        # user may have passed a channel with no actual query.
+        print_cmdhelp(cmdname)
         return xchat.EAT_ALL
 
     try:
@@ -983,19 +1810,22 @@ def cmd_findtext(word, word_eol, userdata=None):
                     boldtext=query)
         return xchat.EAT_ALL
 
-    # Get channels pertaining to this search
-    if argd['--all']:
-        channelnames = get_channel_names()
-    else:
-        channelnames = [xchat.get_context().get_info('channel')]
-
     # Search channel data
-    print('\n{} {}\n'.format(color_text('blue', 'Searching for:'),
-                             color_text('red', query)))
+    statusmsg = '\n{} {}'.format(colorstr('blue', 'Searching for:'),
+                                 colorstr('red', query))
+    chanmsg = '{} {}\n'.format(colorstr('blue', 'In:'),
+                               colorstr('red', ', '.join(channelnames)))
+
+    print_('\n'.join([statusmsg, chanmsg]), newtab=argd['--tab'])
+
     totalmatches = 0
     for chan in channelnames:
         # Open chan file
+        chandata = []
         chanfile = os.path.join(scrollbackdir, '{}.txt'.format(chan))
+        if ('[' in chanfile) or (']' in chanfile):
+            chanfile = chanfile.replace(']', '}').replace('[', '{')
+
         if os.path.isfile(chanfile):
             try:
                 with open(chanfile, 'r') as fread:
@@ -1004,7 +1834,9 @@ def cmd_findtext(word, word_eol, userdata=None):
                 print_error('\nUnable to open: {}'.format(chanfile),
                             exc=exio,
                             boldtext=chanfile)
-                chandata = None
+        else:
+            if chan == chanquery:
+                print_error('No text for channel: {}'.format(chan))
 
         # Search channel lines
         for line in chandata:
@@ -1013,7 +1845,7 @@ def cmd_findtext(word, word_eol, userdata=None):
             if None in (timedate, nick):
                 continue
             # Nick without colors/codes.
-            nickraw = remove_leading_numbers(nick)
+            nickraw = remove_mirc_color(nick)
             # Check for feedback from server/script output.
             noticemsg = (nickraw == '*')
             if noticemsg or (not text):
@@ -1027,33 +1859,34 @@ def cmd_findtext(word, word_eol, userdata=None):
 
             # Line passed checks, Match nick..
             rematch = querypat.search(remove_mirc_color(nick))
-            if (not rematch) and (not argd['--nick']):
+
+            if (rematch is None) and (not argd['--nick']):
                 # Match text if nick_only isn't used.
                 rematch = querypat.search(text)
 
-            if rematch and rematch.group():
+            if (rematch is not None) and rematch.group():
                 totalmatches += 1
                 matchtext = rematch.group()
                 # Found a match, format it.
                 # Get time string. (12-Hour:Minutes:Seconds)
                 timestr = timedate.time().strftime('%I:%M:%S')
                 # Color code matches.
-                text = text.replace(matchtext, color_text(color='red',
-                                                          text=matchtext,
-                                                          bold=True))
+                text = text.replace(matchtext, colorstr(color='red',
+                                                        text=matchtext,
+                                                        bold=True))
                 # Print matches.
-                result = '[{}] [{}] {}: {}'.format(color_text('grey', timestr),
-                                                   color_text('green', chan),
-                                                   color_text('blue', nick),
+                result = '[{}] [{}] {}: {}'.format(colorstr('grey', timestr),
+                                                   colorstr('green', chan),
+                                                   colorstr('blue', nick),
                                                    text)
-                print(result)
+                print_(result, newtab=argd['--tab'])
 
     # Finished.
     if totalmatches == 0:
-        print(color_text('red', '\nNo matches found.'))
+        print_(colorstr('red', '\nNo matches found.'), newtab=argd['--tab'])
     else:
-        print('\nFound {} matches.\n'.format(color_text('blue',
-                                                        str(totalmatches))))
+        totalstr = colorstr('blue', totalmatches)
+        print_('\nFound {} matches.\n'.format(totalstr), newtab=argd['--tab'])
 
     return xchat.EAT_ALL
 
@@ -1062,35 +1895,39 @@ def cmd_listusers(word, word_eol, userdata=None):
     """ List all users, with a count also. """
 
     # Get args
-    word, argd = get_flag_args(word, [('-a', '--all', False),
-                                      ('-c', '--count', False)])
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-a', '--all'),
+                                                     ('-h', '--help'),
+                                                     ('-c', '--count'),
+                                                     ('-t', '--tab')))
+
+    if argd['--help']:
+        print_cmdhelp(cmdname)
+        return xchat.EAT_ALL
 
     if argd['--all']:
-        print(color_text('blue', '\nGathering users...\n'))
+        print_(colorstr('blue', '\nGathering users...\n'),
+               newtab=argd['--tab'])
         channels = xchat.get_list('channels')
         userlist = get_all_users(channels=channels)
-        userlenstr = str(len(userlist))
-        chanlenstr = str(len(channels))
-        cntstr = ('\nFound {} users in '.format(color_text(color='blue',
-                                                           text=userlenstr)) +
-                  '{} channels.\n'.format(color_text(color='blue',
-                                                     text=chanlenstr)))
+        userlen = colorstr('blue', len(userlist))
+        chanlen = colorstr('blue', len(channels))
+        cntstr = ''.join(['\nFound {} users in '.format(userlen),
+                          '{} channels.\n'.format(chanlen)])
     else:
         userlist = xchat.get_context().get_list('users')
-        userlenstr = str(len(userlist))
-        cntstr = '\nFound {} users.\n'.format(color_text(color='blue',
-                                                         text=userlenstr))
+        userlen = colorstr('blue', len(userlist))
+        cntstr = '\nFound {} users.\n'.format(userlen)
     if argd['--count']:
         # Show count results only.
-        print(cntstr)
+        print_(cntstr, newtab=argd['--tab'])
         return xchat.EAT_ALL
 
     # Format results.
-    color_result = lambda u: '{} - ({})'.format(color_text('blue', u.nick),
-                                                color_text('purple', u.host))
+    color_result = lambda u: '{} - ({})'.format(colorstr('blue', u.nick),
+                                                colorstr('purple', u.host))
     userfmt = [color_result(u) for u in userlist]
-    print('    {}'.format('\n    '.join(userfmt)))
-    print(cntstr)
+    print_('    {}'.format('\n    '.join(userfmt)), newtab=argd['--tab'])
+    print_(cntstr, newtab=argd['--tab'])
     return xchat.EAT_ALL
 
 
@@ -1098,24 +1935,33 @@ def cmd_searchuser(word, word_eol, userdata=None):
     """ Searches for a user nick,
         expects: word = /searchuser [-a] usernickregex
     """
+    # Get command args.
+    cmdname, query, argd = get_cmd_args(word_eol, (('-H', '--host'),
+                                                   ('-h', '--help'),
+                                                   ('-o', '--onlyhost'),
+                                                   ('-a', '--all'),
+                                                   ('-t', '--tab')))
 
-    if len(word) == 1:
-        print(cmd_help['searchuser'])
+    if argd['--help']:
+        print_cmdhelp(cmdname)
         return xchat.EAT_ALL
 
-    # Get command args.
-    word, argd = get_flag_args(word,
-                               [('-h', '--host', False),
-                                ('-o', '--onlyhost', False),
-                                ('-a', '--all', False)])
+    # Get query
+    if not query:
+        errmsg = ('No query. Use /listusers to view all users or '
+                  'use /help {} for help.'.format(cmdname.strip('/')))
+        print_error(errmsg, newtab=argd['--tab'])
+        return xchat.EAT_ALL
 
+    # Whether the host will be used in matching.
     match_host = (argd['--host'] or argd['--onlyhost'])
 
     # All users or current chat?
     channels = xchat.get_list('channels')
     if argd['--all']:
         # All users from every channel.
-        print(color_text(color='blue', text='Generating list of all users...'))
+        print_(colorstr('blue', 'Generating list of all users...'),
+               newtab=argd['--tab'])
         channelusers = get_channels_users(channels=channels)
         userchannels = {}
         allusernames = []
@@ -1146,23 +1992,22 @@ def cmd_searchuser(word, word_eol, userdata=None):
         userlist = xchat.get_context().get_list('users')
 
     # Try compiling the query into regex.
-    query = get_cmd_rest(word)
-    if not query:
-        print_error('No query, use /listusers instead.')
-        return xchat.EAT_ALL
     try:
         querypat = re.compile(query)
     except (Exception, re.error) as exre:
         print_error('Invalid query: {}'.format(query),
                     exc=exre,
-                    boldtext=query)
+                    boldtext=query,
+                    newtab=argd['--tab'])
         return xchat.EAT_ALL
 
     # Search
     # Print status (searching for: {})
-    print('\n\n{} {} {}'.format(color_text('darkblue', 'xtools'),
-                                color_text('blue', 'searching for:'),
-                                color_text('red', query)))
+    statusmsg = '\n\n{} {} {}'.format(colorstr('darkblue', 'xtools'),
+                                      colorstr('blue', 'searching for:'),
+                                      colorstr('red', query))
+    print_(statusmsg, newtab=argd['--tab'])
+
     results = []
     for userinf in userlist:
         rematch = None if argd['--onlyhost'] else querypat.search(userinf.nick)
@@ -1176,9 +2021,9 @@ def cmd_searchuser(word, word_eol, userdata=None):
     # Print results.
     if results:
         # Setup some default colors (formatting functions)
-        colornick = lambda n: color_text(color='blue', text=n)
-        colorhost = lambda h: color_text(color='darkpurple', text=h)
-        colorchan = lambda cs: color_text(color='darkgreen', text=cs)
+        colornick = lambda n: colorstr(color='blue', text=n)
+        colorhost = lambda h: colorstr(color='darkpurple', text=h)
+        colorchan = lambda cs: colorstr(color='darkgreen', text=cs)
 
         # Sort results for better printing..
         results = sorted(results, key=lambda u: u.nick)
@@ -1247,19 +2092,20 @@ def cmd_searchuser(word, word_eol, userdata=None):
             pluralnicks = 'host' if len(results) == 1 else 'hosts'
         else:
             pluralnicks = 'nick' if len(results) == 1 else 'nicks'
-        resultstr = color_text(color='blue', bold=True, text=str(len(results)))
+        resultstr = colorstr('blue', len(results), bold=True)
         if argd['--all']:
-            chanlenstr = str(len(channels))
-            channellenstr = ' in {} channels'.format(color_text('blue',
-                                                                chanlenstr))
+            chanlen = len(channels)
+            channellenstr = ' in {} channels'.format(colorstr('blue', chanlen))
         else:
             channellenstr = ' in the current channel'
-        print('Found {} {}{}: {}\n'.format(resultstr,
-                                           pluralnicks,
-                                           channellenstr,
-                                           formattednicks))
+        resultstr = 'Found {} {}{}: {}\n'.format(resultstr,
+                                                 pluralnicks,
+                                                 channellenstr,
+                                                 formattednicks)
+        print_(resultstr, newtab=argd['--tab'])
     else:
-        print(color_text(color='red', bold=True, text='No nicks found.\n'))
+        print_(colorstr('red', 'No nicks found.\n', bold=True),
+               newtab=argd['--tab'])
 
     return xchat.EAT_ALL
 
@@ -1267,8 +2113,12 @@ def cmd_searchuser(word, word_eol, userdata=None):
 def cmd_whitewash(word, word_eol, userdata=None):
     """ Prints a lot of whitespace to 'clear' the chat window. """
 
-    cmdargs = get_cmd_rest(word).strip()
-    if cmdargs:
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-h', '--help'),))
+
+    if argd['--help']:
+        print_cmdhelp(cmdname)
+        return xchat.EAT_ALL
+    elif cmdargs:
         try:
             linecnt = int(cmdargs)
         except ValueError:
@@ -1293,33 +2143,41 @@ def cmd_whitewash(word, word_eol, userdata=None):
 def cmd_xignore(word, word_eol, userdata=None):
     """ Handles the /XIGNORE command to add/remove or list ignored nicks. """
 
-    word, argd = get_flag_args(word, [('-c', '--clear', False),
-                                      ('-l', '--list', False),
-                                      ('-m', '--msgs', False),
-                                      ('-r', '--remove', False),
-                                      ])
-    cmdargs = get_cmd_rest(word)
-
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-c', '--clear'),
+                                                     ('-d', '--delete'),
+                                                     ('-h', '--help'),
+                                                     ('-l', '--list'),
+                                                     ('-m', '--msgs'),
+                                                     ('-r', '--remove'),
+                                                     ('-t', '--tab')
+                                                     ))
     if argd['--clear']:
         if clear_ignored_nicks():
-            print_status('Ignore list cleared.')
+            print_status('Ignore list cleared.', newtab=argd['--tab'])
+    elif argd['--delete']:
+        xtools.ignored_msgs = deque(maxlen=xtools.max_ignored_msgs)
+        print_status('Deleted all ignored messages.', newtab=argd['--tab'])
+    elif argd['--help']:
+        print_cmdhelp(cmdname, newtab=argd['--tab'])
     elif argd['--list']:
-        print_ignored_nicks()
+        print_ignored_nicks(newtab=argd['--tab'])
     elif argd['--msgs']:
-        print_ignored_msgs()
+        print_ignored_msgs(newtab=argd['--tab'])
     elif argd['--remove']:
         removed = remove_ignored_nick(cmdargs)
         if removed:
-            remstr = color_text('blue', ', '.join(removed), bold=True)
-            print_status('Removed {} from the ignored list.'.format(remstr))
+            remstr = colorstr('blue', ', '.join(removed), bold=True)
+            print_status('Removed {} from the ignored list.'.format(remstr),
+                         newtab=argd['--tab'])
     elif cmdargs:
         added = add_ignored_nick(cmdargs)
         if added:
-            addedstr = color_text('blue', ', '.join(added), bold=True)
-            print_status('Added {} to the ignored list.'.format(addedstr))
+            addedstr = colorstr('blue', ', '.join(added), bold=True)
+            print_status('Added {} to the ignored list.'.format(addedstr),
+                         newtab=argd['--tab'])
     else:
         # default
-        print_ignored_nicks()
+        print_ignored_nicks(newtab=argd['--tab'])
 
     return xchat.EAT_ALL
 
@@ -1327,32 +2185,31 @@ def cmd_xignore(word, word_eol, userdata=None):
 def cmd_xtools(word, word_eol, userdata=None):
     """ Shows info about xtools. """
 
-    word, argd = get_flag_args(word, [('-v', '--version', False),
-                                      ('-d', '--desc', False),
-                                      ('-h', '--help', False),
-                                      ('-cd', '--colordemo', False),
-                                      ])
-    cmdargs = get_cmd_rest(word)
-
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-v', '--version'),
+                                                     ('-d', '--desc'),
+                                                     ('-h', '--help'),
+                                                     ('-cd', '--colordemo'),
+                                                     ))
     # Version only
     if argd['--version']:
         print_version()
         return xchat.EAT_ALL
 
     # Command description or descriptions.
-    if argd['--desc']:
+    elif argd['--desc']:
         print_cmddesc(cmdargs)
         return xchat.EAT_ALL
 
     # Command help.
-    if argd['--help']:
+    elif argd['--help']:
         print_cmdhelp(cmdargs)
         return xchat.EAT_ALL
 
     # Undocumented test for color_code.
-    if argd['--colordemo']:
+    elif argd['--colordemo']:
         print_colordemo()
         return xchat.EAT_ALL
+
     # No args, default behavior
     print_cmddesc(cmdargs)
     return xchat.EAT_ALL
@@ -1360,18 +2217,26 @@ def cmd_xtools(word, word_eol, userdata=None):
 
 def filter_chanmsg(word, word_eol, userdata=None):
     """ Filter Channel Messages. """
-    global IGNORED_MESSAGES
 
-    # TODO: Filter /me messages next.
+    # Ignoring messages is easy, just save it and return EAT_ALL.
     msgnick = word[0]
-    for nickkey in IGNORED_NICKS.keys():
-        nickpat = IGNORED_NICKS[nickkey]['pattern']
+    msg = ' '.join(word[1:]).strip('@').strip()
+    for nickkey in xtools.ignored_nicks.keys():
+        nickpat = xtools.ignored_nicks[nickkey]['pattern']
         if nickpat.search(msgnick):
             # Ignore this message.
-            msg = {'nick': msgnick, 'msg': word_eol[1]}
-            IGNORED_MESSAGES.append(msg)
+            add_message(xtools.ignored_msgs.append,
+                        msgnick, msg, msgtype=userdata)
             return xchat.EAT_ALL
 
+    # Caught msgs, needs add_caught_msg because of other scripts emitting
+    # duplicate msgs. The add_caught_msg function handles this.
+    for catchmsg in xtools.msg_catchers.keys():
+        msgpat = xtools.msg_catchers[catchmsg]['pattern']
+        if msgpat.search(msg):
+            add_message(add_caught_msg,
+                        msgnick, msg, msgtype=userdata)
+            return xchat.EAT_NONE
     # Nothing will be done to this message.
     return xchat.EAT_NONE
 
@@ -1380,6 +2245,9 @@ def filter_message(word, word_eol, userdata=None):
     """ Filters all channel messages. """
 
     filter_funcs = {'Channel Message': filter_chanmsg,
+                    'Channel Msg Hilight': filter_chanmsg,
+                    'Channel Action': filter_chanmsg,
+                    'Channel Action Hilight': filter_chanmsg,
                     }
 
     if userdata in filter_funcs.keys():
@@ -1390,140 +2258,204 @@ def filter_message(word, word_eol, userdata=None):
 
 # START OF SCRIPT ------------------------------------------------------------
 
-# List of command names/functions
-# (all keys should also be in cmd_help, and vice versa)
-commands = {'searchuser': {'desc': 'Find users by name or part of a name.',
-                           'func': cmd_searchuser,
-                           'enabled': True},
-            'eval': {'desc': 'Evaluate python code. Can send output to chat.',
-                     'func': cmd_eval,
-                     'enabled': True},
-            'finduser': {'desc': '',
-                         'func': cmd_searchuser,
-                         'enabled': True},
-            'findtext': {'desc': 'Search chat text to see who said what.',
-                         'func': cmd_findtext,
-                         'enabled': True},
-            'whosaid': {'desc': '',
-                        'func': cmd_findtext,
-                        'enabled': True},
-            'listusers': {'desc': 'List users in all rooms or current room.',
-                          'func': cmd_listusers,
-                          'enabled': True},
-            'wash': {'desc': 'alias',
-                     'func': cmd_whitewash,
-                     'enabled': True},
-            'whitewash': {'desc': ('Prints a lot of whitespace to clear the '
-                                   'chat window.'),
-                          'func': cmd_whitewash,
-                          'enabled': True},
-            'xignore': {'desc': 'Add/Remove or list ignored nicks.',
-                        'func': cmd_xignore,
-                        'enabled': True},
-            'xtools': {'desc': 'Show command info or xtools version.',
-                       'func': cmd_xtools,
-                       'enabled': True},
-            }
+# List of command names/functions, enabled/disabled, help text.
+commands = {
+    'catch': {
+        'desc': 'Catch messages based on content.',
+        'func': cmd_catch,
+        'enabled': True,
+        'help': (
+            'Usage: /CATCH <pattern>\n'
+            '       /CATCH -f <pattern>\n'
+            '       /CATCH -r <pattern>\n'
+            '       /CATCH [-c | -d | -l | -m]\n'
+            'Options:\n'
+            '    <pattern>            : A word or regex pattern, if found in\n'
+            '                           a message it causes the msg to be\n'
+            '                           saved. You can retrieve the msgs\n'
+            '                           with the -m flag.\n'
+            '    -c,--clear           : Clear the msg-catcher list.\n'
+            '    -d,--delete          : Delete all caught messages.\n'
+            '    -f pat,--filter pat  : Removed any saved msgs that contain\n'
+            '                           the given text or regex pattern.\n'
+            '    -l,--list            : List all msg-catcher patterns.\n'
+            '    -m,--msgs            : Print all caught messages.\n'
+            '    -p,--print           : Toggle (enable/disable) the message\n'
+            '                           printer. When enabled, caught msgs\n'
+            '                           are printed to the xtools tab as\n'
+            '                           they are received.\n'
+            '    -r,--remove          : Remove catcher by number or text.\n'
+            '    -t,--tab             : Show output in the xtools tab.\n'
+            '\n'
+            '    * With no arguments passed, all caught msgs are listed.\n'
+            '    * You can pass several space-separated catchers.\n'
+            '    * To include a catcher with spaces, wrap it in quotes.\n'
+        )},
+    'catchers': {
+        'desc': 'Shortcut for /CATCH --list, lists all msg-catchers',
+        'func': cmd_catchers,
+        'enabled': True,
+        'help': (
+            'Usage: /CATCHERS [/catch args]\n'
+            '    ...shortcut for /CATCH --list, lists all msg-catchers.\n'
+            '    * any arguments given to this command are sent to the\n'
+            '      /CATCH command.')},
+    'eval': {
+        'desc': 'Evaluate python code. Can send output to chat.',
+        'func': cmd_eval,
+        'enabled': True,
+        'help': (
+            'Usage: /EVAL [-c [nick] [-e] [-r]] [-k] <code>\n'
+            '       /EVAL [-k] [-t] <code>'
+            'Options:\n'
+            '    -c [n],--chat [n] : Send as msg to current channel.\n'
+            '                        Newlines are replaced with \\\\n,\n'
+            '                        and long output is truncated.\n'
+            '                        If a nick (n) is given, mention the\n'
+            '                        nick in the message.\n\n'
+            '                        * Nick must come before eval code,\n'
+            '                          and nick must be present in the\n'
+            '                          current channel.\n'
+            '    -e,--errors       : Force send any errors to chat.\n'
+            '                        This overrides default behavior of\n'
+            '                        cancelling chat-sends when exceptions\n'
+            '                        are raised.\n'
+            '                        Sends the last line of the error msg\n'
+            '                        to chat, usually the Exception string.\n'
+            '    -k,--code         : Print parsed code to window with\n'
+            '                        formatted newlines. Prints before code\n'
+            '                        is evaluated.\n'
+            '    -r,--result       : When chat-sending, send result only.\n'
+            '                        The original query is not sent.\n'
+            '    -t,--tab          : Show output in the xtools tab\n\n'
+            '    ** Warning: This is an unprotected eval, it will eval\n'
+            '                whatever code you give it. It only accepts\n'
+            '                input from you, so you only have yourself to\n'
+            '                blame when something goes wrong.\n'
+            '                It is smarter than the plain eval() function,\n'
+            '                which makes it more dangerous too.\n\n'
+            '    ** DO NOT import os;os.system(\'rm -rf /\')\n'
+            '    ** DO NOT print(open(\'mypassword.txt\').read())\n'
+            '    ** DO NOT do anything you wouldn\'t do in a python \n'
+            '       interpreter.')},
+    'finduser': {
+        'desc': None,
+        'func': cmd_searchuser,
+        'enabled': True,
+        'help': None},
+    'findtext': {
+        'desc': 'Search chat text to see who said what.',
+        'func': cmd_findtext,
+        'enabled': True,
+        'help': (
+            'Usage: /FINDTEXT [-a] -[-n] [-t] <text>\n'
+            '       /FINDTEXT <#channel> [-n] [-t] <text>\n'
+            'Options:\n'
+            '     -a,--all   : Search all open windows.\n'
+            '     -n,--nick  : Search nicks only.\n'
+            '     -t,--tab   : Show output in the xtools tab.')},
+    'listusers': {
+        'desc': 'List users in all rooms or current room.',
+        'func': cmd_listusers,
+        'enabled': True,
+        'help': (
+            'Usage: /LISTUSERS [options]\n'
+            'Options:\n'
+            '    -a,--all    : List from all channels, not just the\n'
+            '                  current channel.\n'
+            '    -c,--count  : Show count only.\n'
+            '    -t,--tab    : Show output in the xtools tab.')},
+    'searchuser': {
+        'desc': 'Find users by name or part of a name.',
+        'func': cmd_searchuser,
+        'enabled': True,
+        'help': (
+            'Usage: /SEARCHUSER [options] <usernick>\n'
+            'Options:\n'
+            '    <usernick>     : All or part of a user nick to find.\n'
+            '                     Regex is allowed.\n'
+            '    -a, --all      : Searches all current channels, not\n'
+            '                     just the current channel.\n'
+            '    -H,--host      : Search host also.\n' +
+            '    -o,--onlyhost  : Only search hosts, not nicks.\n'
+            '    -t,--tab       : Show output in the xtools tab.')},
+    'wash': {
+        'desc': None,
+        'func': cmd_whitewash,
+        'enabled': True,
+        'help': None},
+    'whitewash': {
+        'desc': 'Prints a lot of whitespace to clear the chat window.',
+        'func': cmd_whitewash,
+        'enabled': True,
+        'help': (
+            'Usage: /WHITEWASH [number_of_lines]\n'
+            'Options:\n'
+            '    number_of_lines  : Print the specified amount of lines.\n'
+            '                       Default: 50')},
+    'whosaid': {
+        'desc': None,
+        'func': cmd_findtext,
+        'enabled': True,
+        'help': None},
+    'xignore': {
+        'desc': 'Add/Remove or list ignored nicks.',
+        'func': cmd_xignore,
+        'enabled': True,
+        'help': (
+            'Usage: /XIGNORE <nick>\n'
+            '       /XIGNORE -r <nick>\n'
+            '       /XIGNORE [-c | -d | -l | -m]\n'
+            'Options:\n'
+            '    <nick>       : Regex or text for nick to ignore.\n'
+            '    -c,--clear   : Clear the ignored list.\n'
+            '    -d,--delete  : Delete all ignored messages.\n'
+            '    -l,--list    : List all ignored nicks.\n'
+            '    -m,--msgs    : Print all ignored messages.\n'
+            '    -r,--remove  : Remove nick by number or name.\n'
+            '    -t,--tab     : Show output in the xtools tab\n'
+            '\n    * With no arguments passed, all ignored nicks are listed.'
+            '\n    * You can pass several space-separated nicks.')},
+    'xtools': {
+        'desc': 'Show command info or xtools version.',
+        'func': cmd_xtools,
+        'enabled': True,
+        'help': (
+            'Usage: /XTOOLS [-v] | [[-d | -h] <cmdname>]\n'
+            'Options:\n'
+            '    <cmdname>               : Show help for a command.\n'
+            '                              (same as /help cmdname)\n'
+            '    -d [cmd],--desc [cmd]   : Show description for a command,\n'
+            '                              or all commands.\n'
+            '    -h [cmd],--help [cmd]   : Show help for a command,\n'
+            '                              or all commands.\n'
+            '    -v,--version            : Show version.\n'
+            '\n    * If no options are given, -d is assumed.')},
+}
 
-# Help for commands
-cmd_help = {'eval':
-            ('Usage: /EVAL [-c [nick]] [-r] <code>\n'
-             'Options:\n'
-             '    -c [n],--chat [n] : Send as msg to current channel.\n'
-             '                        Newlines are replaced with \\\\n,\n'
-             '                        and long output is truncated.\n'
-             '                        If a nick (n) is given, mention the\n'
-             '                        nick in the message.\n\n'
-             '                        * Nick must come before eval code,\n'
-             '                          and nick must be present in the\n'
-             '                          current channel.\n'
-             '    -r,--result       : Send result only, no query is sent.\n\n'
-             '    ** Warning: This is an unprotected eval, it will eval\n'
-             '                whatever code you give it. It only accepts\n'
-             '                input from you, so you only have yourself to\n'
-             '                blame when something goes wrong.\n'
-             '                It is smarter than the plain eval() function,\n'
-             '                which makes it more dangerous too.\n\n'
-             '    ** DO NOT import os;os.system(\'rm -rf /\')\n'
-             '    ** DO NOT print(open(\'mypassword.txt\').read())\n'
-             '    ** DO NOT do anything you wouldn\'t do in a python \n'
-             '       interpreter.'
-             ),
-            'findtext':
-            ('Usage: /FINDTEXT [options]\n'
-             'Options:\n'
-             '     -a,--all   : Search all open windows.\n'
-             '     -n,--nick  : Search nicks only.'),
-
-            'listusers':
-            ('Usage: /LISTUSERS [options]\n'
-             'Options:\n'
-             '    -a,--all    : List from all channels, not just the\n'
-             '                  current channel.\n'
-             '    -c,--count  : Show count only.'),
-
-            'searchuser':
-            ('Usage: /SEARCHUSER [options] <usernick>\n'
-             'Options:\n'
-             '    <usernick>     : All or part of a user nick to find.\n'
-             '                     Regex is allowed.\n'
-             '    -a, --all      : Searches all current channels, not\n'
-             '                     just the current channel.\n'
-             '    -h,--host      : Search host also.\n' +
-             '    -o,--onlyhost  : Only search hosts, not nicks.\n'),
-            'whitewash':
-            ('Usage: /WHITEWASH [number_of_lines]\n'
-             'Options:\n'
-             '    number_of_lines  : Print the specified amount of lines.\n'
-             '                       Default: 50'),
-            'xignore':
-            ('Usage: /XIGNORE <nick>\n'
-             '       /XIGNORE -r <nick>\n'
-             '       /XIGNORE [-c | -l | -m]\n'
-             'Options:\n'
-             '    <nick>       : Regex or text for nick to ignore.\n'
-             '    -c,--clear   : Clear the ignored list.\n'
-             '    -l,--list    : List all ignored nicks.\n'
-             '    -m,--msgs    : Print all ignored messages.\n'
-             '    -r,--remove  : Remove nick by number or name.\n'
-             '\n    * With no arguments passed, all ignored nicks are listed.'
-             '\n    * You can pass several space-separated nicks.'
-             ),
-            'xtools':
-            ('Usage: /XTOOLS [-v] | [[-d | -h] <cmdname>]\n'
-             'Options:\n'
-             '    <cmdname>               : Show help for a command.\n'
-             '                              (same as /help cmdname)\n'
-             '    -d [cmd],--desc [cmd]   : Show description for a command,\n'
-             '                              or all commands.\n'
-             '    -h [cmd],--help [cmd]   : Show help for a command,\n'
-             '                              or all commands.\n'
-             '    -v,--version            : Show version.\n'
-             '\n    * If no options are given, -d is assumed.'),
-            }
 # Command aliases
 # {'aliasname': {'originalcmd': {'helpfix': ('REPLACE', 'REPLACEWITH')}}}
-cmd_aliases = {'finduser': {'searchuser': {'helpfix': ('SEARCH', 'FIND')},
-                            },
-               'whosaid': {'findtext': {'helpfix': ('FINDTEXT', 'WHOSAID')},
-                           },
-               'wash': {'whitewash': {'helpfix': ('WHITEWASH', 'WASH')}
-                        },
-               }
+cmd_aliases = {
+    'finduser': {'searchuser': {'helpfix': ('SEARCH', 'FIND')}},
+    'whosaid': {'findtext': {'helpfix': ('FINDTEXT', 'WHOSAID')}},
+    'wash': {'whitewash': {'helpfix': ('WHITEWASH', 'WASH')}},
+}
 
 # Load Colors
-COLORS = build_color_table()
+xtools.colors = build_color_table()
 
 # Load Preferences
 load_prefs()
 load_ignored_nicks()
+load_catchers()
 
 # Fix help and descriptions for aliases
 for aliasname in cmd_aliases.keys():
     # Fix help
     for cmd in cmd_aliases[aliasname]:
         replacestr, replacewith = cmd_aliases[aliasname][cmd]['helpfix']
-        cmd_help[aliasname] = cmd_help[cmd].replace(replacestr, replacewith)
+        fixedhelp = commands[cmd]['help'].replace(replacestr, replacewith)
+        commands[aliasname]['help'] = fixedhelp
     # Fix description
     aliasforcmds = list(cmd_aliases[aliasname].keys())
     aliasfor = aliasforcmds[0]
@@ -1535,12 +2467,12 @@ for cmdname in commands.keys():
         xchat.hook_command(cmdname.upper(),
                            commands[cmdname]['func'],
                            userdata=None,
-                           help=cmd_help[cmdname])
+                           help=commands[cmdname]['help'])
 
 # Hook into channel msgs
-for eventname in ('Channel Message', 'Channel Msg Hilight', 'Your Message'):
+for eventname in ('Channel Message', 'Channel Msg Hilight',
+                  'Channel Action', 'Channel Action Hilight', 'Your Message'):
     xchat.hook_print(eventname, filter_message, userdata=eventname)
 
 # Load Status Message
-print(color_text(color='blue',
-                 text='{} loaded.'.format(VERSIONSTR)))
+print(colorstr('blue', '{} loaded.'.format(VERSIONSTR)))

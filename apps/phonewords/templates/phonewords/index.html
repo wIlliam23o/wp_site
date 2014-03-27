@@ -33,7 +33,9 @@
 {% block content %}
     <div class='phonewords-container'>
         <div class='phonewords-header-box'>
-            <h3 class='header phonewords-header'>PhoneWords</h3>
+            <h3 class='header phonewords-header'>
+                PhoneWords
+            </h3>
             <span class='version'>version {{ version }}</span>
         </div>
         <!-- App container -->
@@ -45,11 +47,19 @@
                         Word or number to look up:
                     </span>
                     <input type='text' name='query' id='query-box' class='input-text app-input-text' maxlength='8' required='True'>
-                    <a href='javascript: void(0);' onclick='javascript: phonewords.do_lookup();'>
+                    <a href='javascript: void(0);' onclick='javascript: phonewords.do_lookup();' title='check this number/word.'>
                         <div class='submit-button app-submit-button'>
                             <span>lookup</span>
                         </div>
                     </a>
+                    {% if hasargs %}
+                        <!-- link back to landing page if we're not on it already -->
+                        <a href='/apps/phonewords' title='help for phonewords'>
+                            <div class='submit-button app-submit-button'>
+                                <span>help</span>
+                            </div>
+                        </a>
+                    {% endif %}
                 </form>
             </div>
             <!-- Results Area -->
@@ -96,9 +106,16 @@
                     {% else %}
                         <!-- Default index page (or No args/Bad args) -->
                         <div class='phonewords-results-box' style='background: white;'>
-                            <span class='I'>
+                            <h3 class='title'>Usage:</h3>
+                            <p class='desc'>
                                 Enter a small word or a seven digit number.
-                            </span>
+                                <br>
+                                If a word is entered (any alphabetical character),
+                                the reverse number-lookup is used.
+                                <br>
+                                If a number is entered, word-lookup is used.
+                            </p>
+
                             <h3 class='title'>About:</h3>
                             <p class='desc'>
                                 This utility will find the phone-number for a
@@ -107,11 +124,12 @@
                             </p>
                             <p class='desc'>
                                 <span class='phonewords-warning'>
-                                    It does not save phone numbers
-                                </span>
-                                , nor does it attach
-                                a given number to your ip address. There is no way for
-                                it to know if you are entering your 
+                                    It does not save your identity.
+                                </span><br>
+                                Phone numbers are cached for fast lookup,
+                                but no identifying information is attached to
+                                the number.
+                                There is no way for it to know if you are entering your 
                                 <span class='I'>real number</span> anyway.
                                 <br><br>
                                 This is an open-source site, you can look at the source
@@ -121,27 +139,37 @@
                                 </a>.
                             </p>
                             <h3 class='title'>Words:</h3>
-                            <p class='desc'>
+                            <div class='desc'>
                                 Any word that is 3 to 7 characters long can be entered,
-                                but non-alphabetical characters will not be converted. 
-                                <h3 class='title'>Word Example:</h3>
-                                <p class='desc'>
-                                    If you enter 'niceapp', the response would be <code>niceapp : 642-3277</code>
-                                </p>
-                            </p>
+                                but non-alphabetical characters will not be converted.
+                                <div class='phonewords-desc-example'>
+                                    <h3 class='title'>Example:</h3>
+                                    <p class='desc'>
+                                        If you enter 'niceapp', the response would be <code>niceapp : 642-3277</code>.
+                                    </p>
+                                </div>
+                            </div>
                             <h3 class='title'>Numbers:</h3>
-                            <p class='desc'>
+                            <div class='desc'>
                                 For numbers you may use a hyphen, but other non-number characters
                                 are rejected. The limit is seven due to the number of comparisons and
                                 combinations that have to be calculated. The limit ensures
                                 some kind of a reasonable response time.
-                                <h3 class='title'>Number Example:</h3>
-                                <p class='desc'>
-                                    If you enter '762-7827', the response would include about 70 results
-                                    including <code>smart27 : smart</code>, <code>7627tap : tap</code>,
-                                    <code>snap827 : snap</code>, and the combined words like <code>snaptap : snaptap</code>.
-                                </p>
-                            </p>
+                                <div class='phonewords-desc-example'>
+                                    <h3 class='title'>Number Example:</h3>
+                                    <p class='desc'>
+                                        If you enter '762-7827', the response would be about 70 results
+                                        including:
+                                        <br>
+                                    </p>
+                                    <div class='codewrap phonewords-desc-example-codewrap'>
+                                        smart27 : smart<br>
+                                        7627tap : tap<br>
+                                        snap827 : snap<br>
+                                        snaptap : snaptop (a combined result)
+                                    </div>
+                                </div>
+                            </div>
 
 
                     {% endif %}

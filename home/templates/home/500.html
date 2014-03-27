@@ -3,29 +3,44 @@
 
 {% block content %}
 	<div class='notfound-box'>
-		<span class='notfound-message'>
-			Server Error.
-			<br/>
-			Something very bad just happened.
-		</span>
-		<br/>
-		{% if request_path %}
-			<span class='notfound-path'>
-				{{ request_path }}
-			</span>
+		{# Show messages from the messages framework #}
+		{% if messages %}
+			    {% for message in messages %}
+			    	{% if message.tags == 'error' %}
+			    		<div class="msg-framework-error">
+			    			{{ message }}
+			    		</div>
+			    	{% endif %}
+			    {% endfor %}
+		{% else %}
+			<div class='msg-framework-error'>
+				Server Error.
+			</div>
+			<div class='notfound-message'>
+				Something very bad just happened.
+			</div>
 		{% endif %}
-		<br/>
-		<span class='notfound-home-message'>
-			<br>
-			Sorry, this was my fault.
-			<br>
-			<br>
-			An email has been sent to me regarding this error. For now, try one of the links below. -Cj
-			<br>
+
+		{% if request_path %}
+			<div class='notfound-path'>
+				{{ request_path }}
+			</div>
+		{% endif %}
+
+		<div class='notfound-home-message'>
+			Sorry, this was probably my fault.
+			An email has been sent to me regarding this error.
+			It will be fixed as soon as possible. -Cj
+		</div>
+		<div class='notfound-home-message'>
 			<a href='/'>Click here to go to the home page</a>,
-			<br/>
-			<br/>
-			Or you can browse my <a href='/projects'>projects</a> or <a href='/blog'>blog</a>.
-		</span>		
+		</div>
+		<div class='notfound-home-message'>
+			Or you can browse my 
+			<a href='/projects'>projects</a>,
+			<a href='/blog'>blog</a>,
+			<a href='/misc'>misc. stuff</a>,
+			or <a href='/apps'>apps</a> page.
+		</div>		
 	</div>
 {% endblock %}

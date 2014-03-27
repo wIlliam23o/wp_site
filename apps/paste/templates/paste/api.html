@@ -1,0 +1,132 @@
+{% extends "home/main.html" %}
+{% load wp_tags %}
+{% block title %}- Paste - API{% endblock %}
+
+{% block extrastyle %}
+    <link rel='stylesheet' href='/static/css/paste.min.css' type='text/css'/>
+{% endblock %}
+
+{% block content %}
+<div class='paste-page-header'>
+    <div class='paste-page-header-title'>
+        <h3 class='header'>
+            Paste API
+        </h3>
+    </div>
+    <div class='paste-page-header-text'>
+        A public api that allows you to view pastes as JSON objects.
+    </div>
+    <div class='paste-listing-surround'>
+        <div class='paste-api-section'>
+            <h3 class='header paste-api-header'>
+                Retrieving
+            </h3>
+            <div class='paste-api-section-content'>
+                <div>
+                    Pastes are available for viewing in JSON form. Access them using
+                    the api url like this:
+                </div>
+                <div class='paste-api-section-json'>
+                    <code>http://{% if server_name %}{{ server_name }}{% else %}welbornprod.com{% endif %}/paste/api/?id=&lt;paste_id&gt;</code>
+                </div>
+
+                <div class='paste-api-section-paragraph'>
+                Id format:
+<pre class='codewrap' style='display: block;'>
+&lt;paste_id&gt; : a valid paste id.
+all        : same as 'latest'.
+latest     : list of all pastes sorted by reverse date. (last paste is first)
+top        : list of all pastes sorted by view_count. (highest view count is first)
+</pre>
+                </div>
+            </div>
+        </div>
+        <div class='paste-api-section'>
+            <h3 class='header paste-api-header'>
+                Responses
+            </h3>
+            <div class='paste-api-section-content'>
+                <div>
+                    All responses are in JSON. The 'status' attribute will tell you
+                    if the paste retrieval was a success or not.
+                </div>
+                <div class='paste-api-section-paragraph'>
+                    Example of a good response:
+                    <div class='paste-api-section-codelabel'>
+                        Single paste:
+                        <div class='paste-api-section-json'>
+<pre class='codewrap'>
+{
+    'status': 'ok',
+    'id': 'asdf',
+    'views': 1,
+    'title': 'test',
+    'content': 'hmm..',
+    'author': '',
+    'date': '2014-03-26 01:42:56.667001',
+    'message': 'Paste asdf retrieved.',
+    'replycount': 2,
+    'replies': ['ftrh', 'dfrt'], // Reply paste ids.
+    'replyto': 'fged' // Parent id
+}
+</pre>
+                        </div>
+                    </div>
+                    <div class='paste-api-section-codelabel'>
+                        Listing:
+                        <div class='paste-api-section-json'>
+<pre class='codewrap'>
+{
+    'status': 'ok',
+    'message': 'Pastes retrieved.',
+    'count': 2,
+    'pastes': [{ ..paste1 }, { ..paste2 }]
+}
+</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class='paste-api-section-paragraph'>
+                    Example of a bad response:
+                    <div class='paste-api-section-codelabel'>
+                        Single paste or listing:
+                        <div class='paste-api-section-json'>
+<pre class='codewrap'>
+{
+    'status': 'error',
+    'message': 'Paste not found.',
+    'count':0,
+    'pastes':[],
+    ..all single-paste attributes (empty values)
+}
+</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class='paste-api-section'>
+            <h3 class='header paste-api-header'>
+                Try it
+            </h3>
+            <div class='paste-api-section-content'>
+                You can try it in your browser right now.
+                Hopefully you are using a browser that 'pretty prints' JSON.
+                <div>
+                    <a href='/paste/api?id=latest' target='_blank'>
+                        <div class='paste-api-section-paragraph'>
+                            View latest pastes
+                        </div>
+                    </a>
+                    <a href='/paste/api?id=top' target='_blank'>
+                        <div class='paste-api-section-paragraph'>
+                            View top pastes
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

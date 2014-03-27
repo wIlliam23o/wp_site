@@ -6,12 +6,16 @@
 #  2.0 is considered a new beginning because the project
 #  is moving towards a backward-incompatible state,
 #  where all python 2 'hacks' will be removed.)
-WPVERSION = '2.0.3'
+WPVERSION = '2.1.0'
 
 # file/path (path joining)
 import os.path
 from sys import version as sysversion
 SYSVERSION = sysversion
+
+# Django messages framework, message-levels
+from django.contrib.messages import constants as message_constants
+MESSAGE_LEVEL = message_constants.ERROR
 
 # DEBUG is in settings_local...
 
@@ -27,21 +31,21 @@ BASE_PARENT = os.path.split(BASE_DIR)[0]
 if 'webapps' in BASE_PARENT:
     # live site directories
     STATIC_PARENT = BASE_PARENT
+    # Static dirs based on test/live site. Set in local_settings.
+    STATIC_ROOT = 'unknown'
     MEDIA_URL = 'http://welbornprod.com/media/'
-    SERVER_LOC = 'remote'
+    SERVER_LOCATION = 'remote'
 else:
     # local development directories
     STATIC_PARENT = '/var/www/'
+    STATIC_ROOT = '/var/www/static'
     MEDIA_URL = 'http://127.0.0.1/media/'
-    SERVER_LOC = 'local'
+    SERVER_LOCATION = 'local'
 
 
 # Static/Media directories.
-STATIC_ROOT = os.path.join(STATIC_PARENT, "static")
 MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
     
-# URL prefix for static files.
-STATIC_URL = '/static/'
 # main app (location of settings.py)
 MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
@@ -61,9 +65,8 @@ if os.path.isfile(KEY_INTERNAL_IPS_FILE):
                 # list of ips in file.
                 ips_list = []
                 for ip_ in ip_raw.split('\n'):
-                    # allows '1.1.1.01' as the least ip length right now,
-                    # but not '1.1.1.1'.
-                    if len(ip_) > 7:
+                    ip_ = ip_.strip()
+                    if len(ip_) > 7 and (not ip_.startswith('#')):
                         _internal_ips.append(ip_)
             else:
                 # single ip in file
@@ -71,6 +74,9 @@ if os.path.isfile(KEY_INTERNAL_IPS_FILE):
     except Exception as ex:
         pass
 
+# Add local dev ips to safe list.
+_internal_ips.extend(['192.168.0.{}'.format(n) for n in range(2, 21)])
+_internal_ips.extend(['192.168.1.{}'.format(n) for n in range(2, 21)])
 # set global allowed ips
 INTERNAL_IPS = tuple(_internal_ips)
 
@@ -92,6 +98,7 @@ DATABASES = {
     }
 }
 
+#------------------ Settings above this may be squashed by settings_local -----
 # Fill in missing settings from local file (not in git).
 SECRET_LOCAL_SETTINGS = os.path.join(BASE_DIR, 'settings_local.py')
 if sysversion < '3':
@@ -144,7 +151,7 @@ USE_I18N = True
 USE_L10N = True
 
 # If you set this to False, Django will not use timezone-aware datetimes.
-USE_TZ = True
+USE_TZ = False
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -183,10 +190,25 @@ TEMPLATE_LOADERS = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.core.context_processors.request",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.media",
-    "django.contrib.auth.context_processors.auth",
+    'django.core.context_processors.request',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.media',
+    'django.contrib.auth.context_processors.auth',
+    'django.contrib.messages.context_processors.messages',
+)
+
+TEMPLATE_DIRS = (
+    # Put strings here, like "/home/html/django_templates" or
+    # "C:/www/django/templates".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
+    TEMPLATES_BASE,
+    os.path.join(TEMPLATES_BASE, 'admin/templates'),
+    os.path.join(TEMPLATES_BASE, 'admindoc/templates'),
+    # Include project pages as possible templates.
+    os.path.join(BASE_DIR, 'projects/static/html'),
+    # Include blog pages as possible templates.
+    os.path.join(BASE_DIR, 'blogger/static/html'),
 )
 
 MIDDLEWARE_CLASSES = (
@@ -216,17 +238,6 @@ ROOT_URLCONF = 'wp_main.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'wp_main.wsgi.application'
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or
-    # "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    TEMPLATES_BASE,
-    os.path.join(TEMPLATES_BASE, "admin/templates"),
-    os.path.join(TEMPLATES_BASE, "admindoc/templates"),
-)
-
-
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -255,6 +266,7 @@ INSTALLED_APPS = (
     'misc',
     'apps',  # handles urls for all sub-apps.
     'apps.phonewords',
+    'apps.paste',
     
 )
 
@@ -276,7 +288,7 @@ LOGGING = {
 
 # Only turn error emails on with the remote server
 # They are driving me nuts when I'm expirimenting locally and DEBUG == False.
-if SERVER_LOC == 'remote':
+if SERVER_LOCATION == 'remote':
     LOGGING['handlers'] = {'mail_admins': {
         'level': 'ERROR',
         'filters': ['require_debug_false'],

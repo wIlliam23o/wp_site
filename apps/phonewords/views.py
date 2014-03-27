@@ -8,8 +8,18 @@ from django.conf import settings
 # Local stuff
 from wp_main.utilities import responses, utilities
 from wp_main.utilities.wp_logging import logger
-from apps.phonewords import app_version, phone_words
-_log = logger('apps.phonewords').log
+from apps.phonewords import phone_words, pwtools
+
+from apps.models import wp_app
+_log = logger('apps.phonewords.views').log
+
+try:
+    phonewordsapp = wp_app.objects.get(alias='phonewords')
+    app_version = phonewordsapp.version
+except Exception as ex:
+    _log.error('Phonewords has no database entry!\n'
+               'Version will be incorrect:\n{}'.format(ex))
+    app_version = '1.0.0'
 
 
 @csrf.csrf_protect
@@ -36,29 +46,58 @@ def view_index(request):
 
 
 @csrf.csrf_protect
-def view_results(request, args):
+def view_results(request, args=None):
     """ Process number/word given by request args. """
 
     errors = None
     results = None
     total = None
-    lookupfunc, query = get_lookup_func(args['query'])
+    rawquery = args['query']
+    lookupfunc, query, method = get_lookup_func(rawquery)
+    cache_used = False
+    # Try cached results first (for numbers only)
+    if method == 'number':
+        cachedresult = pwtools.lookup_results(query)
+        if cachedresult:
+            cache_used = True
+            _log.debug('Using cached result: {}'.format(cachedresult))
+            total = cachedresult.attempts
+            results = pwtools.get_results(cachedresult)
+            if results:
+                # Cancel lookup, we have cached results.
+                lookupfunc = None
+
+        else:
+            _log.debug('No cached found for: {}'.format(query))
+
     if lookupfunc:
         # Get wp words file.
-        wordfile = os.path.join(settings.BASE_DIR, 'apps/phonewords/words')
+        wordfile = os.path.join(settings.BASE_DIR,
+                                'apps/phonewords/words')
         if os.path.isfile(wordfile):
             # Get results.
             try:
                 rawresults = lookupfunc(query, wordfile=wordfile)
-                results, total = fix_results(rawresults)
             except ValueError as exval:
                 errors = exval
             except Exception as ex:
                 _log.error('Error looking up number: {}\n{}'.format(query, ex))
                 errors = ex
+            else:
+                # Good results, fix them.
+                try:
+                    results, total = fix_results(rawresults)
+                except Exception as ex:
+                    _log.error('Error fixing results:\n{}'.format(ex))
+                    errors = Exception('Sorry, there was an error parsing '
+                                       'the results.<br>{}'.format(ex))
+                # Cache these results for later if its a number.
+                if method == 'number' and (not cache_used):
+                    pwtools.save_results(query, results, total)
         else:
             _log.error('missing word file: {}'.format(wordfile))
             errors = ValueError('Can\'t find word file!')
+
     # Return response.
     context = {'request': request,
                'version': app_version,
@@ -92,28 +131,59 @@ def fix_results(results):
         return results, 0
 
 
+def get_lookup_cmd(query):
+    """ Determines cmdline args needed to run phonewords,
+        uses -r if a word was given, and normal if a number was given.
+    """
+
+    if query and ('-' in query):
+        query = query.replace('-', '')
+
+    lookupmethod = get_lookup_method(query)
+    if lookupmethod:
+        argmap = {'word': [query, '-r', '-p'],
+                  'number': [query, '-p'],
+                  }
+        return argmap.get(lookupmethod, None), query, lookupmethod
+    # no lookup args for that query.
+    return None, query, lookupmethod
+
+
 def get_lookup_func(query):
     """ Determines if this is a word or number lookup,
         returns the proper function.
         If no query is given, returns None.
     """
-    # Trim some characters from the query.
-    query = query.replace('-', '').strip() if query else None
+    if query and ('-' in query):
+        query = query.replace('-', '')
 
-    # If we still have a query, try to get the lookup function.
+    lookupmethod = get_lookup_method(query)
+    if lookupmethod:
+        funcmap = {'word': phone_words.get_phonenumber,
+                   'number': phone_words.get_phonewords,
+                   }
+        return funcmap.get(lookupmethod, None), query, lookupmethod
+    # no lookup method for that query
+    return None, query, lookupmethod
+
+
+def get_lookup_method(query):
+    """ Get lookup args depending query type (number or word)
+        Returns 'number', 'word', or None (for bad-query)
+    """
+    # Trim characters from query.
+    if query:
+        query = query.replace('-', '').strip()
+
+    querytype = None
+    # Still have query after trimming, determine method.
     if query:
         try:
-            # Normal lookup, get phone words.
             intval = int(query)
             query = str(intval)
-        except:
-            # Reverse lookup, get phone number.
-            lookupfunc = phone_words.get_phonenumber
+        except ValueError:
+            querytype = 'word'
         else:
-            # Normal value passed.
-            lookupfunc = phone_words.get_phonewords
-    else:
-        # No query given.
-        lookupfunc = None
+            querytype = 'number'
 
-    return lookupfunc, query
+    return querytype

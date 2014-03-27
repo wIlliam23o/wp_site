@@ -22,15 +22,16 @@ _log = logger('utilities.highlighter').log
 # Regex pattern for wp highlight codes.
 # [language]insert code here[/language]
 # Use .findall() with it.
-# TODO: the [^\[/\]] part needs to be rethought.
-#       it is messing with statements such as:
-#       [python]mycode('/')[/python] because of the / inside.
-#       a character change may be needed.
 HCODEPAT = re.compile(r'(\[[\w\d]+\])([^\[/]+)(\[/[\w\d+]+\])')
-# Regex pattern for grabbing lexer names from:
-# <span class='highlight-embedded LEXERNAME'>
-# TODO: SHOULD BE REMOVED AFTER ALL POSTS/PROJECTS SWITCH TO HCODEPAT STYLE.
-LEXERPAT = re.compile(r'\w+[ ]highlight-embedded|highlight-embedded[ ]\w+')
+# This is an alternate method for highlight codes.
+# It uses [language]text[?language] to recognize the codes.
+# Use it for code that contains the '/' character.
+HCODEPAT2 = re.compile(r'(\[[\w\d]+\])([^\[\?]+)(\[\?[\w\d+]+\])')
+
+# DELETE: Regex pattern for grabbing lexer names from:
+# DELETE: <span class='highlight-embedded LEXERNAME'>
+# DELETE: TODO: REMOVE AFTER ALL POSTS/PROJECTS SWITCH TO HCODEPAT STYLE.
+# DELETE: LEXERPAT = re.compile(r'\w+[ ]highlight-embedded|highlight-embedded[ ]\w+') # noqa
 
 # List of valid lexer names.
 LEXERNAMES = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
@@ -38,10 +39,27 @@ LEXERNAMES = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
 # Basic style codes
 STYLECODES = {'b': '<span class=\'B\'>{}</span>',
               'i': '<span class=\'I\'>{}</span>',
+              # This 'l' (link) code requires 2 arguments separated by |.
+              # The first arg is the text, the second is the link target.
+              # Links are opened in a new (blank) window.
+              'l': '<a href=\'{1}\' target=\'_blank\'>{0}</a>',
+              'u': '<span style=\'text-decoration: underline;\'>{}</span>',
+              'code': '<div class=\'codewrap\'>{}</div>',
+              # These are used to build cmd-help lists.
+              'cmdoption': '<div class=\'cmdoption\'>{}</div>',
+              'cmdvalue': '<div class=\'cmdvalue\'>{}</div>',
               }
+# Aliases for pygments lexer names. These are switched to the long name
+# before highlighting.
+STYLEALIASES = {'py': 'python',
+                'cmdopt': 'cmdoption',
+                'cmdval': 'cmdvalue',
+                'copt': 'cmdoption',
+                'cval': 'cmdvalue',
+                }
 STYLENAMES = list(STYLECODES.keys())
 
-
+ 
 class wp_highlighter(object):
 
     """ Class for highlighting code and returning html markup. """
@@ -112,14 +130,13 @@ def highlight_inline(scode, tag_="pre"):
                    'will not be highlighted.')
         return scode
     slines = scode.split('\n')
-    sclass = ""
+    sclass = ''
     inblock = False
     current_block = []
     lexer = None
     formatter = formatters.html.HtmlFormatter(linenos=False, style="default")
     sfinished = scode
-    # Styles that won't be highlighted, but wrapped in their own class,
-    # none will get at least a 'highlighted-inline' class.
+    # Styles that won't be highlighted, but wrapped in a div
     basic_styles = ('none', 'codewrap', 'sampwrap', 'highlighted-inline')
     for sline in slines:
         strim = sline.replace(' ', '').replace('\t', '')
@@ -133,22 +150,20 @@ def highlight_inline(scode, tag_="pre"):
                 # class = 'none or 'codewrap', etc. was used, just wrap it.
                 if lexer in basic_styles:
                     # No highlighting, just wrap it.
+                    # if pre class='codewrap' was used, the 'codewrap' style
+                    # will still be applied to the pre tag.
+                    # if pre class='none' was used, the 'highlighted-inline'
+                    # class will be applied.
                     if lexer == 'none':
-                        newclass = 'highlighted-inline'
+                        newblock = ''.join(['<div class="highlighted-inline">',
+                                            '{}'.format(soldblock),
+                                            '</div>'])
                     else:
-                        newclass = lexer
-                    # left here for testing. TODO: decide and remove this bool.
-                    withclass = False
-                    if withclass:
-                        newheader = '<div class=\'{}\'>'.format(newclass)
-                    else:
-                        newheader = '<div>'
-                    newblock = ['\n{}'.format(newheader),
-                                soldblock,
-                                '</div>\n',
-                                ]
-                    sfinished = sfinished.replace(soldblock,
-                                                  '\n'.join(newblock))
+                        # plain div, the parent tag applied some style.
+                        newblock = '<div>\n{}\n</div>'.format(soldblock)
+                    # newlines for human-readable source.
+                    newblock = '\n{}\n'.format(newblock)
+                    sfinished = sfinished.replace(soldblock, newblock)
                 # must have valid lexer for highlighting
                 elif lexer is not None:
                     # Highlight the old block of text.
@@ -294,12 +309,8 @@ def highlight_codes(scode):
     """ Highlights embedded wp highlight codes.
         like: [lang]lang code here[/lang]
     """
-    # TODO: currently breaks if input contains / characters such as:
-    #      [python]os.system('rm -rf /')[/python]
-    #      ...because the regex matches the first / and decides it is not a
-    #      complete code wrap. Better regex or detection is needed.
-    #      the / character is used all the time in code. Maybe change from:
-    #      [code]..[/code] to [code]..[~code] (i can't think of a good one now)
+    # ...alternate method [code]...[?code] uses ? instead of / to get around
+    #    code with / in it. (uses HCODEPAT2 to find them)
     if isinstance(scode, (list, tuple)):
         return_list = True
         scode = '\n'.join(scode)
@@ -307,7 +318,9 @@ def highlight_codes(scode):
         return_list = False
 
     def get_language(mgroups):
-        """ Retrieve desired language from match groups. """
+        """ Retrieve desired language from match groups.
+            Gets language name from the first group matched: '[language]'
+        """
 
         if mgroups:
             lang = mgroups[0].strip('[').strip(']')
@@ -346,17 +359,33 @@ def highlight_codes(scode):
             _log.debug('highlight_codes: Error highlighting.\n{}'.format(ex))
             return code
 
-    # Search lines..
+    # Search lines for original codes (HCODEPAT)..
     matches = HCODEPAT.findall(scode)
+    newmatches = HCODEPAT2.findall(scode)
+    if newmatches:
+        # New-style matches were found, add them to the 'matches' list.
+        matches.extend(newmatches)
+
     for mgroups in matches:
         langname = get_language(mgroups)
         code = get_code(mgroups)
+        # Aliases are checked first, and converted to the long name.
+        if langname in STYLEALIASES.keys():
+            langname = STYLEALIASES[langname]
+        # Check if this is a style-code or lang-name and format accordingly.
         if langname in STYLENAMES:
             # catch basic style codes such as [b] and [i][/i].
-            newcode = STYLECODES[langname].format(code)
+            if '|' in code:
+                # This style requires two arguments.
+                styleargs = [s.strip() for s in code.split('|')]
+                newcode = STYLECODES[langname].format(*styleargs)
+            else:
+                # Basic style code, only needs 1 format argument.
+                newcode = STYLECODES[langname].format(code)
         else:
             # Do highlighting based on language name [python] or [bash].
             # (any valid pygments lexer)
+            # Try highlighting the code with this language/lexer name.
             newcode = try_highlight(code, langname)
         # Replace old text with new code.
         oldtext = ''.join(mgroups)

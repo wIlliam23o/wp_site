@@ -35,7 +35,7 @@
 {% block verticalmenu %}
 	<div id="file-menu" class="vertical-menu">
 		<ul id="file-menu-items" class="vertical-menu-main">
-			<!-- Items will be added dynamically -->
+			<!-- Items will be added dynamically with wpviewer.js -->
 		</ul>
 	</div>
 {% endblock %}
@@ -92,7 +92,8 @@
 			wptools.pre_ajax();
 
 			// Load initial file
-			view_file("{{ file }}");
+			wpviewer.set_current_file('{{ file }}');
+			view_file('{{ file }}');
 		});
 
 		window.onresize = function () {

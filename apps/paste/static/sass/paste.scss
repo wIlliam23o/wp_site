@@ -1,0 +1,363 @@
+@import 'welbornprod';
+
+#langselect {
+    @include border-radius(3px);
+    border-color: $bordermain;
+    border-width: 2px;
+    border-style: solid;
+    padding: 3px;
+    background-color: $whitedull;
+    color: $greymain;
+
+}
+
+.paste-header-box {
+    background-color: $whitedull;
+    @include border-radius(5px);
+    border-width: 2px;
+    border-color: $borderlight;
+    border-style: solid;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.paste-page-header {
+    margin-bottom: 10px;
+}
+
+.paste-page-header-title {
+    margin-left: 10px;
+}
+
+.paste-page-header-text {
+    margin-top: 10px;
+    margin-left: 10px;
+    color: greylight;
+}
+
+.paste-button-box {
+    position: relative;
+    display: inline-block;
+    margin-left: 15px;
+}
+
+#paste-btn {
+    // The actual 'paste it!' button itself.
+    margin-left: -10px;
+    margin-right: 10px;
+}
+
+.paste-button {
+    // Any paste/view button.
+    background-color: $whitedull;
+    display: inline-block;
+    font-size: $fontnormal;
+    text-transform: lowercase;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 3px;
+}
+
+.replies-button-box {
+    // Extra bit of style for the replies page.
+    display: block;
+}
+
+.paste-lang-box {
+    display: inline-block;
+}
+
+.paste-lang-label {
+    font-size: $fontsmaller;
+    display: inline-block;
+    vertical-align: top;
+    text-align: right;
+    width: 70px;
+    padding-top: 5px;
+    margin-right: 5px;
+    color: $greylight;
+}
+
+.paste-title {
+    font-size: $fontmedium;
+    text-shadow: $shadowtextmedium;
+}
+
+.paste-title-box {}
+
+.paste-title-label {
+    @extend .paste-lang-label;
+}
+
+.paste-title-date {
+    // groups the title and date in one box.
+    // each one still has it's own, but they need to be aligned.
+    position: relative;
+    display: inline-block;
+}
+
+
+.paste-author-box {}
+
+.paste-author {
+    // Author for an existing paste (if available)
+    display: inline-block;
+    font-size: $fontnormal;
+    font-weight: bold;
+    color: $greymain;
+    padding-top: 2px;    
+}
+.paste-author-label {
+    @extend .paste-lang-label;
+}
+
+.paste-date-box {
+    display: block;
+}
+
+.paste-date {
+    font-family: $fontssmall;
+    font-size: $fontsmall;
+    font-weight: bold;
+    color: $greylight;
+}
+
+.paste-date-label {
+    @extend .paste-lang-label;
+}
+
+.paste-replyto-box {
+    margin-top: 10px;
+}
+
+.paste-replyto-label {
+    @extend .paste-lang-label;
+}
+
+.paste-replyto-title {
+
+    display: inline-block;
+    font-size: $fontbigger;
+    text-shadow: $shadowtextmedium;
+    text-transform: lowercase;
+    color: $bluemain;
+
+    &:hover {
+        color: $bluelink;
+    }
+}
+
+/* Replies menu styles */
+.vertical-menu-reply-date {
+    @extend .paste-date;
+    font-weight: normal;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.vertical-menu-reply-all {
+    display: block;
+    text-transform: lowercase;
+}
+
+.vertical-menu-reply-count {
+    display: inline;
+    font-size: $fontsmall;
+}
+
+.vertical-menu-reply-int {
+    color: $bluemain;
+    font-family: $fontsmono;
+}
+
+/* Styles for replies.html */
+.paste-listing-surround {
+    margin: 15px;
+    padding: 10px;
+    background-color: $whitedull;
+    border-radius: 5px;
+    box-shadow: $shadowmedium;
+    text-align: left;
+}
+
+.replies-title-box {
+    display: block;
+}
+
+.replies-title-label {
+    display: inline-block;
+    margin-left: 10px;
+    text-transform: lowercase;
+    color: $greymain;
+}
+
+.replies-title-count {
+    display: inline-block;
+    font-family: $fontsmono;
+    font-weight: bold;
+    color: $bluemain;
+}
+
+.replies-title {
+    display: inline-block;
+    color: $bluemain;
+    font-size: $fontmedium;
+    text-shadow: $shadowtextmedium;
+}
+
+.replies-date-box {
+    @extend .paste-date-box;
+    margin-left: 10px;
+}
+
+.paste-listing-box {
+    // Container for all pastes (even if there are none)
+    padding: 10px;
+}
+
+.paste-listing-none-text {
+    // Style for message when there are no replies.
+    color: $redmain;
+    font-weight: bold;
+}
+
+/* Styles for listing individual pastes. */
+.paste-item {
+    // Container for single reply item.
+    @include border-radius(5px);
+    border-style: solid;
+    border-color: $bordermain;
+    border-width: 2px;
+    @include box-shadow($shadowbox);
+    background-color: $whitedull;
+    padding: 5px;
+    margin-bottom: 5px;
+    display: block;
+
+}
+
+.paste-item-title {
+    // Title for single reply item.
+    display: block;
+    font-size: $fontnormal;
+    font-weight: bold;
+    color: $bluemain;
+    text-transform: lowercase;
+
+    &:hover {
+        color: $bluelink;
+    }
+}
+
+.paste-item-lang-label {
+    display: block;
+    font-size: $fontsmaller;
+    color: $greylight;
+}
+
+.paste-item-lang {
+    display: inline;
+    font-size: $fontsmall;
+    color: $bluemain;
+}
+
+.paste-item-date {
+    // Date for single reply item.
+    @extend .paste-date;
+    display: block;
+}
+
+.paste-item-replies {
+    // Text for if a reply has replies of its own.
+    display: inline-block;
+    margin-left: 5px;
+    @include border-radius(5px);
+    border-color: $bordermain;
+    border-width: 1px;
+    border-style: solid;
+    padding: 1px;
+
+
+    font-family: $fontsnormal;
+    font-weight: bold;
+    font-size: $fontsmaller;
+    
+    color: $bluemain;
+
+    a {
+        color: $bluemain;
+        font-weight: bold;
+    }
+
+    a:hover {
+        color: $bluelink;
+        border-color: $bordermain;
+    }
+}
+
+.paste-item-views {
+    display: inline-block;
+    //margin-left: 5px;
+    @include border-radius(5px);
+    border-color: $bordermain;
+    border-width: 1px;
+    border-style: solid;
+    padding: 1px;
+
+    font-family: $fontsnormal;
+    font-weight: bold;
+    font-size: $fontsmaller;
+    color: $bluemain;
+}
+
+/* API landing page styles */
+.paste-api-section {
+    display: block;
+    background: $whitedull;
+}
+
+.paste-api-header {
+    display: block;
+    margin-bottom: 10px;
+    font-size: $fontbig;
+    text-shadow: $shadowtextbig;
+
+}
+
+.paste-api-section-content {
+    // The content for this section of api help.
+    @include border-radius(5px);
+    border-width: 1px;
+    border-style: solid;
+    border-color: $bordermain;
+    background: $whitedull;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.paste-api-section-paragraph {
+    font-size: $fontbigger;
+    margin-top: 10px;
+    margin-left: 10px;
+    color: $bluemain;
+}
+a .paste-api-section-paragraph {
+    display: inline-block;
+    margin-left: 10px;
+    &:hover {
+        color: $bluelink;
+    }
+}
+
+.paste-api-section-codelabel {
+    font-size: $fontsmaller;
+    margin-top: 10px;
+    margin-left: 10px;
+    color: $greymain;
+}
+
+.paste-api-section-json {
+    font-size: $fontnormal;
+    color: $greymain;
+}
+

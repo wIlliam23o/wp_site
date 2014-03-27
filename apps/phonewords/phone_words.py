@@ -16,30 +16,34 @@ from multiprocessing import Pool
 from docopt import docopt
 
 NAME = 'PhoneWords'
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
+SCRIPT = os.path.split(sys.argv[0])[1]
 
-# Default word list file to use if none was passed.
-FILENAME = '/usr/share/dict/words'
-
-usage_str = """phonewords.py
+usage_str = """{verstr}
 
     Usage:
-        phonewords.py <phonenumber> [wordfile] [-d] [-p] [-s]
-        phonewords.py <phonenumber> [wordfile] -T [-d] [-p] [-P num]
-        phonewords.py <word> -r
-        phonewords.py -t
-        phonewords.py -w word [wordfile]
+        {script} <phonenumber> [WORDFILE] [-d] [-p] [-s]
+        {script} <phonenumber> [WORDFILE] -T [-d] [-p] [-P num]
+        {script} <word> -r [-p]
+        {script} -t
+        {script} -w word [WORDFILE]
 
     Options:
         <phonenumber>           : Phone number to check.
         <word>                  : Word to find phone number for.
-        wordfile                : File to grab dictionary words from.
-                                  Defaults to {defaultfile}
+        WORDFILE                : File to grab dictionary words from.
+                                  Defaults to local words file,
+                                  or /usr/share/dict/words.
                                   ...or any file named 'words' in the current
                                      directory.
         -d,--debug              : Debug mode, may break normal operation.
         -h,--help               : Show this message.
+        -p,--parseable          : Output easy machine-parseable text.
+                                  For communicating with a calling process.
+                                  Each result is newline separated,
+                                  Combo and found word are tab separated,
+                                  and only good output will contain a tab.
         -P num,--procs num      : For testing purposes, number of processes
                                   to use when testing with -T.
         -r,--reverse            : Reverse lookup, find number from word.
@@ -48,7 +52,7 @@ usage_str = """phonewords.py
         -v,--version            : Show version.
         -w word,--wordtest word : Test word list to see if it contains a word.
 
-""".format(defaultfile=FILENAME)
+""".format(verstr=VERSIONSTR, script=SCRIPT)
 # Global flag for debug mode, gets set with '-d' or '--debug' cmdline arg.
 DEBUG = False
 
@@ -80,7 +84,7 @@ def main(argd):
     DEBUG = argd['--debug']
 
     reverse_mode = argd['--reverse']
-    wordfile = argd['wordfile'] if argd['wordfile'] else FILENAME
+    wordfile = argd['WORDFILE'] if argd['WORDFILE'] else get_defaultwordsfile()
 
     if argd['--test']:
         # Test Run for known matches.
@@ -101,10 +105,12 @@ def main(argd):
         ret = test_wordlist(wordfile, argd['--wordtest'])
     elif reverse_mode:
         # Word lookup.
-        ret = do_word(argd['<word>'])
+        ret = do_word(argd['<word>'], parseable=argd['--parseable'])
     else:
         # Number lookup.
-        ret = do_number(strip_number(argd['<phonenumber>']), wordfile=wordfile)
+        ret = do_number(strip_number(argd['<phonenumber>']),
+                        wordfile=wordfile,
+                        parseable=argd['--parseable'])
     return ret
 
 
@@ -134,7 +140,7 @@ def check_number(s):
     return (len(s) == 7) or (len(s) == 10)
 
 
-def do_number(number, wordfile=None, partialmatch=False, showall=False):
+def do_number(number, wordfile=None, parseable=False):
     """ Run lookup for all combinations of a number. """
     if not check_number(number):
         print('\nInvalid number!'
@@ -142,17 +148,17 @@ def do_number(number, wordfile=None, partialmatch=False, showall=False):
         return 1
 
     numberfmt = format_number(number)
-    print('Looking up combos for: {}'.format(numberfmt))
+    if not parseable:
+        print('Looking up combos for: {}'.format(numberfmt))
     
     try:
-        results, total = get_phonewords(number,
-                                        wordfile=wordfile,
-                                        partialmatch=partialmatch)
+        results, total = get_phonewords(number, wordfile=wordfile)
     except KeyboardInterrupt:
         print('\nUser cancelled.')
         pass
     except Exception as ex:
-        print('\nError during search:\n{}'.format(ex))
+        if not parseable:
+            print('\nError during search:\n{}'.format(ex))
         try:
             if results:
                 pass
@@ -160,28 +166,43 @@ def do_number(number, wordfile=None, partialmatch=False, showall=False):
             results = None
             total = 0
 
-    if results:
-        print('\nFound {} words:'.format(str(len(results))))
-        print_results(results)
+    if parseable:
+        # Machine readable output.
+        if results:
+            print_parseable(results)
+        else:
+            print('')
     else:
-        print('\nNo matches found.')
-    if total is not None:
-        print('\nTotal attempts: {}'.format(str(total)))
+        # Human readable output.
+        if results:
+            print('\nFound {} words:'.format(len(results)))
+            print_results(results)
+        else:
+            print('\nNo matches found.')
+        if total is not None:
+            print('\nTotal attempts: {}'.format(total))
 
     return 0
 
 
-def do_word(word):
+def do_word(word, parseable=False):
     """ Run the reverse word lookup. """
     word = word.replace('-', '')
     if not ((len(word) == 7) or (len(word) == 10)):
-        print('\nThis works better with words that '
-              'are 7 or 10 letters long.')
-    print('\nLooking up number for: {}'.format(word))
+        if not parseable:
+            print('\nThis works better with words that '
+                  'are 7 or 10 letters long.')
+    if not parseable:
+        print('\nLooking up number for: {}'.format(word))
 
     results = get_phonenumber(word)
     phonenum = results[list(results.keys())[0]]
-    print('\nFound number: {}'.format(format_number(phonenum)))
+    if parseable:
+        # Machine-readable format.
+        print('{}\t{}'.format(word, format_number(phonenum)))
+    else:
+        # Human-readable format.
+        print('\nFound number: {}'.format(format_number(phonenum)))
     return 0
 
 
@@ -245,59 +266,43 @@ def format_number(s):
 
 def get_defaultwordsfile():
     """ Retrieves the default filename for words file. """
-    # Use default file.
+    # order of preference for default file.
     if os.path.isfile('words'):
         return 'words'
+    elif os.path.isfile('words_trimmed'):
+        return 'words_trimmed'
     elif os.path.isfile('/usr/share/dict/words'):
         return '/usr/share/dict/words'
     return None
 
 
-def get_lettercombos(snumber, partialmatch=False, showall=False):
+def get_lettercombos(snumber):
     """ Gets possible letter combinations for a number.
+        Does no validation,
+        snumber string must contain ONLY number characters.
         No -, or spaces please.
     """
     numberlen = len(snumber)
-    lettersets = get_letterset(snumber)
-    words = set()
-
-    def debugprint(cstr, label=' Letter '):
-        if cstr not in words:
-            print('{} combo: {}'.format(label, cstr))
-
-    def noprint(*args, **kwargs):
-        pass
-
-    printfunc = debugprint if showall else noprint
-
-    for combos in itertools.product(*lettersets):
+    words = []
+    # Using product() because the positions of the letters matter.
+    # This will create every possible letter combination while retaining order.
+    # Ex:
+    #    numberset = [['a', 'b', 'c'], ['d', 'e', '']]
+    #    ..reveals combinations like: 'abc', 'aec', 'dbc', 'dec'
+    for combos in itertools.product(*get_letterset(snumber)):
         combostr = ''.join(combos)
-        combolen = len(combostr)
-        # easy match, full length combo.
-        if combolen == numberlen:
-            printfunc(combostr, label=' Letter')
-            words.add(combostr)
-        elif partialmatch and combolen > 3:
-            # Use combos that aren't full length.
-            # (slower, but finds more matches)
-            combostr = ''
-            for i in range(numberlen):
-                if combos[i]:
-                    combostr += combos[i]
-                else:
-                    combostr += snumber[i]
-            printfunc(combostr, label='Partial')
-            words.add(combostr)
-
-    return list(words)
+        if len(combostr) == numberlen:
+            if combostr not in words:
+                words.append(combostr)
+    return words
 
 
-def get_letterset(s):
-    """ Gets possible letter sets for a number. """
-    sets = []
-    for n in s:
-        sets.append(NUMBERS[n])
-    return sets
+def get_letterset(snumber):
+    """ Gets possible letter sets for a number.
+        No number validation is done,
+        the snumber string must contain ONLY number characters.
+    """
+    return [NUMBERS[n] for n in snumber]
 
 
 def get_phonenumber(word, **kwargs):
@@ -320,8 +325,7 @@ def get_phonenumber(word, **kwargs):
     return {word: format_number(numberstr)}
 
 
-#@profile
-def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
+def get_phonewords(number, wordfile=None, processes=2):
     """ Same as do_number, but for library use.
         Returns a tuple of: ({letter_combo: word_found}, {stats: value})
         Raises ValueError on invalid number, or empty word list.
@@ -332,27 +336,20 @@ def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
         Keyword Arguments:
             wordfile      : Filename to open and get word list from.
                             Default: /usr/share/dict/words
-            partialmatch  : When True, does a deeper search for when words
-                            have 0 or 1 in them. It is slower, but produces
-                            more results in numbers like that.
-                            Default: False
             processes     : Number of processes to use with Pool.map().
                             For testing purposes really.
 
         Example:
             try:
-                foundwords, stats = get_phonewords('5555555', myfile)
+                foundwords, total = get_phonewords('5555555', myfile)
             except Exception as ex:
                 print('Error getting phone words: {}'.format(ex))
             else:
                 # Everything went okay, results should be like:
                 # foundwords == {'555hand': 'hand'}
-                # stats == {'totalcombos': 5500,
-                            'totalsubwords': 13500,
-                            'total': 19000,
-                            }
-            * These results aren't accurate, it is only an example of what
-            * you can find in foundwords and stats when get_phonewords returns.
+                # total == 156789
+            * This total is't accurate, it is only an example of what
+            * you can find in foundwords and total when get_phonewords returns.
     """
 
     # Must be valid number.
@@ -361,7 +358,7 @@ def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
                          'with no letters.')
 
     # Get all possible letter combinations for the number.
-    combos = [c for c in get_lettercombos(number, partialmatch=partialmatch)]
+    combos = [c for c in get_lettercombos(number)]
 
     # Get word list from file.
     if not wordfile:
@@ -376,8 +373,13 @@ def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
         raise ValueError('Empty word list given: {}'.format(wordfile))
 
     # Send to multiprocess pool worker class.
+    # Everything up to this point is relatively quick and small.
+    # What goes on inside of WordFinder needs to be quick as possible.
     finder = WordFinder(number, combos, wordlist)
     finder.processes = processes
+
+    # Run find_words to compare words/combos.
+    # This is where the action is, and where the optimizations are needed.
     foundwords, total = finder.find_words()
 
     if foundwords:
@@ -390,21 +392,17 @@ def get_phonewords(number, wordfile=None, partialmatch=False, processes=2):
     return foundwords, total
 
 
-def iter_filelines(filename, minlength=3, maxlength=10):
+def iter_filelines(filename, maxlength=10):
     """ Iterates over lines in a word file, does not catch errors.
         For library use.
         Skips lines with ' in them (cannot make a word with ' for this app).
         Yields line.lower() with newlines and quotes stripped.
     """
-    # Line is only yielded if it meets this criteria.
-    def good_line(l):
-        if l:
-            llen = len(l)
-            if ((llen <= maxlength) and (llen >= minlength) and
-               (not "'" in l)):
-                return True
-        return False
-    with open(filename, 'r', encoding='utf-8') as fread:
+    maxlen = (maxlength + 1)
+    # Change args to test with stackless/pypy
+    openargs = {'encoding': 'utf-8'} if sys.version[0] == '3' else {}
+    good_line = lambda l: l and (2 < len(l) < maxlen)
+    with open(filename, 'r', **openargs) as fread:
         for line in fread:
             # Strip newlines, then strip "
             line = line.strip('\n').strip('"')
@@ -426,6 +424,12 @@ def iter_listchunk(lst, size=10000):
 
     for i in range(0, len(lst), size):
         yield lst[i:i + size]
+
+
+def print_parseable(d):
+    """ Print an easy machine-parseable dict. """
+    for k in sorted(d.keys()):
+        print('{}\t{}'.format(k, d[k]))
 
 
 def print_results(d, spacelen=None):
@@ -551,51 +555,64 @@ class WordFinder(object):
         self.combos = combos
         self.wordlist = wordlist
         self.processes = processes
+        self.results = {}
 
     def find_word(self, word):
         """ Searches all combos for a single word.
             Used with Pool.map...
         """
 
-        results = {}
+        # Iterating over self.combos (up to ~5184 items)
+        # for every word (up to ~30981 items) for total of
+        # ~160,605,504 iterations really sucks.
+        # There has to be another way,
+        # The requirements are: Check every combo for existence of every word.
+        # Words are checked only once, combos are checked for every word.
         for combo in self.combos:
             if word in combo:
                 filled = fill_number(word, combo, self.number)
-                if filled not in results.keys():
-                    results[filled] = word
-        return results
+                if filled not in self.results.keys():
+                    self.results[filled] = word
+                    return self.results
+        # no result was found.
+        return 0
 
     def find_words(self):
         """ Run all words through find_word using Pool.map """
 
-        # TODO: make WordFinder take in a generator,
-        #       then feed small blocks from that generator to pool.map
-        #       so pool.map is happy with getting a full list(), and
-        #       the memory won't be so heavy.
-        #       loop over the block updating results as the map functions
-        #       finish.
-        #       If I could do something like that for self.combos also
-        #       that would be great. Although the wordlist outweighs the
-        #       combos by far. It should be split into chunks at least.
+        # TODO: Reduce memory footprint and waste on this whole operation.
+
         resultsfmt = {}
+
+        def format_results(resultsets):
+            """ format final results """
+            if resultsets:
+                for resultset in resultsets:
+                    if resultset:
+                        resultsfmt.update(resultset)
+
+        # setup a pool of processes/workers.
         pool = Pool(processes=self.processes)
-        for wordset in iter_listchunk(self.wordlist):
-            resultsets = pool.map(self.find_word, wordset)
-            # Update all results with this set of results.
-            for resultset in resultsets:
-                if resultset:
-                    resultsfmt.update(resultset)
+        # map find_word to the wordlist, and format final results.
+        format_results(pool.map(self.find_word, self.wordlist))
 
         return resultsfmt, (len(self.wordlist) * len(self.combos))
 
 
 # MAIN --------------------------
 if __name__ == '__main__':
+    # Parse args with docopt.
     mainargd = docopt(usage_str, version=VERSIONSTR)
+    
+    # Time and run main()
     starttime = datetime.now()
     mainret = main(mainargd)
     duration = round((datetime.now() - starttime).total_seconds(), 3)
-    print('({} secs.)'.format(str(duration)))
+
+    if not mainargd['--parseable']:
+        # Print time it took, unless the parseable flag was given.
+        print('({} secs.)'.format(str(duration)))
+
     if mainret is None:
         mainret = 0
     sys.exit(mainret)

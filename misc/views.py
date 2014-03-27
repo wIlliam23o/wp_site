@@ -9,8 +9,6 @@ from misc import tools as misctools
 
 _log = logger('misc').log
 
-# TODO: Test Cache Pages
-
 
 @cache_page(15 * 60)
 @csrf_protect

@@ -24,6 +24,9 @@ urlpatterns = patterns('',
                        # 500 tester
                        url(r'^500\.html$',
                            homeviews.view_500),
+                       # error raiser (for testing)
+                       url(r'^raise.html$',
+                           homeviews.view_raiseerror),
                        # debug info
                        url(r'^debug\.html$',
                            homeviews.view_debug),
@@ -57,13 +60,15 @@ urlpatterns = patterns('',
                        # about page
                        url(r'^[Aa]bout/?$',
                            homeviews.view_about),
-
                        )
 
 # Apps views (apps) (see apps.urls)
 urlpatterns += patterns('',
                         url(r'^[Aa]pps/?',
                             include('apps.urls')),
+                        # shortcut for /apps/paste
+                        url(r'^[Pp]aste/?',
+                            include('apps.paste.urls')),
                         )
 
 # Projects view (projects)

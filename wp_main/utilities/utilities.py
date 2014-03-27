@@ -10,6 +10,8 @@
 """
 
 import os
+from datetime import datetime
+
 # global settings
 from django.conf import settings
 # User-Agent helper...
@@ -167,12 +169,21 @@ def get_relative_path(spath):
         if its a '/static' related dir, just trim up to '/static'.
     """
     
-    if settings.BASE_DIR in spath:
-        spath = spath.replace(settings.BASE_DIR, '')
-    
-    # if static file, just make it a '/static/...' path.
-    if '/static' in spath:
-        spath = spath[spath.index('/static'):]
+    if not spath:
+        return ''
+
+    prepend = ''
+    if settings.STATIC_ROOT in spath:
+        spath = spath.replace(settings.STATIC_ROOT, '')
+        prepend = '/static'
+    elif settings.BASE_PARENT in spath:
+        spath = spath.replace(settings.BASE_PARENT, '')
+    if spath and (not spath.startswith('/')):
+        spath = '/{}'.format(spath)
+
+    if prepend:
+        spath = '{}{}'.format(prepend, spath)
+
     return spath
 
 
@@ -190,15 +201,26 @@ def get_absolute_path(relative_file_path):
     if '..' in relative_file_path:
         return ''
     
-    sabsolutepath = ""
-    for root, dirs, files in os.walk(settings.STATIC_PARENT):  # noqa
-        spossible = os.path.join(root, relative_file_path)
+    sabsolutepath = ''
+    # Remove '/static' from the file path.
+    if relative_file_path.startswith(('static', '/static')):
+        staticparts = relative_file_path.split('/')
+        if len(staticparts) > 1:
+            staticstart = 2 if relative_file_path.startswith('/') else 1
+            staticpath = '/'.join(staticparts[staticstart:])
+            # use new relative path (without /static)
+            relative_file_path = staticpath
+        else:
+            # Don't allow plain '/static'
+            return ''
 
-        # dirs allowed
-        if os.path.isfile(spossible) or os.path.isdir(spossible):
+    # Walk real static dir.
+    for root, dirs, files in os.walk(settings.STATIC_ROOT):  # noqa
+        spossible = os.path.join(root, relative_file_path)
+        if os.path.exists(spossible):
             sabsolutepath = spossible
             break
-    
+
     # Guard against files outside of the public /static dir.
     if not sabsolutepath.startswith(settings.STATIC_ROOT):
         return ''
@@ -236,6 +258,36 @@ def debug_allowed(request):
     return (ip_in_settings and bool(settings.DEBUG))
 
 
+def get_datetime(date=None, shortdate=False):
+    """ Return date/time string.
+        Arguments:
+            date       : Existing datetime object to format.
+                         Default: datetime.now()
+            shortdate  : Return date part in short format (m-d-yyyy)
+                         Default: False
+    """
+    if date is None:
+        date = datetime.now()
+    if shortdate:
+        return date.strftime('%m-%d-%Y %I:%M%S %p')
+    return date.strftime('%A %b. %d, %Y %I:%M:%S %p')
+
+
+def get_date(date=None, shortdate=False):
+    """ Return date string.
+        Arguments:
+            date       : Existing datetime object to format.
+                         Default: datetime.now()
+            shortdate  : Return date in short format (m-d-yyyy)
+                         Default: False
+    """
+    if date is None:
+        date = datetime.now()
+    if shortdate:
+        return date.strftime('%m-%d-%Y')
+    return date.strftime('%A %b. %d, %Y')
+
+
 def get_objects_enabled(objects_):
     """ Safely retrieves all objects where disabled == False.
         Handles 'no objects', returns [] if there are no objects.
@@ -266,10 +318,13 @@ def get_object_safe(objects_, **kwargs):
         
     try:
         obj = objects_.get(**kwargs)
-    except:
+    except Exception:
         # No Error is raised, just return None
         obj = None
     return obj
+    
+# Alias for function.
+get_object = get_object_safe
 
 
 def get_remote_host(request):
@@ -290,3 +345,116 @@ def get_remote_ip(request):
     else:
         remote_addr = request.META.get('REMOTE_ADDR', None)
     return remote_addr
+
+
+def get_server(request):
+    """ Return the current server/hostname for a request. """
+    if not request:
+        return None
+
+    try:
+        meta = request.META
+    except AttributeError as exatt:
+        _log.error('Unable to retrieve META from request:\n'
+                   '{}'.format(exatt))
+        return None
+
+    tryattrs = (
+        'SERVER_NAME',
+        'HTTP_X_FORWARDED_SERVER',
+        'HTTP_HOST',
+        'HTTP_X_FORWARDED_HOST',
+    )
+    for attr in tryattrs:
+        server = meta.get(attr, None)
+        if server is not None:
+            return server
+
+    # None of those attributes were filled out in request.META.
+    return None
+
+
+def get_time(time=None, shorttime=False):
+    """ Return time string.
+        Arguments:
+            time       : Existing datetime object to format.
+                         Default: datetime.now()
+            shorttime  : Return time in short format (without am/pm)
+                         Default: False
+    """
+    if time is None:
+        time = datetime.now()
+    if shorttime:
+        return time.strftime('%I:%M:%S')
+    return time.strftime('%I:%M:%S %p')
+
+
+def get_time_since(date, humanform=True):
+    """ Parse a datetime object,
+        return human-readable time-elapsed.
+    """
+    
+    secs = (datetime.now() - date).total_seconds()
+    if secs < 60:
+        if humanform:
+            # Right now.
+            if secs < 0.1:
+                return ''
+            # Seconds (decimal format)
+            return '{:0.1f} seconds'.format(secs)
+        else:
+            # Seconds only.
+            return '{:0.1f}s'.format(secs)
+
+    minutes = secs / 60
+    seconds = int(secs % 60)
+    minstr = 'minute' if int(minutes) == 1 else 'minutes'
+    secstr = 'second' if seconds == 1 else 'seconds'
+    if minutes < 60:
+        # Minutes and seconds only.
+        if humanform:
+            if seconds == 0:
+                # minutes
+                return '{} {}'.format(int(minutes), minstr)
+            # minutes, seconds
+            fmtstr = '{} {}, {} {}'
+            return fmtstr.format(int(minutes), minstr, seconds, secstr)
+        else:
+            # complete minutes, seconds
+            fmtstr = '{}m:{}s'
+            return fmtstr.format(int(minutes), seconds)
+
+    hours = minutes / 60
+    minutes = int(minutes % 60)
+    hourstr = 'hour' if int(hours) == 1 else 'hours'
+    minstr = 'minute' if minutes == 1 else 'minutes'
+    if hours < 24:
+        # Hours, minutes, and seconds only.
+        if humanform:
+            if minutes == 0:
+                # hours
+                return '{} {}'.format(int(hours), hourstr)
+            # hours, minutes
+            fmtstr = '{} {}, {} {}'
+            return fmtstr.format(int(hours), hourstr, minutes, minstr)
+        else:
+            # complete hours, minutes, seconds
+            fmtstr = '{}h:{}m:{}s'
+            return fmtstr.format(int(hours), hourstr, minutes, seconds)
+
+    days = int(hours / 24)
+    hours = int(hours % 24)
+    # Days, hours
+    daystr = 'day' if days == 1 else 'days'
+    hourstr = 'hour' if hours == 1 else 'hours'
+    if humanform:
+        if hours == 0:
+            # days
+            return '{} {}'.format(days, daystr)
+        # days, hours
+        fmtstr = '{} {}, {} {}'
+        return fmtstr.format(days, daystr, hours, hourstr)
+    else:
+        # complete days, hours, minutes, seconds
+        fmtstr = '{}d:{}h:{}m:{}s'
+        return fmtstr.format(days, hours, minutes, seconds)

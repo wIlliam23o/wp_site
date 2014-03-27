@@ -11,6 +11,7 @@
    start date: May 25, 2013
 '''
 
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from downloads.models import file_tracker
 from wp_main.utilities.wp_logging import logger
 _log = logger("downloads.tools").log
@@ -20,26 +21,34 @@ def get_file_tracker(absolute_path, createtracker=True, dosave=False):
     """ gets an existing file_tracker, or creates a new one from a filename """
     try:
         filetracker = file_tracker.objects.get(filename=absolute_path)
-    except Exception as ex:
+    except MultipleObjectsReturned:
+        _log.error('File tracker has multiple objects!: '
+                   '{}'.format(absolute_path))
+        return None
+    except ObjectDoesNotExist:
         if createtracker:
             try:
                 # create new tracker
                 filetracker = file_tracker()
                 filetracker.set_filename(absolute_path, dosave=False)
             except Exception as ex:
-                _log.error("Unable to create new file tracker for: " + absolute_path + '\n' +
-                           str(ex))
+                _log.error('Unable to create new file tracker for: '
+                           '{}\n{}'.format(absolute_path, ex))
                 filetracker = None
         else:
             filetracker = None
-    
+    except Exception as ex:
+        _log.error('Error retrieving file tracker: {}'.format(absolute_path))
+        return None
+
     if (filetracker is not None) and (dosave):
         filetracker.save()
     return filetracker
 
 
 def update_tracker_views(absolute_path, createtracker=True, dosave=True):
-    """ update a file tracker's view_count, will create the file_tracker if wanted.
+    """ update a file tracker's view_count,
+        will create the file_tracker if wanted.
     """
      
     filetracker = get_file_tracker(absolute_path, createtracker)
@@ -54,7 +63,8 @@ def update_tracker_views(absolute_path, createtracker=True, dosave=True):
 
 
 def update_tracker_downloads(absolute_path, createtracker=True, dosave=True):
-    """ updates a file trackers download_count, will create the file_tracker if wanted.
+    """ updates a file trackers download_count,
+        will create the file_tracker if wanted.
     """
     
     filetracker = get_file_tracker(absolute_path, createtracker)
@@ -73,6 +83,8 @@ def update_tracker_projects(tracker_, project_object, dosave=True):
     
     if hasattr(tracker_, 'id'):
         trackerid = tracker_.id
+    else:
+        trackerid = None
     # Tracker must be saved at least once before adding a project relation.
     if trackerid is not None:
         if trackerid < 0:

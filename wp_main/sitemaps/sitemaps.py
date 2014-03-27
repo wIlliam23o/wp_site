@@ -10,6 +10,8 @@
  
    start date: Apr 3, 2013
 '''
+# django cache stuff
+from django.views.decorators.cache import never_cache
 # local logging.
 from wp_main.utilities.wp_logging import logger
 _log = logger("sitemaps").log
@@ -21,28 +23,32 @@ from projects.models import wp_project
 # Today's date
 from datetime import date
 
+
+@never_cache
 def view_sitemap(request):
     """ delivers sitemap for current domain using sitemap.xml template """
     
     # return xml sitemap response
     return responses.xml_response("sitemaps/sitemap.xml",
-                                  {"url_list": get_urls(request), 
+                                  {"url_list": get_urls(request),
                                    })
 
 
+@never_cache
 def view_blank_sitemap(request):
     """ delivers a blank sitemap (for servers that don't need a sitemap like the test-server). """
     
     return responses.text_response("", content_type='application/xml')
 
 
+@never_cache
 def view_byserver(request):
     """ decides which sitemap to deliver according to server.
         sends blank sitemap to server with names starting with 'test.'
     """
     
-    server_name = request.META["SERVER_NAME"]
-    if server_name.startswith("test."):
+    server_name = request.META['SERVER_NAME']
+    if server_name.startswith('test.'):
         return view_blank_sitemap(request)
     else:
         # normal sitemap.
@@ -64,19 +70,31 @@ def get_urls(request):
     
     try:
         # get protocol
-        protocol_ = "https" if request.is_secure() else "http"
+        protocol_ = 'https' if request.is_secure() else 'http'
     except Exception as ex:
-        _log.error("get_urls: unable to determine request.is_secure():\n" + str(ex))
+        _log.error('get_urls: unable to determine request.is_secure():\n'
+                   '{}'.format(ex))
+        return []
+
+    # Find server name (.com or .info)
+    serverattrs = ('HTTP_X_FORWARDED_HOST',
+                   'HTTP_X_FORWARDED_SERVER',
+                   'HTTP_HOST')
+    domain_ = None
+    for serverattr in serverattrs:
+        if serverattr in request.META.keys():
+            # get domain
+            domain_ = request.META[serverattr]
+            if domain_:
+                break
+
+    # Unable to retrieve server name from request.
+    if not domain_:
+        _log.error('get_urls: unable to retrieve domain name!')
         return []
     
-    try:
-        # get domain
-        domain_ = request.META['HTTP_HOST']
-    except Exception as ex:
-        _log.error("get_urls: unable to retrieve domain name!\n" + str(ex))
-        return []
-    
-    # url list [consists of sitemap_url() items containing (URL, Change Frequency, Last Modified Date)]
+    # url list, consists of sitemap_url() items containing:
+    # (URL, Change Frequency, Last Modified Date)
     urls_ = []
     # string form of today's date.
     today_ = str(date.today())
@@ -87,48 +105,48 @@ def get_urls(request):
                      '/blog': 'daily',
                      '/misc': 'weekly',
                      }
-    # build basic urls for main site nav.   
+    # build basic urls for main site nav.
     for main_url in ['/', '/about', '/projects', '/blog', '/misc']:
-        _url = sitemap_url(rel_location = main_url,
-                           protocol = protocol_,
-                           domain = domain_,
-                           changefreq = default_freqs[main_url], 
-                           lastmod = today_,
-                           priority = '0.8')
+        _url = sitemap_url(rel_location=main_url,
+                           protocol=protocol_,
+                           domain=domain_,
+                           changefreq=default_freqs[main_url],
+                           lastmod=today_,
+                           priority='0.8')
         urls_.append(_url)
     
     # build projects urls
     for proj in wp_project.objects.order_by('name'):
-        _url = sitemap_url(rel_location = '/projects/' + proj.alias, 
-                           protocol = protocol_,
-                           domain = domain_,
-                           changefreq = 'monthly', 
-                           lastmod = str(proj.publish_date),
-                           priority = '0.9')
+        _url = sitemap_url(rel_location='/projects/' + proj.alias,
+                           protocol=protocol_,
+                           domain=domain_,
+                           changefreq='monthly',
+                           lastmod=str(proj.publish_date),
+                           priority='0.9')
         urls_.append(_url)
     
     # build blog urls
     for post_ in wp_blog.objects.order_by('-posted'):
-        _url = sitemap_url(rel_location = '/blog/view/' + post_.slug,
-                           protocol = protocol_,
-                           domain = domain_,
-                           changefreq = 'never', 
-                           lastmod = str(post_.posted),
-                           priority = '0.5')
+        _url = sitemap_url(rel_location='/blog/view/' + post_.slug,
+                           protocol=protocol_,
+                           domain=domain_,
+                           changefreq='never',
+                           lastmod=str(post_.posted),
+                           priority='0.5')
         urls_.append(_url)
 
-        
     # return complete list.
-    return urls_   
+    return urls_
     
  
 class sitemap_url(object):
+
     """ provides info for individual sitemap urls """
      
-    def __init__(self, location = '', rel_location = '', 
-                        changefreq = '', lastmod = '',
-                        protocol = 'http', domain = '',
-                        priority = '0.5'):
+    def __init__(self, location='', rel_location='',
+                 changefreq='', lastmod='',
+                 protocol='http', domain='',
+                 priority='0.5'):
         # changes info
         self.changefreq = changefreq
         self.lastmod = lastmod
@@ -143,7 +161,6 @@ class sitemap_url(object):
             self.location = self.complete_url()
         else:
             self.location = location
-
 
     def get_by_name(self, attribute_name):
         """ retrieves url info by name string.
@@ -161,7 +178,6 @@ class sitemap_url(object):
             _log.error("sitemap_url: get_by_name: error getting attribute: " + attribute_name)
             return ''
         
-        
     def get_info_dict(self):
         """ retrieves url info as a dict. """
         
@@ -176,7 +192,6 @@ class sitemap_url(object):
                     
         return info_dict
     
-    
     def get_info_list(self):
         """ retrieves url info as a list of [attribute, value].
             list item[0][0] = attribute 1, item[0][1] = value 1.
@@ -186,7 +201,6 @@ class sitemap_url(object):
         for skey in info_dict.keys():
             info_list.append([skey, info_dict[skey]])
         return info_list
-
 
     def complete_url(self):
         """ builds complete url for this item if all info is present.
@@ -203,4 +217,3 @@ class sitemap_url(object):
             surl = self.protocol + "://" + self.domain + self.rel_location
 
         return surl
-    

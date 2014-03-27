@@ -1,15 +1,22 @@
+""" Welborn Productions - Project Model
+    Holds information about a single wp project.
+"""
 from django.db import models
-#import django.utils #@UnusedImport: utils
+# import django.utils #@UnusedImport: utils
 import datetime
 
-# Module level functions...   
+# Module level functions...
+
+
 def get_date_today():
     """ returns today's date for setting default publish_date value """
         
     return datetime.date.today()
 
-# Create your models here.
+
 class wp_project(models.Model):
+
+    """ Holds information about a single wp project. """
     # project name
     name = models.CharField(blank=False, max_length=100,
                             help_text="Name of the project. (Must be unique)")
@@ -17,7 +24,7 @@ class wp_project(models.Model):
     # ...should be lowercase-no-spaces project name
     alias = models.CharField(blank=False, max_length=100,
                              help_text="Alias for this project (lowercase, used to build urls)")
-    # short description of project 
+    # short description of project
     # (longer description should be in it's html file)
     description = models.CharField(blank=True, default="", max_length=1024,
                                    help_text="Short description for the project.")
@@ -79,11 +86,3 @@ class wp_project(models.Model):
         ordering = ['name']
         verbose_name = "Project"
         verbose_name_plural = "Projects"
-        
-        
-
-        
-        
-    
-    
-    

@@ -7,6 +7,7 @@
                Refreshes static files (collectstatic),
                refreshes admin css (static/admin/css),
                and Restarts the server.
+
     
       @author: Christopher Welborn <cj@welbornprod.com>
 @organization: welborn productions <welbornprod.com>
@@ -23,7 +24,6 @@ from docopt import docopt
 NAME = 'WpRefresh'
 VERSION = '1.2.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
-
 # Initialize Django stuff.
 try:
     import django_init
@@ -42,6 +42,7 @@ if sys.version < '3':
 
 # Get Settings..
 from django.conf import settings
+from django.core.cache import cache
 
 USAGESTR = """{version}
 
@@ -49,17 +50,18 @@ USAGESTR = """{version}
         wprefresh.py [options]
 
     Options:
-        -A,--noadmin    : Skip admin css copy.
-        -b,--buildwp    : Only build wp files.
-        -B,--nobuild    : Skip building files.
-        -c,--collect    : Auto static collection.
-        -C,--nocollect  : Skip static collection.
-        -d,--debug      : Prints extra info (not much right now).
-        -h,--help       : Show this message.
-        -l,--live       : Suppress warning about live site.
-        -r,--norestart  : Skip apache restart.
-        -R,--restart    : Just restart the server, nothing else.
-        -v,--version    : Show version.
+        -A,--noadmin     : Skip admin css copy.
+        -b,--buildwp     : Only build wp files.
+        -B,--nobuild     : Skip building files.
+        -c,--collect     : Auto static collection.
+        -C,--nocollect   : Skip static collection.
+        -d,--debug       : Prints extra info (not much right now).
+        -h,--help        : Show this message.
+        -k,--clearcache  : Clear Django's cache for the WP site.
+        -l,--live        : Suppress warning about live site.
+        -r,--restart     : Just restart the server, nothing else.
+        -R,--norestart   : Skip apache restart.
+        -v,--version     : Show version.
 """.format(version=VERSIONSTR)
 
 
@@ -80,10 +82,9 @@ def main(argd):
         return 1
 
     # Check overall skip.
-    if check_args(argd, ('--norestart',
-                         '--nobuild',
-                         '--nocollect',
-                         '--noadmin')):
+    if check_args(argd,
+                  ('--norestart', '--nobuild', '--nocollect', '--noadmin'),
+                  unless=('--clearcache',)):
         print('\nSkipping entire refresh...')
         return 0
 
@@ -109,13 +110,16 @@ def main(argd):
     if not argd['--norestart']:
         check_call(apache_restart)
 
+    if argd['--clearcache']:
+        check_call(clear_cache)
+
     return 0
 
 
 def apache_restart():
     """ Restart the apache server """
     # apache restart locations.
-    remote_apache_path = os.path.join(settings.STATIC_PARENT, 'apache2', 'bin')
+    remote_apache_path = os.path.join(settings.BASE_PARENT, 'apache2', 'bin')
     if os.path.isdir(remote_apache_path):
         apachecmd = ''.join(['. ', remote_apache_path]) + '/'
         use_elevation = False
@@ -158,15 +162,32 @@ def build_files(wponly=False):
     return ret
 
 
-def check_args(argd, arglist):
+def check_args(argd, arglist, unless=None):
     """ If all args in arglist are present in argd,
         return True. (Checks for mismatched args)
+        If unless is given, the args can be present as long as the
+        'unless' arguments are also present.
+        Arguments:
+            argd     : Docopt style argument dict.
+            arglist  : Tuple/List of arguments to check.
+            unless   : Tuple/List of arguments that make the presence of all
+                       other arguments okay.
     """
 
-    values = [argd[a] for a in arglist]
-    if all(values):
+    argsgiven = all([argd[a] for a in arglist])
+    unlessvals = [argd[a] for a in unless] if unless else []
+    unlessgiven = all(unlessvals) if unlessvals else False
+
+    if argsgiven:
+        if unless and unlessgiven:
+            # The unless args were given, and present. So we're okay.
+            return False
+        # Args were present, no unless given or no unless present.
         print('\nThese args can\'t be used at the same time:')
         print('    {}'.format('\n    '.join(arglist)))
+        if unless:
+            print('\nUnless these args are used:')
+            print('    {}'.format('\n    '.join(unless)))
         return True
     return False
 
@@ -186,6 +207,19 @@ def check_call(func, *args, **kwargs):
     if not func(*args, **kwargs):
         print('Command failed: {}'.format(func.__name__))
         sys.exit(1)
+    return True
+
+
+def clear_cache():
+    """ Clear Django's cache. """
+
+    try:
+        print('\nClearing the cache...')
+        cache.clear()
+    except Exception as ex:
+        print('\nError clearing the cache:\n{}'.format(ex))
+        return False
+    print('\nCache was cleared.')
     return True
 
 
@@ -213,7 +247,7 @@ def collect_admin_css(printskipped=False):
     """ Move admin css to proper dir """
     # admin css dirs (source, target)
     admin_css = os.path.join(django_init.project_dir, "home/static/admin/css")
-    admin_css_static = os.path.join(settings.STATIC_PARENT, "static/admin/css")
+    admin_css_static = os.path.join(settings.STATIC_ROOT, "admin/css")
 
     if not admin_css_static.endswith('/'):
         admin_css_static += '/'

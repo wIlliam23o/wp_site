@@ -11,6 +11,14 @@ from django.utils.safestring import mark_safe
 register = template.Library()
 
 
+def comments_button(blogpost):
+    """ returns comments button for this blog post. """
+    return ''.join(["<a href='",
+                    blogpost.slug,
+                    "#comments-box'><div class='comments-button'>",
+                    "comments...</div></a>"])
+
+
 def tag_links(value):
     """ returns tag list html string for template 
         expects wp_blog post, or wp_blog.tags string.
@@ -28,7 +36,9 @@ def get_body(value):
 def get_body_short(value):
     """ returns the body for a listing, shortened if needed. """
     
-    return mark_safe(blogtools.prepare_content(blogtools.get_post_body_short(value)))
+    return mark_safe(
+        blogtools.prepare_content(
+            blogtools.get_post_body_short(value)))
 
 
 def get_projects(post):
@@ -40,10 +50,13 @@ def get_projects(post):
 
 
 # these can be used as tags.
-registered = (tag_links,
-              get_body,
-              get_body_short,
-              get_projects)
+registered = (
+    comments_button,
+    get_body,
+    get_body_short,
+    get_projects,
+    tag_links,
+)
 # register all functions in the registered list.
 for func in registered:
     register.filter(str(func.__name__), func)

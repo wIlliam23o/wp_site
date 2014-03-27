@@ -144,33 +144,44 @@ cedit <filename>
 	<div class='title-box'>
 		<h3 class='title'>Updates</h3>
 	</div>
-
-	<span class='update-title'>Update: version 1.2.2</span>
-	<p>
-		Uses python 3 by default <span class='highlight-embedded python'>/usr/bin/env python3</span>
-		<p class='indented subtext'>
-			if you can't use python 3 you can always change the first line of cedit.py,<br>
-			or run it with [bash]python cedit.py[/bash]
-			or [bash]python2.7 cedit.py[/bash]
-		</p>
-		<br>
-		Added multi-file ability.
-		<p class='indented subtext'>
-			...if your favorite editor doesn't allow opening multiple files like 'editor file1 file2 file3',<br>
-			you can use the --shellall flag. It will shell an editor process for each file.<br>
-			(most editors will at least group them in the same window, if not you will have multiple windows opened)
-		</p>
-		<br>
-		Changed flags, added flags. Makes the code a little cleaner
-		<p class='indented subtext'>
-			(taking full advantage of <a href='http://docopt.org' target='_blank'>docopt</a> instead of parsing command args.)
-		</p>
-		<br>
-		Added more help messages when required modules aren't present
-		<p class='indented subtext'>
-			(imports 2 non-standard modules that most users probably don't have.)
-		</p>
-	</p>
+	<div class='update-box'>
+		<span class='update-title'>Update: version 1.2.2</span>
+		<ul class='blue circle'>
+			<li>
+				Uses python 3 by default <span class='highlight-embedded python'>/usr/bin/env python3</span>
+			</li>
+			<div class='listdesc'>
+				if you can't use python 3 you can always change the first line of cedit.py,
+				<br>
+				or run it with [bash]python cedit.py[/bash] or [bash]python2.7 cedit.py[/bash]
+			</div>
+			<br>
+			<li>
+				Added multi-file ability.
+			</li>
+			<div class='listdesc'>
+				...if your favorite editor doesn't allow opening multiple files like 
+				[code]myeditor file1.txt file2.txt file3.txt[/code],
+				<br>
+				you can use the [code]--shellall[/code] flag. It will shell an editor process for each file.<br>
+				(most editors will at least group them in the same window, if not you will have multiple windows opened)
+			</div>
+			<br>
+			<li>
+				Changed flags, added flags. Makes the code a little cleaner
+			</li>
+			<div  class='listdesc'>
+				(taking full advantage of [l]docopt|http://docopt.org[?l] instead of parsing command args.)
+			</div>
+			<br>
+			<li>
+				Added more help messages when required modules aren't present
+			</li>
+			<div class='listdesc'>
+				(imports 2 non-standard modules that most users probably don't have.)
+			</div>
+		</ul>
+	</div>
 </div>
 
 <!-- Future -->

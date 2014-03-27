@@ -124,13 +124,14 @@ def generate_fieldchoices():
 
 def misctype_byname(s):
     """ Retrieve a misc type by string name.
-        This is here because the database started out
-        storing simple string values, everything has been converted
-        over to this smarter MiscType (except for the database.)
-        When the model/database can handle actual MiscType objects
-        this can be removed.
     """
     # TODO: Make django/database handle actual MiscTypes.
+    #   This is here because the database started out
+    #   storing simple string values, everything has been converted
+    #   over to this smarter MiscType (except for the database.)
+    #   When the model/database can handle actual MiscType objects
+    #   this can be removed.
+
     try:
         misctype = types_info[s]
     except (KeyError, ValueError):

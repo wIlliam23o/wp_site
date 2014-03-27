@@ -89,83 +89,117 @@ def check_input(cmdname, cmdargs):
             return []
 
     if cmdname.startswith('wprefresh'):
-
-        print('\nwprefresh may require more input...')
-        flags = []
-        # Collect Static for wprefresh
-        yesforced = False
-        noforced = False
-        restartonly = False
-        if cmdargs:
-            for yesarg in ('-c', '--collect'):
-                if yesarg in cmdargs:
-                    yesforced = True
-                    break
-            for noarg in ('-C', '--nocollect'):
-                if noarg in cmdargs:
-                    noforced = True
-                    break
-            if yesforced and noforced:
-                print('\nBoth \'--collect\' and \'--nocollect\' '
-                      'args used, this won\'t work.')
-                sys.exit(1)
-            for restartarg in ('-R', '--restart'):
-                if restartarg in cmdargs:
-                    restartonly = True
-                    break
-
-        if (not yesforced) and (not noforced) and (not restartonly):
-            collectstatic = input('Would you like to collect static files? (yes/no): ')
-            if collectstatic.lower().startswith('y'):
-                flags.append('--collect')
-            else:
-                flags.append('--nocollect')
-        # Get live/skip args
-        liveforced = False
-        skipforced = False
-        if cmdargs:
-            # live args used?
-            for livearg in ('-l', '--live'):
-                if livearg in cmdargs:
-                    liveforced = True
-                    break
-            # skip args used?
-            for skiparg in ('-r', '--norestart'):
-                if skiparg in cmdargs:
-                    skipforced = True
-                    break
-
-        # Ambiguos args.
-        if skipforced and restartonly:
-            print('\nBoth \'--restart\' and \'--norestart\' args used. '
-                  'this won\'t work.')
-            sys.exit(1)
-
-        if skipforced and liveforced:
-            print('\nBoth \'--live\' and \'--norestart\' args used, '
-                  'this won\'t work.')
-            sys.exit(1)
-
-        needlive = (not liveforced) and (not skipforced)
-        if (not is_test_site()) and (needlive):
-            livesite = input('*** This is the LIVE site! ***\n'
-                             'Would you like to restart apache? (yes/no): ')
-            if livesite.lower().startswith('y'):
-                flags.append('--live')
-            else:
-                flags.append('--norestart')
-        return flags
+        return checkargs_wprefresh(cmdargs)
+    elif cmdname.startswith('clearcache'):
+        return checkargs_clearcache(cmdargs)
     # No extra args needed
     return []
+
+
+def checkargs_clearcache(cmdargs):
+    """ Checks arguments for clearcache (because it may require input) """
+
+    if cmdargs and (('-f' in cmdargs) or ('--force' in cmdargs)):
+        return []
+
+    if confirm('This will clear everthing in Django\'s cache.\n'
+               'Would you like to clear the cache?'):
+        # Send force arg to clearcache so it won't require any input.
+        return ['--force']
+    else:
+        print('\nUser Cancelled\n')
+        sys.exit(1)
+
+
+def checkargs_wprefresh(cmdargs):
+    """ Checks arguments for wprefresh (because it requires input) """
+    print('\nwprefresh may require more input...')
+    flags = []
+    # Collect Static for wprefresh
+    yesforced = False
+    noforced = False
+    restartonly = False
+    if cmdargs:
+        for yesarg in ('-c', '--collect'):
+            if yesarg in cmdargs:
+                yesforced = True
+                break
+        for noarg in ('-C', '--nocollect'):
+            if noarg in cmdargs:
+                noforced = True
+                break
+        if yesforced and noforced:
+            print('\nBoth \'--collect\' and \'--nocollect\' '
+                  'args used, this won\'t work.')
+            sys.exit(1)
+        for restartarg in ('-r', '--restart'):
+            if restartarg in cmdargs:
+                restartonly = True
+                break
+
+    if (not yesforced) and (not noforced) and (not restartonly):
+        collectstatic = input('Would you like to collect static files? (yes/no): ')
+        if collectstatic.lower().startswith('y'):
+            flags.append('--collect')
+        else:
+            flags.append('--nocollect')
+    # Get live/skip args
+    liveforced = False
+    skipforced = False
+    if cmdargs:
+        # live args used?
+        for livearg in ('-l', '--live'):
+            if livearg in cmdargs:
+                liveforced = True
+                break
+        # skip args used?
+        for skiparg in ('-R', '--norestart'):
+            if skiparg in cmdargs:
+                skipforced = True
+                break
+
+    # Ambiguos args.
+    if skipforced and restartonly:
+        print('\nBoth \'--restart\' and \'--norestart\' args used. '
+              'this won\'t work.')
+        sys.exit(1)
+
+    if skipforced and liveforced:
+        print('\nBoth \'--live\' and \'--norestart\' args used, '
+              'this won\'t work.')
+        sys.exit(1)
+
+    needlive = (not liveforced) and (not skipforced)
+    if (not is_test_site()) and (needlive):
+        livesite = confirm('*** This is the LIVE site! ***\n'
+                           'Would you like to restart apache?')
+        if livesite:
+            flags.append('--live')
+        else:
+            flags.append('--norestart')
+    return flags
+
+
+def confirm(s=None, default=False):
+    """ Confirms an answer to a yes/no question.
+        Returns True for Yes, False for No.
+        Default can be given for when no answer is given.
+    """
+
+    if s:
+        s = '{} (y/n): '.format(s)
+    else:
+        s = 'Continue? (y/n): '
+    answer = input(s).strip().lower()
+    return answer.startswith('y') if answer else default
 
 
 def do_list():
     """ List all script files found. """
 
-    scripts = get_scripts()
-    print('\nFound {} scripts in: {}\n    {}'.format(str(len(scripts)),
-                                                     SCRIPTSDIR,
-                                                     '\n    '.join(scripts)))
+    scripts = '\n    '.join(get_scripts())
+    print(('\nFound {} scripts in: '
+           '{}\n    {}').format(len(scripts), SCRIPTSDIR, scripts))
 
 
 def get_scripts():
