@@ -33,11 +33,11 @@
                     </div>
                     <!-- Description -->
                     <div class='apps-desc apps-index'>
-                        <span class='desc'>{{ app.description }}</span>
+                        <div class='desc'>{{ app.description|safe }}</div>
                         <br>
-                        <p class='desc'>
-                            {{ app.longdesc }}
-                        </p>
+                        <div class='desc'>
+                            {{ app.longdesc|safe }}
+                        </div>
                     </div>
                     <!-- Goto Button -->
                     <a href='/apps/{{ app.alias }}'>
