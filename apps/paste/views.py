@@ -10,6 +10,7 @@ from wp_main.utilities.utilities import get_object, get_remote_ip
 
 # For creating/accessing wp_paste() objects.
 from apps.paste.models import wp_paste
+from apps.models import wp_app
 
 
 _log = logger('apps.paste').log
@@ -34,7 +35,12 @@ def view_api(request):
 @ensure_csrf_cookie
 def view_index(request):
     """  Main page for pastebin. Add a new paste. """
-
+    # Update the view count for the paste app.
+    app = get_object(wp_app.objects, alias='paste')
+    if app:
+        app.view_count += 1
+        app.save()
+    
     # If the request has args pass it on down to view_paste()
     try:
         reqargs = request.REQUEST
