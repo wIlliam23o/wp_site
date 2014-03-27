@@ -258,6 +258,36 @@ def debug_allowed(request):
     return (ip_in_settings and bool(settings.DEBUG))
 
 
+def get_datetime(date=None, shortdate=False):
+    """ Return date/time string.
+        Arguments:
+            date       : Existing datetime object to format.
+                         Default: datetime.now()
+            shortdate  : Return date part in short format (m-d-yyyy)
+                         Default: False
+    """
+    if date is None:
+        date = datetime.now()
+    if shortdate:
+        return date.strftime('%m-%d-%Y %I:%M%S %p')
+    return date.strftime('%A %b. %d, %Y %I:%M:%S %p')
+
+
+def get_date(date=None, shortdate=False):
+    """ Return date string.
+        Arguments:
+            date       : Existing datetime object to format.
+                         Default: datetime.now()
+            shortdate  : Return date in short format (m-d-yyyy)
+                         Default: False
+    """
+    if date is None:
+        date = datetime.now()
+    if shortdate:
+        return date.strftime('%m-%d-%Y')
+    return date.strftime('%A %b. %d, %Y')
+
+
 def get_objects_enabled(objects_):
     """ Safely retrieves all objects where disabled == False.
         Handles 'no objects', returns [] if there are no objects.
@@ -317,34 +347,31 @@ def get_remote_ip(request):
     return remote_addr
 
 
-def get_datetime(date=None, shortdate=False):
-    """ Return date/time string.
-        Arguments:
-            date       : Existing datetime object to format.
-                         Default: datetime.now()
-            shortdate  : Return date part in short format (m-d-yyyy)
-                         Default: False
-    """
-    if date is None:
-        date = datetime.now()
-    if shortdate:
-        return date.strftime('%m-%d-%Y %I:%M%S %p')
-    return date.strftime('%A %b. %d, %Y %I:%M:%S %p')
+def get_server(request):
+    """ Return the current server/hostname for a request. """
+    if not request:
+        return None
 
+    try:
+        meta = request.META
+    except AttributeError as exatt:
+        _log.error('Unable to retrieve META from request:\n'
+                   '{}'.format(exatt))
+        return None
 
-def get_date(date=None, shortdate=False):
-    """ Return date string.
-        Arguments:
-            date       : Existing datetime object to format.
-                         Default: datetime.now()
-            shortdate  : Return date in short format (m-d-yyyy)
-                         Default: False
-    """
-    if date is None:
-        date = datetime.now()
-    if shortdate:
-        return date.strftime('%m-%d-%Y')
-    return date.strftime('%A %b. %d, %Y')
+    tryattrs = (
+        'SERVER_NAME',
+        'HTTP_X_FORWARDED_SERVER',
+        'HTTP_HOST',
+        'HTTP_X_FORWARDED_HOST',
+    )
+    for attr in tryattrs:
+        server = meta.get(attr, None)
+        if server is not None:
+            return server
+
+    # None of those attributes were filled out in request.META.
+    return None
 
 
 def get_time(time=None, shorttime=False):

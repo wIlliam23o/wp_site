@@ -241,3 +241,16 @@ def view_error(request, error_number):
     }
     return responses.clean_response_req('home/{}.html'.format(serror), context,
                                         request=request)
+
+
+def view_raiseerror(request):
+    """ Purposely raise an error while loading this view, for testing.
+        Custom error msgs can be passed as GET arguments.
+    """
+
+    reqargs = responses.get_request_args(request)
+    if reqargs['msgs']:
+        msgs = reqargs['msgs'].split('|')
+    else:
+        msgs = None
+    return responses.error500(request, msgs=msgs)

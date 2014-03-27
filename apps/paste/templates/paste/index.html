@@ -5,8 +5,8 @@
 
 <!-- Initial CSS to use -->
 {% block extrastyle %}
-    <link type="text/css" rel="stylesheet" href="/static/css/paste.min.css"/>
-    <style type="text/css">
+    <link rel='stylesheet' href='/static/css/paste.min.css' type='text/css'/>
+    <style type='text/css'>
         #paste-content {
             height: 400px;
             border-radius: 5px;
@@ -16,12 +16,11 @@
     </style>
 {% endblock %}
 
-<!-- Viewer JS -->
+<!-- Ace/Editor JS -->
 {% block javascript %}
-    <script type="text/javascript" src="/static/js/wppaste.min.js"></script>
+    <script type='text/javascript' src='/static/js/wppaste.min.js'></script>
     <script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
     <script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
-
 {% endblock %}
 
 <!-- Floating message -->

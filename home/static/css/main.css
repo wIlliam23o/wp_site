@@ -1133,7 +1133,8 @@ code, samp {
   font-size: 1.2em; }
 
 .notfound-home-message {
-  font-size: 0.9em; }
+  font-size: 0.9em;
+  margin-top: 10px; }
 
 .notfound-image-box {
   text-align: center; }

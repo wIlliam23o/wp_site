@@ -310,6 +310,54 @@
     color: $bluemain;
 }
 
+/* API landing page styles */
+.paste-api-section {
+    display: block;
+    background: $whitedull;
+}
 
+.paste-api-header {
+    display: block;
+    margin-bottom: 10px;
+    font-size: $fontbig;
+    text-shadow: $shadowtextbig;
 
+}
+
+.paste-api-section-content {
+    // The content for this section of api help.
+    @include border-radius(5px);
+    border-width: 1px;
+    border-style: solid;
+    border-color: $bordermain;
+    background: $whitedull;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.paste-api-section-paragraph {
+    font-size: $fontbigger;
+    margin-top: 10px;
+    margin-left: 10px;
+    color: $bluemain;
+}
+a .paste-api-section-paragraph {
+    display: inline-block;
+    margin-left: 10px;
+    &:hover {
+        color: $bluelink;
+    }
+}
+
+.paste-api-section-codelabel {
+    font-size: $fontsmaller;
+    margin-top: 10px;
+    margin-left: 10px;
+    color: $greymain;
+}
+
+.paste-api-section-json {
+    font-size: $fontnormal;
+    color: $greymain;
+}
 

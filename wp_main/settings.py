@@ -65,9 +65,8 @@ if os.path.isfile(KEY_INTERNAL_IPS_FILE):
                 # list of ips in file.
                 ips_list = []
                 for ip_ in ip_raw.split('\n'):
-                    # allows '1.1.1.01' as the least ip length right now,
-                    # but not '1.1.1.1'.
-                    if len(ip_) > 7:
+                    ip_ = ip_.strip()
+                    if len(ip_) > 7 and (not ip_.startswith('#')):
                         _internal_ips.append(ip_)
             else:
                 # single ip in file
@@ -75,6 +74,9 @@ if os.path.isfile(KEY_INTERNAL_IPS_FILE):
     except Exception as ex:
         pass
 
+# Add local dev ips to safe list.
+_internal_ips.extend(['192.168.0.{}'.format(n) for n in range(2, 21)])
+_internal_ips.extend(['192.168.1.{}'.format(n) for n in range(2, 21)])
 # set global allowed ips
 INTERNAL_IPS = tuple(_internal_ips)
 

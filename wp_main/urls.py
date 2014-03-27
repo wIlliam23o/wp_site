@@ -24,6 +24,9 @@ urlpatterns = patterns('',
                        # 500 tester
                        url(r'^500\.html$',
                            homeviews.view_500),
+                       # error raiser (for testing)
+                       url(r'^raise.html$',
+                           homeviews.view_raiseerror),
                        # debug info
                        url(r'^debug\.html$',
                            homeviews.view_debug),

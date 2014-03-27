@@ -27,10 +27,11 @@ HCODEPAT = re.compile(r'(\[[\w\d]+\])([^\[/]+)(\[/[\w\d+]+\])')
 # It uses [language]text[?language] to recognize the codes.
 # Use it for code that contains the '/' character.
 HCODEPAT2 = re.compile(r'(\[[\w\d]+\])([^\[\?]+)(\[\?[\w\d+]+\])')
-# Regex pattern for grabbing lexer names from:
-# <span class='highlight-embedded LEXERNAME'>
-# TODO: SHOULD BE REMOVED AFTER ALL POSTS/PROJECTS SWITCH TO HCODEPAT STYLE.
-LEXERPAT = re.compile(r'\w+[ ]highlight-embedded|highlight-embedded[ ]\w+')
+
+# DELETE: Regex pattern for grabbing lexer names from:
+# DELETE: <span class='highlight-embedded LEXERNAME'>
+# DELETE: TODO: REMOVE AFTER ALL POSTS/PROJECTS SWITCH TO HCODEPAT STYLE.
+# DELETE: LEXERPAT = re.compile(r'\w+[ ]highlight-embedded|highlight-embedded[ ]\w+') # noqa
 
 # List of valid lexer names.
 LEXERNAMES = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
@@ -58,7 +59,7 @@ STYLEALIASES = {'py': 'python',
                 }
 STYLENAMES = list(STYLECODES.keys())
 
-
+ 
 class wp_highlighter(object):
 
     """ Class for highlighting code and returning html markup. """

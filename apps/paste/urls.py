@@ -13,4 +13,6 @@ urlpatterns = patterns('',
                        url(r'latest/?', views.view_latest),
                        # top pastes
                        url(r'top/?', views.view_top),
+                       # public api
+                       url(r'api/?', views.view_json),
                        )

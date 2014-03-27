@@ -143,8 +143,9 @@ def get_post_body_short(post_, max_text_length=None, max_text_lines=None):
     
     # post was trimmed? add "...continued" and readmore box.
     if trimmed:
-        new_body += "<span class='continued'> ...(continued)</span>" + \
-                    htmltools.readmore_box('/blog/view/' + post_.slug)
+        new_body = ''.join((new_body,
+                            '<span class=\'continued\'> ...(continued)</span>',
+                            readmore_box('/blog/view/' + post_.slug)))
 
     return new_body
 
@@ -357,6 +358,13 @@ def get_tags_fontsizes(tags_dict=None):
             tag_sizes[tag_name] = "2em"
             
     return tag_sizes
+
+
+def readmore_box(href):
+    """ returns Html string for the readmore box. """
+    return ('<br>'
+            '<a href=\'{}\'>'
+            '<div class=\'readmore-box\'>more...</div></a>').format(href)
 
 
 class wp_tag():

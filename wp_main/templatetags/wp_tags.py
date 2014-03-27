@@ -17,9 +17,8 @@ import os
 from django import template
 from django.conf import settings
 # Local tools
-from wp_main.utilities import htmltools
 from wp_main.utilities import utilities
-from wp_main.utilities.highlighter import wp_highlighter
+from wp_main.utilities.highlighter import wp_highlighter, highlight_codes
 from wp_main.utilities.wp_logging import logger
 # for admin site filtering
 from blogger.models import wp_blog
@@ -41,12 +40,6 @@ disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
 #disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
 #disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
-
-
-def comments_button(value):
-    """ returns comments button for this blog post. """
-    # TODO: Put this is blogger_tags where it belongs..!
-    return mark_safe(htmltools.comments_button('/blog/view/' + value.slug))
 
 
 def contains(str_or_list, val_to_find):
@@ -217,6 +210,16 @@ def get_remote_ip(request):
     """ Make the convenience function available for templates. """
     
     return utilities.get_remote_ip(request)
+
+
+def hcodes(content):
+    """ Highlight using short codes found with highlighter.highlight_codes.
+        Example:
+        {{ "[py]import os[?py]"|hcodes }}
+    """
+    if not content:
+        return content
+    return mark_safe(highlight_codes(content))
 
 
 def highlight_python(scontent):
@@ -418,7 +421,6 @@ def subtract(val, otherval=None):
 
 # tuple of filters to register.
 registered_filters = (
-    comments_button,
     contains,
     debug_allowed,
     dict_value,
@@ -430,6 +432,7 @@ registered_filters = (
     get_filename,
     get_remote_host,
     get_remote_ip,
+    hcodes,
     highlight_python,
     insert_video,
     is_disabled,
