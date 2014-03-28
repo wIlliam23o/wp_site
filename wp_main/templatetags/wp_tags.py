@@ -188,8 +188,14 @@ def exceeds_min(value, min_):
 
 def getlength(lennable):
     """ Tag for len() """
-
-    return len(lennable)
+    if not lennable:
+        return 0
+    
+    try:
+        return len(lennable)
+    except TypeError:
+        # Non len()able type.
+        return 0
 
 
 def get_filename(filename):

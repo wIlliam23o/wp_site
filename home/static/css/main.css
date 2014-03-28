@@ -1035,6 +1035,9 @@ ul.bullet li {
   text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
   border-top: 1px solid rgba(255, 255, 255, 0.3); }
 
+.alert-message {
+  font-weight: bold; }
+
 /* Code wrap. Border with blueish text. (use pre for indention) */
 .codewrap, code, samp, .sampwrap {
   margin: 2px;

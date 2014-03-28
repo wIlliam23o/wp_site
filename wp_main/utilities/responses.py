@@ -16,7 +16,10 @@ from collections import defaultdict
 # Local tools
 from wp_main.utilities import htmltools
 from wp_main.utilities.utilities import (
-    get_browser_style, get_server, get_remote_ip
+    get_browser_style,
+    get_server,
+    get_remote_ip,
+    logtraceback
 )
 
 # Log
@@ -87,7 +90,8 @@ def clean_response(template_name, context_dict, **kwargs):
     """
     if context_dict is None:
         context_dict = {}
-    request = kwargs.get('request', None) or context_dict.get('request', None)
+    # Check kwargs for a request obj, then check the context if it's not there.
+    request = kwargs.get('request', context_dict.get('request', None))
 
     # Add request to context if available.
     if request:
@@ -103,12 +107,26 @@ def clean_response(template_name, context_dict, **kwargs):
     
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
-    except Exception as ex:
-        _log.error('Unable to render template: '
-                   '{}\n{}'.format(template_name, ex))
+    except Exception:
+        logtraceback(_log.error, message='Unable to render.')
+        if request:
+            # 500 page.
+            return error500(request, msgs=('Error while building that page.',))
+        # Fallback crappy alert message page.
         return alert_message(request,
                              'Sorry, there was an error loading this page.')
     else:
+        if not rendered:
+            # Something went wrong in the render chain.
+            # It catches most errors, logs them, and returns ''.
+            msgs = ['Unable to build that page right now, sorry.']
+            if request:
+                return error500(request, msgs=msgs)
+            # no request, build a really crappy error page.
+            msgs.append('The error has been logged and emailed to me.')
+            rendered = htmltools.fatal_error_page('<br>\n'.join(msgs))
+
+        # Return final page response.
         return HttpResponse(rendered)
 
 
@@ -119,7 +137,8 @@ def clean_response_req(template_name, context_dict, **kwargs):
     
     if not context_dict:
         context_dict = {}
-    request = kwargs.get('request', None)
+    # Check kwargs for a request obj, then check the context if it's not there.
+    request = kwargs.get('request', context_dict.get('request', None))
     if request:
         # Add server name, remote ip to context if not added already.
         if not context_dict.get('server_name', False):
@@ -137,36 +156,27 @@ def clean_response_req(template_name, context_dict, **kwargs):
 
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
-    except Exception as ex:
-        _log.error('Unable to render template with request context: '
-                   '{}\n{}'.format(template_name, ex))
+    except Exception:
+        logtraceback(_log.error, message='Unable to render.')
+        if request:
+            # 500 page.
+            return error500(request, msgs=('Error while building that page.',))
+        # Fallback crappy alert message page.
         return alert_message(request,
                              'Sorry, there was an error loading this page.')
     else:
+        if not rendered:
+            # Something went wrong in the render chain.
+            # It catches most errors, logs them, and returns ''.
+            msgs = ['Unable to build that page right now, sorry.']
+            if request:
+                return error500(request, msgs=msgs)
+            # no request, build a really crappy error page.
+            msgs.append('The error has been logged and emailed to me.')
+            rendered = htmltools.fatal_error_page('<br>\n'.join(msgs))
+
+        # Return final page
         return HttpResponse(rendered)
-    
- 
-def clean_template(template_, context_=None, force_=False):
-    """ renders a template with context and
-        applies the cleaning functions.
-        
-        Email addresses are hidden with hide_email(),
-        then fixed on document load with wptools.js.
-        
-        Blank Lines, Whitespace, Comments are removed if DEBUG = True.
-        see: htmltools.render_clean() or htmltools.clean_html()
-    """
-    if context_ is None:
-        context_ = {}
-    
-    if hasattr(template_, 'encode'):
-        # render template and then clean.
-        return htmltools.render_clean(template_, context_)
-    elif hasattr(template_, 'render'):
-        # already loaded template.
-        return htmltools.clean_html(template_.render(context_))
-    else:
-        return None
 
 
 def default_dict(request=None, extradict=None):
@@ -194,14 +204,20 @@ def default_dict(request=None, extradict=None):
     return defaults
 
 
-def error404(request, message=None):
+def error404(request, msgs=None):
     """ Raise a 404, but pass an optional message through the messages
         framework.
     """
 
-    if message:
-        messages.error(request, message)
-        raise Http404(message)
+    if msgs and isinstance(msgs, str):
+        msgs = [msgs]
+
+    if msgs:
+        # Send messages using the message framework.
+        for m in msgs:
+            messages.error(request, m)
+
+        raise Http404(msgs[0])
     else:
         raise Http404()
 

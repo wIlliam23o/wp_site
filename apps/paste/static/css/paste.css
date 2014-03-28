@@ -87,7 +87,7 @@
 .paste-date-box, .replies-date-box {
   display: block; }
 
-.paste-date, .vertical-menu-reply-date, .paste-item-date {
+.paste-date, .vertical-menu-reply-date, .paste-item-date, .paste-item-reply-date {
   font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
   font-size: 0.8em;
   font-weight: bold;
@@ -183,29 +183,40 @@
   margin-bottom: 5px;
   display: block; }
 
-.paste-item-title {
+.paste-item-title, .paste-item-replyto, .paste-item-reply-title {
   display: block;
   font-size: 1em;
   font-weight: bold;
   color: #26a1f4;
   text-transform: lowercase; }
-  .paste-item-title:hover {
+  .paste-item-title:hover, .paste-item-replyto:hover, .paste-item-reply-title:hover {
     color: #2358a6; }
 
-.paste-item-lang-label {
+.paste-item-replyto-label {
+  display: inline-block;
+  margin-left: 10px;
+  margin-bottom: 5px;
+  font-size: 0.75em;
+  color: #afafaf; }
+
+.paste-item-replyto, .paste-item-reply-title {
+  display: inline-block;
+  font-size: 0.75em; }
+
+.paste-item-lang-label, .paste-item-author-label, .paste-item-reply-author-label {
   display: block;
   font-size: 0.75em;
   color: #afafaf; }
 
-.paste-item-lang {
+.paste-item-lang, .paste-item-author, .paste-item-reply-author {
   display: inline;
   font-size: 0.8em;
   color: #26a1f4; }
 
-.paste-item-date {
+.paste-item-date, .paste-item-reply-date {
   display: block; }
 
-.paste-item-replies {
+.paste-item-replies-btn {
   display: inline-block;
   margin-left: 5px;
   -webkit-border-radius: 5px;
@@ -221,12 +232,45 @@
   font-weight: bold;
   font-size: 0.75em;
   color: #26a1f4; }
-  .paste-item-replies a {
+  .paste-item-replies-btn a {
     color: #26a1f4;
     font-weight: bold; }
-  .paste-item-replies a:hover {
+  .paste-item-replies-btn a:hover {
     color: #2358a6;
     border-color: rgba(202, 217, 224, 0.5); }
+
+.paste-item-replies-box {
+  display: block;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(202, 217, 224, 0.5);
+  padding: 5px;
+  margin-top: 5px; }
+
+.paste-item-reply-label {
+  display: inline-block;
+  font-size: 0.8em;
+  font-weight: bold;
+  color: #afafaf;
+  text-transform: lowercase; }
+
+.paste-item-reply {
+  display: block;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-color: rgba(202, 217, 224, 0.5);
+  padding: 5px; }
+
+.paste-item-reply-date {
+  font-size: 0.6em; }
 
 .paste-item-views {
   display: inline-block;

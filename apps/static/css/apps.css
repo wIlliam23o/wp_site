@@ -75,4 +75,8 @@
   box-shadow: #bac2c7 1px 1px 4px;
   -moz-box-shadow: #bac2c7 1px 1px 4px;
   -webkit-box-shadow: #bac2c7 1px 1px 4px;
-  padding: 5px; }
+  padding: 5px;
+  background-color: white; }
+
+a .apps-button {
+  background-color: white; }

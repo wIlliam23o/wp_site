@@ -24,6 +24,38 @@ REPLYMAX = 10
 LISTINGMAX = 25
 
 
+def list_view(request, title=None, filterkw=None, orderby=None):
+    """ A view that lists posts based on filter() kwargs,
+        order_by() kwargs.
+    """
+    if filterkw is None:
+        filterkw = {}
+    if title is None:
+        title = 'Pastes'
+    # Default behaviour is to not show disabled pastes.
+    if not 'disabled' in filterkw.keys():
+        filterkw['disabled'] = False
+
+    try:
+        p = wp_paste.objects.filter(**filterkw)
+        if orderby is not None:
+            p = p.order_by(orderby)
+    except Exception as ex:
+        errmsg = 'Unable to retrieve pastes for: {}\n{}'
+        _log.error(errmsg.format(title, ex))
+        p = []
+
+    if len(p) > LISTINGMAX:
+        p = p[:LISTINGMAX]
+
+    context = {
+        'request': request,
+        'pastes': p,
+        'listing_title': title,
+    }
+    return responses.clean_response('paste/listing.html', context)
+
+
 def view_api(request):
     """ Landing page for api help. """
 
@@ -169,22 +201,7 @@ def view_json(request):
 @csrf_protect
 def view_latest(request):
     """ View latest pastes  """
-
-    try:
-        p = wp_paste.objects.filter(disabled=False).order_by('-publish_date')
-    except Exception as ex:
-        _log.error('Unable to retrieve pastes:\n{}'.format(ex))
-        p = []
-
-    if len(p) > LISTINGMAX:
-        p = p[:LISTINGMAX]
-
-    context = {
-        'request': request,
-        'pastes': p,
-        'listing_title': 'Latest Pastes',
-    }
-    return responses.clean_response('paste/listing.html', context)
+    return list_view(request, title='Latest Pastes', orderby='-publish_date')
 
 
 @never_cache
@@ -292,21 +309,7 @@ def view_replies(request):
 def view_top(request):
     """ View top pastes (highest view count) """
 
-    try:
-        p = wp_paste.objects.filter(disabled=False).order_by('-view_count')
-    except Exception as ex:
-        _log.error('Unable to retrieve pastes:\n{}'.format(ex))
-        p = []
-
-    if len(p) > LISTINGMAX:
-        p = p[:LISTINGMAX]
-
-    context = {
-        'request': request,
-        'pastes': p,
-        'listing_title': 'Top Pastes',
-    }
-    return responses.clean_response('paste/listing.html', context)
+    return list_view(request, title='Top Pastes', orderby='-view_count')
 
 
 @csrf_protect

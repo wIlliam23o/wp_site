@@ -11,14 +11,18 @@ usage_str = """findexe.py
     Options:
         -h,--help                   : Show this message.
         <searchterm>                : Name, or part of a name to search for.
-        -a,--argstyle               : Output is formatted in argument-style so it can be
-                                      used with another command like: stat `findexe ls -a`
-                                      Output is either nothing ('') with return code 1,
-                                      or 'file1 file2 file3' with return code 0.
-        -e <dirs>,--exclude <dirs>  : Directories to exclude separated by ',' or ':'.
+        -a,--argstyle               : Output is formatted in argument-style so
+                                      it can be used with another command like:
+                                      stat `findexe ls -a`
+                                      Output is either nothing ('') with
+                                      return code 1,
+                                      or 'file1 file2 file3' with return
+                                      code 0.
+        -e <dirs>,--exclude <dirs>  : Directories to exclude,
+                                      separated by ',' or ':'.
         
 """
-
+__VERSION__ = '1.0.1'
 from datetime import datetime
 import os
 import re
@@ -29,14 +33,15 @@ from docopt import docopt
 # Usual directories for executables...
 DIRS = ('/usr/local/bin',
         '/usr/local/sbin',
-        '/usr/bin', 
+        '/usr/bin',
         '/usr/sbin',
-        '/bin', 
+        '/bin',
         '/sbin',
         os.path.expanduser('~/bin'),
         os.path.expanduser('~/local/bin'),
         os.path.expanduser('~/.local/bin'),
         )
+
 
 def main(argd):
     """ main entry point, expects arguments from docopt. """
@@ -52,13 +57,14 @@ def main(argd):
     dirs = parse_dirs(excludedirs=argd['--exclude'])
     # Only print header if --argstyle is not used.
     if not argd['--argstyle']:
-        print('\nSearching {} directories for: {}\n'.format(str(len(dirs)), argd['<searchterm>']))
+        headerfmt = '\nSearching {} directories for: {}\n'
+        print(headerfmt.format(len(dirs), argd['<searchterm>']))
     
     # Start searching
     foundfiles = 0
     relevantdirs = []
     starttime = datetime.now()
-    # place for --argstyle output (otherwise exes are printed as they are found)
+    # place for --argstyle output (otherwise exes are printed as found)
     argstyle_exes = []
     try:
         for sdir in dirs:
@@ -78,10 +84,10 @@ def main(argd):
                             relevantdirs.append(root)
         stoptime = datetime.now()
     except (IOError, OSError) as exio:
-        print('\nUnable to walk directory!\n{}'.format(str(exio)))
+        print('\nUnable to walk directory!\n{}'.format(exio))
         return 1
     except Exception as ex:
-        print('\nError in script!\n{}'.format(str(ex)))
+        print('\nError in script!\n{}'.format(ex))
         return 1
     
     # finished successfully.
@@ -93,9 +99,10 @@ def main(argd):
         else:
             return 1
     else:
-        # Print footer for non-argstyle output (filepaths were already printed if found).
+        # Print footer for non-argstyle output
         if foundfiles:
-            print('\nFound {} files in {} directories.'.format(str(foundfiles), str(len(relevantdirs))))
+            print(('\nFound {} files in '
+                   '{} directories.').format(foundfiles, len(relevantdirs)))
         else:
             print('\nNo files found matching: {}'.format(argd['<searchterm>']))
         # show time, trim to acceptable decimal point
@@ -103,6 +110,7 @@ def main(argd):
         duration = str(round(duration, 3))
         print('{}s'.format(duration))
     return 0
+
 
 def parse_excludes(excludestr):
     """ Turns a separated list of dirs into an actual list.
@@ -116,6 +124,7 @@ def parse_excludes(excludestr):
     
     excludestr = excludestr.replace(':', ',').replace(';', ',')
     return excludestr.split(',')
+
 
 def parse_dirs(excludedirs=None):
     """ Checks all dirs, and only returns the valid existing dirs. """
@@ -136,5 +145,3 @@ def parse_dirs(excludedirs=None):
 if __name__ == '__main__':
     mainret = main(docopt(usage_str, argv=sys.argv[1:]))
     sys.exit(mainret)
-
-

@@ -5,6 +5,11 @@
 
 {% block extrastyle %}
     <link type="text/css" rel="stylesheet" href="/static/css/paste.min.css"/>
+    <style type='text/css'>
+        .paste-item-replies-box {
+            display: none;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -55,6 +60,24 @@
                                 {{ paste.title }}
                             </div>
                         </a>
+                        {% if paste.author %}
+                            <div class='paste-item-author-label'>
+                                Author:
+                                <span class='paste-item-author'>
+                                    {{ paste.author }}
+                                </span>
+                            </div>
+                        {% endif %}
+                        {% if paste.parent %}
+                            <div class='paste-item-replyto-label'>
+                                Reply To:
+                                <a href='/paste/?id={{ paste.parent.paste_id }}'>
+                                    <span class='paste-item-replyto'>
+                                        {{ paste.parent.title }}
+                                    </span>
+                                </a>
+                            </div>
+                        {% endif %}
                         <div class='paste-item-lang-label'>
                             Language:
                             <span class='paste-item-lang'>
@@ -78,8 +101,8 @@
                         </div>
                         {% if paste|child_count > 0 %}
                             {# Paste has replies of its own. #}
-                            <div class='paste-item-replies'>
-                                <a href='/paste/replies/?id={{ paste.paste_id }}'>
+                            <div class='paste-item-replies-btn'>
+                                <a href='javascript: void(0);' onclick='javascript: $("#paste-replies-{{ paste.paste_id }}").slideToggle();'>
                                     {{ paste|child_count }}
                                     {% if paste|child_count == 1 %}
                                         reply...
@@ -88,6 +111,33 @@
                                     {% endif %}
                                 </a>
                             </div>
+                            <div id='paste-replies-{{ paste.paste_id }}' class='paste-item-replies-box'>
+                                <div class='paste-item-reply-label'>
+                                    Replies:
+                                </div>
+                                {% for reply in paste|paste_children %}
+                                    <div class='paste-item-reply'>
+                                        <a href='/paste/?id={{ reply.paste_id }}'>
+                                            <div class='paste-item-reply-title'>
+                                                {{ reply.title }}
+                                            </div>
+                                        </a>
+                                        {% if reply.author %}
+                                            <div class='paste-item-reply-author-label'>
+                                                Author:
+                                                <span class='paste-item-reply-author'>
+                                                    {{ reply.author }}
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                        <div class='paste-item-reply-date'>
+                                            {{ reply.publish_date|paste_time }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+
                         {% endif %}
                     </div>
                 {% endfor %}
