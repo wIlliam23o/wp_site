@@ -50,9 +50,6 @@
   position: relative;
   display: inline-block;
   border-radius: 5px;
-  border-width: 1px;
-  border-color: rgba(202, 217, 224, 0.5);
-  border-style: solid;
   padding: 3px; }
 
 .search-listing-title-box:hover {
@@ -60,10 +57,16 @@
 
 .search-listing-title {
   margin-bottom: 5px;
-  font-size: 1.5em; }
+  font-size: 1.5em;
+  color: #26a1f4; }
+  .search-listing-title:hover {
+    color: #2358a6; }
 
-a.search-listing-title {
-  font-size: 1.5em; }
+a .search-listing-title {
+  font-size: 1.5em;
+  color: #26a1f4; }
+  a .search-listing-title:hover {
+    color: #2358a6; }
 
 .search-listing-body {
   border-radius: 5px;

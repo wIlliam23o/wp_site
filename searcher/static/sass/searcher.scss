@@ -59,9 +59,6 @@
     position: relative;
     display: inline-block;
     border-radius: 5px;
-    border-width: 1px;
-    border-color: $bordermain;
-    border-style: solid;
     padding: 3px;
     
 }
@@ -71,11 +68,21 @@
 .search-listing-title {
     margin-bottom: 5px;
     font-size: $fontmedium;
+    color: $bluemain;
+
+    &:hover {
+        color: $bluelink;
+    }
     
 }
 
-a.search-listing-title {
+a .search-listing-title {
     font-size: $fontmedium;
+    color: $bluemain;
+
+    &:hover {
+        color: $bluelink;
+    }
 }
 .search-listing-body {
     border-radius: 5px;

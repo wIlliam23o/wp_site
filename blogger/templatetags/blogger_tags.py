@@ -13,10 +13,11 @@ register = template.Library()
 
 def comments_button(blogpost):
     """ returns comments button for this blog post. """
-    return ''.join(["<a href='",
-                    blogpost.slug,
-                    "#comments-box'><div class='comments-button'>",
-                    "comments...</div></a>"])
+    s = ''.join(["<a href='",
+                 blogpost.slug,
+                 "#comments-box'><div class='comments-button'>",
+                 "comments...</div></a>"])
+    return mark_safe(s)
 
 
 def tag_links(value):
