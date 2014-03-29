@@ -224,6 +224,15 @@ def view_paste(request):
     replycount = None
 
     if pasteidarg is not None:
+        # Check for id aliases.
+        IDALIAS = {
+            'top': view_top,
+            'latest': view_latest,
+            'all': view_latest
+        }
+        if pasteidarg in IDALIAS.keys():
+            return IDALIAS[pasteidarg](request)
+
         # Lookup existing paste by id.
         pasteobj = get_object(wp_paste.objects,
                               paste_id=pasteidarg)

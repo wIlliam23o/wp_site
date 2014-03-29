@@ -34,7 +34,7 @@
 	{% endif %}
 	<tr class="{% cycle 'row1' 'row2' %}">
 		{% for item in result %}
-			{{ item|disabled_css }}
+			{{ item|colorize_admin_css }}
 		{% endfor %}
 	</tr>
 {% endfor %}

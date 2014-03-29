@@ -845,7 +845,12 @@ table#change-history tbody th {
 
 /* Custom items (from wp_tags filters or other) */
 a.item-disabled, .item-disabled {
+    /* Disabled items are grey! */
 	color: #c5c5c5;
 	/*font-weight: normal;*/
 }
 
+a.item-onhold, .item-onhold {
+    /* Onhold items are purple! */
+    color: rgb(147, 0, 210);
+}

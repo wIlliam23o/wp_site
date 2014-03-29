@@ -14,8 +14,8 @@ from sys import version as sysversion
 SYSVERSION = sysversion
 
 # Django messages framework, message-levels
-from django.contrib.messages import constants as message_constants
-MESSAGE_LEVEL = message_constants.ERROR
+#from django.contrib.messages import constants as message_constants
+#MESSAGE_LEVEL = message_constants.ERROR
 
 # DEBUG is in settings_local...
 

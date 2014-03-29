@@ -42,35 +42,7 @@ disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
 
 
-def contains(str_or_list, val_to_find):
-    """ uses 'if val in str_or_list'.
-        returns True if val_to_find is in str_or_list.
-    """
-    
-    return (val_to_find in str_or_list)
-
-
-def debug_allowed(request_object):
-    """ uses utilities to determine if debug 
-        info is allowed for this request.
-    """
-    
-    return utilities.debug_allowed(request_object)
-
-
-def dict_value(dict_object, dictkey):
-    """ retrieves value for dict key,
-        like: value['dictkey'].
-    """
-    
-    try:
-        val = dict_object[dictkey]
-    except:  # Exception as ex:
-        val = ''
-    return val
-
-
-def disabled_css(item):
+def colorize_admin_css(item):
     """ applies class='item-disabled' to admin change_list.results.item
         if the object has .disabled attribute and it is set to True.
         This is used in change_list_results.html template for admin.
@@ -127,10 +99,42 @@ def disabled_css(item):
     if is_disabled(obj):
         return mark_safe(item.replace('<a href',
                                       '<a class="item-disabled" href'))
+    elif is_onhold(obj):
+        # Item is onhold.
+        return mark_safe(item.replace('<a href',
+                                      '<a class="item-onhold" href'))
     else:
         # item was not disabled.
         return item
     
+
+def contains(str_or_list, val_to_find):
+    """ uses 'if val in str_or_list'.
+        returns True if val_to_find is in str_or_list.
+    """
+    
+    return (val_to_find in str_or_list)
+
+
+def debug_allowed(request_object):
+    """ uses utilities to determine if debug 
+        info is allowed for this request.
+    """
+    
+    return utilities.debug_allowed(request_object)
+
+
+def dict_value(dict_object, dictkey):
+    """ retrieves value for dict key,
+        like: value['dictkey'].
+    """
+    
+    try:
+        val = dict_object[dictkey]
+    except:  # Exception as ex:
+        val = ''
+    return val
+
 
 def ends(str_, val_to_check):
     """ uses str_.endswith() to check a value.
@@ -316,6 +320,17 @@ def is_none(obj):
     return obj is None
 
 
+def is_onhold(model_obj):
+    """ if object has .disabled attribute, returns it,
+        if not, returns False.
+    """
+    
+    if hasattr(model_obj, 'onhold'):
+        return model_obj.onhold
+    else:
+        return False
+
+
 def is_staff(request):
     """ Returns true if the user is an admin. """
 
@@ -427,10 +442,10 @@ def subtract(val, otherval=None):
 
 # tuple of filters to register.
 registered_filters = (
+    colorize_admin_css,
     contains,
     debug_allowed,
     dict_value,
-    disabled_css,
     ends,
     exceeds_max,
     exceeds_min,
