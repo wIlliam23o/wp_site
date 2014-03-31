@@ -75,8 +75,9 @@ h1, h2, .module-title h2, h3, h4, h5 {
     text-transform: lowercase;
     }
     
-/* These two should have the same style, different sizes. */
-h2.title, h1.title {
+
+h1.title {
+    font-size: $fontmedium;
     margin-left: 0px;
     margin-bottom: 5px;
     margin-top: 10px;
@@ -85,8 +86,13 @@ h2.title, h1.title {
     padding-left: 10px;
     }
 
-h2.title { font-size: $fontbigger; }
-h1.title { font-size: $fontmedium; }
+h2.title {
+    // H2's are used alone, not fitting in any box.
+    // They need to be unindented to stand out.
+    @extend h1.title;
+    font-size: $fontbigger;
+    margin-left: -20px;
+}
 
 h4 {
     text-transform: lowercase;

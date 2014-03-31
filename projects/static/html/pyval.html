@@ -47,15 +47,6 @@
             <strong>PyVal</strong> looks for [bash]/usr/bin/pypy-sandbox[?bash].
         </div>
         <li class='B'>
-            pastebinit package
-        </li>
-        <div class='listdesc'>
-            Command-line utility to pastebin content when the output limit for chat is exceeded.
-            <br>
-            As of right now, http://paste.pound-python.org is used.<br>
-            <strong>PyVal</strong> looks for [bash]/usr/bin/pastebinit[?bash].
-        </div>
-        <li class='B'>
             Twisted python module
         </li>
         <div class='listdesc'>
@@ -215,14 +206,14 @@ PyValUser: !py print('\\n'.join(['test', 'this']))
         <pre class='codewrap'>
 PyValUser: !py for i in range(65):\n    print('test' * 55)
     pyval: PyValUser, testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
-           full: http://paste.pound-python.org/show/AcDrJg9NszeyXmxcOKBI/
+           - goto: http://welbornprod.com/paste?id=xxxx
         </pre><br>
 
-        Long output is sent to a pastebin, but even then it is truncated.
+        Long output is sent to a paste bin, but even then it is truncated.
         You can get up to 65 lines of output, each line must not exceed ~240 characters.
         <br><br>
-        This limit is to ease the bandwidth used on the pastebin site. 
-        I don't want to be responsible for the abuse of pastebins.
+        This limit is to ease the bandwidth used on my paste site. 
+        I don't want 1000+ lines of junk in my database.
         <br><br>
         If you are trying to evaluate honest code in the sandbox and must have the full output,
         then you should probably download PyVal and run PyValExec yourself with 
@@ -470,7 +461,7 @@ if __name__ != '__pyval__':
         PyVal's tests are [py]unittest[/py]-based, and you can run them with your favorite
         Python test-runner ([py]pytest[/py], [py]nose[/py], etc.).
         <br><br>
-        The tests will check for the existence of [bash]pypy-sandbox[/bash] and [bash]pastebinit[/bash],
+        The tests will check for the existence of [bash]pypy-sandbox[/bash],
         test the execution of code inside the sandbox, and test IRC input / output.
     </div>
 </div>
@@ -482,7 +473,24 @@ if __name__ != '__pyval__':
             Updates
         </h3>
     </div>
-    
+
+    <!-- Update: 1.0.7 -->
+    <div class='update-box'>
+        <span class='update-title'>
+            Update: version 1.0.7
+        </span>
+        <ul class='circle blue'>
+            <li>
+                Switched paste bin to <a href='http://welbornprod.com/paste'>welbornprod.com/paste</a>.
+            </li>
+            <div class='listdesc'>
+                This removes the [bash]pastebinit[?bash] requirement, and allows me
+                to have more control over what PyVal do. Also, I just like my paste site more. :)
+            </div>
+        </ul>
+    </div>
+
+    <!-- Update: 1.0.6 -->
     <div class='update-box'>
         <span class='update-title'>
             Update: version 1.0.6
