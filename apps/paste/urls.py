@@ -5,14 +5,16 @@ from apps.paste import views
 urlpatterns = patterns('',
                        # paste main
                        url(r'^$', views.view_index),
-                       # paste submit
-                       url(r'submit/?', views.ajax_submit),
+                       # public api submit
+                       url(r'api/submit/?', views.submit_public),
+                       # public api
+                       url(r'api/?', views.view_json),
+                       # paste submit (on site)
+                       url(r'submit/?', views.submit_ajax),
                        # paste replies
                        url(r'replies/?', views.view_replies),
                        # latest pastes
                        url(r'latest/?', views.view_latest),
                        # top pastes
                        url(r'top/?', views.view_top),
-                       # public api
-                       url(r'api/?', views.view_json),
                        )

@@ -207,6 +207,10 @@ def default_dict(request=None, extradict=None):
 def error404(request, msgs=None):
     """ Raise a 404, but pass an optional message through the messages
         framework.
+        Arguments:
+            request     : Request object from view.
+            msgs        : Optional error messages for the messages framework.
+                          Accepts a list, or a single string.
     """
 
     if msgs and isinstance(msgs, str):
@@ -222,14 +226,20 @@ def error404(request, msgs=None):
         raise Http404()
 
 
-def error500(request, msgs=None):
+def error500(request, msgs=None, user_error=None):
     """ Fake-raise a 500 error. I say fake because no exception is
         raised, but the user is directed to the 500-error page.
-        If a message is passed, it is sent via the messages framework.
+        If msgs is passed, it is sent via the messages framework.
         Arguments:
-            request  : Request object from view.
-            message  : Optional message for the messages framework.
+            request     : Request object from view.
+            msgs        : Optional error messages for the messages framework.
+                          Accepts a list, or a single string.
+            user_error  : Friendly msg to show to the user, usually because it
+                          was their fault (invalid request/url).
+                          Without it, the default 'sorry, this was my fault..'
+                          msg is shown.
     """
+
     if msgs and isinstance(msgs, str):
         msgs = [msgs]
 
@@ -241,6 +251,7 @@ def error500(request, msgs=None):
     context = {'request': request,
                'server_name': get_server(request),
                'remote_ip': get_remote_ip(request),
+               'user_error': user_error,
                }
     try:
         rendered = htmltools.render_clean('home/500.html',
@@ -469,17 +480,28 @@ def get_request_args(request, requesttype=None, default=None):
 def json_get(data):
     """ Retrieves a dict from json data string. """
     
+    originaltype = type(data)
     if isinstance(data, dict):
         return data
     
-    datadict = json.loads(data.decode('utf-8'))
+    if hasattr(data, 'decode'):
+        data = data.decode('utf-8')
+
+    datadict = None
+    try:
+        datadict = json.loads(data)
+    except TypeError as extype:
+        _log.debug('Wrong type passed in: {}\n{}'.format(originaltype, extype))
+    except ValueError as exval:
+        _log.debug('Bad data passed in: {}\n{}'.format(data, exval))
+
     return datadict
 
 
 def json_get_request(request):
     """ retrieve JSON data from a request (uses json_get()). """
     
-    if request.is_ajax():
+    if hasattr(request, 'body'):
         return json_get(request.body)
     return None
 
@@ -501,7 +523,17 @@ def json_response_err(ex, log=False):
     if log:
         _log.error('Sent JSON error:\n{}'.format(ex))
 
-    return json_response({'status': 'error', 'message': str(ex)})
+    if hasattr(ex, '__class__'):
+        extyp = str(ex.__class__)
+    else:
+        extyp = str(type(ex))
+
+    errdata = {
+        'status': 'error',
+        'message': str(ex),
+        'errortype': extyp,
+    }
+    return json_response(errdata)
 
 
 def redirect_perm_response(redirect_to):

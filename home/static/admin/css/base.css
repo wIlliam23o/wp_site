@@ -851,6 +851,11 @@ a.item-disabled, .item-disabled {
 }
 
 a.item-onhold, .item-onhold {
-    /* Onhold items are purple! */
-    color: rgb(147, 0, 210);
+    /* Onhold items are outlined! */
+    text-decoration: overline underline;
+}
+
+a.item-private, .item-private {
+    /* Private items are italic. */
+    font-style: italic;
 }

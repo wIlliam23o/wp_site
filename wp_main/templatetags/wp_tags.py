@@ -94,19 +94,29 @@ def colorize_admin_css(item):
         _log.debug('Admin-disable: Can\'t find: '
                    '{} [{}]'.format(name, otype))
         return item
-    
+
+    # List of classes to add to this link.
+    newclasses = []
+
     # item is disabled?
     if is_disabled(obj):
-        return mark_safe(item.replace('<a href',
-                                      '<a class="item-disabled" href'))
-    elif is_onhold(obj):
+        newclasses.append('item-disabled')
+
+    if is_onhold(obj):
         # Item is onhold.
-        return mark_safe(item.replace('<a href',
-                                      '<a class="item-onhold" href'))
+        newclasses.append('item-onhold')
+        
+    if is_private(obj):
+        # Item is a private paste.
+        newclasses.append('item-private')
+
+    if newclasses:
+        # Return item with new classes added.
+        newtxt = '<a class="{}" href'.format(' '.join(newclasses))
+        return mark_safe(item.replace('<a href', newtxt))
     else:
-        # item was not disabled.
         return item
-    
+
 
 def contains(str_or_list, val_to_find):
     """ uses 'if val in str_or_list'.
@@ -296,8 +306,7 @@ def is_disabled(model_obj):
     
     if hasattr(model_obj, 'disabled'):
         return model_obj.disabled
-    else:
-        return False
+    return False
 
 
 def is_false(value):
@@ -327,8 +336,16 @@ def is_onhold(model_obj):
     
     if hasattr(model_obj, 'onhold'):
         return model_obj.onhold
-    else:
-        return False
+    return False
+
+
+def is_private(obj):
+    """ If object has a .private attribute, returns it.
+        if not, returns False.
+    """
+    if hasattr(obj, 'private'):
+        return obj.private
+    return False
 
 
 def is_staff(request):

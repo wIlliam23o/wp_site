@@ -138,6 +138,17 @@ def plural(cnt, word, pluralform=None):
     return '{}s'.format(word)
 
 
+def privatize_sel(modeladmin, request, queryset):
+    """ marks selected pastes as private. """
+    selcnt = len(queryset)
+    privcnt = queryset.update(private=True)
+    pstr = plural(selcnt, 'paste was', 'pastes were')
+    msg = '{} of {} {} marked as private.'.format(privcnt, selcnt, pstr)
+    modeladmin.message_user(request, msg, level=messages.SUCCESS)
+    return privcnt
+privatize_sel.short_description = 'Privatize selected pastes'
+
+
 def remove_hold_sel(modeladmin, request, queryset):
     """ marks selected pastes as not 'onhold' """
     p = queryset.filter(onhold=True)
@@ -149,17 +160,28 @@ def remove_hold_sel(modeladmin, request, queryset):
 remove_hold_sel.short_description = 'Remove hold on selected pastes'
 
 
+def unprivatize_sel(modeladmin, request, queryset):
+    """ marks selected pastes as private. """
+    selcnt = len(queryset)
+    privcnt = queryset.update(private=False)
+    pstr = plural(selcnt, 'paste was', 'pastes were')
+    msg = '{} of {} {} marked as not private.'.format(privcnt, selcnt, pstr)
+    modeladmin.message_user(request, msg, level=messages.SUCCESS)
+    return privcnt
+unprivatize_sel.short_description = 'Unprivatize selected pastes'
+
+
 class wp_pasteAdmin(admin.ModelAdmin):
     # enable actions above
     actions = [
-        #        delete_all_expired,
         delete_sel_expired,
         disable_pastes,
-        #        disable_all_expired,
         disable_sel_expired,
         enable_pastes,
         hold_sel,
+        privatize_sel,
         remove_hold_sel,
+        unprivatize_sel,
     ]
 
     
