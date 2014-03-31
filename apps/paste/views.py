@@ -82,9 +82,11 @@ def list_view(request, title=None, filterkw=None, orderby=None):
         filterkw = {}
     if title is None:
         title = 'Pastes'
-    # Default behaviour is to not show disabled pastes.
+    # Default behaviour is to not show disabled/private pastes.
     if not 'disabled' in filterkw.keys():
         filterkw['disabled'] = False
+    if not 'private' in filterkw.keys():
+        filterkw['private'] = False
 
     try:
         p = wp_paste.objects.filter(**filterkw)
