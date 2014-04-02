@@ -14,6 +14,8 @@ __module_description__ = 'Adds a /google command to xchat.'
 import commands
 from os import system as ossystem
 from os import path as ospath
+from urllib import quote as urlquote
+
 try:
     import hexchat as xchat
     xchat.EAT_XCHAT = xchat.EAT_HEXCHAT
@@ -77,35 +79,41 @@ def open_site(site, debug=False):
 
 def cmd_google(word, word_eol, userdata=False):
     """ /GOOGLE Command Handler: userdata is debug."""
-    
+    debug = False
+    for debugarg in ('-d', '--debug'):
+        if debugarg in word:
+            word.remove(debugarg)
+            debug = True
+
     try:
         if len(word) < 2:
-            return help_str
+            print(help_str)
+            return None
             
-        userquery = '+'.join(word[1:])
+        userquery = '+'.join([urlquote(s) for s in word[1:]])
         site = 'https://www.google.com/search?q=%s' % (userquery)
-        if userdata:
+        if debug:
             print('Opening site: {}'.format(site))
-            
-        nonzero = open_site(site, debug=userdata)
+        nonzero = open_site(site, debug=debug)
         if nonzero:
             print('Unable to google.')
         else:
-            print('Googled {}'.format(site))
+            if debug:
+                print('\nGoogled {}'.format(site))
         return None
     except Exception as ex:
-        print('Error during that google:\n{}'.format(str(ex)))
+        print('Error during that google:\n{}'.format(ex))
         return None
 
 
 # START OF SCRIPT
-help_str = 'Google Command Use: /GOOGLE <SearchQuery>'
-debughelp_str = ' '.join(['GoogleDebug Command: /GOOGLEDEBUG <SearchQuery>'
-                          '(Prints out debug info also.)'])
-
+help_str = '\n'.join([
+    'Usage: /GOOGLE <SearchQuery> [-d]',
+    '\nOptions:',
+    '    -d,--debug  : Print extra debugging info.\n',
+])
 xchat.hook_command('GOOGLE', cmd_google, userdata=False,
                    help=help_str)
-xchat.hook_command('GOOGLEDEBUG', cmd_google, userdata=True,
-                   help=debughelp_str)
+
 
 print('{}xgoogler v. {} loaded.'.format('02', __module_version__))
