@@ -3,25 +3,124 @@
 
 """xhighlights.py
 
-    Highlights URLS in XChat...
-
+    Highlights URLS and Nicks in XChat...
+    Colors/Styles are customisable.
     -Christopher Welborn
 """
 
 __module_name__ = 'xhighlights'
-__module_version__ = '0.3.8'
+__module_version__ = '0.4.0'
 __module_description__ = 'Highlights URLs and Nicks in the chat window.'
 VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
-
+import logging
 import os
 import re
-import xchat
+
+
+class logger(object):
+
+    """ Simple file logger, created with mylog = logger('logname').log """
+
+    def __init__(self, logname, filename=None, level=None, maxbytes=2097152):
+        """ Initialize a new logger.
+            Arguments:
+                logname  : Name for this logger (shows in logfile)
+
+            Keyword Arguments:
+                filename  : File name to use, defaults to: 
+                            logname.lower().replace(' ', '-')
+                level     : Logging level, defaults to: logging.DEBUG
+                maxbytes  : Delete old logfile on init if bigger than maxbytes.
+                            Default: 2097152 (~2MB)
+        """
+
+        # initialize logger with name
+        self.log = logging.getLogger(logname)
+        # select file name.
+        if filename:
+            self.filename = filename
+        else:
+            self.filename = '{}.log'.format(logname.lower().replace(' ', '-'))
+        # Check existing log size if available...
+        self.rotate_logfile(maxbytes=maxbytes)
+        # Set logging level.
+        self.level = level if level else logging.DEBUG
+        self.log.setLevel(self.level)
+        
+        # prepare file handler.
+        # build handler
+        self.filehandler = logging.FileHandler(self.filename)
+        # format for logging messages
+        log_format = ('%(asctime)s - [%(levelname)s] '
+                      '%(name)s.%(funcName)s (%(lineno)d):\n %(message)s\n')
+        self.formatter = logging.Formatter(log_format)
+        self.filehandler.setFormatter(self.formatter)
+        self.log.addHandler(self.filehandler)
+
+    def rotate_logfile(self, maxbytes=2097152):
+        """ Removes an old log if it is over a certain size.
+            This can't be done while it is in use.
+            It must be done before the logger is initialized.
+        """
+        if os.path.isfile(self.filename):
+            try:
+                logsize = os.path.getsize(self.filename)
+            except:
+                return False
+            if logsize > maxbytes:
+                # Remove old log file.
+                try:
+                    os.remove(self.filename)
+                    return True
+                except:
+                    return False
+        return False
+
+    def setlevel(self, lvl):
+        self.level = lvl
+        self.log.setLevel(self.level)
 
 # File for config. CWD is used, it usually defaults to /home/username
 CONFIGFILE = os.path.join(os.getcwd(), 'xhighlights.conf')
+LOGFILE = os.path.join(os.getcwd(), 'xhighlights.log')
+
+# Logger for xhighlights main.
+_log = logger('xhighlights', level=logging.WARNING).log
+_log.debug('{} loaded.'.format(VERSIONSTR))
 
 # Regex for matching a link..
-link_re = re.compile('^http\:|^https\:|^ftp|^www\.|\.com$|\.org$|[\w\d]\.net$')
+# Prefixes (as found in xchat/src/common/url.c)
+url_pre = ('irc\.', 'ftp\.', 'www\.',
+           'irc\://', 'ftp\://', 'http\://', 'https\://',
+           'file\://', 'rtsp\://', 'ut2004\://',
+           )
+# Extension (as found in xchat/src/common/url.c)
+url_ext = ('org', 'net', 'com', 'edu', 'html', 'info', 'name')
+# Start is optional, but will trigger a match.
+start = r'(^({})(.))'.format('|'.join(url_pre))
+# Middle (when no prefix is found, middle and end are required)
+middle = r'([\w\-]+)'
+end = r'([\.]({})([^\w\.]|$))'.format('|'.join(url_ext))
+
+# Basic pattern for an email address.
+email = r'(.+\@.+\..+)'
+# Combine all patterns.
+# Middle and End will trigger a match.
+linkpattern = '{}?{}{}'.format(start, middle, end)  # , extended)
+# Prefix will trigger a match.
+linkpattern += '|{}{}({})?'.format(start, middle, end)
+# Email address triggers a match.
+linkpattern += '|{}'.format(email)
+# Final pattern for highlighting a link.
+link_re = re.compile(linkpattern)
+
+
+# Global flag to stop emit_print recursion.
+# (not sure why this script started recursing just by changing the regex
+#  to catch links, but this flag will ensure that message_filter doesn't
+#  try to 'filter' my own emit_print())
+# See emit_highlighted() and message_filter().
+EMITTING = False
 
 
 def build_color_table():
@@ -39,10 +138,10 @@ def build_color_table():
 
     # Build basic table.
     colors = {}
-    for code in range(len(codes)):
-        colors[codes[code]] = {'index': code,
-                               'code': '{}{}'.format(start, str(code)),
-                               }
+    for i, code in enumerate(codes):
+        colors[code] = {'index': i,
+                        'code': '{}{}'.format(start, str(i)),
+                        }
 
     # Add style codes.
     # (made up an index for them for now, so color_code(97) will work.)
@@ -61,12 +160,13 @@ def build_color_table():
 
 
 def cmd_xhighlights(word, word_eol, userdata):
-    """ Handles /XHIGHLIGHTS command.
-        Allows you to set default colors/styles.
+    """ Handles / XHIGHLIGHTS command.
+        Allows you to set default colors / styles.
     """
 
     # Clean word and get flags for command.
     word, argd = get_flag_args(word, [('-c', '--colors', False),
+                                      ('-h', '--help', False),
                                       ('-l', '--link', False),
                                       ('-n', '--nick', False),
                                       ])
@@ -75,6 +175,12 @@ def cmd_xhighlights(word, word_eol, userdata):
     # Just print styles..
     if argd['--colors']:
         print_styles()
+        return xchat.EAT_ALL
+
+    # Print help
+    if argd['--help']:
+        # prints help for correct cmdname even if an alias was used.
+        print_help(word[0])
         return xchat.EAT_ALL
 
     # Check ambiguous args.
@@ -132,10 +238,14 @@ def color_code(color, suppresswarning=False):
 def color_text(color=None, text=None, bold=False, underline=False):
     """ return a color coded word.
         Keyword Arguments:
-            color      : Named color, or mIRC color number.
-            text       : Text to be colored.
-            bold       : Boolean,  whether text is bold or not.
-            underline  : Boolean. whether text is underlined or not.
+            color:
+                Named color, or mIRC color number.
+            text:
+                Text to be colored.
+            bold:
+                Boolean, whether text is bold or not.
+            underline:
+                Boolean. whether text is underlined or not.
     """
 
     # normal color code
@@ -155,7 +265,7 @@ def color_text(color=None, text=None, bold=False, underline=False):
 
 
 def get_cmd_rest(word):
-    """ Return the rest of a command. (removing /COMMAND) """
+    """ Return the rest of a command. (removing / COMMAND) """
 
     if word:
         if len(word) == 1:
@@ -169,13 +279,15 @@ def get_cmd_rest(word):
 def get_flag_args(word, arglist):
     """ Retrieves flag args from a command,
         returns a tuple with:
-            (cleaned_word, {'--longopt': True/False, ...})
+            (cleaned_word, {'--longopt': True / False, ...})
             ...where clean_word has all args removed,
-            ...and the dict has long options with True/False value.
+            ...and the dict has long options with True / False value.
 
         expects:
-            word    : from cmd_ word list.
-            arglist : list of tuples with [('-s', '--long', False), ...]
+            word:
+                from cmd_ word list.
+            arglist:
+                list of tuples with [('-s', '--long', False), ...]
                       ('shortoption', 'longoption', default_value)
                       ...default_value is optional and defaults to False.
 
@@ -189,9 +301,9 @@ def get_flag_args(word, arglist):
                 word == '/cmd This is extra stuff.'
                 argd == {'--all': True,    # the -a flag was used
                          '--count': True,  # it's default is True
-                         '--debug': False, # no -d flag was given.
+                         '--debug': False,  # no -d flag was given.
                          }
-                * Notice the /cmd is kept, it is useful for certain commands.
+                * Notice the / cmd is kept, it is useful for certain commands.
                 * get_cmd_rest(word) can remove it and return extra stuff only.
     """
 
@@ -236,10 +348,27 @@ def get_flag_args(word, arglist):
     return newword, arginfo
 
 
+def emit_highlighted(*emitargs):
+    """ Emits a print by unhooking, emitting, and rehooking to prevent
+        recursion.
+        (this used to not recurse anyway, it's under investigation..)
+
+        Arguments:
+            *emitargs: Arguments for emit_print.
+    """
+    global EMITTING
+    EMITTING = True
+    xchat.get_context().emit_print(*emitargs)
+    EMITTING = False
+    return xchat.EAT_ALL
+
+
 def highlight_word(s, style='link', ownmsg=False):
     """ Highlight a single word (string) in the prefferred style
-        s     :  The word (string) to highlight.
-        style : Type of word, either 'nick' or 'link'
+        s:
+            The word(string) to highlight.
+        style:
+            Type of word, either 'nick' or 'link'
     """
     if not style:
         style = 'link'
@@ -269,10 +398,7 @@ def load_user_color(stylename):
     stylename = stylename.lower().strip()
     user_pref = pref_get('xhighlights_{}'.format(stylename))
     if user_pref:
-        if set_style(user_pref, stylename):
-            print_status('Loaded {} from preferences: {}'.format(stylename,
-                                                                 user_pref))
-        else:
+        if not set_style(user_pref, stylename, silent=True):
             # Failure
             print_status('Default {} style will be used.'.format(stylename))
             try:
@@ -289,10 +415,17 @@ def load_user_color(stylename):
 def message_filter(word, word_eol, userdata):
     """ Filter all messages coming into the chat window.
         Arguments:
-            word    : List of data [nick, message]
-            word_eol: Same as word except [nick message, message]
-            userdata: The event this message came from (used to emit_print())
+            word:
+                List of data[nick, message]
+            word_eol:
+                Same as word except [nick message, message]
+            userdata:
+                The event this message came from (used to emit_print())
     """
+    if EMITTING:
+        _log.debug('Skipping own emit type: {}'.format(userdata))
+        return xchat.EAT_NONE
+    _log.debug('Filtering message type: {}'.format(userdata))
 
     # Get list of nicks.
     userslist = [u.nick for u in xchat.get_list('users')]
@@ -308,16 +441,18 @@ def message_filter(word, word_eol, userdata):
     # (otherwise we don't emit or EAT anything.)
     highlighted = False
 
-    normalmsg = (userdata != 'Channel Msg Hilight')
+    if userdata and ('Msg Hilight' in userdata):
+        normalmsg = False
+    else:
+        normalmsg = True
+
     usernick = (xchat.get_context()).get_info('nick')
     msgnick = remove_mirc_color(word[0])
     # Determine if this is the users own message
     # (changes highlight_word() settings)
     userownmsg = (usernick == msgnick)
 
-    for i in range(len(msgwords)):
-        # Current word being looked at.
-        eachword = msgwords[i]
+    for i, eachword in enumerate(msgwords):
         # Word is users own nick name?
         ownnick = (eachword == usernick) or (eachword[:-1] == usernick)
         # Word is any user name?
@@ -341,13 +476,10 @@ def message_filter(word, word_eol, userdata):
 
     # Print to the chat window.
     if highlighted:
-        # Build args for emit_print
-        # (userdata=Event Name, word = Modifed Message)
-        emitargs = [userdata] + word
+        _log.debug('Highlighted: {}'.format(' '.join(word)))
         # Emit modified message (with highlighting)
-        (xchat.get_context()).emit_print(*emitargs)
-        # Block normal handling of this message.
-        return xchat.EAT_ALL
+        # (userdata=Event Name, word = Modifed Message)
+        return emit_highlighted(*([userdata] + word))
     else:
         # Nothing was done to this message
         return xchat.EAT_NONE
@@ -452,18 +584,6 @@ def pref_set(opt, val):
         return False
 
 
-def print_styles():
-    """ Print all available styles. """
-
-    print('Available styles:')
-    for cname in sorted(COLORS.keys(), key=lambda x: COLORS[x]['index']):
-        cindex = str(COLORS[cname]['index'])
-        if len(cindex) == 1:
-            cindex = '0{}'.format(cindex)
-        print('    {} : {}'.format(cindex, color_text(cname, cname)))
-    print('')
-
-
 def print_currentstyles(link=True, nick=True):
     """ Print the current settings. """
 
@@ -484,9 +604,12 @@ def print_currentstyles(link=True, nick=True):
 def print_error(msg, exc=None, boldtext=None):
     """ Prints a red formatted error msg.
         Arguments:
-            msg       : Normal message to print in red.
-            exc       : Exception() object to print (or None)
-            boldtext  : Text that should be in Bold (or None)
+            msg:
+                Normal message to print in red.
+            exc:
+                Exception() object to print (or None)
+            boldtext:
+                Text that should be in Bold(or None)
 
         Ex:
             print_error('Error in: Main', exc=None, boldtext='Main')
@@ -516,6 +639,53 @@ def print_error(msg, exc=None, boldtext=None):
         print(color_text('red', '\n{}'.format(exc)))
 
 
+def print_help(cmdname):
+    """ Prints the command help, plus a little debugging info.
+        Arguments:
+            cmdname   : Name of command to get help for.
+                        (must be in cmd_help)
+    """
+    if cmdname.startswith('/'):
+        cmdname = cmdname.lower().strip('/')
+
+    if cmdname not in cmd_help.keys():
+        return None
+
+    # Header
+    print('\nHelp for {} ({}):'.format(color_text('grey', VERSIONSTR),
+                                       color_text('red', cmdname, bold=True)))
+    # Actual help lines.
+    for line in cmd_help[cmdname].split('\n'):
+        if ('--' in line) and (':' in line):
+            # option line, color code it.
+            parts = line.split(':')
+            if len(parts) == 2:
+                opt, desc = parts
+                print('    {}:{}'.format(color_text('blue', opt),
+                                         color_text('grey', desc)))
+
+        elif line.startswith('        '):
+            # Continuation of opt/desc line.
+            print('    {}'.format(color_text('grey', line)))
+
+        elif line.strip().startswith('*'):
+            # Notes line..
+            print('    {}'.format(color_text('blue', line)))
+        
+        else:
+            # Usage or other line.
+            print('    {}'.format(line))
+
+    # Debug info (file locations)
+    loglevel = str(_log.getEffectiveLevel())
+    debuglines = ['    Configuration File: {}'.format(str(CONFIGFILE)),
+                  '              Log File: {}'.format(str(LOGFILE)),
+                  '             Log Level: {}'.format(loglevel),
+                  ]
+    for line in debuglines:
+        print(color_text('grey', line))
+
+
 def print_status(s):
     """ Prints a formatted status message. """
 
@@ -526,11 +696,23 @@ mirc_color_regex = re.escape('\x03') + r'(?:(\d{1,2})(?:,(\d{1,2}))?)?'
 mirc_sub_pattern = re.compile(mirc_color_regex).sub
 
 
+def print_styles():
+    """ Print all available styles. """
+
+    print('Available styles:')
+    for cname in sorted(COLORS.keys(), key=lambda x: COLORS[x]['index']):
+        cindex = str(COLORS[cname]['index'])
+        if len(cindex) == 1:
+            cindex = '0{}'.format(cindex)
+        print('    {} : {}'.format(cindex, color_text(cname, cname)))
+    print('')
+
+
 def remove_mirc_color(text, _resubpat=mirc_sub_pattern):
     """ Removes color code from text
         (idea borrowed from nosklos clutterless.py)
         Sub pattern is preloaded on function definition,
-        like nosklos (but more readable i think)
+        like nosklos(but more readable i think)
     """
     return _resubpat('', text)
 
@@ -542,7 +724,7 @@ def set_style(userstyle, stylename=None, silent=False):
     stylename = stylename.lower().strip() if stylename else 'link'
 
     def parse_styles(txt):
-        """ Parses comma-separated styles. """
+        """ Parses comma - separated styles. """
         if ',' in txt:
             return [s.strip() for s in txt.split(',')]
         else:
@@ -613,7 +795,9 @@ for stylename in ('link', 'nick'):
 cmd_help = {'xhighlights':
             ('Usage: /XHIGHLIGHTS [-n [style] | -l [style]]\n'
              'Options:\n'
-             '    -c,--colors            : Show available styles.'
+             '    -c,--colors            : Show available styles.\n'
+             '    -h,--help              : Show this message.\n'
+             '                             (and some debugging info)\n'
              '    -l style,--link style  : Set link style by name/number.\n'
              '    -n style,--nick style  : Set nick style by name/number.\n'
              '\n    * style can be comma separated style names/numbers.\n'
@@ -645,19 +829,39 @@ for aliasname in cmd_aliases.keys():
     aliasforcmds = list(cmd_aliases[aliasname].keys())
     aliasfor = aliasforcmds[0]
     commands[aliasname]['desc'] = commands[aliasfor]['desc']
-
+try:
+    import hexchat as xchat
+    xchat.EAT_XCHAT = xchat.EAT_HEXCHAT
+except ImportError:
+    try:
+        import xchat
+    except ImportError:
+        print('Can\'t find xchat or hexchat.')
+        exit(1)
 # Hook all enabled commands.
+_log.debug('Initial hook into commands...')
+command_hooks = {}
 for cmdname in commands.keys():
     if commands[cmdname]['enabled']:
-        xchat.hook_command(cmdname.upper(),
-                           commands[cmdname]['func'],
-                           userdata=None,
-                           help=cmd_help[cmdname])
+        command_hooks[cmdname] = xchat.hook_command(cmdname.upper(),
+                                                    commands[cmdname]['func'],
+                                                    userdata=None,
+                                                    help=cmd_help[cmdname])
+        _log.debug('Initially hooked command: {}'.format(cmdname))
+
 
 # Hook into channel msgs
+_log.debug('Initial hook into channel messages...')
+event_hooks = {}
 for eventname in ('Channel Message', 'Channel Msg Hilight', 'Your Message'):
-    xchat.hook_print(eventname, message_filter, userdata=eventname)
+    eventhookname = ('message_filter.'
+                     '{}'.format(eventname.lower().replace(' ', '')))
+    event_hooks[eventhookname] = xchat.hook_print(eventname,
+                                                  message_filter,
+                                                  userdata=eventname)
+    _log.debug('Initially hooked event: {}'.format(eventhookname))
 
 
 # Print status
-print('{} loaded.'.format(color_text('blue', VERSIONSTR)))
+print(color_text('blue', '{} loaded.'.format(VERSIONSTR)))
+_log.debug('Initialization finished.')

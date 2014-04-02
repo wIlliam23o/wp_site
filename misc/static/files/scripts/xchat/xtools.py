@@ -26,7 +26,7 @@ import sys
 from threading import Thread
 # XChat style version info.
 __module_name__ = 'xtools'
-__module_version__ = '0.3.4'
+__module_version__ = '0.3.5'
 __module_description__ = 'Various tools/commands for extending XChat...'
 # really minor changes bump this 'versionx'
 VERSIONX = '0'
@@ -36,11 +36,16 @@ VERSIONSTR = '{} v. {}-{}'.format(__module_name__,
                                   VERSIONX)
 
 try:
-    # import actual xchat module (from within xchat)
-    import xchat
+    import hexchat as xchat
+    xchat.EAT_XCHAT = xchat.EAT_HEXCHAT
+    CHATDIR = os.path.expanduser('~/.config/hexchat')
 except ImportError:
-    print('\nThis cannot be used outside of XChat!\n')
-    sys.exit(1)
+    try:
+        import xchat
+        CHATDIR = os.path.expanduser('~/.xchat2')
+    except ImportError:
+            print('Can\'t find xchat or hexchat.')
+            exit(1)
 
 
 class XToolsConfig(object):
@@ -48,7 +53,7 @@ class XToolsConfig(object):
     """ Class for global configuration and session-settings container """
 
     def __init__(self):
-        self.xchat_dir = os.path.expanduser('~/.xchat2')
+        self.xchat_dir = CHATDIR
         # Default config file.
         if os.path.isdir(self.xchat_dir):
             self.config_file = os.path.join(self.xchat_dir, 'xtools.conf')
@@ -72,6 +77,7 @@ class XToolsConfig(object):
         self.msg_catchers = {}
         self.max_caught_msgs = 250
         self.caught_msgs = {}
+        self.msg_filters = {'nicks': {}, 'filters': {}}
         # When redirected, these are updated to be the latest maximum needed.
         self.format_settings = {'chanspace': 7, 'nickspace': 3}
 # Global settings/containers
@@ -246,6 +252,9 @@ def add_catcher(catcherstr):
 
 def add_caught_msg(msginfo):
     """ add a message to the caught-msgs dict, if it doesn't exist. """
+    # Run filters to see if this message is worthy of being caught.
+    if is_filtered_msg(msginfo):
+        return False
     # Caught messages need to have a unique id for each caught msg,
     # or else it will cause double msgs, or recursion in some cases.
     # hince the need for add_caught_msg(), which generates and checks
@@ -283,6 +292,64 @@ def add_caught_msg(msginfo):
                         redirect=True)
 
     return True
+
+
+def add_filter(filterstr, fornick=False):
+    """ Add a filter to the msg_filters config. """
+
+    msg_filters = []
+    # regex to grab quoted spaces.
+    quotepat = re.compile('(["][^"]+["])|([\'][^\']+[\'])')
+    quoted = quotepat.findall(filterstr)
+    if quoted:
+        # gather quoted strings, and left overs.
+        filters = []
+        for grp1, grp2 in quoted:
+            if grp1:
+                filters.append(grp1.strip('"'))
+                filterstr = filterstr.replace(grp1, '')
+            if grp2:
+                filters.append(grp2.strip("'"))
+                filterstr = filterstr.replace(grp2, '')
+
+        # look for leftovers
+        nonquoted = [s.strip() for s in filterstr.split() if s]
+        if nonquoted:
+            filters.extend(nonquoted)
+    else:
+        # This will accept several catchers separated by spaces.
+        filters = filterstr.split()
+
+    # Choose msg filter key for msg_filters config.
+    filtertype = 'nicks' if fornick else 'filters'
+
+    for msg in filters:
+        if msg in xtools.msg_filters[filtertype].keys():
+            # Skip nick already on the list.
+            print_status('{} is already filtered.'.format(msg))
+            continue
+        repat, reerr = compile_re(msg)
+        if not repat:
+            # Skip bad regex.
+            print_error(('Invalid regex pattern for that filter: '
+                        '{}'.format(msg)),
+                        boldtext=msg,
+                        exc=reerr)
+            continue
+        xtools.msg_filters[filtertype][msg] = {
+            'index': len(xtools.msg_catchers),
+            'pattern': repat,
+        }
+
+        msg_filters.append(msg)
+
+    # Fix indexes so they are sorted.
+    build_filter_indexes()
+    if msg_filters and save_filters() and save_prefs():
+        return msg_filters
+    # Failure saving.
+    print_error('Unable to save filters...')
+    return []
 
 
 def add_ignored_nick(nickstr):
@@ -398,6 +465,13 @@ def build_catcher_indexes():
         xtools.msg_catchers[msg]['index'] = index
 
 
+def build_filter_indexes():
+    """ Builds indexes for catcher-filters. """
+    for ftype in ('nicks', 'filters'):
+        for index, msg in enumerate(sorted(xtools.msg_filters[ftype].keys())):
+            xtools.msg_filters[ftype][msg]['index'] = index
+
+
 def build_ignored_indexes():
     """ Builds indexes for ignored nicks. """
     for index, nick in enumerate(sorted(xtools.ignored_nicks.keys())):
@@ -462,6 +536,19 @@ def clear_caught_msgs():
 
     xtools.caught_msgs = {}
     return True
+
+
+def clear_filters(fornick=False):
+    """ Clears all catcher-filters. """
+    filtertype = 'nicks' if fornick else 'filters'
+    if not xtools.msg_filters[filtertype]:
+        print_error('The catcher-filters are already empty. ')
+        return False
+
+    xtools.msg_filters[filtertype] = {}
+    if save_filters() and save_prefs():
+        return True
+    return False
 
 
 def clear_ignored_nicks():
@@ -550,8 +637,10 @@ def compile_re(restr):
         return compiled, None
 
 
-def filter_caught_msgs(filtertxt):
-    """ Filter/remove caught msgs that contain filtertxt.
+def filter_caught_msgs(filtertxt, fornick=False):
+    """ Filter/remove caught msgs that contain filtertxt,
+        add this as a new filter.
+
         filtertxt is compiled to a regex pattern.
         Returns None on empty msgs or bad regex.
         Returns filtered count otherwise.
@@ -570,11 +659,16 @@ def filter_caught_msgs(filtertxt):
 
     filtercnt = 0
     matchtext = lambda k: repat.search(xtools.caught_msgs[k]['msg'])
-    matchnick = lambda k: repat.search(xtools.caught_msgs[k]['nick'])
-    isfiltered = lambda k: matchtext(k) or matchnick(k)
+    if fornick:
+        matchnick = lambda k: repat.search(xtools.caught_msgs[k]['nick'])
+        isfiltered = lambda k: matchtext(k) or matchnick(k)
+    else:
+        isfiltered = lambda k: matchtext(k)
+
     filtered = filter(isfiltered, xtools.caught_msgs)
     for msgid in filtered:
         xtools.caught_msgs.pop(msgid)
+        add_filter(filtertxt, fornick=fornick)
         filtercnt += 1
     return filtercnt
 
@@ -788,6 +882,20 @@ def get_xtools_window(focus=True):
     return xchatwin
 
 
+def is_filtered_msg(msginfo):
+    """ Return True if the msg filters catch this message. """
+    nick = remove_mirc_color(msginfo['nick'])
+    for ftxt, nickfilter in xtools.msg_filters['nicks'].items():
+        if nickfilter['pattern'].search(nick):
+            return True
+
+    for ftxt, msgfilter in xtools.msg_filters['filters'].items():
+        if msgfilter['pattern'].search(msginfo['msg']):
+            return True
+    # Passed
+    return False
+
+
 def load_catchers():
     """ Loads msg-catchers from preferences. """
 
@@ -814,6 +922,40 @@ def load_catchers():
     xtools.msg_catchers.update(valid)
     # Rebuild indexes
     build_catcher_indexes()
+    return True
+
+
+def load_filters():
+    """ Loads catcher-filters from preferences. """
+    filtertypes = (
+        ('nicks', 'msg_filter_nicks'),
+        ('filters', 'msg_filters'),
+    )
+    for filtertype, configopt in filtertypes:
+        filter_str = get_pref(configopt)
+        if filter_str:
+            filters = [s.strip() for s in filter_str.split('{|}')]
+        else:
+            filters = []
+
+        # Validate nicks.
+        valid = {}
+        for msg in filters:
+            repat, reerr = compile_re(msg)
+            if reerr:
+                print_error(('Invalid regex pattern for {} '
+                             'in config: {}').format(configopt, msg),
+                            boldtext=msg,
+                            exc=reerr)
+                continue
+            # Have good nick pattern, add it.
+            valid[msg] = {'index': len(valid), 'pattern': repat}
+
+        # Save to global.
+        xtools.msg_filters[filtertype].update(valid)
+
+    # Rebuild indexes
+    build_filter_indexes()
     return True
 
 
@@ -1227,6 +1369,34 @@ def print_evalerror(cquery, eoutput, **kwargs):
         print_error('Code Error:\n{}'.format(errorsfmt), newtab=newtab)
 
 
+def print_filters(newtab=False, fornick=False):
+    """ Print catcher-filters. """
+
+    filtertype = 'nicks' if fornick else 'filters'
+    statustype = 'nick' if fornick else 'message'
+    if not xtools.msg_filters[filtertype]:
+        print_status('No msg {}-filters have been set.'.format(statustype),
+                     newtab=newtab)
+        return True
+
+    filterlen, caughtlen = colormulti('blue',
+                                      [len(xtools.msg_filters[filtertype]),
+                                       len(xtools.caught_msgs)])
+
+    statusmsg = ''.join(('Catcher-Filters ({}s)'.format(statustype),
+                         '({} filters - '.format(filterlen),
+                         '{} caught msgs):'.format(filterlen, caughtlen)))
+    
+    print_status(statusmsg, newtab=newtab)
+    msgsortkey = lambda k: xtools.msg_filters[filtertype][k]['index']
+    for msg in sorted(xtools.msg_filters[filtertype].keys(), key=msgsortkey):
+        index = xtools.msg_filters[filtertype][msg]['index'] + 1
+        line = '    {}: {}'.format(colorstr('blue', index, bold=True),
+                                   colorstr('blue', msg))
+        print_(line, newtab=newtab)
+    return True
+
+
 def print_ignored_msgs(newtab=False):
     """ Prints all ignored messages for this session. """
 
@@ -1433,6 +1603,48 @@ def remove_catcher(catcherstr):
         return False
 
 
+def remove_filter(filterstr, fornick=False):
+    """ Removes a catcher-filter by string. """
+    filtertype = 'nicks' if fornick else 'filters'
+
+    def get_key(kstr):
+        if kstr in xtools.msg_filters[filtertype].keys():
+            return kstr
+        else:
+            # Try by index.
+            try:
+                intval = int(kstr)
+            except:
+                return None
+            for msg in xtools.msg_filters[filtertype].keys():
+                msgindex = xtools.msg_filters[filtertype][msg]['index']
+                if msgindex == (intval - 1):
+                    return msg
+
+            return None
+
+    removed_filters = []
+    for msg in filterstr.split():
+        msgkey = get_key(msg)
+        if msgkey:
+            # Good key, remove it.
+            xtools.msg_filters[filtertype].pop(msgkey)
+            removed_filters.append(msgkey)
+        else:
+            print_error('Can\'t find that in the filter list: '
+                        '{}'.format(msg),
+                        boldtext=msg)
+            continue
+
+    # Fix indexes
+    build_filter_indexes()
+    # Return status.
+    if removed_filters and save_filters() and save_prefs():
+        return removed_filters
+    else:
+        return False
+
+
 def remove_ignored_nick(nickstr):
     """ Removes an ignored nick by name. """
 
@@ -1496,6 +1708,24 @@ def save_catchers():
         # no msg catchers
         if 'msg_catchers' in xtools.settings.keys():
             xtools.settings.pop('msg_catchers')
+    return True
+
+
+def save_filters():
+    """ Save msg-catchers in preferences. """
+    filtertypes = (
+        ('nicks', 'msg_filter_nicks'),
+        ('filters', 'msg_filters')
+    )
+    for filtertype, configopt in filtertypes:
+        if xtools.msg_filters[filtertype]:
+            filter_names = list(xtools.msg_filters[filtertype].keys())
+            filter_str = '{|}'.join(filter_names)
+            xtools.settings[configopt] = filter_str
+        else:
+            # no msg catchers
+            if configopt in xtools.settings.keys():
+                xtools.settings.pop(configopt)
     return True
 
 
@@ -1642,6 +1872,49 @@ def cmd_catchers(word, word_eol, userdata=None):
         return xchat.EAT_ALL
 
 
+def cmd_catchfilter(word, word_eol, userdata=None):
+    """ Manages filters to catchers, 
+        msgs that match the filters aren't caught.
+    """
+    cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-c', '--clear'),
+                                                     ('-h', '--help'),
+                                                     ('-l', '--list'),
+                                                     ('-n', '--nicks'),
+                                                     ('-r', '--remove'),
+                                                     ('-t', '--tab')
+                                                     ))
+    # Flag for whether or not this filter only applies to nicks.
+    fornick = argd['--nicks']
+    listname = 'filter-nick' if fornick else 'filter-msg'
+
+    if argd['--help']:
+        print_cmdhelp(cmdname, newtab=argd['--tab'])
+        return xchat.EAT_ALL
+    elif argd['--clear']:
+        if clear_filters():
+            print_status('Filter list cleared.', newtab=argd['--tab'])
+    elif argd['--list']:
+        print_filters(newtab=argd['--tab'], fornick=fornick)
+
+    elif argd['--remove']:
+        removed = remove_filter(cmdargs, fornick=fornick)
+        if removed:
+            remstr = colorstr('blue', ', '.join(removed), bold=True)
+            msg = 'Removed {} from the {} list.'.format(remstr, listname)
+            print_status(msg, newtab=argd['--tab'])
+    elif cmdargs:
+        added = add_filter(cmdargs, fornick=fornick)
+        if added:
+            addedstr = colorstr('blue', ', '.join(added), bold=True)
+            print_status('Added {} to the {} list.'.format(addedstr, listname),
+                         newtab=argd['--tab'])
+    else:
+        # default
+        print_filters(newtab=argd['--tab'], fornick=fornick)
+
+    return xchat.EAT_ALL
+
+
 def cmd_eval(word, word_eol, userdata=None):
     """ Evaluates your own python code, prints query and result
         to the screen or sends the code and output directly to the channel
@@ -1761,8 +2034,9 @@ def cmd_findtext(word, word_eol, userdata=None):
 
     # Get current network.
     network = xchat.get_info('network')
-    scrollbackbase = os.path.join('~/.xchat2/scrollback', network)
+    scrollbackbase = os.path.join(xtools.xchat_dir, 'scrollback', network)
     scrollbackdir = os.path.expanduser(scrollbackbase)
+   
     if not os.path.isdir(scrollbackdir):
         print('Error, no scrollback dir found in: {}'.format(scrollbackdir))
         return xchat.EAT_ALL
@@ -1823,6 +2097,7 @@ def cmd_findtext(word, word_eol, userdata=None):
         # Open chan file
         chandata = []
         chanfile = os.path.join(scrollbackdir, '{}.txt'.format(chan))
+
         if ('[' in chanfile) or (']' in chanfile):
             chanfile = chanfile.replace(']', '}').replace('[', '{')
 
@@ -2300,13 +2575,32 @@ commands = {
             '    ...shortcut for /CATCH --list, lists all msg-catchers.\n'
             '    * any arguments given to this command are sent to the\n'
             '      /CATCH command.')},
+    'catchfilter': {
+        'desc': 'Adds filters to the msg-catchers to filter certain msgs.',
+        'func': cmd_catchfilter,
+        'enabled': True,
+        'help': (
+            'Usage: /CATCHFILTER [-n] <pattern>\n'
+            '       /CATCHFILTER -c | -l | -r [-n] [-t]\n'
+            'Options:\n'
+            '    -c,--clear   : Clear filter list.\n'
+            '    -l,--list    : List current filters.\n'
+            '    -n,--nicks   : Apply to nicks/nick-filters only,\n'
+            '                   not messages.\n'
+            '    -r,--remove  : Remove filter by number or text.\n'
+            '    -t,--tab     : Show output in the xtools tab.\n'
+            '\n'
+            '    * With no other arguments, filters are listed.\n'
+            '    * There are 2 filter lists, one for nicks, one for msgs.\n'
+            '    * Be sure to pass -n to work on the nicks list.\n'
+        )},
     'eval': {
         'desc': 'Evaluate python code. Can send output to chat.',
         'func': cmd_eval,
         'enabled': True,
         'help': (
             'Usage: /EVAL [-c [nick] [-e] [-r]] [-k] <code>\n'
-            '       /EVAL [-k] [-t] <code>'
+            '       /EVAL [-k] [-t] <code>\n'
             'Options:\n'
             '    -c [n],--chat [n] : Send as msg to current channel.\n'
             '                        Newlines are replaced with \\\\n,\n'
@@ -2448,6 +2742,8 @@ xtools.colors = build_color_table()
 load_prefs()
 load_ignored_nicks()
 load_catchers()
+load_filters()
+
 
 # Fix help and descriptions for aliases
 for aliasname in cmd_aliases.keys():
