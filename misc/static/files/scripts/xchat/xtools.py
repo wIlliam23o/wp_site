@@ -1375,7 +1375,7 @@ def print_filters(newtab=False, fornick=False):
     filtertype = 'nicks' if fornick else 'filters'
     statustype = 'nick' if fornick else 'message'
     if not xtools.msg_filters[filtertype]:
-        print_status('No msg {}-filters have been set.'.format(statustype),
+        print_status('No {}-filters have been set.'.format(statustype),
                      newtab=newtab)
         return True
 
@@ -1383,7 +1383,7 @@ def print_filters(newtab=False, fornick=False):
                                       [len(xtools.msg_filters[filtertype]),
                                        len(xtools.caught_msgs)])
 
-    statusmsg = ''.join(('Catcher-Filters ({}s)'.format(statustype),
+    statusmsg = ''.join(('Catcher-Filters ({}s) '.format(statustype),
                          '({} filters - '.format(filterlen),
                          '{} caught msgs):'.format(filterlen, caughtlen)))
     
