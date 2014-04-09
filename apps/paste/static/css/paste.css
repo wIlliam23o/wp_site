@@ -11,6 +11,9 @@
   background-color: #fafafa;
   color: #919191; }
 
+#themeselect {
+  color: #919191; }
+
 .paste-header-box {
   background-color: #fafafa;
   -webkit-border-radius: 5px;
@@ -43,7 +46,8 @@
 .paste-bottom-button-box {
   position: relative;
   display: block;
-  margin-top: 10px; }
+  margin-top: 10px;
+  text-align: right; }
 
 #paste-btn {
   margin-left: -10px;
@@ -120,11 +124,12 @@
   border-radius: 5px;
   border-style: solid;
   border-width: 2px;
-  border-color: rgba(202, 217, 224, 0.5);
+  border-color: #afafaf;
   padding: 5px; }
 
 .paste-theme-label {
-  width: auto; }
+  width: auto;
+  color: greymain; }
 
 /* Replies menu styles */
 .vertical-menu-reply-date {
