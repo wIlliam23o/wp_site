@@ -2,6 +2,9 @@ from django.db import models
 from datetime import datetime
 from random import SystemRandom
 
+from wp_main.utilities.wp_logging import logger
+_log = logger('apps.paste.models').log
+
 IDCHOICES = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 SYSRANDOM = SystemRandom()
 IDSTARTCHAR = 'a'
@@ -183,6 +186,19 @@ class wp_paste(models.Model):
             reverse url lookup really needs to be used here.
         """
         return '/paste/?id={}'.format(self.paste_id)
+
+    def is_expired(self):
+        """ Determine if this paste is expired.
+            Pastes that are on hold will never expire.
+        """
+        if self.onhold:
+            return False
+        try:
+            elapsed = datetime.today() - self.publish_date
+        except Exception as ex:
+            _log.error('Error getting elapsed time:\n{}'.format(ex))
+            return False
+        return (elapsed.days > 0)
 
     def reverse_id(self, pasteid=None):
         """ Decode a paste_id, return the actual id.

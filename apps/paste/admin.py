@@ -1,4 +1,8 @@
-from datetime import datetime
+""" Welborn Productions - Apps - Paste - Admin
+    ...Handles djang-admin site actions/listings for wp_paste objects.
+    -Christopher Welborn 2014
+"""
+
 from django.contrib import admin, messages
 from apps.paste.models import wp_paste
 from wp_main.utilities.wp_logging import logger
@@ -16,9 +20,8 @@ def delete_expired(pastes):
 
     deletedcount = 0
     for p in pastes:
-        if is_expired(p):
-            p.disabled = True
-            p.save()
+        if p.is_expired():
+            p.delete()
             deletedcount += 1
         else:
             if stoponunexpired:
@@ -44,7 +47,7 @@ def delete_sel_expired(modeladmin, request, queryset):
     msg = 'Deleted {} of {} selected {}.'.format(delcount, len(queryset), pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
     return delcount
-delete_sel_expired.short_description = 'Deleted selected expired pastes'
+delete_sel_expired.short_description = 'Delete selected expired pastes'
 
 
 def disable_expired(pastes):
@@ -58,7 +61,7 @@ def disable_expired(pastes):
 
     disabledcount = 0
     for p in pastes:
-        if is_expired(p):
+        if p.is_expired():
             p.disabled = True
             p.save()
             disabledcount += 1
@@ -115,18 +118,6 @@ def hold_sel(modeladmin, request, queryset):
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
     return heldcnt
 hold_sel.short_description = 'Hold selected pastes'
-
-
-def is_expired(paste):
-    """ Determine if a paste is expired.
-        Returns True if it is, otherwise False.
-    """
-    if paste.onhold:
-        return False
-
-    elapsed = (datetime.now() - paste.publish_date).total_seconds()
-    days = (((elapsed / 60) / 60) / 24)
-    return (days > 1)
 
 
 def plural(cnt, word, pluralform=None):

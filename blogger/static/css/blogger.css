@@ -195,3 +195,8 @@
   padding-bottom: 2px;
   margin-right: 2px;
   font-size: 0.8em; }
+
+.wpbutton.blog-edit-button {
+  position: absolute;
+  right: 130px;
+  margin-top: 4px; }

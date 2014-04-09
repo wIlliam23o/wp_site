@@ -237,3 +237,10 @@
     margin-right: 2px;
     font-size:$fontsmall;
 }
+
+.wpbutton.blog-edit-button {
+    // Edit button for admin only.
+    position: absolute;
+    right: 130px;
+    margin-top: 4px;
+}
