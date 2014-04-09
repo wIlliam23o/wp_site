@@ -1,4 +1,4 @@
-#langselect {
+#langselect, #themeselect {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   -ms-border-radius: 3px;
@@ -40,6 +40,11 @@
   display: inline-block;
   margin-left: 15px; }
 
+.paste-bottom-button-box {
+  position: relative;
+  display: block;
+  margin-top: 10px; }
+
 #paste-btn {
   margin-left: -10px;
   margin-right: 10px; }
@@ -59,7 +64,7 @@
 .paste-lang-box {
   display: inline-block; }
 
-.paste-lang-label, .paste-title-label, .paste-author-label, .paste-date-label, .paste-replyto-label {
+.paste-lang-label, .paste-title-label, .paste-author-label, .paste-date-label, .paste-replyto-label, .paste-theme-label {
   font-size: 0.75em;
   display: inline-block;
   vertical-align: top;
@@ -104,6 +109,22 @@
   color: #26a1f4; }
   .paste-replyto-title:hover {
     color: #2358a6; }
+
+.paste-theme-box {
+  display: inline-block;
+  background-color: #fafafa;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgba(202, 217, 224, 0.5);
+  padding: 5px; }
+
+.paste-theme-label {
+  width: auto; }
 
 /* Replies menu styles */
 .vertical-menu-reply-date {

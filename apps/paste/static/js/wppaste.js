@@ -2,9 +2,17 @@
 var wppaste = {
     build_lang_menu : function () {
         /* Build language options. */
-        var modelen = wp_modelist.modes.length;
-        var modecur;
-        var modeopt;
+        var modes = wp_modelist.modes;
+        modes.sort(function (a, b) {
+            // Sort modes by 'caption' text
+            if (a.caption < b.caption) {
+                return -1
+            } else if (a.caption > b.caption) {
+                return 1
+            } else {
+                return 0
+            }
+        });
         // create a doc fragment to build on.
         var menufrag = document.createDocumentFragment();
 
@@ -15,13 +23,15 @@ var wppaste = {
         $(menufrag).append(nonemode);
 
         // iterate over all known modes.
-        for (var i=0; i < modelen; i++) {
+        var modecur;
+        var modeopt;
+        for (var i=0; i < modes.length; i++) {
             // get mode info.
-            modecur = wp_modelist.modes[i];
+            modecur = modes[i];
             // create an <option> element.
             modeopt = document.createElement('option');
             $(modeopt).attr({'val': modecur.mode});
-            $(modeopt).text(modecur.name);
+            $(modeopt).text(modecur.caption);
             // add the new option to doc fragment.
             $(menufrag).append(modeopt);
         }
@@ -29,14 +39,37 @@ var wppaste = {
         $('#langselect').append(menufrag);
     },
 
-    get_mode_byname : function (name) {
-        /* Get ace mode string by name. */
-        var modestr = wp_modelist.modesByName[name];
-        if (!modestr) {
-            return '';
-        } else {
-            return modestr;
+    build_theme_menu : function () {
+        /* Build theme options */
+        // Grab the list of themes and sort them by caption.
+        var themes = wp_themelist.themes;
+        themes.sort(function (a, b) {
+            // sort the themes by 'caption' text.
+            if (a.caption < b.caption) {
+                return -1
+            } else if (a.caption > b.caption) {
+                return 1
+            } else {
+                return 0
+            }
+        });
+        // Doc frag to build on.
+        var themefrag = document.createDocumentFragment();
+        // iterate over all known themes.
+        var themecur;
+        var themeopt;
+        for (var i=0; i < themes.length; i++) {
+            // get theme info.
+            themecur = wp_themelist.themes[i];
+            // create an <option>
+            themeopt = document.createElement('option');
+            $(themeopt).attr({'val': themecur.theme});
+            $(themeopt).text(themecur.caption);
+            // add option to the doc frag.
+            $(themefrag).append(themeopt);
         }
+        // Add whole theme-menu fragment to the <select> tag.
+        $('#themeselect').append(themefrag);
     },
 
     get_paste_author : function () {
@@ -62,21 +95,39 @@ var wppaste = {
         return $(selected).attr('val');
     },
 
+    get_selected_theme : function () {
+        /* Get selected ace-editor theme. */
+        var themeselect = document.getElementById('themeselect');
+        var selected = themeselect.options[themeselect.selectedIndex];
+        return $(selected).attr('val');
+    },
+
+    get_selected_theme_name : function () {
+        /* Get selected ace-editor theme name. */
+        var themeselect = document.getElementById('themeselect');
+        var selected = themeselect.options[themeselect.selectedIndex];
+        return $(selected).text();
+    },
+
     load_paste_settings : function (options) {
         /* Load user's paste settings from cookie. */
         var cookieraw = $.cookie('pastesettings');
         var author = '';
-        var userlang = 'python';
+        var userlang = 'Python';
+        var usertheme = 'Solarized Dark';
         var opts = options || {'nolangset': false};
         if (cookieraw) {
             var cookieinfo = JSON.parse(cookieraw);
             author = cookieinfo.author || '';
-            userlang = cookieinfo.lang || 'python';
+            userlang = cookieinfo.lang || 'Python';
+            usertheme = cookieinfo.theme || 'Solarized Dark';
         }
         if (!opts.nolangset) {
             // set language from cookie
             wppaste.set_selected_mode(userlang);
         }
+        // Set theme
+        wppaste.set_selected_theme(usertheme);
 
         $('#paste-author-entry').val(author);
     },
@@ -86,6 +137,24 @@ var wppaste = {
         var modestr = wppaste.get_selected_mode();
         wp_content.getSession().setMode(modestr);
         //console.log('mode set to: ' + modestr);
+    },
+
+    on_theme_change: function () {
+        /* Change Ace theme when theme option is selected. */
+        var themestr = wppaste.get_selected_theme();
+        wp_content.setTheme(themestr);
+        //console.log('theme set to: ' + themestr);
+    },
+
+    save_paste_settings : function () {
+        /* Save current UI settings to a cookie. */
+        var cookieinfo = JSON.stringify({
+            'lang': wppaste.get_selected_lang(),
+            'author': wppaste.get_paste_author(),
+            'theme': wppaste.get_selected_theme_name(),
+        });
+
+        $.cookie('pastesettings', cookieinfo, {expires: 365, path:'/'});
     },
 
     set_selected_mode : function (name) {
@@ -100,8 +169,27 @@ var wppaste = {
             }
         }
         // no mode by that name.
+        console.log('No mode named: "' + name + '"');
         langselect.selectedIndex = 0;
         wppaste.on_mode_change();
+        return false;
+    },
+
+    set_selected_theme : function (name) {
+        /* set selected theme by name. */
+        var themeselect = document.getElementById('themeselect');
+        var themelen = themeselect.options.length;
+        for (var i=0; i < themelen; i++) {
+            if (name == $(themeselect.options[i]).text()) {
+                themeselect.selectedIndex = i;
+                wppaste.on_theme_change();
+                return true
+            }
+        }
+        // no theme by that name.
+        console.log('No theme named: "' + name + '"');
+        themeselect.selectedIndex = 0;
+        wppaste.on_theme_change();
         return false;
     },
 
@@ -188,12 +276,7 @@ var wppaste = {
         /* Called when the server sends back a successful json response. */
         if (jsondata.url) {
             // Good paste url returned, save a cookie with some info.
-            var cookieinfo = JSON.stringify({
-                'lang': wppaste.get_selected_lang(),
-                'author': wppaste.get_paste_author(),
-            });
-
-            $.cookie('pastesettings', cookieinfo, {expires: 365, path:'/'});
+            wppaste.save_paste_settings();
 
             // Move to newly created paste.
             wptools.navigateto(jsondata.url);
@@ -206,8 +289,8 @@ var wppaste = {
 // setup initial ace editor
 function setup_ace (doreadonly) {
     wp_content = ace.edit('paste-content');
-    // highlight style
-    wp_content.setTheme('ace/theme/solarized_dark');
+    // highlight style (set in load_paste_settings)
+    //wp_content.setTheme('ace/theme/solarized_dark');
     // various settings for ace
     wp_content.setHighlightActiveLine(true);
     wp_content.setAnimatedScroll(true);
@@ -217,9 +300,11 @@ function setup_ace (doreadonly) {
     if (doreadonly) {
         wp_content.setReadOnly(true);        
     }
-    // Get mode list for ace. We will be using it later.
+    // Get mode/theme list for ace. We will be using them later.
     wp_modelist = ace.require('ace/ext/modelist');
-
+    wppaste.build_lang_menu();
+    wp_themelist = ace.require('ace/ext/themelist');
+    wppaste.build_theme_menu();
 }
 
 // update floater message and size/position

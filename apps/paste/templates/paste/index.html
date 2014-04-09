@@ -21,6 +21,7 @@
     <script type='text/javascript' src='/static/js/wppaste.min.js'></script>
     <script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
     <script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
+    <script type='text/javascript' src='/static/js/ace/ext-themelist.js' charset='utf-8'></script>
 {% endblock %}
 
 <!-- Floating message -->
@@ -183,6 +184,7 @@
                 <select id='langselect' onchange='javascript: wppaste.on_mode_change();'>
                 </select>
             </div>
+
             <!-- Control Box for pastes -->
             <div class='paste-button-box'>
                 {% if not paste %}
@@ -227,6 +229,18 @@
         <!-- Ace Editor content for pastes -->
         <div id='paste-content'>
         </div>
+
+        <!-- Bottom Buttons (Theme Change) -->
+        <div class='paste-bottom-button-box'>
+            <!-- Theme Change Buttons -->
+            <div class='paste-theme-box'>
+                <div class='paste-theme-label'>
+                    Highlight Theme:
+                </div>
+                <select id='themeselect' onchange='javascript: wppaste.on_theme_change();'></select>
+            </div>
+        </div>
+
         <!-- Hidden replyto id -->
         {% if replyto %}
             <input id='replyto-id' type='hidden' value='{{ replyto.paste_id }}'/>
@@ -245,11 +259,12 @@
 
         // setup basic settings for ace.
         setup_ace(doreadonly);
-        wppaste.build_lang_menu();
+        
 
         // setup individual-paste-related settings.
         {% if paste.language %}
             wppaste.set_selected_mode('{{ paste.language }}');
+            wppaste.load_paste_settings({'nolangset': true});
         {% elif replyto.language %}
             wppaste.set_selected_mode('{{ replyto.language }}');
             wppaste.load_paste_settings({'nolangset': true});

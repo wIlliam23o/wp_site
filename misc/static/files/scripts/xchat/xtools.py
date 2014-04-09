@@ -1385,7 +1385,7 @@ def print_filters(newtab=False, fornick=False):
 
     statusmsg = ''.join(('Catcher-Filters ({}s) '.format(statustype),
                          '({} filters - '.format(filterlen),
-                         '{} caught msgs):'.format(filterlen, caughtlen)))
+                         '{} caught msgs):'.format(caughtlen)))
     
     print_status(statusmsg, newtab=newtab)
     msgsortkey = lambda k: xtools.msg_filters[filtertype][k]['index']
