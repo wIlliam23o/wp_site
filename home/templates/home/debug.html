@@ -26,11 +26,11 @@
 					Site Version: {{ siteversion }}
 				</span>
 		</div>
-				
-				{% filter highlight_python %}
-					{% debug %}
-				{% endfilter %}
-
+		<div class='debug-page-box'>
+			{% filter highlight_python %}
+				{% debug %}
+			{% endfilter %}
+		</div>
 	{% else %}
 		<!-- No Permissions -->
 		<div class="alert">

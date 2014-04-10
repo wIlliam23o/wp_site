@@ -16,6 +16,9 @@ import os
 # Django stuff
 from django import template
 from django.conf import settings
+from django.utils.safestring import mark_safe
+
+
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities.highlighter import wp_highlighter, highlight_codes
@@ -30,7 +33,6 @@ from apps.paste.models import wp_paste
 
 _log = logger("wp_main.tags").log
 
-from django.utils.safestring import mark_safe
 register = template.Library()
 
 # for admin change_list filtering.

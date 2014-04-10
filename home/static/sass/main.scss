@@ -880,9 +880,31 @@ code, samp {
 
 /* Debug Info Styles */
 .debug-box {
+    // Small debug box for every page is displayed with javascript.
     display: none;
-    /*margin-top: 5px; // not needed anymore now that box displays full width on the top */
-    margin-bottom: 5px;
+
+    position: relative;
+    background-color: $whitedull;
+    padding-top: 5px;
+    padding-left: 5px;
+    // Make a small box that scrolls the very long debug info.
+    width: 90%;
+    height: 300px;
+    overflow-x: scroll;
+    overflow-y: scroll;
+
+}
+
+.debug-page-box {
+    // Entire debug info is layed out.
+    position: relative;
+    background-color: $whitedull;
+    @include border-radius(5px);
+    border-width: 2px;
+    border-style: solid;
+    border-color: $borderlight;
+    padding: 5px;
+    overflow-x: scroll;
 }
 
 .debug-button {

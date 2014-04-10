@@ -1156,8 +1156,28 @@ code, samp {
 /* Debug Info Styles */
 .debug-box {
   display: none;
-  /*margin-top: 5px; // not needed anymore now that box displays full width on the top */
-  margin-bottom: 5px; }
+  position: relative;
+  background-color: #fafafa;
+  padding-top: 5px;
+  padding-left: 5px;
+  width: 90%;
+  height: 300px;
+  overflow-x: scroll;
+  overflow-y: scroll; }
+
+.debug-page-box {
+  position: relative;
+  background-color: #fafafa;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #afafaf;
+  padding: 5px;
+  overflow-x: scroll; }
 
 .debug-button {
   -webkit-border-radius: 5px;

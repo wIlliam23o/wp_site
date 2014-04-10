@@ -117,19 +117,19 @@
 .paste-theme-box {
   display: inline-block;
   background-color: #fafafa;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  -ms-border-radius: 5px;
-  -o-border-radius: 5px;
-  border-radius: 5px;
+  -webkit-border-radius: 7px;
+  -moz-border-radius: 7px;
+  -ms-border-radius: 7px;
+  -o-border-radius: 7px;
+  border-radius: 7px;
   border-style: solid;
-  border-width: 2px;
+  border-width: 1px;
   border-color: #afafaf;
-  padding: 5px; }
+  padding: 1px 1px 1px 5px; }
 
 .paste-theme-label {
   width: auto;
-  color: greymain; }
+  color: #919191; }
 
 /* Replies menu styles */
 .vertical-menu-reply-date {

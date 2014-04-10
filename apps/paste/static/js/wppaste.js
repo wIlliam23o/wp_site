@@ -89,21 +89,21 @@ var wppaste = {
     },
 
     get_selected_mode : function () {
-        /* Get selected ace-editor mode. */
+        /* Get selected ace-editor mode. ('ace/mode/python') */
         var langselect = document.getElementById('langselect');
         var selected = langselect.options[langselect.selectedIndex];
         return $(selected).attr('val');
     },
 
     get_selected_theme : function () {
-        /* Get selected ace-editor theme. */
+        /* Get selected ace-editor theme ('ace/theme/themename'). */
         var themeselect = document.getElementById('themeselect');
         var selected = themeselect.options[themeselect.selectedIndex];
         return $(selected).attr('val');
     },
 
     get_selected_theme_name : function () {
-        /* Get selected ace-editor theme name. */
+        /* Get selected ace-editor theme name ('Theme Name'). */
         var themeselect = document.getElementById('themeselect');
         var selected = themeselect.options[themeselect.selectedIndex];
         return $(selected).text();
@@ -137,6 +137,9 @@ var wppaste = {
         var modestr = wppaste.get_selected_mode();
         wp_content.getSession().setMode(modestr);
         //console.log('mode set to: ' + modestr);
+
+        // Save user language to a cookie for next time.
+        wppaste.update_paste_settings({'lang': wppaste.get_selected_lang()});
     },
 
     on_theme_change: function () {
@@ -144,6 +147,9 @@ var wppaste = {
         var themestr = wppaste.get_selected_theme();
         wp_content.setTheme(themestr);
         //console.log('theme set to: ' + themestr);
+
+        // Save user theme to a cookie for next time.
+        wppaste.update_paste_settings({'theme': wppaste.get_selected_theme_name()});
     },
 
     save_paste_settings : function () {
@@ -154,7 +160,7 @@ var wppaste = {
             'theme': wppaste.get_selected_theme_name(),
         });
 
-        $.cookie('pastesettings', cookieinfo, {expires: 365, path:'/'});
+        return $.cookie('pastesettings', cookieinfo, {expires: 365, path:'/'});
     },
 
     set_selected_mode : function (name) {
@@ -281,7 +287,89 @@ var wppaste = {
             // Move to newly created paste.
             wptools.navigateto(jsondata.url);
         }
+    },
+
+    updatejson : function (jsondata, newdata) {
+        /* Update JSON object data with new keys/values.
+            Arguments:
+                jsondata : JSON string with object inside.
+                newdata  : object with keys/values to update.
+
+            Returns updated JSON (Does not modify the original.)
+        */
+        
+        if (!jsondata) { return JSON.stringify(newdata) || ''; }
+        else if (!newdata) { return jsondata;}
+
+        var oldobj = JSON.parse(jsondata);
+        if (!oldobj) { return jsondata;}
+        var newobj = wppaste.updateobject(oldobj, newdata);
+        return JSON.stringify(newobj);
+    },
+
+    update_paste_settings : function (newsettings) {
+        /* Update current cookie info with new keys/values,
+           and save the cookie.
+
+            Arguments:
+                newsettings  : Object with json-friendly key/value pairs to
+                               save as settings in the cookie.
+        */
+
+        var cookiejson = $.cookie('pastesettings');
+        if (cookiejson) {
+            var settings = JSON.parse(cookiejson);
+        } else {
+            var settings = {};
+        }
+
+        // update the old settings and convert to JSON
+        var updated = wppaste.updateobject(settings, newsettings);
+        var updatedjson = JSON.stringify(updated);
+
+        // save updated settings to cookie.
+        return $.cookie('pastesettings', updatedjson, {expires: 365, path: '/'});
+    },
+
+
+    updateobject : function (oldobj, newobj) {
+        /* Update an object based on another objects values.
+            Arguments:
+                oldobj  : Old object to update with simple keys/values.
+                newobj  : New object with keys/values to update with.
+
+            Returns updated object, does not modify the original object.
+        */
+
+        if (!oldobj) { return newobj;}
+        else if (!newobj) { return oldobj;}
+
+        // Make a shallow copy of the old object, so we don't modify it later.
+        var tmpobj = {};
+        for (var oldkey in oldobj) {
+            tmpobj[oldkey] = oldobj[oldkey];
+        }
+
+        // Iterate over all keys/values in the new object,
+        // and update the old objects values.
+        for (var newkey in newobj) {
+            // See if the old key even exists.
+            if (!tmpobj[newkey]) {
+                // add the new key.
+                tmpobj[newkey] = newobj[newkey];
+            } else {
+                // old key exists, make sure new value is good.
+                if (newobj[newkey]) {
+                    // new key is truthy, update the old one.
+                    tmpobj[newkey] = newobj[newkey]
+                } 
+                // otherwise the old key/value is kept.
+            }
+        }
+        // return the modified old object.
+        return tmpobj
     }
+
 
 };
 
