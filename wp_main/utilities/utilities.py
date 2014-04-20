@@ -144,7 +144,7 @@ def get_datetime(date=None, shortdate=False):
     if date is None:
         date = datetime.now()
     if shortdate:
-        return date.strftime('%m-%d-%Y %I:%M%S %p')
+        return date.strftime('%m-%d-%Y %I:%M:%S %p')
     return date.strftime('%A %b. %d, %Y %I:%M:%S %p')
 
 
