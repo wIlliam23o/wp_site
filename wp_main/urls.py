@@ -140,3 +140,9 @@ urlpatterns += patterns('',
                         url(r'^admin\.php$',
                             homeviews.view_scriptkids),
                         )
+# Debug toolbar explicit setup (per new debug_toolbar version)
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += patterns('',
+                            url(r'^__debug__/', include(debug_toolbar.urls)),
+                            )
