@@ -42,6 +42,11 @@ def decode_id(idstr):
     return int(''.join(finalid))
 
 
+def repr_header():
+    """ Return a string header for the repr(paste) data. """
+    return 'publish date        views  id       status   author     title'
+
+
 class wp_paste(models.Model):
 
     """ A Paste object for the paste app. """
@@ -135,7 +140,9 @@ class wp_paste(models.Model):
     date_hierarchy = 'publish_date'
 
     def __str__(self):
-        """ String format for a paste object. """
+        """ Default string format for a paste object.
+            This is a simple format, for more info see: __repr__
+        """
         if hasattr(self, 'id'):
             _id = self.id
             basestr = '{}: ({})'.format(_id, self.paste_id)
@@ -147,8 +154,29 @@ class wp_paste(models.Model):
         return finalstr
     
     def __repr__(self):
-        """ same as str() """
-        return self.__str__()
+        """ Format a paste for printing (different from str(paste))
+            This provides:
+                publish_date, view count, paste_id, enabled, and title
+        """
+        datestr = self.publish_date.strftime('%m-%d-%Y %I:%M:%S')
+        viewstr = '({})'.format(self.view_count).ljust(6)
+        idstr = self.paste_id or 'new'
+        idstr = idstr.ljust(8)
+        statusstr = '[d]' if self.disabled else '[e]'
+        statusstr = statusstr.ljust(8)
+        authorstr = self.author or '<none>'
+        authorstr = authorstr.ljust(10)
+
+        pfmt = '{date} {views} {pasteid} {status} {author} {title}'
+        pfmtargs = {
+            'date': datestr,
+            'views': viewstr,
+            'pasteid': idstr,
+            'status': statusstr,
+            'author': authorstr,
+            'title': self.title,
+        }
+        return pfmt.format(**pfmtargs)
     
     # Meta info for the admin site
     class Meta:
