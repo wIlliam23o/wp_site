@@ -47,6 +47,10 @@ Created on Nov 1, 2013
 # Standard modules
 import os
 import sys
+from collections import namedtuple
+
+# For an implementation of the 'pastetree' script (when listing pastes)
+IterPasteResult = namedtuple('IterPasteResult', ['level', 'paste'])
 
 # Local helper modules.
 try:
@@ -70,6 +74,8 @@ try:
     from blogger.models import wp_blog
     from misc.models import wp_misc
     from downloads.models import file_tracker
+    from apps.paste.models import wp_paste, repr_header as paste_repr_header
+
 except ImportError as eximp:
     print('Unable to import model!\n{}'.format(eximp))
     sys.exit(1)
@@ -97,23 +103,34 @@ except Exception as ex:
     available_aliases = None
 
 # Info used to decide which model we're working on based on what the script name is.
-modelinfo = {'project': {'name': 'Project',
-                         'model': wp_project,
-                         'attrs': ('name', 'alias'),
-                         },
-             'blog': {'name': 'Blog',
-                      'model': wp_blog,
-                      'attrs': ('title', 'slug'),
-                      },
-             'misc': {'name': 'Misc',
-                      'model': wp_misc,
-                      'attrs': ('name', 'alias'),
-                      },
-             'file': {'name': 'FileTracker',
-                      'model': file_tracker,
-                      'attrs': ('filename',),
-                      },
-             }
+modelinfo = {
+    'project': {
+        'name': 'Project',
+        'model': wp_project,
+        'attrs': ('name', 'alias'),
+    },
+    'blog': {
+        'name': 'Blog',
+        'model': wp_blog,
+        'attrs': ('title', 'slug'),
+    },
+    'misc': {
+        'name': 'Misc',
+        'model': wp_misc,
+        'attrs': ('name', 'alias'),
+    },
+    'file': {
+        'name': 'FileTracker',
+        'model': file_tracker,
+        'attrs': ('filename',),
+    },
+    'paste': {
+        'name': 'Paste',
+        'model': wp_paste,
+        'attrs': ('paste_id', 'id', 'title'),
+    },
+
+}
 # modelinfo aliases.
 modelinfo['proj'] = modelinfo['project']
 modelinfo['post'] = modelinfo['blog']
@@ -262,6 +279,18 @@ def do_list_misc():
     return do_list_projects(model=wp_misc)
 
 
+def do_list_pastes():
+    """ List all pastes (in a tree, like the pastetree script). """
+    pastecnt = 0
+    print(paste_repr_header())
+    for pasteresult in iter_pastes():
+        print_pasteresult(pasteresult)
+        pastecnt += 1
+
+    pastestr = 'paste' if pastecnt == 1 else 'pastes'
+    print('\nFound {} {}.'.format(pastecnt, pastestr))
+
+
 def do_list_projects(model=None):
     """ List all project or misc names/aliases/versions.
         If miscmodel is passed, it is used instead of wp_project
@@ -294,21 +323,56 @@ def do_list_projects(model=None):
         aliasspace = (' ' * ((longestalias - len(proj.alias)) + 1))
         versionstr = 'v. {}'.format(proj.version) if proj.version else ''
 
-        infostr = '    {name}{namespace}({alias}){aliasspace}{ver}'.format(name=proj.name,
-                                                                           alias=proj.alias,
-                                                                           ver=versionstr,
-                                                                           namespace=namespace,
-                                                                           aliasspace=aliasspace)
+        infostrfmt = '    {name}{namespace}({alias}){aliasspace}{ver}'
+        infostrargs = {
+            'name': proj.name,
+            'alias': proj.alias,
+            'ver': versionstr,
+            'namespace': namespace,
+            'aliasspace': aliasspace
+        }
+        infostr = infostrfmt.format(infostrargs)
         if usemisc:
             infostr = '{} {}'.format(infostr, proj.filename)
         print(infostr)
     return 0
+
+
+def iter_paste_children(paste, level=1):
+    """ Iterate over all children of a paste, and children's children. """
+    for p in paste.children.order_by('publish_date'):
+        yield IterPasteResult(level, p)
+        if p.children.count() > 0:
+            yield from iter_paste_children(p, level=level + 1)
+
+
+def iter_pastes(startpastes=None):
+    """ Iterate over all pastes that have no parent.
+        Given a 'startpastes' list, it will start from that paste only.
+    """
+    if startpastes is None:
+        pastes = wp_paste.objects.filter(parent=None)
+        pastes = pastes.order_by('publish_date')
+    else:
+        pastes = [startpastes]
+
+    for p in pastes:
+        yield IterPasteResult(0, p)
+        if p.children.count() > 0:
+            yield from iter_paste_children(p, level=1)
+
+
+def print_pasteresult(iresult):
+    """ Print a tuple result from iter_children/iter_pastes """
+    indention = '  ' * iresult.level
+    print('{}{!r}'.format(indention, iresult.paste))
 
 # Set list handler for this model.
 listfuncs = {'Project': do_list_projects,
              'Misc': do_list_misc,
              'Blog': do_list_blogs,
              'FileTracker': do_list_filetrackers,
+             'Paste': do_list_pastes,
              }
 do_list = listfuncs[modelused['name']]
 
