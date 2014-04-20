@@ -107,7 +107,8 @@ def do_headerstr(ident, model, attrs=None):
     """ Print just the header string for an object.
         Arguments:
             ident  : name, title or part of a name to retrieve object.
-            model  : model containing the objects to retrieve from (wp_project, wp_blog, etc.)
+            model  : model containing the objects to retrieve from 
+                     (wp_project, wp_blog, etc.)
 
         Keyword Arguments:
             attrs  : attributes to use when retrieving the object.
@@ -419,19 +420,29 @@ def get_headerstr(obj):
     if not obj:
         return headerstr
     # Header string for various models.
-    headerstrings = {'wp_project': {'format': '{} ({}) v. {}',
-                                    'attrs': ('name', 'alias', 'version'),
-                                    },
-                     'wp_misc': {'format': '{} ({}) v. {}',
-                                 'attrs': ('name', 'alias', 'version'),
-                                 },
-                     'wp_blog': {'format': '{}',
-                                 'attrs': ('title',),
-                                 },
-                     'file_tracker': {'format': '{}',
-                                      'attrs': ('filename',),
-                                      },
-                     }
+    headerstrings = {
+        'wp_project': {
+            'format': '{} ({}) v. {}',
+            'attrs': ('name', 'alias', 'version'),
+        },
+        'wp_misc': {
+            'format': '{} ({}) v. {}',
+            'attrs': ('name', 'alias', 'version'),
+        },
+        'wp_blog': {
+            'format': '{}',
+            'attrs': ('title',),
+        },
+        'wp_paste': {
+            'format': '{} [{}] {}',
+            'attrs': ('publish_date', 'paste_id', 'title')
+        },
+        'file_tracker': {
+            'format': '{}',
+            'attrs': ('filename',),
+        },
+
+    }
     # Get current model name.
     try:
         mname = obj.__class__.__name__
@@ -482,7 +493,7 @@ def get_model_fields(model, includefunctions=False, exclude=None):
     attrs = [a for a in dir(tmpobject) if not a.startswith('_')]
     # Default excluded fields.
     defaultfiltered = ['project', 'file_tracker_set',
-                       'objects', 'wp_blog_set', 'pk']
+                       'objects', 'wp_blog_set', 'pk', 'children']
     # Add user excluded fields.
     filtered = defaultfiltered + exclude if exclude else defaultfiltered
 
