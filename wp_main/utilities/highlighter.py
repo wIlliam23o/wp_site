@@ -107,11 +107,15 @@ def get_tag_class(stext, tag_="pre"):
     """ grabs class name from a pre tag for auto-highlighting """
     if "<" + tag_ + " class=" in stext and ">" in stext:
         sclass = stext.split('=')[1]
-        sclass = sclass[:sclass.index('>')]
-        if "'" in sclass:
-            sclass = sclass.replace("'", '')
-        elif '"' in sclass:
-            sclass = sclass.replace('"', '')
+        if '>' in sclass:
+            sclass = sclass[:sclass.index('>')]
+            if "'" in sclass:
+                sclass = sclass.replace("'", '')
+            elif '"' in sclass:
+                sclass = sclass.replace('"', '')
+        else:
+            # A style or seomthing was added to the <pre> tag, it breaks this.
+            return None
     else:
         sclass = ""
     return sclass
@@ -188,37 +192,43 @@ def highlight_inline(scode, tag_="pre"):
                 current_block.append(sline)
         else:
             # Detect start
-            if strim.startswith('<' + tag_ + 'class='):
+            if strim.startswith('<{}class='.format(tag_)):
                 # get class name
                 sclass = get_tag_class(sline, tag_)
-                # check for name fixing
-                # names can start with '_' like '_c' in case they share
-                # a name with other css classes.
-                if sclass.startswith("_"):
-                    sclass = sclass[1:]
-                if sclass.lower() in basic_styles:
-                    # no highlighting wanted here.
-                    # but we will wrap it in a <div class='highlighted...'
-                    lexer = sclass
-                    sclass = ''
-                    inblock = True
-                elif sclass:
-                    # try highlighting with this lexer name.
-                    try:
-                        lexer = get_lexer_byname(sclass)
-                    except:
-                        _log.error('highlight_inline: unable to create '
-                                   'lexer/formatter with: '
-                                   '{}'.format(sclass))
-                        sclass = ''
-                        lexer = None
-                    # Set the flag to start collecting lines.
-                    inblock = True
+                if sclass is None:
+                    # Error while parsing class name probably extra info in
+                    # the tag. like: <pre class='test' style='breaker'>
+                    _log.error('Unable to parse class attribute from '
+                               '{}'.format(strim))
                 else:
-                    # No class
-                    _log.error("encountered empty highlight class: " + sline)
-                    return scode
-                    inblock = False
+                    # check for name fixing
+                    # names can start with '_' like '_c' in case they share
+                    # a name with other css classes.
+                    if sclass.startswith("_"):
+                        sclass = sclass[1:]
+                    if sclass.lower() in basic_styles:
+                        # no highlighting wanted here.
+                        # but we will wrap it in a <div class='highlighted...'
+                        lexer = sclass
+                        sclass = ''
+                        inblock = True
+                    elif sclass:
+                        # try highlighting with this lexer name.
+                        try:
+                            lexer = get_lexer_byname(sclass)
+                        except:
+                            _log.error('highlight_inline: unable to create '
+                                       'lexer/formatter with: '
+                                       '{}'.format(sclass))
+                            sclass = ''
+                            lexer = None
+                        # Set the flag to start collecting lines.
+                        inblock = True
+                    else:
+                        # No class
+                        _log.error('encountered empty highlight class: '
+                                   '{}'.format(sline))
+                        return scode
 
     # Finished with all lines.
     return sfinished
