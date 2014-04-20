@@ -36,6 +36,14 @@ DEBUG = False
 
 # Where all scripts can be found.
 SCRIPTSDIR = os.path.join(os.getcwd(), 'scripts')
+# Script dirs relative to the main scripts dir, and including the main dir.
+SCRIPTDIRS = (
+    '',  # Equates to the main scripts dir.
+    '../apps/paste/scripts',
+)
+# Helper function for translating script dirs.
+get_scriptdir = lambda s: os.path.abspath(os.path.join(SCRIPTSDIR, s))
+
 if os.path.isdir(SCRIPTSDIR):
     sys.path.insert(1, SCRIPTSDIR)
 else:
@@ -43,9 +51,12 @@ else:
     sys.exit(1)
 
 # Executables and acceptable file extensions
-EXECS = {'.py': 'python3',
-         '.sh': 'bash',
-         '.pl': 'perl'}
+EXECS = {
+    '.py': 'python3',
+    '.sh': 'bash',
+    '.pl': 'perl',
+    '.js': 'node',  # experimental
+}
 
 
 def main(args):
@@ -60,37 +71,40 @@ def main(args):
     else:
         scriptargs = None
 
-    scriptname = find_script(args[0])
+    scriptpath = find_script(args[0])
 
-    if not scriptname:
+    if not scriptpath:
         print('\nCannot find that script!: {}'.format(args[0]))
         return 1
 
-    # Get full scriptname
-    scriptfull = os.path.join(SCRIPTSDIR, scriptname)
-
     # Check for extra input needed.
-    forgotargs = check_input(scriptname, scriptargs)
+    forgotargs = check_input(scriptpath, scriptargs)
     if forgotargs:
-        scriptargs = forgotargs if (not scriptargs) else (scriptargs + forgotargs)
+        if not scriptargs:
+            scriptargs = forgotargs
+        else:
+            scriptargs.extend(forgotargs)
     # Shell script..
-    shellret = shell_script(scriptfull, scriptargs)
+    shellret = shell_script(scriptpath, scriptargs)
     if shellret:
-        print('wrun: script returned non-zero!: {}'.format(str(shellret)))
+        print('wrun: script returned non-zero!: {}'.format(shellret))
 
     return shellret
 
 
-def check_input(cmdname, cmdargs):
+def check_input(cmdpath, cmdargs):
     if cmdargs:
         if ('-h' in cmdargs) or ('--help' in cmdargs):
             return []
         elif ('-v' in cmdargs) or ('--version' in cmdargs):
             return []
 
+    cmdname = os.path.split(cmdpath)[-1]
     if cmdname.startswith('wprefresh'):
+        print('wprefresh may require more input, checking...')
         return checkargs_wprefresh(cmdargs)
     elif cmdname.startswith('clearcache'):
+        print('clearcache may require more input, checking...')
         return checkargs_clearcache(cmdargs)
     # No extra args needed
     return []
@@ -113,7 +127,6 @@ def checkargs_clearcache(cmdargs):
 
 def checkargs_wprefresh(cmdargs):
     """ Checks arguments for wprefresh (because it requires input) """
-    print('\nwprefresh may require more input...')
     flags = []
     # Collect Static for wprefresh
     yesforced = False
@@ -138,7 +151,8 @@ def checkargs_wprefresh(cmdargs):
                 break
 
     if (not yesforced) and (not noforced) and (not restartonly):
-        collectstatic = input('Would you like to collect static files? (yes/no): ')
+        collectstatic = input('Would you like to collect static files? '
+                              '(yes/no): ')
         if collectstatic.lower().startswith('y'):
             flags.append('--collect')
         else:
@@ -197,21 +211,39 @@ def confirm(s=None, default=False):
 def do_list():
     """ List all script files found. """
 
-    scripts = '\n    '.join(get_scripts())
-    print(('\nFound {} scripts in: '
-           '{}\n    {}').format(len(scripts), SCRIPTSDIR, scripts))
+    print_debug('Getting scripts to list...')
+    scripts = get_scripts()
+    print('\nFound {} scripts:'.format(len(scripts)))
+    curdir = None
+    for scriptpath in scripts:
+        thisdir, thisscript = os.path.split(scriptpath)
+        if thisdir != curdir:
+            # Directory change, print it.
+            print('\n    {}:'.format(thisdir))
+            curdir = thisdir
+        # Print the filename with indention.
+        print('        {}'.format(thisscript))
 
 
 def get_scripts():
-    try:
-        # retrieve scripts with matching extensions in EXTENSIONS
-        scripts = [fname for fname in os.listdir(SCRIPTSDIR) if fname[-3:] in EXECS.keys()]
-    except (IOError, OSError) as exio:
-        print_fail('Cannot list scripts dir: {}'.format(SCRIPTSDIR), exc=exio)
+    execexts = EXECS.keys()
+    scripts = []
+    for relativedir in SCRIPTDIRS:
+        scriptdir = get_scriptdir(relativedir)
+        print_debug('Checking dir: {}'.format(scriptdir))
+        try:
+            for fname in os.listdir(scriptdir):
+                print_debug('Checking file: {}'.format(fname))
+                # Skip __init__.py files.
+                if fname.startswith('__init__'):
+                    continue
+                # Add files with acceptable extensions.
+                if fname[-3:] in execexts:
+                    scripts.append(os.path.join(scriptdir, fname))
 
-    # trim __init__.py (no use for it in this case, and it looks ugly.)
-    if '__init__.py' in scripts:
-        scripts.remove('__init__.py')
+        except (IOError, OSError) as exio:
+            print_fail('Cannot list scripts dir: {}'.format(SCRIPTSDIR),
+                       exc=exio)
 
     return sorted(scripts)
 
@@ -221,16 +253,34 @@ def find_script(partname, scriptlist=None):
         Returns 'scriptname' on success, or None on failure/no match.
     """
 
-    # compile search pattern into regex
-    wpname = None if (partname.startswith('wp') or partname.startswith('^')) else 'wp{}'.format(partname)
-    updatename = None if (partname.startswith('update') or partname.startswith('^')) else 'update{}'.format(partname)
+    # Helper for scripts that start with 'wp'
+    if (partname.startswith('wp') or partname.startswith('^')):
+        wpname = None
+    else:
+        wpname = 'wp{}'.format(partname)
+    # Helper for scripts that start with 'update'
+    if (partname.startswith('update') or partname.startswith('^')):
+        updatename = None
+    else:
+        updatename = 'update{}'.format(partname)
 
-    # only match switches beginning with partname.
+    # only match switches beginning with partname to avoid ambiguous names.
     if not partname.startswith('^'):
         partname = '^{}'.format(partname)
+    # compile search pattern into regex
     try:
-        repatwp = re.compile('^{}'.format(wpname)) if wpname else None
-        repatupdate = re.compile('^{}'.format(updatename)) if updatename else None
+        # Try compiling a 'wp' pattern if needed
+        if wpname:
+            repatwp = re.compile('^{}'.format(wpname))
+        else:
+            repatwp = None
+
+        # Try compiling an 'update' pattern if needed.
+        if updatename:
+            repatupdate = re.compile('^{}'.format(updatename))
+        else:
+            repatupdate = None
+        # Compile the original pattern.
         repat = re.compile(partname)
     except Exception as expat:
         print_fail('Invalid name given!: {}'.format(partname), exc=expat)
@@ -238,31 +288,35 @@ def find_script(partname, scriptlist=None):
     # Load scripts if needed
     if scriptlist is None:
         scriptlist = get_scripts()
+    if not scriptlist:
+        print_fail('\nUnable to find any scripts!')
 
     # Search scripts
-    for script in scriptlist:
+    for scriptpath in scriptlist:
+        script = os.path.split(scriptpath)[-1]
         # Match with or without wp
         rematch = repat.search(script)
         if rematch:
-            return script
+            return scriptpath
         else:
             if repatwp:
                 # try wpname
                 rematch = repatwp.search(script)
                 if rematch:
-                    return script
+                    return scriptpath
             if repatupdate:
                 # try updatescript
                 rematch = repatupdate.search(script)
                 if rematch:
-                    return script
+                    return scriptpath
 
     # No match
     return None
 
 
 def is_test_site():
-    return ('test' in os.getcwd())
+    cwd = os.getcwd()
+    return ('test' in cwd) or ('cj/workspace' in cwd)
 
 
 def shell_script(scriptfile, args=None):
@@ -273,11 +327,13 @@ def shell_script(scriptfile, args=None):
     try:
         cmd = EXECS[scriptfile[-3:]]
     except Exception as ex:
-        print_fail('Cannot locate executable for this script: {}'.format(scriptfile), exc=ex)
+        print_fail('Cannot locate executable for this script: '
+                   '{}'.format(scriptfile),
+                   exc=ex)
     # build command list for subprocess
     cmdlst = [cmd, scriptfile] + args if args else [cmd, scriptfile]
     # run/create process
-    print('\nRunning: {}'.format(' '.join(cmdlst)))
+    print('\nRunning: {}\n'.format(' '.join(cmdlst)))
     # Shell the process, returns the subprocess.Popen() proc object.
     proc = run_process(cmdlst)
     # Print stdout/stderr
@@ -296,7 +352,8 @@ def run_process(cmdlist):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
     except Exception as exproc:
-        print_fail('Error opening process!: {} ...'.format(' '.join(cmdlist[:3])), exc=exproc)
+        cmdstr = ' '.join(cmdlist[:3])
+        print_fail('Error opening process!: {} ...'.format(cmdstr), exc=exproc)
         return None
     return proc
 
@@ -305,19 +362,23 @@ def parse_commands(args):
     """ Parse the arg list, run any commands before looking up a script name """
 
     # command flags, mapped to their function.
-    commands = {'-l': {'aliases': ['--list'],
-                       'func': do_list,
-                       'kwargs': None,
-                       },
-                '-h': {'aliases': ['--help'],
-                       'func': print_usage,
-                       'kwargs': {'retcode': 0},
-                       },
-                }
+    commands = {
+        '-l': {
+        'aliases': ['--list'],
+        'func': do_list,
+        'kwargs': None,
+        },
+        '-h': {
+        'aliases': ['--help'],
+        'func': print_usage,
+        'kwargs': {'retcode': 0},
+        },
+    }
 
     # Setup list of known flags...
     commandflags = list(commands.keys())
-    for cmdaliases in [commands[cmdflag]['aliases'] for cmdflag in commands.keys()]:
+    aliasesgen = (commands[cmdflag]['aliases'] for cmdflag in commands.keys())
+    for cmdaliases in aliasesgen:
         commandflags += cmdaliases
     commandflags.sort()
 
@@ -344,19 +405,26 @@ def parse_commands(args):
             commandkw = command['kwargs']
             commandfunc = command['func']
             if commandkw:
+                print_debug('Running command option function with args...')
                 commandfunc(**commandkw)
             else:
+                print_debug('Running command option function...')
                 commandfunc()
         else:
             # unknown flag!
-            print_fail('Unknown flag given!: {}\nRun with --help for usage instructions.'.format(cmdarg))
+            print_fail((
+                'Unknown flag given!: {}\n'
+                'Run with --help for usage instructions.'
+            ).format(cmdarg))
 
     # Return args without any 'wrun command flags'.
     return args
 
 
 def print_debug(obj):
-    """ Prints a message, or if list of strings is passed it formats the output better """
+    """ Prints a message,
+        or if list of strings is passed it formats the output better
+    """
 
     if not DEBUG:
         return False
