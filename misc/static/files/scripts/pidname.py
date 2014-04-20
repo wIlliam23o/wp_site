@@ -16,7 +16,7 @@ import sys
 from docopt import docopt
 
 _NAME = 'PidName'
-__VERSION__ = '1.1.0'
+__VERSION__ = '1.2.0'
 _VERSIONSTR = '{} v. {}'.format(_NAME, __VERSION__)
 _FILE = os.path.split(sys.argv[0])[1] if '/' in sys.argv[0] else sys.argv[0]
 _SCRIPT = _FILE[:-3] if _FILE.endswith('.py') else _FILE
@@ -30,19 +30,30 @@ usage_str = """{versionstr}
         {script} <name> -e <excludename> [options]
 
     Options:
-        <name>                              : known process name, or name to search for (regex allowed).
+        <name>                              : known process name, or name to 
+                                              search for (regex allowed).
+                                              you can also enter a known pid
+                                              for reverse lookup.
         -h,--help                           : show this message.
-        -a,--args                           : include command arguments in results when found.
-        -A,--ARGS                           : always include command arguments in results.
-        -e <excluded>,--exclude <excluded>  : exclude any process names matching this regex.
-                                              by default one process is always excluded, the 'pidname' process.
-                                              it would list false-positives when searching process args.
-        -l,--list                           : list all running processes with arguments.
-        -n,--noargsearch                    : don't search arguments for a match.
-        -p,--pidonly                        : searches only process names (no args),
+        -a,--args                           : include command arguments in
+                                              results when found.
+        -A,--ARGS                           : always include command arguments
+                                              in results.
+        -e <excluded>,--exclude <excluded>  : exclude any process names
+                                              matching this regex.
+                                              by default one process is always
+                                              excluded, the 'pidname' process.
+                                              it would list false-positives
+                                              when searching process args.
+        -l,--list                           : list all running processes with
+                                              arguments.
+        -n,--noargsearch                    : don't search arguments for match.
+        -p,--pidonly                        : searches only names (no args),
                                               prints only the first pid found.
-        -s,--short                          : use short output suitable for chaining with another program.
-                                              multiple pids are comma-separated.
+        -s,--short                          : use short output suitable for
+                                              chaining with another program.
+                                              multiple pids are separated by
+                                              a comma.
         -v,--version                        : show {script} version.
         
 
@@ -64,10 +75,11 @@ def main(argd):
     try:
         pnamepat = re.compile(pname)
     except Exception as expat:
-        print_fail('Invalid name/search-term given!: {}\n{}'.format(str(pname), expat))
+        print_fail('Invalid name/search-term given!: '
+                   '{}\n{}'.format(pname, expat))
     
     # run search, certain cmdline options are passed to the search function.
-    knownpids = get_searchpid(pnamepat, 
+    knownpids = get_searchpid(pnamepat,
                               includeargs=argd['--args'],
                               forceargs=argd['--ARGS'],
                               forceshort=argd['--short'],
@@ -81,8 +93,13 @@ def main(argd):
     returnval = print_pids(knownpids, pidonly=shortoutput)
     
     # Print notes
-    if (not shortoutput) and (not argd['--args']) and (not argd['--ARGS']) and knownpids:
-        print('\nA * means the result was found in command arguments. Use -a, or -A to view them.')
+    if ((not shortoutput) and
+       (not argd['--args']) and
+       (not argd['--ARGS']) and knownpids):
+        print(''.join([
+            '\nA * means the result was found in command arguments. ',
+            'Use -a, or -A to view them.',
+        ]))
     
     return returnval
 
@@ -118,10 +135,39 @@ def get_searchpid(pnamepat, **kwargs):
         excludepat = re.compile(excluded) if excluded else None
     except:
         print_fail('Invalid exclude pattern!', retcode=1)
-    
+
+    def format_name(pname, pargs, usedargs=False):
+        """ Format a found pid's name (with or without args) """
+        if forceargs:
+            # args always included
+            pname = pargs
+        elif (usedargs and includeargs):
+            # args only included when used
+            pname = pargs
+        elif (usedargs):
+            # args not included, but used and marked.
+            pname = pname + " *"
+        return pname
+
     procs = get_processes()
     results = []
     
+    # If the user passed an integer (possibly pid), check to see if the
+    # pid exists, and print it's info if available.
+    try:
+        pidnum = int(pnamepat.pattern)
+        # was an integer, save the pattern for procs key use.
+        pidnum = pnamepat.pattern
+    except (ValueError, TypeError):
+        pidnum = None
+    if pidnum and (pidnum in procs.keys()):
+
+        # User passed a valid pid number.
+        pname = '' if procs[pidnum]['name'] is None else procs[pidnum]['name']
+        pargs = '' if procs[pidnum]['args'] is None else procs[pidnum]['args']
+        pname = format_name(pname, pargs, usedargs=False)
+        results.append('{} : {}'.format(pidnum, pname))
+
     for pid in procs.keys():
         # grab info from this pid. (defaults to empty string if read failed.)
         pname = '' if procs[pid]['name'] is None else procs[pid]['name']
@@ -144,20 +190,13 @@ def get_searchpid(pnamepat, **kwargs):
                 usedargs = True
             
         if namematch is not None:
-            # found a match, return "pid : command name (possibly with args)"
-            if forceargs:
-                # args always included
-                pname = pargs
-            elif (usedargs and includeargs):
-                # args only included when used
-                pname = pargs
-            elif (usedargs):
-                # args not included, but used and marked.
-                pname = pname + " *"
+            # Found a pid, format the name according to user options.
+            pname = format_name(pname, pargs, usedargs=usedargs)
  
             # add this match
             if pidonly:
-                # only list pids (args don't count for --pidonly, it includes pidname itself because of args.)
+                # only list pids (args don't count for --pidonly,
+                #                 it includes pidname itself because of args.)
                 if not usedargs:
                     results.append(pid)
 
@@ -166,7 +205,7 @@ def get_searchpid(pnamepat, **kwargs):
                 if forceshort:
                     results.append(pid)
                 else:
-                    results.append(pid + " : " + pname)
+                    results.append('{} : {}'.format(pid, pname))
     
     return results
 
@@ -193,7 +232,8 @@ def get_processes(skipthisscript=True):
     thispid = str(os.getpid())
     if skipthisscript:
         # don't inlcude this process (the python proc running this script)
-        pids = [pid for pid in os.listdir('/proc') if (pid.isdigit() and pid != thispid)]
+        pids = [pid for pid in os.listdir('/proc')
+                if (pid.isdigit() and pid != thispid)]
     else:
         # all proc pids (string), including this one.
         pids = [pid for pid in os.listdir('/proc') if pid.isdigit()]
@@ -234,7 +274,7 @@ def print_allprocs():
     print('Running processes: (' + proclen + ')')
     # cycle thru integer pids (a list comprehension would've added another loop)
     for pidint in procids:
-        pid = str(pidint) 
+        pid = str(pidint)
         # defaults to empty string if read failed during get_processes()
         pidname = '' if procs[pid]['name'] is None else procs[pid]['name']
         pidargs = '' if procs[pid]['args'] is None else procs[pid]['args']
