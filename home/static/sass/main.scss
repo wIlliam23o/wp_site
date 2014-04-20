@@ -124,6 +124,15 @@ p {
     margin-bottom: 10px;
 }
 
+.paragraph {
+    // Putting a div inside a p breaks some of the highlight-code formatting.
+    // The fix is using a div, so the formatted div will flow correctly.
+    // This style should make a div behave kinda like a paragraph,
+    // minus that one flaw.
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
 ul {list-style-image: none;}
 ul.menu {padding-left: 0;}
 
