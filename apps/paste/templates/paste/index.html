@@ -198,9 +198,16 @@
                         </div>
                     </a>
                 {% else %}
+                    <!-- Reply to paste -->
                     <a href='/paste/?replyto={{ paste.paste_id }}'>
                         <div id='reply-btn' class='wpbutton paste-button'>
                             Reply..
+                        </div>
+                    </a>
+                    <!--  Plain text button -->
+                    <a href='/paste/plain/?id={{ paste.paste_id }}'>
+                        <div id='plaintext-btn' class='wpbutton paste-button'>
+                            View plain text..
                         </div>
                     </a>
                 {% endif %}

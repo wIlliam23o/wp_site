@@ -478,6 +478,39 @@ def view_paste(request):
     return responses.clean_response('paste/index.html', context)
 
 
+def view_paste_plain(request):
+    """ View a paste as plain text. """
+    pasteidarg = responses.get_request_arg(request, 'id')
+    if not pasteidarg:
+        # Can't have both.
+        return responses.error404(request, 'Invalid url.')
+
+    try:
+        pasteobj = wp_paste.objects.get(paste_id=pasteidarg)
+    except wp_paste.DoesNotExist:
+        return responses.error404(request, 'Paste not found.')
+    except Exception as ex:
+        _log.error('Error retrieving paste: {}\n{}'.format(pasteidarg, ex))
+        return responses.error404(request, 'Paste not found.')
+
+    if pasteobj is None:
+        return responses.error404(request, 'Paste content not found.')
+
+    try:
+        pasteobj.view_count += 1
+        pasteobj.save()
+    except Exception as ex:
+        _log.error('Unable to update view_count!\n{}'.format(ex))
+    try:
+        content = pasteobj.content
+    except Exception as ex:
+        _log.error('paste.content is not available!\n{}'.format(ex))
+        return responses.error404(request, 'Paste content not found.')
+
+    # Valid paste, return the plain content.
+    return responses.text_response(content)
+
+
 @never_cache
 @csrf_protect
 def view_replies(request):

@@ -114,7 +114,7 @@ def get_tag_class(stext, tag_="pre"):
             elif '"' in sclass:
                 sclass = sclass.replace('"', '')
         else:
-            # A style or seomthing was added to the <pre> tag, it breaks this.
+            # A style or something was added to the <pre> tag, it breaks this.
             return None
     else:
         sclass = ""
@@ -198,6 +198,7 @@ def highlight_inline(scode, tag_="pre"):
                 if sclass is None:
                     # Error while parsing class name probably extra info in
                     # the tag. like: <pre class='test' style='breaker'>
+                    # Code will not be highlighted.
                     _log.error('Unable to parse class attribute from '
                                '{}'.format(strim))
                 else:

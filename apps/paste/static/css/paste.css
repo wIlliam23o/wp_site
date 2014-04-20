@@ -53,6 +53,9 @@
   margin-left: -10px;
   margin-right: 10px; }
 
+#plaintext-btn {
+  margin-right: 10px; }
+
 .paste-button {
   background-color: #fafafa;
   display: inline-block;

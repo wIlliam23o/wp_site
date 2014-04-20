@@ -59,6 +59,11 @@
     margin-right: 10px;
 }
 
+#plaintext-btn {
+    // View as plain-text button.
+    margin-right: 10px;
+}
+
 .paste-button {
     // Any paste/view button.
     background-color: $whitedull;
@@ -174,6 +179,7 @@
     width: auto;
     color: $greymain;
 }
+
 
 /* Replies menu styles */
 .vertical-menu-reply-date {
