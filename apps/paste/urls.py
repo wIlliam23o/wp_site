@@ -18,5 +18,5 @@ urlpatterns = patterns('',
                        # top pastes
                        url(r'top/?', views.view_top),
                        # plain
-                       url(r'plain/?', views.view_paste_plain),
+                       url(r'raw/?', views.view_paste_raw),
                        )

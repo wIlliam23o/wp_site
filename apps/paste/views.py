@@ -478,7 +478,7 @@ def view_paste(request):
     return responses.clean_response('paste/index.html', context)
 
 
-def view_paste_plain(request):
+def view_paste_raw(request):
     """ View a paste as plain text. """
     pasteidarg = responses.get_request_arg(request, 'id')
     if not pasteidarg:
