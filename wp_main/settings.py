@@ -10,8 +10,8 @@ WPVERSION = '2.1.0'
 
 # file/path (path joining)
 import os.path
-from sys import version as sysversion
-SYSVERSION = sysversion
+import sys
+SYSVERSION = sys.version
 
 # Django messages framework, message-levels
 #from django.contrib.messages import constants as message_constants
@@ -101,14 +101,26 @@ DATABASES = {
 #------------------ Settings above this may be squashed by settings_local -----
 # Fill in missing settings from local file (not in git).
 SECRET_LOCAL_SETTINGS = os.path.join(BASE_DIR, 'settings_local.py')
-if sysversion < '3':
-    execfile(SECRET_LOCAL_SETTINGS)  # noqa
+if sys.version_info.major < 3:
+    try:
+        execfile(SECRET_LOCAL_SETTINGS)  # noqa
+    except Exception as ex:
+        sys.stderr.write('\n'.join([
+            'Error including settings_local.py!',
+            'This will not work.',
+            '{}\n'.format(ex)]))
 else:
     # Python 3 exec file is gone.
-    exec(compile(open(SECRET_LOCAL_SETTINGS).read(),
-                 SECRET_LOCAL_SETTINGS,
-                 'exec'),
-         globals(), locals())
+    try:
+        exec(compile(open(SECRET_LOCAL_SETTINGS).read(),
+                     SECRET_LOCAL_SETTINGS,
+                     'exec'),
+             globals(), locals())
+    except Exception as ex:
+        sys.stderr.write('\n'.join([
+            'Error including settings_local.py!',
+            'This will not work.',
+            '{}\n'.format(ex)]))
 
 # Cache Settings
 CACHES = {
@@ -289,21 +301,27 @@ LOGGING = {
 # Only turn error emails on with the remote server
 # They are driving me nuts when I'm expirimenting locally and DEBUG == False.
 if SERVER_LOCATION == 'remote':
-    LOGGING['handlers'] = {'mail_admins': {
-        'level': 'ERROR',
-        'filters': ['require_debug_false'],
-        'class': 'django.utils.log.AdminEmailHandler'
+    LOGGING['handlers'] = {
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        }
     }
+    LOGGING['loggers'] = {
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        }
     }
-    LOGGING['loggers'] = {'django.request': {
-                          'handlers': ['mail_admins'],
-                          'level': 'ERROR',
-                          'propagate': True,
-                          }
-                          }
 
-
-DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS': False}
+# Disable redirect panel (per new debug_toolbar method.)
+DEBUG_TOOLBAR_CONFIG = {
+    'DISABLE_PANELS': set(['debug_toolbar.panels.redirects.RedirectsPanel'])
+}
+# Don't automatically adjust project settings based on DEBUG!
+DEBUG_TOOLBAR_PATCH_SETTINGS = False
 
 # default login url
 # (regex for wp_main.urls, put here to avoid future mismatches)
