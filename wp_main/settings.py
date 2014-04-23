@@ -101,6 +101,13 @@ DATABASES = {
 #------------------ Settings above this may be squashed by settings_local -----
 # Fill in missing settings from local file (not in git).
 SECRET_LOCAL_SETTINGS = os.path.join(BASE_DIR, 'settings_local.py')
+# This is a hack. Badly recommended from several places on the internet.
+# This could probably be done better with a secret JSON file, or even a
+# sqlite database. The idea would be the same but it would only parse/read
+# the data, and no code would be executed.
+#     like: json.loads(open(secret_file).read())
+# The only problem is the few 'decisions' that the local-settings-file makes.
+# ...like setting 'SITE_VERSION' based on cwd. (harmless debug info but still)
 if sys.version_info.major < 3:
     try:
         execfile(SECRET_LOCAL_SETTINGS)  # noqa
