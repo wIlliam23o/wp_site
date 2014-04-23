@@ -125,7 +125,7 @@ help_str = """
                be found easily by the finder.
          
          example switch with 3 possible names for changing port numbers:
-             /mydir/settings.py|port,portnum,p|2600,81|myportvariable|switch ports
+             /mydir/settings.py|port,portnum,p|2600,81|myportvariable =|switch ports
              * this switch can now be turned on with: wpswitch port on, wpswitch portnum on, 
                or wpswitch p on
             
@@ -157,11 +157,13 @@ help_str = """
             there are many ways to accomplish what this script does. things like 'awk' and 'sed' 
             come to mind. this script was designed for a very specific purpose, and does only 
             what i needed it to do and nothing else. it was meant to be extendable and easily 
-            accessable. some times i don't want to use a terminal editor to change my website 
-            settings. i like to edit offline on my own machine. some times it would take longer 
-            to open the file, scroll to the line, edit, and save the changes. 
+            accessable. some times i don't want to use a terminal editor to change 1 line of code 
+            in my settings. i like to edit offline on my own machine. some times it would take
+            longer to open the file, scroll to the line, edit, and save the changes. 
             
-            running something like 'wpswitch testdatabase off' seems a lot better to me.
+            running something like 'wpswitch testdatabase off' seems a lot better to me,
+            as long as care is taken when defining a 'switch' and you don't try to get too fancy.
+            if you want to get fancy then don't even use this. use an editor.
     """
                      
 
@@ -172,7 +174,7 @@ class switch(object):
         and the RegEx/Text needed to find the switch. """
         
     def __init__(self, filename=None, name=None, default_values=None, finder=None, description=None, group=None):
-        """       Filename: File where we can find the switch (the finder text).
+        """       Filename: File where we can find the switch (with the finder text).
                             Must be in same directory, or relative path of same directory.
                             ex: settings_local.py -or- /main/settings.py
                       Name: Name of switch
@@ -187,7 +189,11 @@ class switch(object):
                      Group: Name of the group this switch belongs to, or None if not grouped.
         """
         
-        self.filename = filename
+        if filename is None:
+            self.filename = None
+        else:
+            self.filename = os.path.abspath(os.path.expanduser(filename))
+
         # allows setting multiple names for a switch ["database", "db"]
         if isinstance(name, (list, tuple)):
             self.aliases = name
@@ -545,8 +551,9 @@ class switch(object):
         if os.path.isfile(self.filename):
             return self.filename
         else:
+            shortname = os.path.split(self.filename)[-1]
             for checkpath in CHECK_DIRS:
-                filename = os.path.join(checkpath, self.filename)
+                filename = os.path.join(checkpath, shortname)
                 if os.path.isfile(filename):
                     self.filename = filename
                     return filename
@@ -1198,19 +1205,26 @@ def list_groups():
     """ print group information """
     
     print("current groups:")
+    # Get groups set by the user.
     groups = get_groups()
-    # add the 'None' group.
+    # Add the 'None' group (where all non-grouped switches are.)
     groups.append('None')
     
-    # print'em
+    # Format for a switches info.
+    grpfmt = '    {group}:'
+    swtfmt = '        {name} : {state} ({actual})'
     for group in groups:
         displayname = '(no group)' if group == 'None' else group
-        print('    ' + displayname + ": ")
+        print(grpfmt.format(group=displayname))
+
         for sw in get_group_members(group):
             contents = sw.get_file_contents()
-            print('        ' + sw.name + " : " +
-                  sw.get_state(False, contents) +
-                  ' (' + sw.get_state(True, contents) + '))')
+            swtfmtargs = {
+                'name': sw.name.ljust(10),
+                'state': sw.get_state(False, contents),
+                'actual': sw.get_state(True, contents)
+            }
+            print(swtfmt.format(**swtfmtargs))
             
 
 def list_files():
@@ -1240,7 +1254,7 @@ def list_status(full_value=False, switchlist=None):
     
     for sw in switchlist:
         contents = sw.get_file_contents()
-        status = "    " + sw.get_name() + " : " + sw.get_state(False, contents)
+        status = sw.get_name().rjust(15) + ' : ' + sw.get_state(False, contents)
         # Show actual value, unless its a version string.
         if full_value and not sw.is_version():
             status += " (" + sw.get_state(True, contents) + ")"
