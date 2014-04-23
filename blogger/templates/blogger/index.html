@@ -52,8 +52,12 @@
 							</div>
 							<!-- Comments Button -->
 							{% if post.enable_comments %}
-								{{ post|comments_button }}
-							{% endif %}	
+								<a href='/blog/view/{{ post.slug }}#comments-box'>
+									<div class='comments-button'>
+										comments..
+									</div>
+								</a>
+							{% endif %}
 							<!-- EDIT -->
 		                    {% if request|is_staff %}
 	                            <a href='/adminblogger/wp_blog/{{ post.id }}'>
