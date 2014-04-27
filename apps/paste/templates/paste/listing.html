@@ -3,6 +3,10 @@
 {% load paste_tags %}
 {% block title %}- {{ listing_title }}{% endblock %}
 
+{% block metainfo %}
+    <meta name="description" content="View a listing of pastes from the welborn productions paste bin app.">
+{% endblock %}
+
 {% block extrastyle %}
     <link type="text/css" rel="stylesheet" href="/static/css/paste.min.css"/>
     <style type='text/css'>

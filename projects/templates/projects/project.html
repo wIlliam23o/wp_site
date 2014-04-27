@@ -4,6 +4,10 @@
 
 {% block title %}{% if project %}- {{ project.name }}{% endif %}{% endblock %}
 
+{% block metainfo %}
+    <meta name="description" content="A welborn productions project{% if project %}: {{ project.name }} v. {{ project.version }}{% if project.description %}, {{ project.description }}{% endif %}{% else %}.{% endif %}">
+{% endblock %}
+
 <!-- Screenshots Javascript -->
 {% block extrahead %}
 	{% if use_screenshots %}

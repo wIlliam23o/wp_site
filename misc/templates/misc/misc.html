@@ -4,6 +4,10 @@
 
 {% block title %}{% if misc %}- {{ misc.name }}{% endif %}{% endblock %}
 
+{% block metainfo %}
+    <meta name="description" content="A small script or tool from welborn productions{% if misc %}: {{ misc.name }} v. {{ misc.version }}{% if misc.description %}, {{ misc.description }}{% endif %}{% else %}.{% endif %}">
+{% endblock %}
+
 <!-- Screenshots Javascript -->
 {% if misc %}
     {% if misc|has_screenshots %}

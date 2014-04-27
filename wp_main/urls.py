@@ -39,9 +39,6 @@ urlpatterns = patterns('',
                        # stats info
                        url(r'^stats\.html$',
                            homeviews.view_stats),
-                       # test page (random code tests for actual server)
-                       url(r'^test\.html$',
-                           homeviews.view_test),
                        # login processor
                        url(settings.LOGIN_URL_REGEX,
                            'django.contrib.auth.views.login'),

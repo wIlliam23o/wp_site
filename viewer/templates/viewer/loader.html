@@ -1,6 +1,10 @@
 {% extends "home/main.html" %}
 {% load wp_tags %}
 
+{% block metainfo %}
+	<meta name="description" content="Contents for a welborn productions project or script{% if file %}: {{ file }}{% else %}.{% endif %}">
+{% endblock %}
+
 <!-- Initial CSS to use -->
 {% block extrastyle %}
 	<style type="text/css">

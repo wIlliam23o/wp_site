@@ -1,6 +1,10 @@
 {% extends "home/main.html" %}
 {% block title %}- Server Error{% endblock %}
 
+{% block metainfo %}
+    <meta name="description" content="A server error for welborn productions.">
+{% endblock %}
+
 {% block content %}
 	<div class='notfound-box'>
 		{# Show messages from the messages framework #}

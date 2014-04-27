@@ -4,6 +4,7 @@
 
 {% block metainfo %}
 	<meta name="robots" content="nofollow">
+	<meta name="descroption" content="A joke page that catches attempted access to wordpress, joomla, or other script-kiddie urls.">
 {% endblock %}
 
 {% block content %}
@@ -14,16 +15,16 @@
 			</div>
 		{% endif %}
 		
-		<p class='home-welcome-text'>
-			You are an idiot. Do you have nothing better to do with your time? I used to do things
-			like this when I was a kid, but when I became a man I had to put away childish things.
-			No script kiddies are welcome here. Leave.
+		<div class='home-welcome-text'>
+			I hope your bot chokes on this page, or your script crashes.
+			Whatever you were looking for isn't here.
 			
 			{% if use_ip %}
-				<br/><br/>
-				Your ip has been logged: {{ ip_address }}
+				<div style="margin-top: 15px;">
+					Your ip has been logged: {{ ip_address }}
+				</div>
 			{% endif %}
-		</p>
+		</div>
 		
 	</div>
 {% endblock %}

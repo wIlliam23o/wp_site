@@ -81,16 +81,6 @@ def view_ip_simple(request):
     return responses.text_response('{}\n'.format(str(utilities.get_remote_ip(request))))
 
 
-@login_required(login_url='/login')
-def view_test(request):
-    """ returns whatever tests are being conducted in test.html template. """
-    
-    return responses.clean_response("home/test.html",
-                                    {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
-                                     })
-
-
 def view_login(request):
     """ processes login attempts ## NOT BEING USED RIGHT NOW ##"""
     
