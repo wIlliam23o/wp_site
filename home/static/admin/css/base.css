@@ -850,6 +850,16 @@ a.item-disabled, .item-disabled {
 	/*font-weight: normal;*/
 }
 
+a.item-expired, .item-expired {
+    /* expired pastes/items are red */
+    color: rgb(160, 0, 0);
+}
+
+a.item-disabled.item-expired, .item-disabled.item-expired {
+    /* expired, already disabled items are red/grey. */
+    color: rgb(206, 154, 154);
+}
+
 a.item-onhold, .item-onhold {
     /* Onhold items are outlined! */
     text-decoration: overline underline;

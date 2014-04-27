@@ -13,31 +13,17 @@ def delete_expired(pastes):
     """ Delete all expired pastes, given a QuerySet/List of pastes. """
     try:
         pastes = pastes.order_by('publish_date')
-        stoponunexpired = True
     except AttributeError:
         # Can't sort a list of pastes using order_by.
-        stoponunexpired = False
+        return -1
 
     deletedcount = 0
     for p in pastes:
         if p.is_expired():
             p.delete()
             deletedcount += 1
-        else:
-            if stoponunexpired:
-                # Stopping on unexpired paste (the rest aren't expired)
-                break
-    return deletedcount
 
-# THIS DOES NOT WORK AS EXPECTED, OBJECTS MUST BE SELECTED TO DO ANYTHING
-# FURTHER HACKING IS NEEDED TO MAKE IT WORK.
-# def delete_all_expired(modeladmin, request, queryset):
-#    """ Delete expired pastes. """
-#    delcount = delete_expired(wp_paste.objects)
-#    msg = 'Deleted {} pastes.'.format(delcount)
-#    modeladmin.message_user(request, msg)
-#    return delcount
-#delete_all_expired.short_description = 'Delete ALL expired pastes'
+    return deletedcount
 
 
 def delete_sel_expired(modeladmin, request, queryset):
@@ -46,7 +32,6 @@ def delete_sel_expired(modeladmin, request, queryset):
     pstr = 'paste' if delcount == 1 else 'pastes'
     msg = 'Deleted {} of {} selected {}.'.format(delcount, len(queryset), pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
-    return delcount
 delete_sel_expired.short_description = 'Delete selected expired pastes'
 
 
@@ -54,10 +39,9 @@ def disable_expired(pastes):
     """ Disabled all expired pastes, given a QuerySet/List of pastes. """
     try:
         pastes = pastes.order_by('publish_date')
-        stoponunexpired = True
     except AttributeError:
         # Can't sort a list of pastes using order_by.
-        stoponunexpired = False
+        return -1
 
     disabledcount = 0
     for p in pastes:
@@ -65,30 +49,15 @@ def disable_expired(pastes):
             p.disabled = True
             p.save()
             disabledcount += 1
-        else:
-            if stoponunexpired:
-                # Stopping on unexpired paste (the rest aren't expired)
-                break
+
     return disabledcount
-
-
-# THIS DOES NOT WORK AS EXPECTED, OBJECTS MUST BE SELECTED TO DO ANYTHING
-# FURTHER HACKING IS NEEDED TO MAKE IT WORK.
-# def disable_all_expired(modeladmin, request, queryset):
-#    """ Disable all expired pastes. """
-#    disablecount = disable_expired(wp_paste.objects.filter(disabled=False))
-#    msg = 'Disabled {} pastes.'.format(disablecount)
-#    modeladmin.message_user(request, msg)
-#    return disablecount
-#disable_all_expired.short_description = 'Disable ALL expired pastes'
 
 
 def disable_sel_expired(modeladmin, request, queryset):
     """ Disable selected expired pastes. """
-    discnt = disable_expired(queryset.filter(disabled=False))
+    discnt = disable_expired(queryset)
     msg = 'Disabled {} of {} selected pastes.'.format(discnt, len(queryset))
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
-    return discnt
 disable_sel_expired.short_description = 'Disable selected expired pastes'
 
 

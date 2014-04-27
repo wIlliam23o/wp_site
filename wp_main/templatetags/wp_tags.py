@@ -100,8 +100,9 @@ def colorize_admin_css(item):
     # List of classes to add to this link.
     newclasses = []
 
-    # item is disabled?
+    # Add classes based on object attributes.
     if is_disabled(obj):
+        # Item is disabled (could be post, project, misc, paste, etc.)
         newclasses.append('item-disabled')
 
     if is_onhold(obj):
@@ -111,6 +112,10 @@ def colorize_admin_css(item):
     if is_private(obj):
         # Item is a private paste.
         newclasses.append('item-private')
+
+    if is_expired(obj):
+        # Item is an expired paste.
+        newclasses.append('item-expired')
 
     if newclasses:
         # Return item with new classes added.
@@ -309,6 +314,21 @@ def is_disabled(model_obj):
     if hasattr(model_obj, 'disabled'):
         return model_obj.disabled
     return False
+
+
+def is_expired(paste_obj):
+    """ if object has .is_expired() function, returns the result.
+        if not, returns False.
+    """
+
+    if hasattr(paste_obj, 'is_expired'):
+        try:
+            expired = paste_obj.is_expired()
+        except TypeError:
+            expired = False
+    else:
+        expired = False
+    return expired
 
 
 def is_false(value):
