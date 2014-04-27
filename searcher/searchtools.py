@@ -31,15 +31,32 @@ from misc import tools as misctools
 from apps.models import wp_app
 
 
-class wp_result(object):
+class WpResult(object):
 
     """ holds search result information """
-    
-    def __init__(self, title="", link="", desc="", posted=""):
+    # A map to type aliases and proper names for result types.
+    types = {
+        'post': 'Blog Post',
+        'project': 'Project',
+        'misc': 'Misc.',
+        'app': 'Web App.',
+        'none': '',
+    }
+
+    def __init__(self, title='', link='', desc='', posted='', restype=''):
+        # Title for the link that is generated in this result.
         self.title = title
+        # Link href for this result.
         self.link = link
+        # Small description for this result.
         self.description = mark_safe(desc)
+        # Publish date for this result.
         self.posted = posted
+        # Type of result (project, blog post, misc, etc.)
+        if restype in WpResult.types:
+            self.restype = WpResult.types[restype]
+        else:
+            self.restype = WpResult.types['none']
 
 
 def fix_query_string(querystr):
@@ -132,7 +149,8 @@ def highlight_queries(queriestr, scontent):
 
                     # stops highlighting 'a' and 'apple' in 'applebaum'
                     # when queries are: 'a', 'apple', 'applebaum'
-                    possible_fix = word_.replace(word_trim, "<strong>" + word_trim + "</strong>")
+                    boldword = '<strong>{}</strong>'.format(word_trim)
+                    possible_fix = word_.replace(word_trim, boldword)
                     if len(possible_fix) > len(fixed_word):
                         fixed_word = possible_fix
                         #_log.debug("set possible: " + fixed_word)
@@ -166,7 +184,7 @@ def search_all(querystr, projects_first=True):
 
 
 def search_apps(querystr):
-    """ search all wp_app objects and return a list of results (wp_results).
+    """ search all wp_app objects and return a list of results (WpResults).
         returns empty list on failure.
     """
     if is_empty_query(querystr):
@@ -193,17 +211,18 @@ def search_apps(querystr):
         got_match = search_targets(queries, targets)
         if got_match:
             _log.debug('    Found good app match.')
-            goodresult = wp_result(title=app.name,
-                                   desc=highlight_queries(queries,
-                                                          acontent),
-                                   link='/apps/{}'.format(app.alias),
-                                   posted=str(app.publish_date))
+            goodresult = WpResult(title=app.name,
+                                  desc=highlight_queries(queries,
+                                                         acontent),
+                                  link='/apps/{}'.format(app.alias),
+                                  posted=str(app.publish_date),
+                                  restype='app')
             results.append(goodresult)
     return results
 
 
 def search_blog(querystr):
-    """ search all wp_blogs and return a list of results (wp_results).
+    """ search all wp_blogs and return a list of results (WpResults).
         returns empty list on failure.
     """
     if is_empty_query(querystr):
@@ -217,7 +236,8 @@ def search_blog(querystr):
     
     results = []
     for post in wp_blog.objects.filter(disabled=False).order_by('-posted'):
-        pdesc = blogtools.prepare_content(blogtools.get_post_body_short(post, max_text_lines=16))
+        praw = blogtools.get_post_body_short(post, max_text_lines=16)
+        pdesc = blogtools.prepare_content(praw)
         targets = (post.title, post.slug,
                    blogtools.get_post_body(post), pdesc,
                    str(post.posted),
@@ -225,15 +245,16 @@ def search_blog(querystr):
 
         got_match = search_targets(queries, targets)
         if got_match:
-            results.append(wp_result(title=post.title,
-                                     desc=highlight_queries(queries, pdesc),
-                                     link="/blog/view/" + post.slug,
-                                     posted=str(post.posted)))
+            results.append(WpResult(title=post.title,
+                                    desc=highlight_queries(queries, pdesc),
+                                    link="/blog/view/" + post.slug,
+                                    posted=str(post.posted),
+                                    restype='post'))
     return results
 
 
 def search_misc(querystr):
-    """ search all wp_misc objects and return a list of results (wp_results).
+    """ search all wp_misc objects and return a list of results (WpResults).
         returns empty list on failure.
     """
     if is_empty_query(querystr):
@@ -249,8 +270,8 @@ def search_misc(querystr):
         return []
     
     results = []
-
-    for misc in wp_misc.objects.filter(disabled=False).order_by('-publish_date'):
+    miscobjs = wp_misc.objects.filter(disabled=False)
+    for misc in miscobjs.order_by('-publish_date'):
         mcontent = misctools.get_long_desc(misc)
         targets = (misc.name, misc.alias,
                    misc.version, misc.filetype,
@@ -259,17 +280,18 @@ def search_misc(querystr):
                    )
         got_match = search_targets(queries, targets)
         if got_match:
-            goodresult = wp_result(title=misc.name,
-                                   desc=highlight_queries(queries,
-                                                          misc.description),
-                                   link='/misc/#{}'.format(misc.alias),
-                                   posted=str(misc.publish_date))
+            goodresult = WpResult(title=misc.name,
+                                  desc=highlight_queries(queries,
+                                                         misc.description),
+                                  link='/misc/#{}'.format(misc.alias),
+                                  posted=str(misc.publish_date),
+                                  restype='misc')
             results.append(goodresult)
     return results
                 
         
 def search_projects(querystr):
-    """ search all wp_projects and return a list of results (wp_results).
+    """ search all wp_projects and return a list of results (WpResults).
         returns empty list on failure.
     """
     if is_empty_query(querystr):
@@ -283,8 +305,8 @@ def search_projects(querystr):
     if not wp_project.objects.count():
         # Nothing to search
         return []
-    
-    for proj in wp_project.objects.filter(disabled=False).order_by('-publish_date'):
+    projobjs = wp_project.objects.filter(disabled=False)
+    for proj in projobjs.order_by('-publish_date'):
         targets = (proj.name, proj.alias,
                    proj.version, proj.description,
                    str(proj.publish_date), ptools.get_html_content(proj),
@@ -293,10 +315,12 @@ def search_projects(querystr):
         got_match = search_targets(queries, targets)
         # Add this project if it matched any of the queries.
         if got_match:
-            goodresult = wp_result(title=proj.name + " v." + proj.version,
-                                   desc=highlight_queries(queries, proj.description),
-                                   link='/projects/' + proj.alias,
-                                   posted=str(proj.publish_date))
+            goodresult = WpResult(title=proj.name + " v." + proj.version,
+                                  desc=highlight_queries(queries,
+                                                         proj.description),
+                                  link='/projects/' + proj.alias,
+                                  posted=str(proj.publish_date),
+                                  restype='project')
             results.append(goodresult)
     
     return results
@@ -341,7 +365,8 @@ def valid_query(querystr):
                 search_warning = 'Too many spaces, try again.'
                 break
             elif query_len < 3:
-                search_warning = '3 character minimum for all terms, try again.'
+                search_warning = ('3 character minimum for all terms, '
+                                  'try again.')
                 break
     # final illegal char check
     if has_illegal_chars(querystr):

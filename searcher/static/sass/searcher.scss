@@ -65,7 +65,7 @@
 .search-listing-title-box:hover {
     border-color: $borderhover;
 }
-.search-listing-title {
+a .search-listing-title, .search-listing-title {
     margin-bottom: 5px;
     font-size: $fontmedium;
     color: $bluemain;
@@ -76,14 +76,30 @@
     
 }
 
-a .search-listing-title {
-    font-size: $fontmedium;
-    color: $bluemain;
-
-    &:hover {
-        color: $bluelink;
-    }
+.search-listing-type-box {
+    display: block;
 }
+
+a .search-listing-type-label, .search-listing-type-label {
+    display: inline;
+    font-size: $fontsmall;
+    color: $greymain;
+}
+
+a .search-listing-type-label:hover {
+    color: $bluelink;
+}
+
+a .search-listing-type-value, .search-listing-type-value {
+    display: inline;
+    font-size: $fontsmall;
+    color: $bluemain;
+}
+
+a .search-listing-type-value:hover {
+    color: $bluelink;
+}
+
 .search-listing-body {
     border-radius: 5px;
     border-style: solid;

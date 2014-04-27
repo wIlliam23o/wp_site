@@ -63,11 +63,24 @@
 		<div class="search-results">
 			{% for result in results_list %}
 				<div class="search-listing">
-                    <a href="{{ result.link }}">  
-				        <div class='search-listing-title-box'>
-                            <span class="search-listing-title">{{ result.title }}</span>
-				        </div>
-                    </a>
+                      
+				    <div class='search-listing-title-box'>
+				    	<a href="{{ result.link }}">
+                            <span class="search-listing-title">
+                            	{{ result.title }}
+                            </span>
+                        </a>
+                        {% if result.restype %}
+                        	<div class="search-listing-type-box">
+	                        	<span class="search-listing-type-label">
+	                        		Type:
+	                        	</span>
+	                        	<span class="search-listing-type-value">
+	                        		{{ result.restype }}
+	                        	</span>
+	                        </div>
+                        {% endif %}
+				    </div>
 					<div class="search-listing-date-box">
 						<span class="search-listing-date">{{ result.posted }}</span>
 					</div>

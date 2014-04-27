@@ -55,18 +55,31 @@
 .search-listing-title-box:hover {
   border-color: #b5ceff; }
 
-.search-listing-title {
+a .search-listing-title, .search-listing-title {
   margin-bottom: 5px;
   font-size: 1.5em;
   color: #26a1f4; }
-  .search-listing-title:hover {
+  a .search-listing-title:hover, .search-listing-title:hover {
     color: #2358a6; }
 
-a .search-listing-title {
-  font-size: 1.5em;
+.search-listing-type-box {
+  display: block; }
+
+a .search-listing-type-label, .search-listing-type-label {
+  display: inline;
+  font-size: 0.8em;
+  color: #919191; }
+
+a .search-listing-type-label:hover {
+  color: #2358a6; }
+
+a .search-listing-type-value, .search-listing-type-value {
+  display: inline;
+  font-size: 0.8em;
   color: #26a1f4; }
-  a .search-listing-title:hover {
-    color: #2358a6; }
+
+a .search-listing-type-value:hover {
+  color: #2358a6; }
 
 .search-listing-body {
   border-radius: 5px;
