@@ -27,6 +27,8 @@ from blogger import blogtools
 # Misc Info
 from misc.models import wp_misc
 from misc import tools as misctools
+# App Info
+from apps.models import wp_app
 
 
 class wp_result(object):
@@ -38,14 +40,6 @@ class wp_result(object):
         self.link = link
         self.description = mark_safe(desc)
         self.posted = posted
-
-
-def is_empty_query(querystring):
-    """ returns True if querystring == '', or len(querystring) < 3 """
-
-    if not hasattr(querystring, 'encode'):
-        querystring = str(querystring)
-    return (querystring == '') or (len(querystring) < 3)
 
 
 def fix_query_string(querystr):
@@ -77,24 +71,165 @@ def force_query_list(querystr):
     # string, no spaces
     return [querystr]
 
-
-def search_targets(queries, targets):
-    """ Search all target strings in [targets] for all queries in [queries].
-        Returns True on first match, False on no match.
-        (no regex used, just 'if s.lower() in t.lower()')
+  
+def has_illegal_chars(querystr):
+    """ check for illegal characters in query,
+        returns True on first match, otherwise False.
     """
     
-    if not queries:
-        return False
-    
-    for target in targets:
-        if target:
-            target = target.lower()
-            for query in queries:
-                if query in target:
-                    # Return True on first match
-                    return True
+    illegalchars = (':', '<', '>', ';', 'javascript:', '{', '}', '[', ']')
+    for char in illegalchars:
+        #_log.debug("checking " + char_ + " in " + query_.replace(' ', ''))
+        if char in querystr.replace(' ', ''):
+            return True
+        
     return False
+
+
+def highlight_queries(queriestr, scontent):
+    """ makes all query words found in the content bold
+        by wrapping them in a <strong> tag.
+    """
+    
+    word_list = scontent.split(' ')
+    if isinstance(queriestr, (list, tuple)):
+        queries = queriestr
+    else:
+        if ',' in queriestr:
+            queriestr = queriestr.replace(',', ' ')
+        if ' ' in queriestr:
+            queries = queriestr.split(' ')
+        else:
+            queries = [queriestr]
+    # fix queries.
+    queries_lower = [q.lower() for q in queries]
+    # regex was not working for me. i'll look into it later.
+    puncuation = ['.', ',', '!', '?', '+', '=', '-']
+    for qcopy in [qc for qc in queries_lower]:
+        for punc in puncuation:
+            queries_lower.append(qcopy + punc)
+            queries_lower.append(punc + qcopy)
+                 
+    fixed_words = []
+    for i in range(0, len(word_list)):
+        word_ = word_list[i]
+        word_lower = word_.lower()
+        # Remove certain characters from the word and save to word_trim.
+        word_trim = word_lower
+        for c in ',.;:"\'':
+            word_trim = word_trim.replace(c, '')
+
+        fixed_word = word_
+        for query in queries_lower:
+            if len(query.replace(' ', '')) > 1:
+                # contains query
+                if ((query in word_lower) and
+                   # not words that are already bold
+                   (not "<strong>" in word_) and
+                   (not "</strong>" in word_) and
+                   # not words that may be html tags
+                   (not (word_.count('=') and word_.count('>')))):
+
+                    # stops highlighting 'a' and 'apple' in 'applebaum'
+                    # when queries are: 'a', 'apple', 'applebaum'
+                    possible_fix = word_.replace(word_trim, "<strong>" + word_trim + "</strong>")
+                    if len(possible_fix) > len(fixed_word):
+                        fixed_word = possible_fix
+                        #_log.debug("set possible: " + fixed_word)
+
+        fixed_words.append(fixed_word)
+    return ' '.join(fixed_words)
+
+
+def is_empty_query(querystring):
+    """ returns True if querystring == '', or len(querystring) < 3 """
+
+    if not hasattr(querystring, 'encode'):
+        querystring = str(querystring)
+    return (querystring == '') or (len(querystring) < 3)
+
+
+def search_all(querystr, projects_first=True):
+    """ searches both projects and blog posts """
+    
+    if projects_first:
+        results = search_projects(querystr)
+        results.extend(search_apps(querystr))
+        results.extend(search_misc(querystr))
+        results.extend(search_blog(querystr))
+    else:
+        results = search_blog(querystr)
+        results.extend(search_projects(querystr))
+        results.extend(search_apps(querystr))
+        results.extend(search_misc(querystr))
+    return results
+
+
+def search_apps(querystr):
+    """ search all wp_app objects and return a list of results (wp_results).
+        returns empty list on failure.
+    """
+    if is_empty_query(querystr):
+        return []
+
+    # Forces list, and trims queries len > 2.
+    queries = force_query_list(querystr)
+    if not queries:
+        # empty queries, or too short queries in the string.
+        return []
+
+    if not wp_app.objects.count():
+        # Nothing to search.
+        return []
+
+    results = []
+    for app in wp_app.objects.filter(disabled=False).order_by('-publish_date'):
+        acontent = app.description
+        targets = (app.name, app.alias,
+                   app.version, app.description,
+                   str(app.publish_date),
+                   )
+        _log.debug('Searching app: {}'.format(app.name))
+        got_match = search_targets(queries, targets)
+        if got_match:
+            _log.debug('    Found good app match.')
+            goodresult = wp_result(title=app.name,
+                                   desc=highlight_queries(queries,
+                                                          acontent),
+                                   link='/apps/{}'.format(app.alias),
+                                   posted=str(app.publish_date))
+            results.append(goodresult)
+    return results
+
+
+def search_blog(querystr):
+    """ search all wp_blogs and return a list of results (wp_results).
+        returns empty list on failure.
+    """
+    if is_empty_query(querystr):
+        return []
+    
+    queries = force_query_list(querystr)
+    
+    if not wp_blog.objects.count():
+        # Nothing to search
+        return []
+    
+    results = []
+    for post in wp_blog.objects.filter(disabled=False).order_by('-posted'):
+        pdesc = blogtools.prepare_content(blogtools.get_post_body_short(post, max_text_lines=16))
+        targets = (post.title, post.slug,
+                   blogtools.get_post_body(post), pdesc,
+                   str(post.posted),
+                   )
+
+        got_match = search_targets(queries, targets)
+        if got_match:
+            results.append(wp_result(title=post.title,
+                                     desc=highlight_queries(queries, pdesc),
+                                     link="/blog/view/" + post.slug,
+                                     posted=str(post.posted)))
+    return results
 
 
 def search_misc(querystr):
@@ -167,99 +302,23 @@ def search_projects(querystr):
     return results
 
 
-def search_blog(querystr):
-    """ search all wp_blogs and return a list of results (wp_results).
-        returns empty list on failure.
-    """
-    if is_empty_query(querystr):
-        return []
-    
-    queries = force_query_list(querystr)
-    
-    if not wp_blog.objects.count():
-        # Nothing to search
-        return []
-    
-    results = []
-    for post in wp_blog.objects.filter(disabled=False).order_by('-posted'):
-        pdesc = blogtools.prepare_content(blogtools.get_post_body_short(post, max_text_lines=16))
-        targets = (post.title, post.slug,
-                   blogtools.get_post_body(post), pdesc,
-                   str(post.posted),
-                   )
-
-        got_match = search_targets(queries, targets)
-        if got_match:
-            results.append(wp_result(title=post.title,
-                                     desc=highlight_queries(queries, pdesc),
-                                     link="/blog/view/" + post.slug,
-                                     posted=str(post.posted)))
-    return results
-
-
-def search_all(querystr, projects_first=True):
-    """ searches both projects and blog posts """
-    
-    if projects_first:
-        results = search_projects(querystr)
-        results += search_misc(querystr)
-        results += search_blog(querystr)
-    else:
-        results = search_blog(querystr)
-        results += search_projects(querystr)
-        results += search_misc(querystr)
-    return results
-
-
-def highlight_queries(queriestr, scontent):
-    """ makes all query words found in the content bold
-        by wrapping them in a <strong> tag.
+def search_targets(queries, targets):
+    """ Search all target strings in [targets] for all queries in [queries].
+        Returns True on first match, False on no match.
+        (no regex used, just 'if s.lower() in t.lower()')
     """
     
-    word_list = scontent.split(' ')
-    if isinstance(queriestr, (list, tuple)):
-        queries = queriestr
-    else:
-        if ',' in queriestr:
-            queriestr = queriestr.replace(',', ' ')
-        if ' ' in queriestr:
-            queries = queriestr.split(' ')
-        else:
-            queries = [queriestr]
-    # fix queries.
-    queries_lower = [q.lower() for q in queries]
-    # regex was not working for me. i'll look into it later.
-    puncuation = ['.', ',', '!', '?', '+', '=', '-']
-    for qcopy in [qc for qc in queries_lower]:
-        for punc in puncuation:
-            queries_lower.append(qcopy + punc)
-            queries_lower.append(punc + qcopy)
-                 
-    fixed_words = []
-    for i in range(0, len(word_list)):
-        word_ = word_list[i]
-        word_lower = word_.lower()
-        word_trim = word_lower.replace(',', '').replace('.', '').replace(';', '').replace(':', '')
-        fixed_word = word_
-        for query in queries_lower:
-            if len(query.replace(' ', '')) > 1:
-                # contains query
-                if ((query in word_lower) and
-                   # not words that are already bold
-                   (not "<strong>" in word_) and
-                   (not "</strong>" in word_) and
-                   # not words that may be html tags
-                   (not (word_.count('=') and word_.count('>')))):
-
-                    # stops highlighting 'a' and 'apple' in 'applebaum'
-                    # when queries are: 'a', 'apple', 'applebaum'
-                    possible_fix = word_.replace(word_trim, "<strong>" + word_trim + "</strong>")
-                    if len(possible_fix) > len(fixed_word):
-                        fixed_word = possible_fix
-                        #_log.debug("set possible: " + fixed_word)
-
-        fixed_words.append(fixed_word)
-    return ' '.join(fixed_words)
+    if not queries:
+        return False
+    
+    for target in targets:
+        if target:
+            target = target.lower()
+            for query in queries:
+                if query in target:
+                    # Return True on first match
+                    return True
+    return False
 
 
 def valid_query(querystr):
@@ -290,17 +349,3 @@ def valid_query(querystr):
         search_warning = 'Illegal characters in search term, try again.'
 
     return search_warning
-
-  
-def has_illegal_chars(querystr):
-    """ check for illegal characters in query,
-        returns True on first match, otherwise False.
-    """
-    
-    illegalchars = (':', '<', '>', ';', 'javascript:', '{', '}', '[', ']')
-    for char in illegalchars:
-        #_log.debug("checking " + char_ + " in " + query_.replace(' ', ''))
-        if char in querystr.replace(' ', ''):
-            return True
-        
-    return False
