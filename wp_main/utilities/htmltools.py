@@ -618,7 +618,8 @@ def check_replacement(source_string, target_replacement):
 
 
 def clean_html(source_string):
-    """ runs the proper remove_ functions. on the source string """
+    """ runs the proper remove_ functions. on the source string
+    """
 
     # these things have to be done in a certain order to work correctly.
     # hide_email, fix p spaces, remove_comments,
@@ -627,9 +628,7 @@ def clean_html(source_string):
         _log.debug('Final HTML for page was None!')
         return ''
 
-    return remove_whitespace(
-        remove_comments(
-            hide_email(source_string)))
+    return remove_whitespace(remove_comments(hide_email(source_string)))
 
 
 def fatal_error_page(message=None):
@@ -1229,14 +1228,11 @@ def remove_newlines(source_string):
 def remove_whitespace(source_string):
     """ removes leading and trailing whitespace from lines,
         and removes blank lines.
-
+        This ignores <pre> blocks, to keep <pre> formatting.
     """
 
-    # removes newlines, except for in pre blocks.
-    if '\n' in source_string:
-        slines = source_string.split('\n')
-    else:
-        slines = [source_string]
+    slines = source_string.split('\n')
+
     # start processing
     in_skipped = False
     final_output = []
@@ -1250,7 +1246,7 @@ def remove_whitespace(source_string):
             # add original line.
             final_output.append(sline)
         else:
-            trimmed = trim_whitespace_line(sline)
+            trimmed = sline.strip()
             # no blanks.
             if trimmed != '\n' and trimmed != '':
                 final_output.append(trimmed)
@@ -1275,7 +1271,6 @@ def render_clean(template_name, **kwargs):
             For these arguments, see: htmltools.render_html()
         passes resulting html through clean_html(),
         returns resulting html string.
-
     """
 
     return clean_html(render_html(template_name, **kwargs))
@@ -1353,17 +1348,6 @@ def strip_all(s, strip_chars):
     for c in strip_chars:
         s = strip_(s, c)
     return s
-
-
-def trim_whitespace_line(sline):
-    """ trims whitespace from a single line """
-
-    scopy = sline
-    while scopy.startswith(' ') or scopy.startswith('\t'):
-        scopy = scopy[1:]
-    while scopy.endswith(' ') or scopy.endswith('\t'):
-        scopy = scopy[:-1]
-    return scopy
 
 
 def wrap_link(content_, link_url, alt_text=""):
