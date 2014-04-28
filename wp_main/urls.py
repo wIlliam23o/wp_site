@@ -61,46 +61,46 @@ urlpatterns = patterns('',
 
 # Apps views (apps) (see apps.urls)
 urlpatterns += patterns('',
-                        url(r'^[Aa]pps/?',
+                        url(r'^[Aa]pps',
                             include('apps.urls')),
                         # shortcut for /apps/paste
-                        url(r'^[Pp]aste/?',
+                        url(r'^[Pp]aste',
                             include('apps.paste.urls')),
                         )
 
 # Projects view (projects)
 urlpatterns += patterns('',
-                        url(r'^[Pp]rojects/?',
+                        url(r'^[Pp]rojects',
                             include('projects.urls'))
                         )
 
 # Misc view (misc)
 urlpatterns += patterns('',
-                        url(r'^[Mm]isc/?',
+                        url(r'^[Mm]isc',
                             include('misc.urls'))
                         )
 # Download view (downloads)
 urlpatterns += patterns('',
                         # /dl/
-                        url(r'^[Dd][Ll]/?',
+                        url(r'^[Dd][Ll]',
                             include('downloads.urls'))
                         )
 
 # Viewer view (viewer)
 urlpatterns += patterns('',
-                        url(r'^[Vv]iew/?',
+                        url(r'^[Vv]iew',
                             include('viewer.urls'))
                         )
 
 # Blogger views (blogger)
 urlpatterns += patterns('',
-                        url(r'[Bb]log/?',
+                        url(r'[Bb]log',
                             include('blogger.urls'))
                         )
 
 # Searcher views (searcher)
 urlpatterns += patterns('',
-                        url(r'[Ss]earch/?',
+                        url(r'[Ss]earch',
                             include('searcher.urls'))
                         )
 
@@ -130,6 +130,8 @@ handler500 = 'home.views.view_500'
 #  them a msg stating how dumb they are.)
 urlpatterns += patterns('',
                         # wordpress login
+                        url(r'^wordpress/wp-admin/?$',
+                            homeviews.view_scriptkids),
                         url(r'^wp\-login\.php$',
                             homeviews.view_scriptkids),
                         url(r'^administrator/index\.php$',

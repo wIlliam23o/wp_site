@@ -297,14 +297,17 @@ def get_paged_args(request, total_count):
                                ['start_id', 'start'],
                                default=0,
                                min_val=0,
-                               max_val=9999)
+                               max_val=total_count)
     # calculate last page based on max_posts
     last_page = (total_count - max_) if (total_count > max_) else 0
     # fix starting id.
     if hasattr(start_id, 'lower'):
         start_id = last_page if start_id.lower() == 'last' else 0
     else:
-        start_id = 0
+        if start_id > total_count:
+            # If the start_id is larger than the total posts,
+            # start on the last page.
+            start_id = last_page
         
     # fix maximum start_id (must be within the bounds)
     if start_id > (total_count - 1):

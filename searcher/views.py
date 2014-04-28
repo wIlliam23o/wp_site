@@ -67,7 +67,7 @@ def view_paged(request):
     
     # check query
     search_warning = searchtools.valid_query(query)
-
+    page_args = None
     # search okay?
     if search_warning == '':
         # get initial results
@@ -85,23 +85,31 @@ def view_paged(request):
                                                  max_items=page_args['max_items'])
         else:
             results_slice = []
-        
+    # No args provided?
+    if not page_args:
+        errmsgs = ['No arguments provided.']
+        friendly = 'That page needs more info to work correctly.'
+        return responses.error500(request, msgs=errmsgs, user_error=friendly)
+    
     # get last index.
     end_id = str(page_args['start_id'] + len(results_slice))
-    return responses.clean_response("searcher/results_paged.html",
-                                    {"request": request,
-                                     "search_warning": search_warning,
-                                     "results_list": results_slice,
-                                     "query_text": query,
-                                     "query_safe": query_safe,
-                                     "start_id": (page_args['start_id'] + 1),
-                                     "end_id": end_id,
-                                     "results_count": results_count,
-                                     "prev_page": page_args['prev_page'],
-                                     "next_page": page_args['next_page'],
-                                     "has_prev": (page_args['start_id'] > 0),
-                                     "has_next": (page_args['start_id'] < (results_count - page_args['max_items'])),
-                                     "extra_style_link_list": [utilities.get_browser_style(request),
-                                                               "/static/css/searcher.min.css",
-                                                               "/static/css/highlighter.min.css"],
-                                     })
+    hasnxt = (page_args['start_id'] < (results_count - page_args['max_items']))
+    hasprv = (page_args['start_id'] > 0)
+    context = {
+        "request": request,
+        "search_warning": search_warning,
+        "results_list": results_slice,
+        "query_text": query,
+        "query_safe": query_safe,
+        "start_id": (page_args['start_id'] + 1),
+        "end_id": end_id,
+        "results_count": results_count,
+        "prev_page": page_args['prev_page'],
+        "next_page": page_args['next_page'],
+        "has_prev": hasprv,
+        "has_next": hasnxt,
+        "extra_style_link_list": [utilities.get_browser_style(request),
+                                  "/static/css/searcher.min.css",
+                                  "/static/css/highlighter.min.css"],
+    }
+    return responses.clean_response("searcher/results_paged.html", context)

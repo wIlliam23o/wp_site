@@ -110,10 +110,6 @@ a .search-listing-type-value:hover {
 
 /* Navigation */
 .search-nav-box {
-  border-style: solid;
-  border-radius: 5px;
-  border-width: 1px;
-  border-color: rgba(202, 217, 224, 0.5);
   padding: 2px;
   display: inline-block; }
 
@@ -123,8 +119,7 @@ a .search-listing-type-value:hover {
   font-size: 0.8em;
   font-weight: bold;
   display: block;
-  padding-bottom: 2px;
-  padding-left: 5px; }
+  padding-bottom: 2px; }
 
 .search-nav-button {
   border-style: solid;
