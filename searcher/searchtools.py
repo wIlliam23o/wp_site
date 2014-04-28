@@ -207,10 +207,8 @@ def search_apps(querystr):
                    app.version, app.description,
                    str(app.publish_date),
                    )
-        _log.debug('Searching app: {}'.format(app.name))
         got_match = search_targets(queries, targets)
         if got_match:
-            _log.debug('    Found good app match.')
             goodresult = WpResult(title=app.name,
                                   desc=highlight_queries(queries,
                                                          acontent),
