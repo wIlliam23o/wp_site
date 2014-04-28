@@ -9,11 +9,10 @@ Created on Oct 20, 2013
 from django.conf.urls import patterns, url
 from misc import views as miscviews
 
-urlpatterns = patterns('',
-        # misc index
-        url('^$', miscviews.view_index),
-        # specific misc item
-        url('(?P<identifier>.+/?)', miscviews.view_misc_any),
-        )
-
-
+urlpatterns = patterns(
+    '',
+    # misc index
+    url(r'^/?$', miscviews.view_index),
+    # specific misc item
+    url(r'/(?P<identifier>.+/?)', miscviews.view_misc_any),
+)
