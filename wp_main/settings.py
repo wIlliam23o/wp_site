@@ -244,7 +244,7 @@ MIDDLEWARE_CLASSES = (
     
     # make requests available in templates...
     #'django.core.context_processors.request',
-    
+
     # django debug tools
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     # special user-agent middleware...
