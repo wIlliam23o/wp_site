@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 
-'''
-      project: welborn productions - utilities - html
-     @summary: provides html string manipulation, code injection/generation
+'''Welborn productions - Utilities - HtmlTools
+    Provides html string manipulation, code injection/generation
     
-      @author: Christopher Welborn <cj@welbornproductions.net>
-@organization: welborn productions <welbornproductions.net>
- 
-   start date: Mar 27, 2013
+   -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
 '''
 
 
