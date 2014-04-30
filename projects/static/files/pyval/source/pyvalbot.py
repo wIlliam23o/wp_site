@@ -32,7 +32,16 @@
                               Either a channel, or a user. Functions may return
                               None if no response is needed.
 
-    Original Twisted basic bot code borrowed from github.com/habnabit.
+    Original Twisted basic bot code borrowed from habnabit.
+        Original ircbot.py from habnabit:
+            https://gist.github.com/habnabit/5823693
+
+        Also hosted at mine in case of future removal:
+            https://gist.github.com/welbornprod/9612828
+
+        ..much has been added since then, but it gave me a base to start from.
+        ..i just want to give credit where it is due.
+
     Sandboxing is done by pypy-sandbox (pypy.org)
 
     -Christopher Welborn 2013-2014
@@ -41,12 +50,15 @@
 
 # System/General stuff
 from datetime import datetime
+from hashlib import md5
 from os import getpid
 import os.path
 import sys
 
 # Arg parsing
 from docopt import docopt
+# Config file
+from easysettings import EasySettings
 
 # Irc stuff
 from twisted.internet import defer, endpoints, protocol, reactor, task
@@ -61,7 +73,10 @@ from pyval_util import NAME, VERSION, VERSIONSTR
 SCRIPT = os.path.split(sys.argv[0])[1]
 
 BANFILE = '{}_banned.lst'.format(NAME.lower().replace(' ', '-'))
-
+CONFIGFILE = '{}.conf'.format(NAME.lower().replace(' ', '_'))
+CONFIG = EasySettings(CONFIGFILE)
+CONFIG.name = NAME
+CONFIG.version = VERSION
 USAGESTR = """{versionstr}
 
     Usage:
@@ -69,15 +84,22 @@ USAGESTR = """{versionstr}
         {script} [options]
         
     Options:
+        -a,--autosave              : Automatically save new command-lin
+                                     options to config file.
+                                     (passwords are stored in plain text!)
+        -b,--noheartbeat           : Don't log the heartbeat pongs.
         -c chans,--channels chans  : Comma-separated list of channels to join.
         -C chr,--commandchar chr   : Character that marks a msg as a command.
                                      Messages that start with this character
                                      are considered commands by {name}.
                                      Defaults to: !
+        -D,--dumpconfig            : Print current config file settings.
         -d,--data                  : Log all sent/received data.
         -h,--help                  : Show this message.
         -i,--ips                   : Print all messages to log, 
                                      include ip addresses.
+        -L pw,--loginpw pw         : Password  for the irc server,
+                                     sent with /PASS <pw>.
         -l,--logfile               : Use log file instead of stderr/stdout.
         -m,--monitor               : Print all messages to log.
         -n <nick>,--nick <nick>    : Choose what NICK to use for this bot.
@@ -88,6 +110,7 @@ USAGESTR = """{versionstr}
                                      Defaults to: 6667
         -s server,--server server  : Name/Domain for the irc server.
                                      Defaults to: irc.freenode.net
+        -U name,--username name    : Username for server login.
         -v,--version               : Show {name} version.
         
 """.format(name=NAME, versionstr=VERSIONSTR, script=SCRIPT)
@@ -96,40 +119,129 @@ USAGESTR = """{versionstr}
 class PyValIRCProtocol(irc.IRCClient):
  
     def __init__(self):
-        self.argd = main_argd
+        self.argd = MAIN_ARGD
         # Main deferred, fired on fatal error or final disconnect.
         self.deferred = defer.Deferred()
 
         # Class to handle admin stuff. Needs to be accessed here and in
         # CommandHandler.
         self.admin = AdminHandler()
-        self.admin.monitor = self.get_argd('--monitor', default=False)
-        self.admin.monitordata = self.get_argd('--data', default=False)
-        self.admin.monitorips = self.get_argd('--ips', default=False)
-        self.admin.nickname = self.get_argd('--nick', default='pyval')
-        self.admin.cmdchar = self.get_argd('--commandchar', default='!')
+        # Admin should have the EasySettings config options.
+        self.admin.config = CONFIG
+        self.admin.argd = self.argd
+        self.admin.monitor = self.get_config('monitor', False)
+        self.admin.monitordata = self.get_config('data', False)
+        self.admin.monitorips = self.get_config('ips', False)
+        self.admin.nickname = self.get_config('nick', 'pyval')
+
+        self.admin.cmdchar = self.get_config('commandchar', '!')
+        self.admin.noheartbeatlog = self.get_config('noheartbeat', False)
         # Give admin access to certain functions.
         self.admin.quit = self.quit
         self.admin.sendLine = self.sendLine
         self.admin.ctcpMakeQuery = self.ctcpMakeQuery
         self.admin.do_action = self.me
         self.admin.handlinglock = defer.DeferredLock()
-        # IRCClient must hold the nickname attribute.
+
+        # parse username/password config where 'user:password' is used.
+        pw = self.get_config('loginpw', None)
+        if pw:
+            if ':' in pw:
+                username, pw = pw.split(':')
+            else:
+                username = self.get_config('username', NAME)
+        else:
+            username = self.get_config('username', None)
+            if username:
+                if ':' in username:
+                    username, pw = username.split(':')
+            else:
+                username = NAME
+
+        self.admin.username = username
+        self.password = pw
+        # IRCClient must hold the nickname/username attribute.
         self.nickname = self.admin.nickname
+        self.username = self.admin.username
+        # The password attributes are deleted as soon as they are used.
+        self.nickservpw = self.get_config('password', default=None)
+        #self.password = self.get_config('loginpw', default=None)
         self.erroneousNickFallback = '{}_'.format(self.nickname)
         # Settings for client/version replies.
         self.versionName = NAME
         self.versionNum = VERSION
         # parse cmdline args to set attributes.
         # self.channels depends on self.nickname for the default channel.
-        self.channels = self.parse_join_channels(self.get_argd('--channels'))
-        self.nickservpw = self.get_argd('--password', default=None)
+        self.channels = self.parse_join_channels(self.get_config('channels'))
 
         # Class to handle messages and commands.
         self.commandhandler = CommandHandler(defer_=defer,
                                              reactor_=reactor,
                                              task_=task,
                                              adminhandler=self.admin)
+
+        # Save cmdline args to config.
+        if self.get_config('autosave'):
+            save_config()
+
+    def _kill_setting(self, option, attr=None):
+        """ Try to remove all traces of a config setting (like a password) """
+        if not option:
+            return False
+
+        if option.startswith('--'):
+            argopt = option
+            option = option.strip('-')
+        else:
+            argopt = '--{}'.format(option)
+
+        for cmdline in [MAIN_ARGD, self.argd]:
+            try:
+                cmdline[argopt] = None
+            except Exception as ex:
+                log.msg('Failed to kill cmdline setting in '
+                        '{}: {}\n{}'.format(cmdline, argopt, ex))
+
+        for configset in [CONFIG, self.admin.config]:
+            try:
+                configset.set(option, None)
+            except Exception as ex:
+                log.msg('Failed to kill config setting in '
+                        '{}: {}\n{}'.format(configset, option, ex))
+
+        if not attr:
+            # No attribute value will be killed.
+            return True
+
+        # Try erasing an attribute value (without erasing the attribute)
+        if not '.' in attr:
+            try:
+                setattr(self, attr, None)
+                return True
+            except Exception as ex:
+                log.msg('Error setting attribute: {}\n{}'.format(attr, ex))
+                return False
+        # Has child attributes in the string.
+        attrs = attr.split('.')
+        firstattr, lastattr = attrs[0], attrs[-1]
+        middleattrs = attrs[1:-1]
+        try:
+            # First attribute to work with.
+            thisattr = getattr(self, firstattr)
+            # Navigate and save attributes in the middle, to get to the last.
+            for curattrstr in middleattrs:
+                thisattr = getattr(thisattr, curattrstr)
+        except Exception as exnav:
+            log.msg('Error navigating attributes: {}\n{}'.format(attr, exnav))
+            return False
+
+        try:
+            # Set the last attribute to None
+            setattr(thisattr, lastattr, None)
+            return True
+        except Exception as exset:
+            log.msg('Error setting attribute: {}\n{}'.format(attr, exset))
+            return False
 
     def connectionMade(self):
         """ Initial connection was made, no 'welcome' message yet. """
@@ -171,14 +283,39 @@ class PyValIRCProtocol(irc.IRCClient):
         """ Safely retrieves a command-line arg from self.argd. """
         if not self.argd:
             log.msg('Something went wrong, self.argd was None!\n'
-                    '    Setting to main_argd.')
-            self.argd = main_argd
+                    '    Setting to MAIN_ARGD.')
+            self.argd = MAIN_ARGD
 
         if self.argd:
             argval = self.argd.get(argname, None)
             if argval:
                 return argval
         return default
+
+    def get_config(self, option, default=None):
+        """ Retrieve setting for PyVal.
+            Tries cmdline args first, then admin.config.
+            Default value is returned if neither is found.
+
+            Arguments:
+                option   : Command line option ('option').
+                           '--' is prepended to try cmdline args.
+                default  : Default value if nothing is found,
+                           defaults to None.
+        """
+
+        if not option:
+            return default
+        if option.startswith('--'):
+            argopt = option
+            option = option.strip('-')
+        else:
+            argopt = '--{}'.format(option)
+
+        val = self.get_argd(argopt, None)
+        if not val:
+            val = self.admin.config.get(option, default=default)
+        return val
 
     def irc_PING(self, prefix, params):
         """ Called when someone has pinged the bot,
@@ -250,6 +387,14 @@ class PyValIRCProtocol(irc.IRCClient):
         """
         return self.versionName
 
+    def md5(self, s):
+        """ md5 some bytes, strings are encoded in utf-8 if passed. """
+        if isinstance(s, bytes):
+            hashobj = md5(s)
+        else:
+            hashobj = md5(s.encode('utf-8'))
+        return hashobj.hexdigest()
+
     def me(self, channel, action):
         """ Perform an action, (/ME action) """
         if channel and (not channel.startswith('#')):
@@ -295,6 +440,7 @@ class PyValIRCProtocol(irc.IRCClient):
     def nickChanged(self, nick):
         """ Called when the bots nick changes. """
         self.admin.nickname = nick
+        self.nickname = nick
 
     def notice(self, user, message):
         """ Send a "notice" to a channel or user. """
@@ -311,6 +457,9 @@ class PyValIRCProtocol(irc.IRCClient):
         if not self.admin.monitordata:
             if channel == self.admin.nickname:
                 # Private notice.
+                # Check for ZNC autoop challenge.
+                if '!ZNCAO CHALLENGE' in message:
+                    self.respond_znc_challenge(user, message)
                 noticefmt = 'NOTICE from {}: {}'
                 log.msg(noticefmt.format(user, message))
             else:
@@ -365,7 +514,9 @@ class PyValIRCProtocol(irc.IRCClient):
             log.msg('PONG from: {} ({}s)'.format(user, secs))
         elif not self.admin.monitordata:
             # no data monitoring, but seconds is unknown.
-            log.msg('PONG from: {} (heartbeat response)'.format(user))
+            # log it if --noheartbeat isn't being used.
+            if not self.admin.noheartbeatlog:
+                log.msg('PONG from: {} (heartbeat response)'.format(user))
 
     def privmsg(self, user, channel, message):
         """ Handles personal and channel messages.
@@ -460,6 +611,30 @@ class PyValIRCProtocol(irc.IRCClient):
         self.admin.last_handle = datetime.now()
         self.admin.last_nick = nick
 
+    def respond_znc_challenge(self, user, msg):
+        """ Respond to a ZNC auth challenge.
+            This currently only works if no key is set.
+
+            When an admin is using a ZNC bouncer, and has *autoop enabled,
+            pyval can be added as an 'autoop' user.
+            When pyval joins a channel setup for autoop ZNC will send a
+            challenge (NOTICE !ZNCAO CHALLENGE <challenge_text>).
+            This will automatically respond with:
+                '!ZNCAO RESPONSE <md5(challenge_text)>'
+
+            It will not handle keys. 
+            Pyval will need to connect to a BNC bouncer so ZNC can handle the 
+            keys itself.
+        """
+
+        if user and msg:
+            challenge = msg.split()[-1]
+            response = self.md5(challenge)
+            self.notice(user, '!ZNCAO RESPONSE {}'.format(response))
+
+        # No user/message was provided.
+        return None
+
     def sendLine(self, line):
         """ Send line, catch what is being sent for logs. """
         # call the original sendline (handles default actions).
@@ -494,8 +669,8 @@ class PyValIRCProtocol(irc.IRCClient):
         if self.nickservpw:
             self.admin.identify(self.nickservpw)
             # no need to save the pw here.
-            self.nickservpw = None
-            self.argd['--password'] = None
+            if not self._kill_setting('password', attr='nickservpw'):
+                log.msg('Failed to remove nickserv password!')
 
         # Join channels.
         for channel in self.channels:
@@ -562,6 +737,100 @@ class PyValIRCFactory(protocol.ReconnectingClientFactory):
         return '{}-Factory'.format(NAME)
 
 
+def dump_config():
+    """ Print current config options to console. """
+    print('\nCurrent configuration for {}:\n'.format(VERSIONSTR))
+    width = 80
+    cols = width / 4
+    colhalf = width / 2
+    # print header labels...
+    configlbl = 'Config File:'.ljust(colhalf)
+    arglbl = 'Command Line:'.ljust(colhalf)
+    print('{}{}'.format(configlbl, arglbl))
+
+    # Print all setting set in config first.
+    handled = []
+    for configopt, configval in CONFIG.settings.items():
+        argopt = '--{}'.format(configopt)
+        handled.append(argopt)
+        argval = MAIN_ARGD.get(argopt, configval)
+        fmtargs = [
+            str(configopt).rjust(cols),
+            str(configval).ljust(cols),
+            argopt.rjust(cols),
+            str(argval).ljust(cols),
+        ]
+        print('{}:{}{}:{}'.format(*fmtargs))
+
+    # Do unset command line args.
+    for argopt, argval in MAIN_ARGD.items():
+        if argopt in handled:
+            continue
+        configopt = argopt.strip('-')
+        configval = ''
+        fmtargs = [
+            str(configopt).rjust(cols),
+            str(configval).ljust(cols),
+            argopt.rjust(cols),
+            str(argval).ljust(cols),
+        ]
+        print('{}:{}{}:{}'.format(*fmtargs))
+
+    print('    Command-line settings override config-file settings when '
+          'both are set (not None or False).')
+
+    return True
+
+
+def get_config(option, default=None):
+    """ Get global config setting.
+        Tries cmdline args first, then config file.
+        Returns default value is neither is found.
+        Arguments:
+            option   : option to retrieve (without '--')
+            default  : default value if not found (defaults to None)
+    """
+    if not option:
+        return default
+    if option.startswith('--'):
+        argopt = option
+        option = option.strip('-')
+    else:
+        argopt = '--{}'.format(option)
+
+    val = MAIN_ARGD.get(argopt, None)
+    if not val:
+        val = CONFIG.get(option, default=default)
+    return val
+
+
+def save_config():
+    """ Save command-line options to config.
+        This will overwrite existing config, but save unchanged values.
+    """
+    changedcnt = 0
+    for argopt, argval in MAIN_ARGD.items():
+        configopt = argopt.strip('--')
+        configval = CONFIG.get(configopt, default=None)
+        if argval and (argval != configval):
+            # Command-line option was set. Save it to config.
+            CONFIG.set(configopt, argval)
+            changedcnt += 1
+
+    if changedcnt == 0:
+        # Nothing changed, no need to save.
+        log.msg('Config has not changed, not saving.')
+        return True
+
+    if CONFIG.save():
+        log.msg('Config saved. ({} altered items)'.format(changedcnt))
+        return True
+    else:
+        log.msg('Config cannot be saved! '
+                '({} items needed saving)'.format(changedcnt))
+        return False
+
+
 def write_pidfile():
     """ Writes the current pid to file, for pyval_restart. """
 
@@ -597,11 +866,19 @@ def main(reactor, serverstr, argd):
 
 if __name__ == '__main__':
     # Get docopt args
-    main_argd = docopt(USAGESTR, version=VERSIONSTR)
+    MAIN_ARGD = docopt(USAGESTR, version=VERSIONSTR)
+
+    # Some args don't need to run the bot.
+    if MAIN_ARGD['--dumpconfig']:
+        if dump_config():
+            # Config dumped, exit on success.
+            sys.exit(0)
+        # Bad config dump.
+        sys.exit(1)
 
     # Start logging as soon as possible.
     # Open log file if --logfile is passed, (fallback to stderr on error)
-    if main_argd['--logfile']:
+    if get_config('logfile', default=False):
         logfilename = '{}.log'.format(NAME.lower().replace(' ', '-'))
         try:
             logfile = open(logfilename, 'w')
@@ -619,25 +896,22 @@ if __name__ == '__main__':
     # Write pid file.
     write_pidfile()
     
-    # Parse server/port settings from cmdline.
-    if main_argd['--server']:
-        servername = main_argd['--server']
-    else:
-        servername = 'irc.freenode.net'
-    if main_argd['--port']:
-        portnum = main_argd['--port']
-    else:
-        portnum = '6667'
+    # Parse server/port settings from cmdline, or set defaults.
+    servername = get_config('server', default='irc.freenode.net')
+    portnum = get_config('port', default='6667')
+
     try:
+        # validate user's port number (redundant when no --port was given)
         int(portnum)
-    except ValueError:
-        log.msg('Invalid port number given!: {}'.format(main_argd['--port']))
+    except (ValueError, TypeError):
+        log.msg('Invalid port number given!: {}'.format(portnum))
         sys.exit(1)
 
     # Final server string for endpoints.clientFromString()
     serverstr = 'tcp:{}:{}'.format(servername, portnum)
 
     # Global factory instance, clients need to call 'resetDelay' on connect.
+    # main() creates the instance.
     factory = None
     # Start irc client.
-    task.react(main, [serverstr, main_argd])
+    task.react(main, [serverstr, MAIN_ARGD])

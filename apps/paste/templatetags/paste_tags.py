@@ -20,6 +20,13 @@ def child_count(paste):
     return 0
 
 
+def paste_children(paste):
+    """ Makes paste.children available in the templates. """
+    c = [p for
+         p in paste.children.filter(disabled=False).order_by('-publish_date')]
+    return c
+
+
 def paste_time(date, shortdate=False):
     """ Parse a date, and return human readable time-elapsed since the date.
         If it has been more than 1 day, the full Weekday, Month, Day, Time,
@@ -33,7 +40,19 @@ def paste_time(date, shortdate=False):
         return date
 
     since = get_time_since(date)
-    if (' day' in since):
+    if ' hour' in since:
+        # It has been at least one hour,
+        # if it has been more than 6 (magic number), show the full date.
+        try:
+            hours = int(since.split()[0])
+        except Exception as ex:
+            hours = 0
+            _log.error('Error in parsing get_time_since!\n{}'.format(ex))
+            return get_datetime(date, shortdate=shortdate)
+        finally:
+            if hours > 6:
+                return get_datetime(date, shortdate=shortdate)
+    elif (' day' in since):
         # Not today.
         return get_datetime(date, shortdate=shortdate)
 
@@ -54,6 +73,7 @@ def trim_reply_title(title):
 
 registered_filters = (
     child_count,
+    paste_children,
     paste_time,
     trim_reply_title,
 )

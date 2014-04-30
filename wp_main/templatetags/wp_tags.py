@@ -16,6 +16,9 @@ import os
 # Django stuff
 from django import template
 from django.conf import settings
+from django.utils.safestring import mark_safe
+
+
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities.highlighter import wp_highlighter, highlight_codes
@@ -30,7 +33,6 @@ from apps.paste.models import wp_paste
 
 _log = logger("wp_main.tags").log
 
-from django.utils.safestring import mark_safe
 register = template.Library()
 
 # for admin change_list filtering.
@@ -42,35 +44,7 @@ disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
 
 
-def contains(str_or_list, val_to_find):
-    """ uses 'if val in str_or_list'.
-        returns True if val_to_find is in str_or_list.
-    """
-    
-    return (val_to_find in str_or_list)
-
-
-def debug_allowed(request_object):
-    """ uses utilities to determine if debug 
-        info is allowed for this request.
-    """
-    
-    return utilities.debug_allowed(request_object)
-
-
-def dict_value(dict_object, dictkey):
-    """ retrieves value for dict key,
-        like: value['dictkey'].
-    """
-    
-    try:
-        val = dict_object[dictkey]
-    except:  # Exception as ex:
-        val = ''
-    return val
-
-
-def disabled_css(item):
+def colorize_admin_css(item):
     """ applies class='item-disabled' to admin change_list.results.item
         if the object has .disabled attribute and it is set to True.
         This is used in change_list_results.html template for admin.
@@ -122,15 +96,62 @@ def disabled_css(item):
         _log.debug('Admin-disable: Can\'t find: '
                    '{} [{}]'.format(name, otype))
         return item
-    
-    # item is disabled?
+
+    # List of classes to add to this link.
+    newclasses = []
+
+    # Add classes based on object attributes.
     if is_disabled(obj):
-        return mark_safe(item.replace('<a href',
-                                      '<a class="item-disabled" href'))
+        # Item is disabled (could be post, project, misc, paste, etc.)
+        newclasses.append('item-disabled')
+
+    if is_onhold(obj):
+        # Item is onhold.
+        newclasses.append('item-onhold')
+        
+    if is_private(obj):
+        # Item is a private paste.
+        newclasses.append('item-private')
+
+    if is_expired(obj):
+        # Item is an expired paste.
+        newclasses.append('item-expired')
+
+    if newclasses:
+        # Return item with new classes added.
+        newtxt = '<a class="{}" href'.format(' '.join(newclasses))
+        return mark_safe(item.replace('<a href', newtxt))
     else:
-        # item was not disabled.
         return item
+
+
+def contains(str_or_list, val_to_find):
+    """ uses 'if val in str_or_list'.
+        returns True if val_to_find is in str_or_list.
+    """
     
+    return (val_to_find in str_or_list)
+
+
+def debug_allowed(request_object):
+    """ uses utilities to determine if debug 
+        info is allowed for this request.
+    """
+    
+    return utilities.debug_allowed(request_object)
+
+
+def dict_value(dict_object, dictkey):
+    """ retrieves value for dict key,
+        like: value['dictkey'].
+    """
+    
+    try:
+        val = dict_object[dictkey]
+    except:  # Exception as ex:
+        val = ''
+    return val
+
 
 def ends(str_, val_to_check):
     """ uses str_.endswith() to check a value.
@@ -188,8 +209,14 @@ def exceeds_min(value, min_):
 
 def getlength(lennable):
     """ Tag for len() """
-
-    return len(lennable)
+    if not lennable:
+        return 0
+    
+    try:
+        return len(lennable)
+    except TypeError:
+        # Non len()able type.
+        return 0
 
 
 def get_filename(filename):
@@ -286,8 +313,22 @@ def is_disabled(model_obj):
     
     if hasattr(model_obj, 'disabled'):
         return model_obj.disabled
+    return False
+
+
+def is_expired(paste_obj):
+    """ if object has .is_expired() function, returns the result.
+        if not, returns False.
+    """
+
+    if hasattr(paste_obj, 'is_expired'):
+        try:
+            expired = paste_obj.is_expired()
+        except TypeError:
+            expired = False
     else:
-        return False
+        expired = False
+    return expired
 
 
 def is_false(value):
@@ -308,6 +349,25 @@ def is_mobile(request_object):
 def is_none(obj):
     """ Return whether a value is actually None (not falsey) """
     return obj is None
+
+
+def is_onhold(model_obj):
+    """ if object has .disabled attribute, returns it,
+        if not, returns False.
+    """
+    
+    if hasattr(model_obj, 'onhold'):
+        return model_obj.onhold
+    return False
+
+
+def is_private(obj):
+    """ If object has a .private attribute, returns it.
+        if not, returns False.
+    """
+    if hasattr(obj, 'private'):
+        return obj.private
+    return False
 
 
 def is_staff(request):
@@ -421,10 +481,10 @@ def subtract(val, otherval=None):
 
 # tuple of filters to register.
 registered_filters = (
+    colorize_admin_css,
     contains,
     debug_allowed,
     dict_value,
-    disabled_css,
     ends,
     exceeds_max,
     exceeds_min,

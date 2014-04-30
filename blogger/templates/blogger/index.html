@@ -3,21 +3,15 @@
 {% load wp_tags %}
 {% block title %}- Blog{% endblock %}
 
+{% block metainfo %}
+    <meta name="description" content="Welborn productions blog posts.">
+{% endblock %}
+
 {% block extrastylelink %}
 	<link rel="stylesheet" href="/static/css/blogger.min.css" type="text/css"/>
 	<link rel="stylesheet" href="/static/css/highlighter.min.css" type="text/css"/>
 	{{ block.super }}
 		
-{% endblock %}
-
-{% block extrastyle %}
-	<style type='text/css'>
-		.wpbutton.blog-edit-button {
-			position: absolute;
-			left: 890px;
-			margin-top: 4px;
-		}
-	</style>
 {% endblock %}
 
 {% block contentabove %}
@@ -62,8 +56,12 @@
 							</div>
 							<!-- Comments Button -->
 							{% if post.enable_comments %}
-								{{ post|comments_button }}
-							{% endif %}	
+								<a href='/blog/view/{{ post.slug }}#comments-box'>
+									<div class='comments-button'>
+										comments..
+									</div>
+								</a>
+							{% endif %}
 							<!-- EDIT -->
 		                    {% if request|is_staff %}
 	                            <a href='/adminblogger/wp_blog/{{ post.id }}'>

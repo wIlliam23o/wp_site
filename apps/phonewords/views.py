@@ -53,6 +53,9 @@ def view_results(request, args=None):
     results = None
     total = None
     rawquery = args['query']
+    if not rawquery:
+        return responses.error404(request, msgs=['Invalid url args.'])
+
     lookupfunc, query, method = get_lookup_func(rawquery)
     cache_used = False
     # Try cached results first (for numbers only)
@@ -96,7 +99,7 @@ def view_results(request, args=None):
                     pwtools.save_results(query, results, total)
         else:
             _log.error('missing word file: {}'.format(wordfile))
-            errors = ValueError('Can\'t find word file!')
+            errors = Exception('Can\'t find word file!')
 
     # Return response.
     context = {'request': request,

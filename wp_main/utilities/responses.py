@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''
-      project: welborn productions utilities - responses
-     @summary: provides easy access to HttpResponse/Request objects/functions.
+'''Welborn Productions - Utilities - Responses
+    Provides easy access to HttpResponse/Request objects/functions,
+    and some helper functions.
     
-      @author: Christopher Welborn <cj@welbornproductions.net>
-@organization: welborn productions <welbornproductions.net>
- 
-   start date: Mar 27, 2013
+    -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
 '''
 
 # Default dict for request args.
@@ -16,7 +13,10 @@ from collections import defaultdict
 # Local tools
 from wp_main.utilities import htmltools
 from wp_main.utilities.utilities import (
-    get_browser_style, get_server, get_remote_ip
+    get_browser_style,
+    get_server,
+    get_remote_ip,
+    logtraceback
 )
 
 # Log
@@ -66,11 +66,12 @@ def alert_message(request, alert_msg, **kwargs):
 
     # alert_message will display at the top of the page,
     # per the main templates 'alert_message' block.
-    return clean_response("home/main.html",
-                          {'main_content': mark_safe(main_content),
-                           'alert_message': mark_safe(alert_msg),
-                           'request': request,
-                           })
+    context = {
+        'main_content': mark_safe(main_content),
+        'alert_message': mark_safe(alert_msg),
+        'request': request,
+    }
+    return clean_response('home/main.html', context)
 
 
 def basic_response(scontent='', *args, **kwargs):
@@ -87,7 +88,8 @@ def clean_response(template_name, context_dict, **kwargs):
     """
     if context_dict is None:
         context_dict = {}
-    request = kwargs.get('request', None) or context_dict.get('request', None)
+    # Check kwargs for a request obj, then check the context if it's not there.
+    request = kwargs.get('request', context_dict.get('request', None))
 
     # Add request to context if available.
     if request:
@@ -103,12 +105,26 @@ def clean_response(template_name, context_dict, **kwargs):
     
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
-    except Exception as ex:
-        _log.error('Unable to render template: '
-                   '{}\n{}'.format(template_name, ex))
+    except Exception:
+        logtraceback(_log.error, message='Unable to render.')
+        if request:
+            # 500 page.
+            return error500(request, msgs=('Error while building that page.',))
+        # Fallback crappy alert message page.
         return alert_message(request,
                              'Sorry, there was an error loading this page.')
     else:
+        if not rendered:
+            # Something went wrong in the render chain.
+            # It catches most errors, logs them, and returns ''.
+            msgs = ['Unable to build that page right now, sorry.']
+            if request:
+                return error500(request, msgs=msgs)
+            # no request, build a really crappy error page.
+            msgs.append('The error has been logged and emailed to me.')
+            rendered = htmltools.fatal_error_page('<br>\n'.join(msgs))
+
+        # Return final page response.
         return HttpResponse(rendered)
 
 
@@ -119,7 +135,8 @@ def clean_response_req(template_name, context_dict, **kwargs):
     
     if not context_dict:
         context_dict = {}
-    request = kwargs.get('request', None)
+    # Check kwargs for a request obj, then check the context if it's not there.
+    request = kwargs.get('request', context_dict.get('request', None))
     if request:
         # Add server name, remote ip to context if not added already.
         if not context_dict.get('server_name', False):
@@ -137,36 +154,27 @@ def clean_response_req(template_name, context_dict, **kwargs):
 
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
-    except Exception as ex:
-        _log.error('Unable to render template with request context: '
-                   '{}\n{}'.format(template_name, ex))
+    except Exception:
+        logtraceback(_log.error, message='Unable to render.')
+        if request:
+            # 500 page.
+            return error500(request, msgs=('Error while building that page.',))
+        # Fallback crappy alert message page.
         return alert_message(request,
                              'Sorry, there was an error loading this page.')
     else:
+        if not rendered:
+            # Something went wrong in the render chain.
+            # It catches most errors, logs them, and returns ''.
+            msgs = ['Unable to build that page right now, sorry.']
+            if request:
+                return error500(request, msgs=msgs)
+            # no request, build a really crappy error page.
+            msgs.append('The error has been logged and emailed to me.')
+            rendered = htmltools.fatal_error_page('<br>\n'.join(msgs))
+
+        # Return final page
         return HttpResponse(rendered)
-    
- 
-def clean_template(template_, context_=None, force_=False):
-    """ renders a template with context and
-        applies the cleaning functions.
-        
-        Email addresses are hidden with hide_email(),
-        then fixed on document load with wptools.js.
-        
-        Blank Lines, Whitespace, Comments are removed if DEBUG = True.
-        see: htmltools.render_clean() or htmltools.clean_html()
-    """
-    if context_ is None:
-        context_ = {}
-    
-    if hasattr(template_, 'encode'):
-        # render template and then clean.
-        return htmltools.render_clean(template_, context_)
-    elif hasattr(template_, 'render'):
-        # already loaded template.
-        return htmltools.clean_html(template_.render(context_))
-    else:
-        return None
 
 
 def default_dict(request=None, extradict=None):
@@ -194,26 +202,42 @@ def default_dict(request=None, extradict=None):
     return defaults
 
 
-def error404(request, message=None):
+def error404(request, msgs=None):
     """ Raise a 404, but pass an optional message through the messages
         framework.
+        Arguments:
+            request     : Request object from view.
+            msgs        : Optional error messages for the messages framework.
+                          Accepts a list, or a single string.
     """
 
-    if message:
-        messages.error(request, message)
-        raise Http404(message)
+    if msgs and isinstance(msgs, str):
+        msgs = [msgs]
+
+    if msgs:
+        # Send messages using the message framework.
+        for m in msgs:
+            messages.error(request, m)
+
+        raise Http404(msgs[0])
     else:
         raise Http404()
 
 
-def error500(request, msgs=None):
+def error500(request, msgs=None, user_error=None):
     """ Fake-raise a 500 error. I say fake because no exception is
         raised, but the user is directed to the 500-error page.
-        If a message is passed, it is sent via the messages framework.
+        If msgs is passed, it is sent via the messages framework.
         Arguments:
-            request  : Request object from view.
-            message  : Optional message for the messages framework.
+            request     : Request object from view.
+            msgs        : Optional error messages for the messages framework.
+                          Accepts a list, or a single string.
+            user_error  : Friendly msg to show to the user, usually because it
+                          was their fault (invalid request/url).
+                          Without it, the default 'sorry, this was my fault..'
+                          msg is shown.
     """
+
     if msgs and isinstance(msgs, str):
         msgs = [msgs]
 
@@ -225,6 +249,7 @@ def error500(request, msgs=None):
     context = {'request': request,
                'server_name': get_server(request),
                'remote_ip': get_remote_ip(request),
+               'user_error': user_error,
                }
     try:
         rendered = htmltools.render_clean('home/500.html',
@@ -270,14 +295,17 @@ def get_paged_args(request, total_count):
                                ['start_id', 'start'],
                                default=0,
                                min_val=0,
-                               max_val=9999)
+                               max_val=total_count)
     # calculate last page based on max_posts
     last_page = (total_count - max_) if (total_count > max_) else 0
     # fix starting id.
     if hasattr(start_id, 'lower'):
         start_id = last_page if start_id.lower() == 'last' else 0
     else:
-        start_id = 0
+        if start_id > total_count:
+            # If the start_id is larger than the total posts,
+            # start on the last page.
+            start_id = last_page
         
     # fix maximum start_id (must be within the bounds)
     if start_id > (total_count - 1):
@@ -453,17 +481,28 @@ def get_request_args(request, requesttype=None, default=None):
 def json_get(data):
     """ Retrieves a dict from json data string. """
     
+    originaltype = type(data)
     if isinstance(data, dict):
         return data
     
-    datadict = json.loads(data.decode('utf-8'))
+    if hasattr(data, 'decode'):
+        data = data.decode('utf-8')
+
+    datadict = None
+    try:
+        datadict = json.loads(data)
+    except TypeError as extype:
+        _log.debug('Wrong type passed in: {}\n{}'.format(originaltype, extype))
+    except ValueError as exval:
+        _log.debug('Bad data passed in: {}\n{}'.format(data, exval))
+
     return datadict
 
 
 def json_get_request(request):
     """ retrieve JSON data from a request (uses json_get()). """
     
-    if request.is_ajax():
+    if hasattr(request, 'body'):
         return json_get(request.body)
     return None
 
@@ -485,7 +524,17 @@ def json_response_err(ex, log=False):
     if log:
         _log.error('Sent JSON error:\n{}'.format(ex))
 
-    return json_response({'status': 'error', 'message': str(ex)})
+    if hasattr(ex, '__class__'):
+        extyp = str(ex.__class__)
+    else:
+        extyp = str(type(ex))
+
+    errdata = {
+        'status': 'error',
+        'message': str(ex),
+        'errortype': extyp,
+    }
+    return json_response(errdata)
 
 
 def redirect_perm_response(redirect_to):

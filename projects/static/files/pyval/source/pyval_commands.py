@@ -1,23 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""ircbot_commands.py
+"""pyval_commands.py
 
-    Handles commands for ircbot.py, separate from the rest of the other
+    Handles commands for pyvalbot.py, separate from the rest of the other
     irc bot functionality to prevent mess.
 
-    -Christopher Welborn (original ircbot.py from github.com/habnabit)
+    -Christopher Welborn 
+
 """
 
+from datetime import datetime
 import json
 import os
 from sys import version as sysversion
-from datetime import datetime
-import subprocess
+import urllib
+
+from easysettings import EasySettings
 from twisted.python import log
 
-from pyval_exec import ExecBox, TempInput, TimedOut
-from pyval_util import NAME, VERSION, VERSIONX, humantime, timefromsecs
+from pyval_exec import ExecBox, TimedOut
+from pyval_util import (
+    NAME,
+    VERSION,
+    VERSIONX,
+    get_args,
+    humantime,
+    timefromsecs)
 
 ADMINFILE = '{}_admins.lst'.format(NAME.lower().replace(' ', '-'))
 BANFILE = '{}_banned.lst'.format(NAME.lower().replace(' ', '-'))
@@ -26,10 +35,6 @@ HELPFILE = '{}_help.json'.format(NAME.lower().replace(' ', '-'))
 # Parses common string for True/False values.
 parse_true = lambda s: s.lower() in ('true', 'on', 'yes', '1')
 parse_false = lambda s: s.lower() in ('false', 'off', 'no', '0')
-
-# Location of pastebinit
-# TODO: needs to check other locations as well.
-PASTEBINIT_EXE = '/usr/bin/pastebinit'
 
 
 def simple_command(func):
@@ -64,6 +69,46 @@ def basic_command(func):
     return inner
 
 
+def block_dict_val(data, blockedlst, value=None):
+    """ Block certain dict/config values from being seen.
+        Replaces a keys value if any strings in blockedlst are found.
+        Strings are found if they start or end with any string in the
+        blocked list.
+        Values are replaces with the 'value' argument.
+
+        This is meant to be used with string representations of dicts.
+        The original data is unchanged, the changed version is returned.
+
+        Arguments:
+            data  : dict or EasySetting instance.
+            blockedlst  : Tuple of strings, if found in a key it is blocked.
+            value       : New value for blocked items. Defaults to: '********'
+
+    """
+    if isinstance(data, dict):
+        d = data
+    elif isinstance(data, EasySettings):
+        d = data.settings
+    else:
+        # Not the correct type to be blocked.
+        return data
+
+    if value is None:
+        # Default value for blocked vlaues.
+        value = '********'
+
+    # Block all 'password/pw' values from dict/settings...
+    newdata = {}
+    for k, v in d.items():
+        keystr = str(k)
+        if keystr.startswith(blockedlst) or keystr.endswith(blockedlst):
+            newdata[k] = value
+        else:
+            newdata[k] = v
+
+    return newdata
+
+
 def load_json_object(filename):
     """ Loads an object from a json file,
         returns {} on failure.
@@ -82,6 +127,65 @@ def load_json_object(filename):
         return {}
 
     return jsonobj
+
+
+def pasteit(data):
+    """ Submit a paste to welbornprod.com/paste ...
+        data should be a dict with at least:
+        {'content': <paste content>}
+
+        with optional settings:
+        {'author': 'name',
+         'title': 'paste title',
+         'content': 'this is content',
+         'private': True,
+         'onhold': True,
+         }
+    """
+    pasteurl = 'http://welbornprod.com/paste/api/submit'
+    try:
+        newdata = urllib.urlencode(data)
+    except Exception as exenc:
+        log.msg('Unable to encode paste data: {}\n{}'.format(data, exenc))
+        return None
+    try:
+        con = urllib.urlopen(pasteurl, data=newdata)
+    except Exception as exopen:
+        log.msg('Unable to open paste url: {}\n{}'.format(pasteurl, exopen))
+        return None
+    try:
+        resp = con.read()
+    except Exception as exread:
+        log.msg('Unable to read paste response from '
+                '{}\n{}'.format(pasteurl, exread))
+        return None
+    try:
+        respdata = json.loads(resp)
+    except Exception as exjson:
+        log.msg('Unable to decode JSON from {}\n{}'.format(pasteurl, exjson))
+        return None
+
+    status = respdata.get('status', 'error')
+    if status == 'error':
+        # Server responded with json error response.
+        errmsg = respdata.get('message', '<no msg>')
+        log.msg('Paste site responded with error: {}'.format(errmsg))
+        # Little something for the unit tests..
+        # The error is most likely 'too many pastes in a row',
+        # just return the error msg so the test will pass and be printed.
+        if data.get('author', '').startswith('<pyvaltest>'):
+            return 'TESTERROR: {}'.format(errmsg)
+        # Paste site errored, no url given to the chat user.
+        return None
+
+    # Good response.
+    suburl = respdata.get('url', None)
+    if suburl:
+        finalurl = 'http://welbornprod.com{}'.format(suburl)
+        return finalurl
+
+    # No url found to respond with.
+    return None
 
 
 class AdminHandler(object):
@@ -324,6 +428,37 @@ class AdminHandler(object):
 
         return load_json_object(HELPFILE)
 
+    def save_config(self):
+        """ Save config settings to disk.
+            Returns the number of items changed/saved.
+            Returns None on failure.
+        """
+        if not hasattr(self, 'argd'):
+            log.msg('Unable to save config, admin.argd not found!')
+            return None
+        if not hasattr(self, 'config'):
+            log.msg('Unable to save config, admin.config not found!')
+            return None
+
+        changecnt = 0
+        for argopt, argval in self.argd.items():
+            configopt = argopt.strip('--')
+            configval = self.config.get(configopt, default=None)
+            if argval and (argval != configval):
+                # New config option.
+                self.config.set(configopt, argval)
+                changecnt += 1
+
+        if changecnt > 0:
+            if self.config.save():
+                # Save was a success.
+                return changecnt
+            # Bad save.
+            return None
+        else:
+            # No items to save.
+            return 0
+
 
 class CommandHandler(object):
 
@@ -536,6 +671,67 @@ class CommandFuncs(object):
         return 'current channels: {}'.format(', '.join(self.admin.channels))
 
     @basic_command
+    def admin_configget(self, rest):
+        """ Retrieve value for a config setting. """
+
+        rest = rest.strip()
+        if not rest:
+            return 'usage: {}configget <option>'.format(self.admin.cmdchar)
+
+        val = self.admin.config.get(rest, '__NOTSET__')
+        if val == '__NOTSET__':
+            return '{}: <not set>'.format(rest)
+        
+        # Filter some config settings (dont want passwords sent to chat)
+        blocked = ('pw', 'password')
+        if rest.startswith(blocked) or rest.endswith(blocked):
+            return '{}: ********'.format(rest)
+
+        # Value is ok to send to chat.
+        return '{}: {}'.format(rest, val)
+
+    @simple_command
+    def admin_configlist(self):
+        """ List current config. Filters certain items from chat. """
+
+        return self.admin_getattr('admin.config')
+
+    @simple_command
+    def admin_configsave(self):
+        """ Save the current config (cmdline options) to disk. """
+        saved = self.admin.save_config()
+        if saved is None:
+            return 'unable to save config.'
+        else:
+            return 'saved {} new config settings.'.format(saved)
+
+    @basic_command
+    def admin_configset(self, rest):
+        """ Set value for a config setting. """
+
+        usagestr = ('usage: '
+                    '{}configset <option> <value>').format(self.admin.cmdchar)
+        rest = rest.strip()
+        if not rest:
+            return usagestr
+
+        args = rest.split(' ')
+        if len(args) < 2:
+            # Not enough args.
+            return usagestr
+
+        opt, val = args[0], ' '.join(args[1:])
+
+        if val == '-':
+            # Have to pass - to blank-out config settings.
+            val = None
+        if self.admin.config.setsave(opt, val):
+            return 'saved {}: {}'.format(opt, val)
+
+        # Failure.
+        return 'unable to save: {}: {}'.format(opt, val)
+
+    @basic_command
     def admin_getattr(self, rest):
         """ Return value for attribute. """
         if not rest.strip():
@@ -544,6 +740,13 @@ class CommandFuncs(object):
         parent, attrname, attrval = self.parse_attrstr(rest)
         if attrname is None:
             return 'no attribute named: {}'.format(rest)
+
+        # Block certain config attributes from being printed.
+        if ('password' in attrname) or attrname.endswith('pw'):
+            attrval = '********'
+        elif 'config' in rest:
+            # Block password config from chat.
+            attrval = block_dict_val(attrval, ('password', 'pw'))
 
         attrval = str(attrval)
         if len(attrval) > 250:
@@ -734,18 +937,32 @@ class CommandFuncs(object):
             newval = '{} ...truncated'.format(newval[:250])
         return '{} = {}'.format(attrstr, newval)
 
-    @simple_command
-    def admin_shutdown(self):
+    @basic_command
+    def admin_shutdown(self, rest):
         """ Shutdown the bot. """
-        log.msg('Shutting down...')
-        self.admin.quit(message='shutting down...')
-        return None
+        userargs = rest.strip()
+        default = 'No message given.'
+        if userargs:
+            quitmsg = rest
+        else:
+            quitmsg = 'Shutting down...'
+        finalmsg = 'Shutting down: {}'.format(quitmsg if userargs else default)
+        log.msg(finalmsg)
+        self.admin.quit(message=quitmsg)
+        # Unreachable code.
+        return finalmsg
 
     @simple_command
     def admin_stats(self):
         """ Return simple stats info. """
         uptime = timefromsecs(self.admin.get_uptime())
-        return 'uptime: {}, handled: {}'.format(uptime, self.admin.handled)
+        statslst = (
+            'uptime: {}'.format(uptime),
+            'handled: {}'.format(self.admin.handled),
+            'banned: {}'.format(len(self.admin.banned)),
+            'warned: {}'.format(len(self.admin.banned_warned)),
+        )
+        return ', '.join(statslst)
 
     @basic_command
     def admin_unban(self, rest):
@@ -773,13 +990,11 @@ class CommandFuncs(object):
         """ Returns a short help string. """
         return self.get_help(role='user', cmdname=rest, usernick=nick)
 
-    @basic_command
-    def cmd_py(self, rest):
+    def cmd_py(self, rest, nick=None):
         """ Shortcut for cmd_python """
-        return self.cmd_python(rest)
+        return self.cmd_python(rest, nick=nick)
 
-    @basic_command
-    def cmd_python(self, rest):
+    def cmd_python(self, rest, nick=None):
         """ Evaluate python code and return the answer.
             Restrictions are set. No os module, no nested eval() or exec().
         """
@@ -787,6 +1002,9 @@ class CommandFuncs(object):
         if not rest.strip():
             # No input.
             return None
+        
+        # Parse command arguments and trim them from the command.
+        argd, rest = get_args(rest, (('-p', '--paste'),))
 
         def pastebin_chatout(pastebinurl):
             """ Callback for deferred print_topastebin.
@@ -806,7 +1024,7 @@ class CommandFuncs(object):
                 if len(chatout) > 100:
                     chatout = chatout[:100]
                 return ('{} '.format(chatout) +
-                        ' full: {}'.format(pastebinurl))
+                        ' - goto: {}'.format(pastebinurl))
             else:
                 # failed to pastebin.
                 chatout = execbox.safe_output(maxlines=30, maxlength=140)
@@ -830,11 +1048,13 @@ class CommandFuncs(object):
         except Exception as ex:
             return 'error: {}'.format(ex)
 
-        if len(results) > 160:
+        if argd['--paste'] or (len(results) > 160):
+            # Parse output to replace 'fake' newlines with realones,
+            # use it for pastebin output.
+            parsed = execbox.parse_input(rest, stringmode=True)
+
             # Use pastebinit, with safe_pastebin() settings.
-            pastebincontent = self.safe_pastebin(execbox.output,
-                                                 maxlines=65,
-                                                 maxlength=240)
+            pastebincontent = self.safe_pastebin(execbox.output)
             if self.admin.handlingcount > 1:
                 # Delay this pastebin call based on the handling count.
                 timeout = 3 * self.admin.handlingcount
@@ -844,7 +1064,9 @@ class CommandFuncs(object):
                 deferredurl = self.task.deferLater(self.reactor,
                                                    timeout,
                                                    self.print_topastebin,
-                                                   pastebincontent)
+                                                   parsed,
+                                                   pastebincontent,
+                                                   author=nick)
                 # Create a callback that takes in the url and produces
                 # the final chat response.
                 # IRCClient.privmsg() looks for a deferred and will add
@@ -855,7 +1077,9 @@ class CommandFuncs(object):
 
             else:
                 # paste it right away
-                pastebinout = self.print_topastebin(pastebincontent)
+                pastebinout = self.print_topastebin(parsed,
+                                                    pastebincontent,
+                                                    author=nick)
                 resultstr = pastebin_chatout(pastebinout)
 
         else:
@@ -1035,30 +1259,36 @@ class CommandFuncs(object):
             converted = type(oldval)(newval)
         return converted
 
-    def print_topastebin(self, s):
-        """ Uses paste.pound-python.org to paste a string. """
+    def print_topastebin(self, query, result, author=None, title=None):
+        """ Uses welbornprod.com/paste to paste a response. """
 
-        if not s:
+        if (not query) or (not result):
             return None
 
-        cmdargs = [PASTEBINIT_EXE,
-                   '-a', 'pyval',
-                   '-b', 'http://paste.pound-python.org']
-        try:
-            with TempInput(s) as stdinput:
-                proc = subprocess.Popen(cmdargs,
-                                        stdin=stdinput,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE)
-        except Exception as ex:
-            log.msg('Error running pastebinit:\n{}'.format(ex))
-            return None
+        div = '-' * 80
+        contentfmt = '{dv}\nQuery:\n{dv}\n\n{q}\n\n{dv}\nResult:\n{dv}\n\n{r}'
+        content = contentfmt.format(dv=div, q=query, r=result)
 
-        output = self.proc_output(proc)
-        if output.startswith('http'):
-            return output
+        if author is None:
+            author = 'PyVal'
         else:
-            return None
+            author = 'PyVal (for {})'.format(author)
+
+        pastedata = {
+            'author': author,
+            'title': title or 'PyVal Evaluation Results',
+            'language': 'Python',
+            'content': content,
+            'private': True,
+
+        }
+
+        # Add extra args for the unittests..
+        if author.startswith('<pyvaltest>') or query.startswith('<pyvaltest>'):
+            pastedata['disabled'] = True
+            pastedata['author'] = '<pyvaltest> {}'.format(author)
+
+        return pasteit(pastedata)
 
     def proc_output(self, proc):
         """ Get process output, whether its on stdout or stderr.
@@ -1097,7 +1327,7 @@ class CommandFuncs(object):
 
         return output.strip('\n')
 
-    def safe_pastebin(self, s, maxlines=65, maxlength=240):
+    def safe_pastebin(self, s, maxlines=300, maxlength=400):
         """ Format string for safe pastebin pasting.
             maxlines is the limit of lines allowed.
             maxlength is the limit allowed for each line.

@@ -23,12 +23,15 @@ def index(request):
     except Exception as ex:
         _log.error("Error getting blog posts!:\n" + str(ex))
         blog_posts = False
-        
-    return responses.clean_response("blogger/index.html",
-                                    {'request': request,
-                                     'blog_posts': blog_posts,
-                                     'post_count': post_count,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)]})
+        post_count = 0
+
+    context = {
+        'request': request,
+        'blog_posts': blog_posts,
+        'post_count': post_count,
+        'extra_style_link_list': [utilities.get_browser_style(request)]
+    }
+    return responses.clean_response('blogger/index.html', context)
 
 
 def index_page(request):
@@ -40,35 +43,48 @@ def index_page(request):
     post_count = wp_blog.objects.count()
     # get request args.
     page_args = responses.get_paged_args(request, post_count)
+    # Setup defaults incase of missing items/errors.
+    startid = page_args.get('start_id', 0)
+    maxposts = page_args.get('max_items', blogtools.DEFAULT_MAXPOSTS),
+    orderby = page_args.get('order_by', None)
+    prevpage = page_args.get('prev_page', None)
+    nextpage = page_args.get('next_page', None)
     # retrieve blog posts slice
     try:
-        post_slice = blogtools.get_post_list(starting_index=page_args['start_id'],
-                                             max_posts=page_args.get('max_items', blogtools.DEFAULT_MAXPOSTS),
-                                             _order_by=page_args.get('order_by', None))
-    except Exception as ex:
-        _log.debug("Error getting blog posts slice:\n" + str(ex))
-        blog_posts = post_slice = end_id = False
-    else:
+        sliceargs = {
+            'starting_index': startid,
+            'max_posts': maxposts,
+            'order_by': orderby,
+        }
+        post_slice = blogtools.get_post_list(**sliceargs)
         # fix posts for listing.
         blog_posts = blogtools.fix_post_list(post_slice)
-        # get last index.
-        end_id = str(page_args['start_id'] + len(post_slice))
-        
-    return responses.clean_response("blogger/index_paged.html",
-                                    {'request': request,
-                                     "blog_posts": blog_posts,
-                                     "start_id": (page_args['start_id'] + 1),
-                                     "end_id": end_id,
-                                     "post_count": post_count,
-                                     "prev_page": page_args['prev_page'],
-                                     "next_page": page_args['next_page'],
-                                     "has_prev": (page_args['start_id'] > 0),
-                                     "has_next": (page_args['start_id'] < (post_count - page_args['max_items'])),
-                                     "extra_style_link_list": [utilities.get_browser_style(request)],
-                                     })
+    except Exception as ex:
+        _log.debug('Error getting blog posts slice:\n{}'.format(ex))
+        blog_posts = post_slice = end_id = False
+
+    # get last index, 'has next page', and 'has prev page'
+    end_id = startid + len(post_slice)
+    hasnxt = startid < (post_count - maxposts)
+    hasprv = startid > 0
+
+    # Template values.
+    context = {
+        'request': request,
+        'blog_posts': blog_posts,
+        'start_id': (startid + 1),
+        'end_id': end_id,
+        'post_count': post_count,
+        'prev_page': prevpage,
+        'next_page': nextpage,
+        'has_prev': hasprv,
+        'has_next': hasnxt,
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+    }
+    return responses.clean_response('blogger/index_paged.html', context)
 
 
-def view_post(request, _identifier):
+def view_post(request, identifier):
     """ view a post by identifier.
         identifier can be:
             pk (id)
@@ -76,46 +92,53 @@ def view_post(request, _identifier):
             title
     """
     
-    post_ = blogtools.get_post_byany(_identifier)
+    post = blogtools.get_post_byany(identifier)
     
-    if post_ is None:
-        _log.error("Post not found: " + _identifier)
-        response = responses.alert_message(request,
-                                           "Sorry, I can't find that post.",
-                                           body_message="<a href='/blog'><span>Click here to go back to the blog index.</span></a>")  # noqa
+    if post is None:
+        _log.error('Post not found: {}'.format(identifier))
+        errmsg = 'Sorry, I can\'t find that post.'
+        errlink = '\n'.join([
+            '<a href=\'/blog\'><span>',
+            'Click here to go back to the main blog page.',
+            '</span></a>'])
+
+        return responses.alert_message(request, errmsg, body_message=errlink)
+
+    # build blog post.
+    
+    # get short title for window-text
+    if len(post.title) > 20:
+        post_title_short = '..{}'.format(post.title[len(post.title) - 30:])
     else:
-        # build blog post.
-        
-        # get short title for window-text
-        if len(post_.title) > 20:
-            post_title_short = ".." + post_.title[len(post_.title) - 30:]
-        else:
-            post_title_short = post_.title
-        
-        # no content found.
-        if blogtools.get_post_body(post_) == "":
-            response = responses.alert_message(request,
-                                               "Sorry, no content found for this post.",  # noqa
-                                               body_message="<a href='/blog'><span>Click here to go back to the blog index.</span></a>")  # noqa
-        else:
-            # increment view count
-            post_.view_count += 1
-            post_.save()
-            # enable comments.
-            enable_comments = post_.enable_comments
-            # grab related projects
-            related_projects = post_.get_projects()
-            
-            # Build clean HttpResponse with post template...
-            response = responses.clean_response("blogger/post.html",
-                                                {'request': request,
-                                                 'extra_style_link_list': [utilities.get_browser_style(request)],
-                                                 'post_title_short': post_title_short,
-                                                 'enable_comments': enable_comments,
-                                                 'blog_post': post_,
-                                                 'related_projects': related_projects,
-                                                 })
-    return response
+        post_title_short = post.title
+    
+    # no content found.
+    if not blogtools.get_post_body(post):
+        errmsg = 'Sorry, no content found for this post.'
+        errlink = '\n'.join([
+            '<a href=\'/blog\'><span>',
+            'Click here to go back to the main blog page.',
+            '</span></a>'])
+        return responses.alert_message(request, errmsg, body_message=errlink)
+
+    # increment view count
+    try:
+        post.view_count += 1
+        post.save()
+    except Exception as exsave:
+        _log.error('Unable to increment view_count for: '
+                   '{}\n{}'.format(post, exsave))
+
+    # Build clean HttpResponse with post template...
+    context = {
+        'request': request,
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+        'post_title_short': post_title_short,
+        'enable_comments': post.enable_comments,
+        'blog_post': post,
+        'related_projects': post.get_projects(),
+    }
+    return responses.clean_response('blogger/post.html', context)
 
 
 def view_tags(request):
@@ -124,44 +147,51 @@ def view_tags(request):
     # get all tag counts
     tag_count = blogtools.get_tags_post_count()
     tag_sizes = blogtools.get_tags_fontsizes(tag_count)
+
+    def make_tag(tagname):
+        """ Make a WpTag() based on count and size info gathered. """
+        return blogtools.WpTag(name=tagname,
+                               count=tag_count[tagname],
+                               size=tag_sizes[tagname])
+
     # build list of tags and info for tags.html template
-    tag_list = []
-    for tag_name in tag_count.keys():
-        tag_list.append(blogtools.wp_tag(name_=tag_name,
-                                         count_=tag_count[tag_name],
-                                         size_=tag_sizes[tag_name]))
-    
-    return responses.clean_response("blogger/tags.html",
-                                    {'request': request,
-                                     'tag_list': tag_list,
-                                     'tag_count': len(tag_list),
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
-                                     })
+    tag_list = [make_tag(tname) for tname in tag_count]
+    context = {
+        'request': request,
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+        'tag_list': tag_list,
+        'tag_count': len(tag_list),
+    }
+    return responses.clean_response('blogger/tags.html', context)
 
 
-def view_tag(request, _tag):
+def view_tag(request, tag):
     """ list all posts with these tags """
     
-    tag_name = utilities.trim_special(_tag).replace(',', ' ')
-    found_posts = blogtools.get_posts_by_tag(tag_name, starting_index=0, max_posts=-1)
+    tag_name = utilities.trim_special(tag).replace(',', ' ')
+    found_posts = blogtools.get_posts_by_tag(tag_name,
+                                             starting_index=0,
+                                             max_posts=-1)
     post_count = len(found_posts)
-    
-    blog_posts = blogtools.fix_post_list(found_posts)
-    item_count = len(blog_posts)
-    return responses.clean_response("blogger/tag.html",
-                                    {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
-                                     'tag_name': tag_name,
-                                     'post_count': post_count,
-                                     'item_count': item_count,
-                                     'blog_posts': blog_posts})
+    # Fix the list (shorten the body, trim to maxposts if needed)
+    found_posts = blogtools.fix_post_list(found_posts)
+
+    context = {
+        'request': request,
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+        'tag_name': tag_name,
+        'post_count': post_count,
+        'item_count': len(found_posts),
+        'blog_posts': found_posts
+    }
+    return responses.clean_response('blogger/tag.html', context)
 
 
-def tag_page(request, _tag):
+def tag_page(request, tag):
     """ view all posts with this tag, paged. """
     
     # fix tag name
-    tag_name = utilities.trim_special(_tag).replace(',', ' ')
+    tag_name = utilities.trim_special(tag).replace(',', ' ')
     # get all found posts. no slice.
     all_posts = blogtools.get_posts_by_tag(tag_name, starting_index=0)
 
@@ -169,33 +199,41 @@ def tag_page(request, _tag):
     post_count = len(all_posts)
     # get request args.
     page_args = responses.get_paged_args(request, post_count)
+    startid = page_args.get('start_id', 0)
+    maxitems = page_args.get('max_items', None)
+    orderby = page_args.get('order_by', None)
+    prevpage = page_args.get('prev_page', None)
+    nextpage = page_args.get('next_page', None)
     # retrieve blog posts slice
     post_slice = blogtools.get_posts_by_tag(tag_name,
-                                            starting_index=page_args['start_id'],
-                                            max_posts=page_args['max_items'],
-                                            _order_by=page_args.get('order_by', None))
+                                            starting_index=startid,
+                                            max_posts=maxitems,
+                                            order_by=orderby)
         
     # fix posts for listing.
     blog_posts = blogtools.fix_post_list(post_slice)
     # number of items in this slice (to get the last index)
-    end_id = str(page_args['start_id'] + len(blog_posts))
+    end_id = startid + len(blog_posts)
+    hasprv = startid > 0
+    hasnxt = startid < (post_count < maxitems)
     # build page.
-    return responses.clean_response("blogger/tag_paged.html",
-                                    {"request": request,
-                                     "blog_posts": blog_posts,
-                                     "tag_name": tag_name,
-                                     "start_id": (page_args['start_id'] + 1),
-                                     "end_id": end_id,
-                                     "post_count": post_count,
-                                     "prev_page": page_args['prev_page'],
-                                     "next_page": page_args['next_page'],
-                                     "extra_style_link_list": [utilities.get_browser_style(request)],
-                                     "has_prev": (page_args['start_id'] > 0),
-                                     "has_next": (page_args['start_id'] < (post_count - page_args['max_items'])),
-                                     })
+    context = {
+        'request': request,
+        'blog_posts': blog_posts,
+        'tag_name': tag_name,
+        'start_id': (startid + 1),
+        'end_id': end_id,
+        'post_count': post_count,
+        'prev_page': prevpage,
+        'next_page': nextpage,
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+        'has_prev': hasprv,
+        'has_next': hasnxt,
+    }
+    return responses.clean_response('blogger/tag_paged.html', context)
 
 
 def no_identifier(request):
-    """ returns a message when user forgets to add an identifier """
+    """ Redirects when user forgets to add an identifier """
     
     return responses.redirect_response('/blog')

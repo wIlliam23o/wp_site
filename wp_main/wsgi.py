@@ -13,10 +13,14 @@ middleware here, or combine a Django application with an application of another
 framework.
 
 """
-import os, sys
+import os
+import sys
 
-sys.path.append("/var/www")
-sys.path.append("/var/www/static")
+staticdirs = ('/var/www', '/var/www/static')
+for staticdir in staticdirs:
+    # Only add these if they exist (local dev), and aren't added yet.
+    if os.path.isdir(staticdir) and (staticdir not in sys.path):
+        sys.path.append(staticdir)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wp_main.settings")
 
@@ -27,13 +31,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wp_main.settings")
 from django.core.handlers.wsgi import WSGIHandler
 
 
-
-#django.core.wsgi.
+# django.core.wsgi.
 application = WSGIHandler()
 
 # Apply WSGI middleware here.
 # from helloworld.wsgi import HelloWorldApplication
 # application = HelloWorldApplication(application)
-
-    
-    

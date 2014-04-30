@@ -845,7 +845,28 @@ table#change-history tbody th {
 
 /* Custom items (from wp_tags filters or other) */
 a.item-disabled, .item-disabled {
+    /* Disabled items are grey! */
 	color: #c5c5c5;
 	/*font-weight: normal;*/
+}
+
+a.item-expired, .item-expired {
+    /* expired pastes/items are red */
+    color: rgb(160, 0, 0);
+}
+
+a.item-disabled.item-expired, .item-disabled.item-expired {
+    /* expired, already disabled items are red/grey. */
+    color: rgb(206, 154, 154);
+}
+
+a.item-onhold, .item-onhold {
+    /* Onhold items are outlined! */
+    text-decoration: overline underline;
+}
+
+a.item-private, .item-private {
+    /* Private items are italic. */
+    font-style: italic;
 }
 

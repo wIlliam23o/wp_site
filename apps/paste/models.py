@@ -2,6 +2,9 @@ from django.db import models
 from datetime import datetime
 from random import SystemRandom
 
+from wp_main.utilities.wp_logging import logger
+_log = logger('apps.paste.models').log
+
 IDCHOICES = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 SYSRANDOM = SystemRandom()
 IDSTARTCHAR = 'a'
@@ -39,31 +42,43 @@ def decode_id(idstr):
     return int(''.join(finalid))
 
 
+def repr_header():
+    """ Return a string header for the repr(paste) data. """
+    return 'publish date        views  id       status   author     title'
+
+
 class wp_paste(models.Model):
 
     """ A Paste object for the paste app. """
 
-    # author of the paste (possible future development.)
-    author = models.CharField('paste author',
+    # author of the paste.
+    author = models.CharField('author',
                               blank=True,
                               default='',
                               max_length=255,
                               help_text='Author for the paste.')
 
+    # author's ip address. (for tracking public submits.)
+    author_ip = models.CharField('author\'s ip',
+                                 blank=True,
+                                 default='',
+                                 max_length=15,
+                                 help_text='Author\'s IP for the paste.')
+
     # paste content (can't be blank.)
-    content = models.TextField('paste content',
+    content = models.TextField('content',
                                blank=False,
                                help_text='Content for the paste.')
 
     # paste title..
-    title = models.CharField('paste title',
+    title = models.CharField('title',
                              blank=True,
                              default='',
                              max_length=255,
                              help_text='Title for the paste.')
 
     # language for the paste.
-    language = models.CharField('paste language',
+    language = models.CharField('language',
                                 blank=True,
                                 default='',
                                 max_length=255,
@@ -83,11 +98,30 @@ class wp_paste(models.Model):
                                                    'published. '
                                                    '(Set automatically)'))
     
+    # api submitted? (True if the paste was submitted through the public api)
+    apisubmit = models.BooleanField('api submitted',
+                                    default=False,
+                                    help_text=('Whether or not this was '
+                                               'submitted with the public '
+                                               'api.'))
+
     # disables paste (instead of deleting it, it simply won't be viewed)
-    disabled = models.BooleanField(default=False)
+    disabled = models.BooleanField('disabled',
+                                   default=False,
+                                   help_text=('Whether or not this paste is '
+                                              'disabled (not viewable).'))
     
     # hold on to the paste forever?
-    onhold = models.BooleanField(default=False)
+    onhold = models.BooleanField('on hold',
+                                 default=False,
+                                 help_text=('Whether or not this paste is '
+                                            'on hold (never expires).'))
+
+    # private paste? (won't show in public listings.)
+    private = models.BooleanField('private',
+                                  default=False,
+                                  help_text=('Whether or not this paste is '
+                                             'private (not listable).'))
 
     # count of views/downloads
     view_count = models.PositiveIntegerField('view count',
@@ -103,12 +137,12 @@ class wp_paste(models.Model):
                                null=True,
                                related_name='children')
 
-    # admin stuff
     date_hierarchy = 'publish_date'
-    get_latest_by = 'publish_date'
-    
+
     def __str__(self):
-        """ String format for a paste object. """
+        """ Default string format for a paste object.
+            This is a simple format, for more info see: __repr__
+        """
         if hasattr(self, 'id'):
             _id = self.id
             basestr = '{}: ({})'.format(_id, self.paste_id)
@@ -120,15 +154,37 @@ class wp_paste(models.Model):
         return finalstr
     
     def __repr__(self):
-        """ same as str() """
-        return self.__str__()
+        """ Format a paste for printing (different from str(paste))
+            This provides:
+                publish_date, view count, paste_id, enabled, and title
+        """
+        datestr = self.publish_date.strftime('%m-%d-%Y %I:%M:%S')
+        viewstr = '({})'.format(self.view_count).ljust(6)
+        idstr = self.paste_id or 'new'
+        idstr = idstr.ljust(8)
+        statusstr = '[d]' if self.disabled else '[e]'
+        statusstr = statusstr.ljust(8)
+        authorstr = self.author or '<none>'
+        authorstr = authorstr.ljust(10)
+
+        pfmt = '{date} {views} {pasteid} {status} {author} {title}'
+        pfmtargs = {
+            'date': datestr,
+            'views': viewstr,
+            'pasteid': idstr,
+            'status': statusstr,
+            'author': authorstr,
+            'title': self.title,
+        }
+        return pfmt.format(**pfmtargs)
     
     # Meta info for the admin site
     class Meta:
+        get_latest_by = 'publish_date'
+        db_table = 'wp_pastes'
         ordering = ['-publish_date']
         verbose_name = 'Paste'
         verbose_name_plural = 'Pastes'
-        db_table = 'wp_pastes'
 
     def save(self, *args, **kwargs):
         """ Generate paste_id before saving. """
@@ -158,6 +214,19 @@ class wp_paste(models.Model):
             reverse url lookup really needs to be used here.
         """
         return '/paste/?id={}'.format(self.paste_id)
+
+    def is_expired(self):
+        """ Determine if this paste is expired.
+            Pastes that are on hold will never expire.
+        """
+        if self.onhold:
+            return False
+        try:
+            elapsed = datetime.today() - self.publish_date
+        except Exception as ex:
+            _log.error('Error getting elapsed time:\n{}'.format(ex))
+            return False
+        return (elapsed.days > 0)
 
     def reverse_id(self, pasteid=None):
         """ Decode a paste_id, return the actual id.

@@ -2,6 +2,10 @@
 
 {% block title %}- Blog Tags{% endblock %}
 
+{% block metainfo %}
+    <meta name="description" content="All tags found in welborn productions blog posts.">
+{% endblock %}
+
 {% block extrastylelink %}
 	{{ block.super }}
 	<link rel="stylesheet" href="/static/css/blogger.min.css" type="text/css"/>
@@ -11,8 +15,8 @@
 {% block contentabove %}
 	<div class="blog-header">
 		<div class="blog-header-title">
-			<a href='/blog'>
-				<h3 class='header'>Tags</h3>
+			<a href='/blog/tags'>
+				<h3 class='header'>Blog Tags</h3>
 			</a>
 		</div>
 		

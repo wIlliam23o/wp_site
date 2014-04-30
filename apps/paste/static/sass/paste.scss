@@ -11,6 +11,11 @@
 
 }
 
+#themeselect {
+    @extend #langselect;
+    color: $greymain;
+}
+
 .paste-header-box {
     background-color: $whitedull;
     @include border-radius(5px);
@@ -41,9 +46,21 @@
     margin-left: 15px;
 }
 
+.paste-bottom-button-box {
+    position: relative;
+    display: block;
+    margin-top: 10px;
+    text-align: right;
+}
+
 #paste-btn {
     // The actual 'paste it!' button itself.
     margin-left: -10px;
+    margin-right: 10px;
+}
+
+#view-raw-btn {
+    // View as plain-text button.
     margin-right: 10px;
 }
 
@@ -147,6 +164,23 @@
     }
 }
 
+.paste-theme-box {
+    display: inline-block;
+    background-color: $whitedull;
+    @include border-radius(7px);
+    border-style: solid;
+    border-width: 1px;
+    border-color: $borderlight;
+    padding: 1px 1px 1px 5px;
+}
+
+.paste-theme-label {
+    @extend .paste-lang-label;
+    width: auto;
+    color: $greymain;
+}
+
+
 /* Replies menu styles */
 .vertical-menu-reply-date {
     @extend .paste-date;
@@ -249,6 +283,29 @@
     }
 }
 
+.paste-item-author-label {
+    @extend .paste-item-lang-label;
+}
+
+.paste-item-author {
+    @extend .paste-item-lang;
+}
+
+.paste-item-replyto-label {
+    display: inline-block;
+    margin-left: 10px;
+    margin-bottom: 5px;
+    font-size: $fontsmaller;
+    color: $greylight;
+}
+
+.paste-item-replyto {
+    @extend .paste-item-title;
+    display: inline-block;
+    font-size: $fontsmaller;
+
+}
+
 .paste-item-lang-label {
     display: block;
     font-size: $fontsmaller;
@@ -267,7 +324,7 @@
     display: block;
 }
 
-.paste-item-replies {
+.paste-item-replies-btn {
     // Text for if a reply has replies of its own.
     display: inline-block;
     margin-left: 5px;
@@ -293,6 +350,56 @@
         color: $bluelink;
         border-color: $bordermain;
     }
+}
+
+.paste-item-replies-box {
+    // Holds all reply pastes for a paste
+    display: block;
+    @include border-radius(5px);
+    border-width: 1px;
+    border-style: solid;
+    border-color: $bordermain;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+.paste-item-reply-label {
+    // Label and reply count.
+    display: inline-block;
+    font-size: $fontsmall;
+    font-weight: bold;
+    color: $greylight;
+    text-transform: lowercase;
+}
+
+
+.paste-item-reply {
+    // Single reply paste item.
+    display: block;
+    @include border-radius(5px);
+    // border-width: 1px;
+    // border-style: solid;
+    border-color: $bordermain;
+    padding: 5px;
+}
+
+.paste-item-reply-title {
+    // Title/Link for a reply.
+    @extend .paste-item-replyto;
+}
+
+.paste-item-reply-author-label {
+    @extend .paste-item-author-label;
+}
+
+.paste-item-reply-author {
+    @extend .paste-item-author;
+}
+
+.paste-item-reply-date {
+    // Date of reply.
+    @extend .paste-item-date;
+    font-size: $fonttiny;
 }
 
 .paste-item-views {

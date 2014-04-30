@@ -47,15 +47,6 @@
             <strong>PyVal</strong> looks for [bash]/usr/bin/pypy-sandbox[?bash].
         </div>
         <li class='B'>
-            pastebinit package
-        </li>
-        <div class='listdesc'>
-            Command-line utility to pastebin content when the output limit for chat is exceeded.
-            <br>
-            As of right now, http://paste.pound-python.org is used.<br>
-            <strong>PyVal</strong> looks for [bash]/usr/bin/pastebinit[?bash].
-        </div>
-        <li class='B'>
             Twisted python module
         </li>
         <div class='listdesc'>
@@ -214,15 +205,15 @@ PyValUser: !py print('\\n'.join(['test', 'this']))
         To get long output (there is a time limit on executing code):<br>
         <pre class='codewrap'>
 PyValUser: !py for i in range(65):\n    print('test' * 55)
-    pyval: PyValUser, testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
-           full: http://paste.pound-python.org/show/AcDrJg9NszeyXmxcOKBI/
+    pyval: PyValUser, testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
+           - goto: http://welbornprod.com/paste?id=xxxx
         </pre><br>
 
-        Long output is sent to a pastebin, but even then it is truncated.
+        Long output is sent to a paste bin, but even then it is truncated.
         You can get up to 65 lines of output, each line must not exceed ~240 characters.
         <br><br>
-        This limit is to ease the bandwidth used on the pastebin site. 
-        I don't want to be responsible for the abuse of pastebins.
+        This limit is to ease the bandwidth used on my paste site. 
+        I don't want 1000+ lines of junk in my database.
         <br><br>
         If you are trying to evaluate honest code in the sandbox and must have the full output,
         then you should probably download PyVal and run PyValExec yourself with 
@@ -295,6 +286,25 @@ PyValAdmin: !adminhelp
                 [cval]List all current channels pyval is in.[/cval]
             </div>
             <div class='cmditem'>
+                [copt]configget &lt;option&gt;[/copt]
+                [cval]Get a config option's value. Certain options are hidden from chat.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]configlist[/copt]
+                [cval]List current config.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]configsave[/copt]
+                [cval]Save current command-line options to permanent config.[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]configset &lt;option&gt; &lt;value&gt;[/copt]
+                <div class='cmdvalue'>
+                    Set a config option's value. String values only for now.
+                    Remove options by passing - as the value.
+                </div>
+            </div>
+            <div class='cmditem'>
                 [copt]getattr &lt;attribute&gt;[/copt]
                 [cval]Show the value of a CommandHandler attribute (ex: admin.blacklist)[/cval]
             </div>
@@ -355,7 +365,10 @@ PyValAdmin: !adminhelp
             </div>
             <div class='cmditem'>
                 [copt]stats[/copt]
-                [cval]Show 'handled-count' (number of handled commands) and uptime (time since startup).[/cval]
+                <div class='cmdvalue'>
+                    Show 'handled-count' (number of handled commands),
+                    uptime (time since startup), and other counts.
+                </div>
             </div>
             <div class='cmditem'>
                 [copt]unban &lt;nick&gt;[/copt]
@@ -470,7 +483,7 @@ if __name__ != '__pyval__':
         PyVal's tests are [py]unittest[/py]-based, and you can run them with your favorite
         Python test-runner ([py]pytest[/py], [py]nose[/py], etc.).
         <br><br>
-        The tests will check for the existence of [bash]pypy-sandbox[/bash] and [bash]pastebinit[/bash],
+        The tests will check for the existence of [bash]pypy-sandbox[/bash],
         test the execution of code inside the sandbox, and test IRC input / output.
     </div>
 </div>
@@ -482,7 +495,54 @@ if __name__ != '__pyval__':
             Updates
         </h3>
     </div>
-    
+
+    <!-- Update: 1.0.7-1-->
+    <div class='update-box'>
+        <span class='update-title'>
+            Update: version 1.0.7-1
+        </span>
+        <ul class='circle blue'>
+            <li>
+                Added [bash]--username[?bash] and 
+                [bash]--loginpw[?bash] command-line options.
+            </li>
+            <div class='listdesc'>
+                Gives you the ability to pass a username and password to the server itself.
+                This enables pyval to connect to more servers (such as BNC servers).
+            </div>
+            <li>
+                Added [bash]--autosave[?bash] and
+                and [bash]--dumpconfig[?bash] command-line options.
+            </li>
+            <div class='listdesc'>
+                Command-line options can be saved as a configuration file for the next run.
+                If a config file exists, settings will be loaded from it.
+                The command-line options still have priority though.
+                <br><br>
+                With [bash]--autosave[?bash], the current command-line options are saved to config.
+                <br><br>
+                Current configuration can be viewed with the [bash]--dumpconfig[?bash] flag.
+            </div>
+        </ul>
+    </div>
+
+    <!-- Update: 1.0.7 -->
+    <div class='update-box'>
+        <span class='update-title'>
+            Update: version 1.0.7
+        </span>
+        <ul class='circle blue'>
+            <li>
+                Switched paste bin to <a href='http://welbornprod.com/paste'>welbornprod.com/paste</a>.
+            </li>
+            <div class='listdesc'>
+                This removes the [bash]pastebinit[?bash] requirement, and allows me
+                to have more control over what PyVal can do. Also, I just like my paste site more. :P
+            </div>
+        </ul>
+    </div>
+
+    <!-- Update: 1.0.6 -->
     <div class='update-box'>
         <span class='update-title'>
             Update: version 1.0.6

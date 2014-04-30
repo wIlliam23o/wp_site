@@ -4,6 +4,13 @@
     -Christopher Welborn 2014
 """
 
+from datetime import datetime
+
+from django.views.decorators.csrf import (
+    csrf_protect, ensure_csrf_cookie, csrf_exempt
+)
+from django.views.decorators.cache import never_cache
+
 from wp_main.utilities import responses
 from wp_main.utilities.wp_logging import logger
 from wp_main.utilities.utilities import get_object, get_remote_ip
@@ -13,15 +20,231 @@ from apps.paste.models import wp_paste
 from apps.models import wp_app
 
 
+# Log object for logging.
 _log = logger('apps.paste').log
-from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
-from django.views.decorators.cache import never_cache
-
-
 # Maximum amount of replies to build a vertical menu with.
 REPLYMAX = 10
 # Maximum amount of pastes to show in simple listings.
 LISTINGMAX = 25
+# Minimum seconds allowed between public api paste submits.
+MIN_SUBMIT_SECS = 120
+
+
+def invalidate_submit(submitdata):
+    """ Validate an author/user's ip address.
+        Do not allow fast, multiple, duplicate, pastes.
+        Returns None (Falsey) if the ip is okay, otherwise a string
+        containing the reason the paste failed (Truthy).
+    """
+
+    ipaddr = submitdata.get('author_ip', None)
+    if not ipaddr:
+        # None, or '' was passed (unable to get ip,  give the benefit of doubt)
+        return None
+
+    userpastes = wp_paste.objects.filter(author_ip=ipaddr)
+    if not userpastes:
+        # User has no pastes..
+        return None
+
+    # Get user's last paste.
+    lastpaste = userpastes.latest('publish_date')
+    try:
+        elapsed = (datetime.now() - lastpaste.publish_date).total_seconds()
+    except Exception as ex:
+        _log.error('Error getting elapsed paste-time for: '
+                   '{}\n{}'.format(lastpaste, ex))
+        # Don't fault a possibly good user for our error.
+        return None
+
+    # Deny pastes that are less than MIN_SUBMIT_SECS (seconds) apart.
+    if elapsed < MIN_SUBMIT_SECS:
+        return 'Last paste time: {}s ago'.format(elapsed)
+
+    # Deny pastes that have the same content as the last one.
+    content = submitdata.get('content', None)
+    if not content:
+        return 'Paste has no content.'
+    
+    lang = submitdata.get('language', None)
+    if (content == lastpaste.content) and (lang == lastpaste.language):
+        return 'Same as last paste.'
+
+    # Paste passed the gauntlet.
+    return None
+
+
+def list_view(request, title=None, filterkw=None, orderby=None):
+    """ A view that lists posts based on filter() kwargs,
+        order_by() kwargs.
+    """
+    if filterkw is None:
+        filterkw = {}
+    if title is None:
+        title = 'Pastes'
+    # Default behaviour is to not show disabled/private pastes.
+    if not 'disabled' in filterkw.keys():
+        filterkw['disabled'] = False
+    if not 'private' in filterkw.keys():
+        filterkw['private'] = False
+
+    try:
+        p = wp_paste.objects.filter(**filterkw)
+        if orderby is not None:
+            p = p.order_by(orderby)
+    except Exception as ex:
+        errmsg = 'Unable to retrieve pastes for: {}\n{}'
+        _log.error(errmsg.format(title, ex))
+        p = []
+
+    if len(p) > LISTINGMAX:
+        p = p[:LISTINGMAX]
+
+    context = {
+        'request': request,
+        'pastes': p,
+        'listing_title': title,
+    }
+    return responses.clean_response('paste/listing.html', context)
+
+
+def process_submit(submitdata, apisubmit=False):
+    """ Given request arguments, parses them and tries to create a new paste.
+        The submitdata can be any dict.
+        ...usually comes from responses.json_get_request(request)
+
+        Arguments:
+            submitdata  : Data/dict to be fill paste info.
+            apisubmit   : Whether this was a public-api submit.
+                          Default: False
+
+        Responses are in JSON..
+        Returns:
+          HttpResponse(responsedata, content_type='application/json')
+    """
+
+    if (not submitdata) or (not submitdata.get('content', False)):
+        # No valid submit data.
+        exc = ValueError('Invalid data submitted.')
+        return responses.json_response_err(exc)
+
+    # Build a new paste object, strip newlines.
+    pastecontent = submitdata.get('content', '').strip()
+    if not pastecontent:
+        # Invalid content.
+        exc = ValueError('Empty pastes not allowed.')
+        return responses.json_response_err(exc)
+
+    # See if this is a reply.
+    replytoid = submitdata.get('replyto', None)
+    replytoobj = None
+    if replytoid:
+        replytoobj = get_object(wp_paste.objects,
+                                paste_id=replytoid)
+        if replytoobj is None:
+            # Trying to reply to a dead paste.
+            exc = ValueError('No paste with that id: {}'.format(replytoid))
+            return responses.json_response_err(exc)
+        else:
+            # Check for disabled replyto paste.
+            if replytoobj.disabled:
+                exc = ValueError('Paste is disabled: {}'.format(replytoid))
+                return responses.json_response_err(exc)
+
+    newpaste = wp_paste(author=submitdata.get('author', ''),
+                        author_ip=submitdata.get('author_ip', ''),
+                        title=submitdata.get('title', ''),
+                        content=pastecontent,
+                        onhold=submitdata.get('onhold', False),
+                        language=submitdata.get('language', ''),
+                        parent=replytoobj,
+                        private=submitdata.get('private', False),
+                        apisubmit=apisubmit,
+                        )
+
+    try:
+        # Try saving the new paste.
+        newpaste.save()
+        # Build success message with id/url/message.
+        jsonresp = {
+            'status': 'ok',
+            'message': 'Paste was a success.',
+            'id': newpaste.paste_id,
+            'url': newpaste.get_url(),
+            'parent': getattr(newpaste.parent, 'paste_id', None),
+        }
+    except Exception as ex:
+        _log.error('Error saving new paste:\n{}'.format(ex))
+        return responses.json_response_err(ex)
+
+    # Send JSON response back.
+    return responses.json_response(jsonresp)
+
+
+@csrf_protect
+@ensure_csrf_cookie
+def submit_ajax(request):
+    """ Handles ajax paste submits.
+        Reads json data from request and handles accordingly.
+    """
+    # Submits should always be ajax/POST.
+    if not request.is_ajax():
+        remoteip = get_remote_ip(request)
+        if not remoteip:
+            remoteip = '<Unknown IP>'
+        _log.error('Received non-ajax request from: {}'.format(remoteip))
+        errormsgs = ['Invalid request.']
+        usermsg = ''.join([
+            'Try entering a valid url, ',
+            'or using the forms/buttons ',
+            'provided. -Cj',
+        ])
+        return responses.error500(request, msgs=errormsgs, user_error=usermsg)
+
+    # Get the request args for this submit (JSON only).
+    submitdata = responses.json_get_request(request)
+    if (not submitdata) or (not submitdata.get('content', False)):
+        # No valid submit data.
+        exc = ValueError('Invalid data submitted.')
+        return responses.json_response_err(exc)
+
+    # Add the user's ip address to the paste data.
+    submitdata['author_ip'] = get_remote_ip(request)
+
+    # Try building a paste, and return a JSON response.
+    return process_submit(submitdata)
+
+
+@csrf_exempt
+def submit_public(request):
+    """ A public paste submission
+        (may have to pass a gauntlet of checks)
+    """
+
+    # Get the request args for this submit.
+    submitdata = responses.json_get_request(request)
+    # Try using GET/POST..
+    if not submitdata:
+        submitdata = responses.get_request_args(request)
+
+    if (not submitdata) or (not submitdata.get('content', False)):
+        # No valid submit data.
+        exc = ValueError('Invalid data submitted.')
+        return responses.json_response_err(exc)
+
+    # Add author's ip to the paste info.
+    submitdata['author_ip'] = get_remote_ip(request)
+
+    invalidsubmit = invalidate_submit(submitdata)
+    if invalidsubmit:
+        # User is not allowed to paste again right now.
+        _log.debug('User paste invalidated: '
+                   '{} - {}'.format(submitdata['author_ip'], invalidsubmit))
+        err = ValueError(invalidsubmit)
+        return responses.json_response_err(err)
+
+    # Try building a paste, and return JSON response.
+    return process_submit(submitdata, apisubmit=True)
 
 
 def view_api(request):
@@ -169,22 +392,7 @@ def view_json(request):
 @csrf_protect
 def view_latest(request):
     """ View latest pastes  """
-
-    try:
-        p = wp_paste.objects.filter(disabled=False).order_by('-publish_date')
-    except Exception as ex:
-        _log.error('Unable to retrieve pastes:\n{}'.format(ex))
-        p = []
-
-    if len(p) > LISTINGMAX:
-        p = p[:LISTINGMAX]
-
-    context = {
-        'request': request,
-        'pastes': p,
-        'listing_title': 'Latest Pastes',
-    }
-    return responses.clean_response('paste/listing.html', context)
+    return list_view(request, title='Latest Pastes', orderby='-publish_date')
 
 
 @never_cache
@@ -207,6 +415,15 @@ def view_paste(request):
     replycount = None
 
     if pasteidarg is not None:
+        # Check for id aliases.
+        IDALIAS = {
+            'top': view_top,
+            'latest': view_latest,
+            'all': view_latest
+        }
+        if pasteidarg in IDALIAS.keys():
+            return IDALIAS[pasteidarg](request)
+
         # Lookup existing paste by id.
         pasteobj = get_object(wp_paste.objects,
                               paste_id=pasteidarg)
@@ -261,6 +478,39 @@ def view_paste(request):
     return responses.clean_response('paste/index.html', context)
 
 
+def view_paste_raw(request):
+    """ View a paste as plain text. """
+    pasteidarg = responses.get_request_arg(request, 'id')
+    if not pasteidarg:
+        # Can't have both.
+        return responses.error404(request, 'Invalid url.')
+
+    try:
+        pasteobj = wp_paste.objects.get(paste_id=pasteidarg)
+    except wp_paste.DoesNotExist:
+        return responses.error404(request, 'Paste not found.')
+    except Exception as ex:
+        _log.error('Error retrieving paste: {}\n{}'.format(pasteidarg, ex))
+        return responses.error404(request, 'Paste not found.')
+
+    if pasteobj is None:
+        return responses.error404(request, 'Paste content not found.')
+
+    try:
+        pasteobj.view_count += 1
+        pasteobj.save()
+    except Exception as ex:
+        _log.error('Unable to update view_count!\n{}'.format(ex))
+    try:
+        content = pasteobj.content
+    except Exception as ex:
+        _log.error('paste.content is not available!\n{}'.format(ex))
+        return responses.error404(request, 'Paste content not found.')
+
+    # Valid paste, return the plain content.
+    return responses.text_response(content)
+
+
 @never_cache
 @csrf_protect
 def view_replies(request):
@@ -292,90 +542,4 @@ def view_replies(request):
 def view_top(request):
     """ View top pastes (highest view count) """
 
-    try:
-        p = wp_paste.objects.filter(disabled=False).order_by('-view_count')
-    except Exception as ex:
-        _log.error('Unable to retrieve pastes:\n{}'.format(ex))
-        p = []
-
-    if len(p) > LISTINGMAX:
-        p = p[:LISTINGMAX]
-
-    context = {
-        'request': request,
-        'pastes': p,
-        'listing_title': 'Top Pastes',
-    }
-    return responses.clean_response('paste/listing.html', context)
-
-
-@csrf_protect
-@ensure_csrf_cookie
-def ajax_submit(request):
-    """ Handles ajax paste submits.
-        Reads json data from request and handles accordingly.
-    """
-    # Submits should always be ajax/POST.
-    if not request.is_ajax():
-        remoteip = get_remote_ip()
-        if not remoteip:
-            remoteip = '<Unknown IP>'
-        _log.error('Received non-ajax request from: {}'.format(remoteip))
-        raise responses.error404(request, 'Invalid request.')
-
-    # Get data being submitted.
-    submitdata = responses.json_get_request(request)
-    #_log.debug('Received submit data:\n{!r}'.format(submitdata))
-    if (not submitdata) or (not submitdata.get('content', False)):
-        # No valid submit data.
-        exc = Exception('Invalid data submitted.')
-        return responses.json_response_err(exc)
-
-    # Build a new paste object, strip newlines.
-    pastecontent = submitdata.get('content', '').strip()
-    if not pastecontent:
-        # Invalid content.
-        exc = Exception('Empty pastes not allowed.')
-        return responses.json_response_err(exc)
-
-    # See if this is a reply.
-    replytoid = submitdata.get('replyto', None)
-    replytoobj = None
-    if replytoid:
-        replytoobj = get_object(wp_paste.objects,
-                                paste_id=replytoid)
-        if replytoobj is None:
-            # Trying to reply to a dead paste.
-            exc = Exception('No paste with that id: {}'.format(replytoid))
-            return responses.json_response_err(exc)
-        else:
-            # Check for disabled replyto paste.
-            if replytoobj.disabled:
-                exc = Exception('Paste is disabled: {}'.format(replytoid))
-                return responses.json_response_err(exc)
-
-    newpaste = wp_paste(author=submitdata.get('author', ''),
-                        title=submitdata.get('title', ''),
-                        content=pastecontent,
-                        onhold=submitdata.get('onhold', False),
-                        language=submitdata.get('language', ''),
-                        parent=replytoobj,
-                        )
-
-    try:
-        # Try saving the new paste.
-        newpaste.save()
-        # Build success message with id/url/message.
-        jsonresp = {
-            'status': 'ok',
-            'message': 'Paste was a success.',
-            'id': newpaste.paste_id,
-            'url': newpaste.get_url(),
-            'parent': getattr(newpaste.parent, 'paste_id', None),
-        }
-    except Exception as ex:
-        _log.error('Error saving new paste:\n{}'.format(ex))
-        return responses.json_response_err(ex)
-
-    # Send JSON response back.
-    return responses.json_response(jsonresp)
+    return list_view(request, title='Top Pastes', orderby='-view_count')

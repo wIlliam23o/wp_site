@@ -15,14 +15,16 @@
     Run `pyval_exec.py -h` for options.
     -Christopher Welborn 2013
 
-    Killer Strings,
-    known to crash python or cause problems, ignore the '# noqa'.
-    eval() will fail with these strings in a normal interpreter:
-    SegFault (crashes python/pypy):
-    (lambda fc=(lambda n: [c for c in ().__class__.__bases__[0].__subclasses__() if c.__name__ == n][0]):fc("function")(fc("code")(0,0,0,0,"KABOOM",(),(),(),"","",0,""),{})())() # noqa
+    Killer Strings:
+        Known to crash python or cause problems, ignore the '# noqa'.
 
-    MemoryError (not in PyPy though):
-    ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((1)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))) # noqa
+        eval() will fail with these strings in a normal interpreter:
+        
+        SegFault (crashes python/pypy):
+            (lambda fc=(lambda n: [c for c in ().__class__.__bases__[0].__subclasses__() if c.__name__ == n][0]):fc("function")(fc("code")(0,0,0,0,"KABOOM",(),(),(),"","",0,""),{})())() # noqa
+
+        MemoryError (not in PyPy though):
+            ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((1)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))) # noqa
 
     Even though these errors might occur, it doesn't mean the bot will die.
     Code is evaluated in a subprocess and is timed. It will fail gracefully.
@@ -58,8 +60,9 @@ class ExecBox(object):
         self.inputstr = evalstr
         # Trimmed during execute()
         self.inputtrim = None
-        # Set during execute()
-        self.parsed = None
+        # Set after newlines have been parsed.
+        # This is the final string sent to the interpreter.
+        self.parsed = ''
         # Maximum number of seconds to run.
         self.timeout = 5
         # Maximum lines/length for safe_output()
@@ -145,17 +148,8 @@ class ExecBox(object):
         """
         if not self.inputstr:
             self.error_return('No source.')
-        # let the user use '\n' (\\n) as newlines, and '\\n' ('\\\\n') as
-        # escaped newline characters.
-        if stringmode:
-            self.inputstr = self.inputstr.replace('\\\\n', '//n')
-            self.inputstr = self.inputstr.replace('\\n', '\n')
-            self.inputstr = self.inputstr.replace('//n', '\\n')
-        # Add shortcut for print, ?(value)
-        self.inputstr = self.inputstr.replace('?(', 'print(')
-        if ('\n' in self.inputstr) and (not self.inputstr.endswith('\n')):
-                # Make sure code ends with \n.
-                self.inputstr = '{}\n'.format(self.inputstr)
+        
+        self.parsed = self.parse_input(self.inputstr, stringmode=stringmode)
 
         # Get locations for pypy-sandbox, sandbox dir, pyval_sandbox.
 
@@ -171,8 +165,9 @@ class ExecBox(object):
         self.printdebug('running sandbox: {}'.format(' '.join(cmdargs)))
 
         # Fill temp file with user input, send it to pyval_sandbox.
-        self.printdebug('_exec({})'.format(self.inputstr))
-        with TempInput(self.inputstr) as stdinput:
+        self.printdebug('_exec({})'.format(self.parsed))
+
+        with TempInput(self.parsed) as stdinput:
             proc = subprocess.Popen(cmdargs,
                                     stdin=stdinput,
                                     stdout=subprocess.PIPE,
@@ -245,6 +240,26 @@ class ExecBox(object):
             return self.output
         else:
             return self.safe_output()
+
+    @staticmethod
+    def parse_input(s, stringmode=True):
+        """ Replace newline symbols with real newlines,
+            escape newlines where needed.
+            Return the parsed input.
+        """
+        # let the user use '\n' (\\n) as newlines, and '\\n' ('\\\\n') as
+        # escaped newline characters.
+        if stringmode:
+            s = s.replace('\\\\n', '{//n}')
+            s = s.replace('\\n', '\n')
+            s = s.replace('{//n}', '\\n')
+        # Add shortcut for print, ?(value)
+        s = s.replace('?(', 'print(')
+        if ('\n' in s) and (not s.endswith('\n')):
+                # Make sure code ends with \n.
+                s = '{}\n'.format(s)
+
+        return s
 
     def pprint(self, s):
         """ No longer used. DELETE ME. """

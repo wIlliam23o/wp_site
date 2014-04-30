@@ -1,6 +1,10 @@
 {% extends "home/main.html" %}
 {% block title %}- Server Error{% endblock %}
 
+{% block metainfo %}
+    <meta name="description" content="A server error for welborn productions.">
+{% endblock %}
+
 {% block content %}
 	<div class='notfound-box'>
 		{# Show messages from the messages framework #}
@@ -28,9 +32,13 @@
 		{% endif %}
 
 		<div class='notfound-home-message'>
-			Sorry, this was probably my fault.
-			An email has been sent to me regarding this error.
-			It will be fixed as soon as possible. -Cj
+			{% if user_error %}
+				{{ user_error|safe }}
+			{% else %}
+				Sorry, this was probably my fault.
+				An email has been sent to me regarding this error.
+				It will be fixed as soon as possible. -Cj
+			{% endif %}
 		</div>
 		<div class='notfound-home-message'>
 			<a href='/'>Click here to go to the home page</a>,

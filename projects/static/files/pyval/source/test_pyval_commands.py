@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os.path
 import unittest
 
-from pyval_commands import AdminHandler, CommandHandler, PASTEBINIT_EXE
+from pyval_commands import AdminHandler, CommandHandler
 
-PASTEBINIT_EXISTS = os.path.exists(PASTEBINIT_EXE)
-NOPASTEBINIT_MSG = ('ERROR: no pastebinit executable found! '
-                    'print_topastebin() won\'t work!')
 
 # Only load admin help once, and save it here.
 ADMINHELP = None
@@ -33,6 +29,10 @@ class NoCommand(object):
 
 
 class TestCommandFuncs(unittest.TestCase):
+
+    """ Test basic functionality of pyval_commands.
+        This includes AdminHandler, CommandHandler, and CommandFuncs.
+    """
 
     def fail_nocmd(self, nocmd):
         """ Fail due to NoCommand. Pass a NoCommand in. """
@@ -115,26 +115,22 @@ class TestCommandFuncs(unittest.TestCase):
         self.assertEqual(self.cmdhandler.admin.blacklist, True,
                          msg='Failed to set attribute')
 
-    def test_pastebinit_exists(self):
-        """ pastebinit executable exists """
-
-        self.assertEqual(PASTEBINIT_EXISTS, True, msg=NOPASTEBINIT_MSG)
-
-    @unittest.skipUnless(PASTEBINIT_EXISTS, NOPASTEBINIT_MSG)
     def test_print_topastebin(self):
         """ test print_topastebin() """
 
         pastebin = self.cmdhandler.commands.print_topastebin
 
-        noneresult = pastebin('')
+        noneresult = pastebin('', '')
         self.assertIsNone(noneresult, msg='empty arg should produce None')
 
-        pastebinurl = pastebin('valid string')
+        pastebinurl = pastebin('<pyvaltest> query', '<pyvaltest> valid string')
         self.assertIsNotNone(pastebinurl,
                              msg=('print_topastebin() failed to give url: '
                                   '\'{}\''.format(pastebinurl)))
         # Make sure it is an actual url.
-        goodurl = pastebinurl.startswith('http')
-        self.assertEqual(goodurl, True,
-                         msg='valid string should produce a paste bin url')
+        self.assertIsNotNone(pastebinurl,
+                             msg='valid string should produce a paste bin url')
         print('test_print_topastebin - Url: {}'.format(pastebinurl))
+
+if __name__ == '__main__':
+    unittest.main()

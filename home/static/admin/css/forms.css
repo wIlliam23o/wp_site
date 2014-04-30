@@ -16,7 +16,7 @@
 .form-row input {
     font-family: "Ubuntu Mono", monospace;
     font-size: 1.1em;
-    width: 500px;
+    /* width: 500px;  Added and Removed by Cj (in favor of . vTextField, etc.*/
 }
 
 form .form-row p {
@@ -229,7 +229,8 @@ body.popup .submit-row {
 }
 
 .vTextField {
-    width: 20em;
+    /* width: 20em; ORIGINAL DJANGO SETTING */
+    width: 500px;
 }
 
 .vIntegerField {
@@ -366,4 +367,4 @@ body.popup .submit-row {
 .empty-form {
     display: none;
 }
-/* comment added to trigger function in wprefresh DELETE_THIS_COMMENT */
+

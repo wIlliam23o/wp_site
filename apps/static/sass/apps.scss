@@ -89,4 +89,9 @@
     -moz-box-shadow: $shadowsmall;
     -webkit-box-shadow: $shadowsmall;
     padding: 5px;
+    background-color: $whitemain;
+}
+
+a .apps-button {
+    background-color: $whitemain;
 }

@@ -59,24 +59,47 @@
     position: relative;
     display: inline-block;
     border-radius: 5px;
-    border-width: 1px;
-    border-color: $bordermain;
-    border-style: solid;
     padding: 3px;
     
 }
 .search-listing-title-box:hover {
     border-color: $borderhover;
 }
-.search-listing-title {
+a .search-listing-title, .search-listing-title {
     margin-bottom: 5px;
     font-size: $fontmedium;
+    color: $bluemain;
+
+    &:hover {
+        color: $bluelink;
+    }
     
 }
 
-a.search-listing-title {
-    font-size: $fontmedium;
+.search-listing-type-box {
+    display: block;
 }
+
+a .search-listing-type-label, .search-listing-type-label {
+    display: inline;
+    font-size: $fontsmall;
+    color: $greymain;
+}
+
+a .search-listing-type-label:hover {
+    color: $bluelink;
+}
+
+a .search-listing-type-value, .search-listing-type-value {
+    display: inline;
+    font-size: $fontsmall;
+    color: $bluemain;
+}
+
+a .search-listing-type-value:hover {
+    color: $bluelink;
+}
+
 .search-listing-body {
     border-radius: 5px;
     border-style: solid;
@@ -109,12 +132,13 @@ a.search-listing-title {
 
 /* Navigation */
 .search-nav-box {
-    border-style: solid;
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: $bordermain;
+    //border-style: solid;
+    //border-radius: 5px;
+    //border-width: 1px;
+    //border-color: $bordermain;
     padding: 2px;
     display: inline-block;
+    //background: $whitedull;
 }
 
 .search-nav-label {
@@ -124,7 +148,7 @@ a.search-listing-title {
     font-weight: bold;
     display: block;
     padding-bottom: 2px;
-    padding-left: 5px;
+    //padding-left: 5px;
 }
 
 .search-nav-button {

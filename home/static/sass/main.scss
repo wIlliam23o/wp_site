@@ -75,8 +75,9 @@ h1, h2, .module-title h2, h3, h4, h5 {
     text-transform: lowercase;
     }
     
-/* These two should have the same style, different sizes. */
-h2.title, h1.title {
+
+h1.title {
+    font-size: $fontmedium;
     margin-left: 0px;
     margin-bottom: 5px;
     margin-top: 10px;
@@ -85,8 +86,13 @@ h2.title, h1.title {
     padding-left: 10px;
     }
 
-h2.title { font-size: $fontbigger; }
-h1.title { font-size: $fontmedium; }
+h2.title {
+    // H2's are used alone, not fitting in any box.
+    // They need to be unindented to stand out.
+    @extend h1.title;
+    font-size: $fontbigger;
+    margin-left: -20px;
+}
 
 h4 {
     text-transform: lowercase;
@@ -114,6 +120,15 @@ strong {
 }
 
 p {
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.paragraph {
+    // Putting a div inside a p breaks some of the highlight-code formatting.
+    // The fix is using a div, so the formatted div will flow correctly.
+    // This style should make a div behave kinda like a paragraph,
+    // minus that one flaw.
     margin-top: 5px;
     margin-bottom: 10px;
 }
@@ -752,6 +767,10 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
 .alert, #system-message dd.error ul {background-color: #BD5151; background-image: url(/static/images/typography/dark/alert.png);color: #4C1818;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}
 .notice, #system-message dd ul {background-color: #488AAD; background-image: url(/static/images/typography/dark/notice.png);color: #133548;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}   
 
+.alert-message {
+    font-weight: bold;
+}
+
 /* Code wrap. Border with blueish text. (use pre for indention) */
 .codewrap,.sampwrap { 
     margin: 2px;
@@ -870,9 +889,31 @@ code, samp {
 
 /* Debug Info Styles */
 .debug-box {
+    // Small debug box for every page is displayed with javascript.
     display: none;
-    /*margin-top: 5px; // not needed anymore now that box displays full width on the top */
-    margin-bottom: 5px;
+
+    position: relative;
+    background-color: $whitedull;
+    padding-top: 5px;
+    padding-left: 5px;
+    // Make a small box that scrolls the very long debug info.
+    width: 90%;
+    height: 300px;
+    overflow-x: scroll;
+    overflow-y: scroll;
+
+}
+
+.debug-page-box {
+    // Entire debug info is layed out.
+    position: relative;
+    background-color: $whitedull;
+    @include border-radius(5px);
+    border-width: 2px;
+    border-style: solid;
+    border-color: $borderlight;
+    padding: 5px;
+    overflow-x: scroll;
 }
 
 .debug-button {

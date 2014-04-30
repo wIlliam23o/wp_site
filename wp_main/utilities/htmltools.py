@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 
-'''
-      project: welborn productions - utilities - html
-     @summary: provides html string manipulation, code injection/generation
+'''Welborn productions - Utilities - HtmlTools
+    Provides html string manipulation, code injection/generation
     
-      @author: Christopher Welborn <cj@welbornproductions.net>
-@organization: welborn productions <welbornproductions.net>
- 
-   start date: Mar 27, 2013
+   -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
 '''
 
 
@@ -618,18 +614,38 @@ def check_replacement(source_string, target_replacement):
 
 
 def clean_html(source_string):
-    """ runs the proper remove_ functions. on the source string """
+    """ runs the proper remove_ functions. on the source string
+    """
 
     # these things have to be done in a certain order to work correctly.
     # hide_email, fix p spaces, remove_comments,
     # remove_whitespace, remove_newlines
     if source_string is None:
-        _log.debug("None object passed as source_string!")
+        _log.debug('Final HTML for page was None!')
         return ''
 
-    return remove_whitespace(
-        remove_comments(
-            hide_email(source_string)))
+    return remove_whitespace(remove_comments(hide_email(source_string)))
+
+
+def fatal_error_page(message=None):
+    """ If something really bad has happened and we can't rely on templates,
+        this string can be passed in a Response.
+        Arguments:
+            message  : Optional extra message for response.
+    """
+    s = ('<html><head><title>Welborn Prod. - Fatal Error</title>',
+         '<style>body {{font-family: Arial, sans-serif}}'
+         '.header {{font-size:3em; color: blue;}}'
+         '.msg {{font-size:1em; color: darkgrey;}}</style>'
+         '<body><div class="header">',
+         'Welborn Productions',
+         '</div>',
+         '<div class="msg">',
+         '{}',
+         '</div>')
+    if message is None:
+        message = 'Something has gone horribly wrong with the site.'
+    return '\n'.join(s).format(message)
 
 
 def find_email_addresses(source_string):
@@ -705,11 +721,10 @@ def fix_open_tags(source):
         elif isinstance(source, (list, tuple)):
             joiner = None
         else:
-            _log.debug("Unknown type passed: " + str(type(source)))
-            joiner = None
+            raise ValueError('Unknown type passed: {}'.format(type(source)))
     except Exception as ex:
         # error splitting text?
-        _log.error("Error splitting text:\n" + str(ex))
+        _log.error('Error splitting text:\n{}'.format(ex))
         return source
 
     # keeps track of tags opened so far,
@@ -973,7 +988,7 @@ def inject_article_ad(source_string, target_replacement="{{ article_ad }}"):
     target = check_replacement(source_string, target_replacement)
     if target:
         # at this moment article ad needs no Context.
-        article_ad = render_clean("home/articlead.html")
+        article_ad = render_clean('home/articlead.html')
         return source_string.replace(target, article_ad)
 
     # target not found.
@@ -1152,78 +1167,6 @@ def load_html_file(sfile, request=None, context=None):
         return ''
 
 
-def render_clean(template_name, **kwargs):
-    """ runs render_html() through clean_html().
-        renders template by name and context dict,
-        RequestContext is used if 'request' kwarg is present.
-        Keyword Arguments (same as render_html()):
-              context_dict : dict to be used by Context() or RequestContext()
-                   request : HttpRequest() object passed on to RequestContext()
-                 link_list : link_list to be used with htmltools.auto_link()
-                             Default: False
-            auto_link_args : A dict containing kw arguments for auto_link()
-                             Default: {}
-            For these arguments, see: htmltools.render_html()
-        passes resulting html through clean_html(),
-        returns resulting html string.
-
-    """
-
-    return clean_html(render_html(template_name, **kwargs))
-
-
-def render_html(template_name, **kwargs):
-    """ renders template by name and context dict,
-        returns the resulting html.
-        Keyword arguments are:
-            context_dict : Context or RequestContext dict to be used
-                           RequestContext is used if a request is passed in
-                           with 'request' kwarg. 
-                           Default: {}
-                 request : HttpRequest object to pass on to RequestContext
-                           Default: False (causes Context to be used)
-               link_list : A link list in auto_link() format to be used
-                           with auto_link() before returning content.
-                           see: htmltools.auto_link()
-                           Default: False (disables auto_link())
-          auto_link_args : dict containing arguments for auto_link()
-                           ex: 
-                           render_html("mytemplate",
-                                       link_list=my_link_list,
-                                       auto_link_args={"target":"_blank",
-                                                       "class":"my-link-class",
-                                                       })
-                           Default: {}
-    """
-    context_dict = kwargs.get('context_dict', {})
-    request = kwargs.get('request', False)
-    link_list = kwargs.get('link_list', False)
-    auto_link_args = kwargs.get('auto_link_args', {})
-
-    try:
-        tmplate = loader.get_template(template_name)
-        if isinstance(context_dict, dict):
-            if request:
-                context_ = RequestContext(request, context_dict)
-            else:
-                context_ = Context(context_dict)
-        else:
-            # whole Context was passed
-            context_ = context_dict
-
-        rendered = tmplate.render(context_)
-        if link_list:
-            rendered = auto_link(rendered, link_list, **auto_link_args)
-        return rendered
-    except Exception as ex:
-        errstr = 'Unable to render html template'
-        if request:
-            errstr = '{} with request context'.format(errstr)
-        _log.error('{}: {}\n{}'.format(errstr, template_name, ex))
-
-        return None
-
-
 def remove_comments(source_string):
     """ splits source_string by newlines and
         removes any line starting with <!-- and ending with -->.
@@ -1281,14 +1224,11 @@ def remove_newlines(source_string):
 def remove_whitespace(source_string):
     """ removes leading and trailing whitespace from lines,
         and removes blank lines.
-
+        This ignores <pre> blocks, to keep <pre> formatting.
     """
 
-    # removes newlines, except for in pre blocks.
-    if '\n' in source_string:
-        slines = source_string.split('\n')
-    else:
-        slines = [source_string]
+    slines = source_string.split('\n')
+
     # start processing
     in_skipped = False
     final_output = []
@@ -1302,7 +1242,7 @@ def remove_whitespace(source_string):
             # add original line.
             final_output.append(sline)
         else:
-            trimmed = trim_whitespace_line(sline)
+            trimmed = sline.strip()
             # no blanks.
             if trimmed != '\n' and trimmed != '':
                 final_output.append(trimmed)
@@ -1311,6 +1251,78 @@ def remove_whitespace(source_string):
             in_skipped = False
 
     return '\n'.join(final_output)
+
+
+def render_clean(template_name, **kwargs):
+    """ runs render_html() through clean_html().
+        renders template by name and context dict,
+        RequestContext is used if 'request' kwarg is present.
+        Keyword Arguments (same as render_html()):
+              context_dict : dict to be used by Context() or RequestContext()
+                   request : HttpRequest() object passed on to RequestContext()
+                 link_list : link_list to be used with htmltools.auto_link()
+                             Default: False
+            auto_link_args : A dict containing kw arguments for auto_link()
+                             Default: {}
+            For these arguments, see: htmltools.render_html()
+        passes resulting html through clean_html(),
+        returns resulting html string.
+    """
+
+    return clean_html(render_html(template_name, **kwargs))
+
+
+def render_html(template_name, **kwargs):
+    """ renders template by name and context dict,
+        returns the resulting html.
+        Keyword arguments are:
+            context_dict : Context or RequestContext dict to be used
+                           RequestContext is used if a request is passed in
+                           with 'request' kwarg. 
+                           Default: {}
+                 request : HttpRequest object to pass on to RequestContext
+                           Default: False (causes Context to be used)
+               link_list : A link list in auto_link() format to be used
+                           with auto_link() before returning content.
+                           see: htmltools.auto_link()
+                           Default: False (disables auto_link())
+          auto_link_args : dict containing arguments for auto_link()
+                           ex: 
+                           render_html("mytemplate",
+                                       link_list=my_link_list,
+                                       auto_link_args={"target":"_blank",
+                                                       "class":"my-link-class",
+                                                       })
+                           Default: {}
+    """
+    context_dict = kwargs.get('context_dict', {})
+    request = kwargs.get('request', False)
+    link_list = kwargs.get('link_list', False)
+    auto_link_args = kwargs.get('auto_link_args', {})
+
+    try:
+        tmplate = loader.get_template(template_name)
+        if isinstance(context_dict, dict):
+            if request:
+                context_ = RequestContext(request, context_dict)
+            else:
+                context_ = Context(context_dict)
+        else:
+            # whole Context was passed
+            context_ = context_dict
+
+        rendered = tmplate.render(context_)
+        if link_list:
+            rendered = auto_link(rendered, link_list, **auto_link_args)
+        return rendered
+    except Exception:
+        errstr = 'Unable to render html template'
+        if request:
+            errstr = '{} with request context'.format(errstr)
+        message = '{}: {}'.format(errstr, template_name)
+        utilities.logtraceback(_log.error, message=message)
+
+        return None
 
 
 def strip_all(s, strip_chars):
@@ -1332,17 +1344,6 @@ def strip_all(s, strip_chars):
     for c in strip_chars:
         s = strip_(s, c)
     return s
-
-
-def trim_whitespace_line(sline):
-    """ trims whitespace from a single line """
-
-    scopy = sline
-    while scopy.startswith(' ') or scopy.startswith('\t'):
-        scopy = scopy[1:]
-    while scopy.endswith(' ') or scopy.endswith('\t'):
-        scopy = scopy[:-1]
-    return scopy
 
 
 def wrap_link(content_, link_url, alt_text=""):

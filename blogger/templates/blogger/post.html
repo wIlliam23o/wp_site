@@ -3,6 +3,9 @@
 {% load wp_tags %}
 {% block title %}- Blog{% if post_title_short %} - {{ post_title_short }}{% endif %}{% endblock %}
 
+{% block metainfo %}
+    <meta name="description" content="Blog post from welborn productions{% if blog_post %}: {{ blog_post.title }}{% else %}.{% endif %}">
+{% endblock %}
 
 {% block extrastylelink %}
 	{{ block.super }}

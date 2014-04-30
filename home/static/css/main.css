@@ -53,7 +53,7 @@ a:-webkite-any-link {
 h1 {
   font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif; }
 
-h1.title {
+h1.title, h2.title {
   margin-top: 0; }
 
 h1, h2, .module-title h2, h3, h4, h5 {
@@ -71,8 +71,8 @@ h1, h2, .module-title h2, h3, h4, h5 {
   padding-bottom: 5px;
   text-transform: lowercase; }
 
-/* These two should have the same style, different sizes. */
-h2.title, h1.title {
+h1.title, h2.title {
+  font-size: 1.5em;
   margin-left: 0px;
   margin-bottom: 5px;
   margin-top: 10px;
@@ -81,10 +81,8 @@ h2.title, h1.title {
   padding-left: 10px; }
 
 h2.title {
-  font-size: 1.2em; }
-
-h1.title {
-  font-size: 1.5em; }
+  font-size: 1.2em;
+  margin-left: -20px; }
 
 h4 {
   text-transform: lowercase;
@@ -111,6 +109,10 @@ strong {
   /* old-fonts used: 400 */ }
 
 p {
+  margin-top: 5px;
+  margin-bottom: 10px; }
+
+.paragraph {
   margin-top: 5px;
   margin-bottom: 10px; }
 
@@ -1035,6 +1037,9 @@ ul.bullet li {
   text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
   border-top: 1px solid rgba(255, 255, 255, 0.3); }
 
+.alert-message {
+  font-weight: bold; }
+
 /* Code wrap. Border with blueish text. (use pre for indention) */
 .codewrap, code, samp, .sampwrap {
   margin: 2px;
@@ -1155,8 +1160,28 @@ code, samp {
 /* Debug Info Styles */
 .debug-box {
   display: none;
-  /*margin-top: 5px; // not needed anymore now that box displays full width on the top */
-  margin-bottom: 5px; }
+  position: relative;
+  background-color: #fafafa;
+  padding-top: 5px;
+  padding-left: 5px;
+  width: 90%;
+  height: 300px;
+  overflow-x: scroll;
+  overflow-y: scroll; }
+
+.debug-page-box {
+  position: relative;
+  background-color: #fafafa;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #afafaf;
+  padding: 5px;
+  overflow-x: scroll; }
 
 .debug-button {
   -webkit-border-radius: 5px;
