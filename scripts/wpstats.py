@@ -609,6 +609,31 @@ def validate_orderby(modelobj, orderby):
     return goodorderby
 
 
+class StatsInfo(object):
+
+    """ Holds info for stats.html template and home.view_stats() view. """
+
+    def __init__(self, title=None, statlines=None):
+        self.title = title
+        self.statlines = statlines
+
+
+class StatsCollection(object):
+
+    """ Holds a collection of StatsInfo objects. """
+
+    def __init__(self, *args):
+        """ Adds a list of StatsInfo()'s on intialization """
+        self.stats = []
+        for arg in args:
+            if arg is not None:
+                self.stats.append(arg)
+
+    def add(self, *args):
+        for statsinfo in args:
+            self.stats.append(statsinfo)
+
+
 # START OF SCRIPT
 if __name__ == "__main__":
     args = sys.argv[1:]

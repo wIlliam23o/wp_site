@@ -22,63 +22,140 @@ _log = logger("home").log
 from home import hometools as htools
 
 
+def convert_line(line):
+    """ Format a single line for stats info. """
+    return mark_safe('{}\n<br>\n'.format(line.replace(' ', '&nbsp;')))
+
+
+def convert_pblock(pblock):
+    """ Format a print_block() for stats info. """
+    if not pblock:
+        return []
+    pblock_args = {'append_key': ': '}
+    return [convert_line(line) for line in pblock.iterblock(**pblock_args)]
+
+
 def index(request):
     """ serve up main page (home, index, landing) """
 
     # render main page
-    return responses.clean_response("home/index.html",
-                                    {'request': request,
-                                     'blog_post': htools.get_latest_blog(),
-                                     'featured_project': htools.get_featured_project(),  # noqa
-                                     'extra_style_link_list':
-                                         [utilities.get_browser_style(request),
-                                         ],
-                                     })
+    context = {
+        'request': request,
+        'blog_post': htools.get_latest_blog(),
+        'featured_project': htools.get_featured_project(),
+        'featured_app': htools.get_featured_app(),
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+    }
+    return responses.clean_response('home/index.html', context)
     
+
+def makestats(name, getfunc, orderby=None):
+    """ Create a StatsInfo() object from a name, get_info_func, and orderby
+        Arguments:
+            name     : Name to display for these stats.
+            getfunc  : Function that returns a print_block() with the stats.
+            orderby  : Sort order for the objects gathered.
+                       Defaults to: -download_count
+    """
+
+    if not orderby:
+        orderby = '-download_count'
+    oinfo = getfunc(orderby=orderby)
+    return wpstats.StatsInfo(name, convert_pblock(oinfo))
+
+
+def view_403(request):
+    """ return the forbidden page. (403 template) """
+    return view_error(request, 403)
+
+
+def view_404(request):
+    """ return the page not found view (404 template) """
+    return view_error(request, 404)
+
+
+def view_500(request):
+    """ return the internal server error page. """
+    return view_error(request, 500)
+
 
 def view_about(request):
     """ return the about page for welbornproductions. """
     
     # Pass link list for the about page
-
-    return responses.clean_response("home/about.html",
-                                    {'request': request,
-                                     'extra_style_link_list': ["/static/css/about.min.css",
-                                                               utilities.get_browser_style(request)],
-                                     },
+    context = {
+        'request': request,
+        'extra_style_link_list': [
+            '/static/css/about.min.css',
+            utilities.get_browser_style(request)],
+    }
+    return responses.clean_response('home/about.html', context,
                                     link_list=htmltools.auto_link_list,
-                                    auto_link_args={"target": "_blank"}
+                                    auto_link_args={'target': '_blank'}
                                     )
+
+
+def view_badlogin(request):
+    """ show the bad login message """
+    
+    context = {
+        'request': request,
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+    }
+    return responses.clean_response('home/badlogin.html', context)
 
 
 @login_required(login_url='/login')
 def view_debug(request):
     """ return the django debug info page. """
     siteversion = settings.SITE_VERSION
+    context = {
+        'request': request,
+        'djangoversion': get_django_version(),
+        'sysversion': sysversion,
+        'siteversion': siteversion,
+        'extra_style_link_list': [
+        utilities.get_browser_style(request),
+        '/static/css/highlighter.min.css'],
+    }
+    return responses.clean_response('home/debug.html', context)
+
+
+def view_error(request, error_number):
+    """  returns  appropriate error page when given the error code. """
     
-    return responses.clean_response("home/debug.html",
-                                    {'request': request,
-                                     'djangoversion': get_django_version(),
-                                     'sysversion': sysversion,
-                                     'siteversion': siteversion,
-                                     'extra_style_link_list': [utilities.get_browser_style(request),
-                                                               "/static/css/highlighter.min.css"],
-                                     })
+    request_path = request.META['PATH_INFO']
+    if request_path.startswith('/'):
+        request_path = request_path[1:]
+    
+    serror = str(error_number)
+    # if its not one of these I don't have a template for it,
+    # so it really would be a file-not-found error.
+    if not serror in ['403', '404', '500']:
+        serror = '404'
+    context = {
+        'request': request,
+        'request_path': mark_for_escaping(request_path),
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+    }
+    return responses.clean_response_req('home/{}.html'.format(serror),
+                                        context,
+                                        request=request)
 
 
 def view_ip(request):
     """  returns the remote ip page. """
-    
-    return responses.clean_response('home/ip.html',
-                                    {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
-                                     })
+    context = {
+        'request': request,
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+    }
+    return responses.clean_response('home/ip.html', context)
 
 
 def view_ip_simple(request):
     """ returns the remote ip in plain text. """
-    
-    return responses.text_response('{}\n'.format(str(utilities.get_remote_ip(request))))
+    ip = '{}\n'.format(utilities.get_remote_ip(request))
+    return responses.text_response(ip)
 
 
 def view_login(request):
@@ -103,14 +180,15 @@ def view_login(request):
         if user is not None:
             if user.is_active():
                 auth.login(request, user)
-                referer_view = responses.get_referer_view(request, default=None)
+                referer_view = responses.get_referer_view(request,
+                                                          default=None)
                 
                 #_log.debug("referer_view: " + str(referer_view))
                 
-                # Change response based on whether or not previous view was given.
+                # Change response based on whether or not prev. view was given.
                 if referer_view is None:
                     # Success
-                    response = responses.redirect_response("/")
+                    response = responses.redirect_response('/')
                 else:
                     # Previous view
                     response = responses.redirect_response(referer_view)
@@ -118,66 +196,22 @@ def view_login(request):
     return response
     
 
-def view_badlogin(request):
-    """ show the bad login message """
-    
-    return responses.clean_response("home/badlogin.html",
-                                    {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request)],
-                                     })
-
-
-@login_required(login_url="/login")
-def view_stats(request):
-    """ return stats info for projects, blog posts, and file trackers.
-        should require admin permissions.
-    """
-    
-    def convert_line(line):
-        return mark_safe(line.replace(' ', '&nbsp;') + '\n<br/>\n')
-
-    def convert_pblock(pblock):
-        if pblock is None:
-            return []
-        if not pblock.keys():
-            return []
-    
-        pblock_args = {'append_key': ': '}
-        return [convert_line(line) for line in pblock.iterblock(**pblock_args)]
-    # gather print_block stats from wpstats and convert to lists of strings.
-    # for projects, misc objects, blog posts, and file trackers...
-    projectinfo = htools.StatsInfo('Projects', convert_pblock(wpstats.get_projects_info(orderby='-download_count')))
-    miscinfo = htools.StatsInfo('Misc', convert_pblock(wpstats.get_misc_info(orderby='-download_count')))
-    postinfo = htools.StatsInfo('Posts', convert_pblock(wpstats.get_blogs_info(orderby='-view_count')))
-    fileinfo = htools.StatsInfo('File Trackers', convert_pblock(wpstats.get_files_info(orderby='-download_count')))
-    # Add them to a collection.
-    stats = htools.StatsCollection(projectinfo, miscinfo, postinfo, fileinfo)
-    
-    if request.user.is_authenticated():
-        response = responses.clean_response("home/stats.html",
-                                            {'request': request,
-                                             'extra_style_link_list': [utilities.get_browser_style(request),
-                                                                       "/static/css/stats.min.css"],
-                                             'stats': stats,
-                                             })
-    else:
-        response = responses.clean_response("home/badlogin.html",
-                                            {'request': request,
-                                             'extra_style_link_list': [utilities.get_browser_style(request)]})
-    
-    return response
-
-
 def view_scriptkids(request):
     """ return my script kiddie view 
         (for people trying to access wordpress-login pages and stuff like that.)
     """
     
     # get ip if possible.
-    ip_address = request.META.get("HTTP_X_FORWARDED_FOR", None)
-    if ip_address is None:
-        ip_address = request.META.get("REMOTE_ADDR", None)
+    #ip_address = request.META.get("HTTP_X_FORWARDED_FOR", None)
+    # if ip_address is None:
+    #    ip_address = request.META.get("REMOTE_ADDR", None)
+    ip_address = utilities.get_remote_ip(request)
     use_ip = (ip_address is not None)
+    try:
+        path = request.path
+    except AttributeError:
+        path = '<error getting path>'
+    _log.error('ScriptKid Access from: {} -> {}'.format(ip_address, path))
 
     # get insulting image to display
     scriptkid_img = htools.get_scriptkid_image()
@@ -185,52 +219,55 @@ def view_scriptkids(request):
         scriptkid_img = utilities.get_relative_path(scriptkid_img)
     use_img = (scriptkid_img is not None)
     
-    # return formatted template.
-    return responses.clean_response("home/scriptkids.html",
-                                    {'request': request,
-                                     'extra_style_link_list': [utilities.get_browser_style(request),
-                                                               "/static/css/highlighter.min.css"],
-                                     'use_img': use_img,
-                                     'scriptkid_img': scriptkid_img,
-                                     'use_ip': use_ip,
-                                     'ip_address': ip_address,
-                                     })
-    
-
-def view_403(request):
-    """ return the forbidden page. (403 template) """
-    return view_error(request, 403)
-    
-    
-def view_404(request):
-    """ return the page not found view (404 template) """
-    return view_error(request, 404)
-    
-
-def view_500(request):
-    """ return the internal server error page. """
-    return view_error(request, 500)
-
-    
-def view_error(request, error_number):
-    """  returns  appropriate error page when given the error code. """
-    
-    request_path = request.META["PATH_INFO"]
-    if request_path.startswith('/'):
-        request_path = request_path[1:]
-    
-    serror = str(error_number)
-    # if its not one of these I don't have a template for it,
-    # so it really would be a file-not-found error.
-    if not serror in ["403", "404", "500"]:
-        serror = "404"
     context = {
         'request': request,
-        'request_path': mark_for_escaping(request_path),
+        'extra_style_link_list': [
+            utilities.get_browser_style(request),
+            '/static/css/highlighter.min.css'],
+        'use_img': use_img,
+        'scriptkid_img': scriptkid_img,
+        'use_ip': use_ip,
+        'ip_address': ip_address,
+    }
+    # return formatted template.
+    return responses.clean_response('home/scriptkids.html', context)
+
+
+@login_required(login_url='/login')
+def view_stats(request):
+    """ return stats info for projects, blog posts, and file trackers.
+        should require admin permissions.
+    """
+    
+    if request.user.is_authenticated():
+        # gather print_block stats from wpstats and convert to lists of strings.
+        # for projects, misc objects, blog posts, and file trackers...
+        projectinfo = makestats('Project', wpstats.get_projects_info)
+        miscinfo = makestats('Misc', wpstats.get_misc_info)
+        postinfo = makestats('Posts', wpstats.get_blogs_info, '-view_count')
+        fileinfo = makestats('File Trackers', wpstats.get_files_info)
+
+        # Add them to a collection.
+        stats = wpstats.StatsCollection(projectinfo,
+                                        miscinfo,
+                                        postinfo,
+                                        fileinfo)
+        # Build template variables...
+        context = {
+            'request': request,
+            'extra_style_link_list': [
+                utilities.get_browser_style(request),
+                '/static/css/stats.min.css'],
+            'stats': stats,
+        }
+        return responses.clean_response('home/stats.html', context)
+
+    # Not authenticated, return the bad login page. No stats for you!
+    context = {
+        'request': request,
         'extra_style_link_list': [utilities.get_browser_style(request)],
     }
-    return responses.clean_response_req('home/{}.html'.format(serror), context,
-                                        request=request)
+    return responses.clean_response('home/badlogin.html', context)
 
 
 def view_raiseerror(request):

@@ -66,11 +66,12 @@ def alert_message(request, alert_msg, **kwargs):
 
     # alert_message will display at the top of the page,
     # per the main templates 'alert_message' block.
-    return clean_response("home/main.html",
-                          {'main_content': mark_safe(main_content),
-                           'alert_message': mark_safe(alert_msg),
-                           'request': request,
-                           })
+    context = {
+        'main_content': mark_safe(main_content),
+        'alert_message': mark_safe(alert_msg),
+        'request': request,
+    }
+    return clean_response('home/main.html', context)
 
 
 def basic_response(scontent='', *args, **kwargs):
