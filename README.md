@@ -5,12 +5,29 @@
 
 It features a blog app I made to suit my needs, projects, web applications,
 and miscellaneous scripts that I've written for one reason or another.
+It's a mixture of [Python]/[Django], HTML/Templates, JavaScript, and SASS/CSS.
+It uses a Postgres backend to handle all the storage.
 
 
 I wasn't able to find many pre-made 'apps' to do exactly what I wanted,
 so I ended up making my own. I admit that most of these apps couldn't be
 'dropped into' another project without bringing the 'wp_main' app and some
-other stuff with it, but it was made for me, not everyone else. Sorry.
+other stuff with it, but in the beginning of this project I wasn't sure about
+what a 'good django project' looked like. The 'searcher' app depends heavily on
+the other apps (to know what to search, and where). The 'downloads' also, as it
+updates the 'download_count' on many objects. The 'viewer' will show extra info
+depending on whether a file is related to a project or not, and also updates
+the 'view_count' on objects that have one.
+
+
+There is one section where things are much more isolated. The 'apps' are meant
+to stand alone. They still depend on the home/main.html template,
+but work with their own set of tools and models.
+
+
+The 'wp_main' app holds many utilities that are used throughout the other apps.
+It's sort of the 'global settings/tools' app. Many things in 'home' could be,
+and probably need to be, moved there. Maybe some day soon I'll do that.
 
 
 At the least, maybe someone could take inspiration from the apps, or modify them
@@ -55,7 +72,7 @@ The site is live, if you'd like to see what I have so far you can do so here:
 
 [welbornprod.com]
 
-It's running on an Apache server, hosted by WebFaction.
+It's running on an [Apache] server, hosted by [WebFaction].
 
 
    [welbornprod.com]: http://welbornprod.com "welbornprod.com"
