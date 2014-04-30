@@ -992,7 +992,7 @@ def inject_article_ad(source_string, target_replacement="{{ article_ad }}"):
     target = check_replacement(source_string, target_replacement)
     if target:
         # at this moment article ad needs no Context.
-        article_ad = render_clean("home/articlead.html")
+        article_ad = render_clean('home/articlead.html')
         return source_string.replace(target, article_ad)
 
     # target not found.
