@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''
-      project: welborn productions utilities - responses
-     @summary: provides easy access to HttpResponse/Request objects/functions.
+'''Welborn Productions - Utilities - Responses
+    Provides easy access to HttpResponse/Request objects/functions,
+    and some helper functions.
     
-      @author: Christopher Welborn <cj@welbornproductions.net>
-@organization: welborn productions <welbornproductions.net>
- 
-   start date: Mar 27, 2013
+    -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
 '''
 
 # Default dict for request args.
