@@ -27,6 +27,9 @@ BASE_DIR = os.path.split(SCRIPT_PARENT)[0]
 # get parent of application
 BASE_PARENT = os.path.split(BASE_DIR)[0]
 
+# File for list of IP's to ban.
+SECRET_BAN_FILE = os.path.join(BASE_DIR, 'wp_banned.lst')
+
 # test or live?
 if 'webapps' in BASE_PARENT:
     # live site directories
@@ -231,6 +234,9 @@ TEMPLATE_DIRS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    # WelbornProd IP bans..
+    'middleware.requests.WpBanIpMiddleware',
+    # Standard middleware chain.
     'django.middleware.gzip.GZipMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.common.CommonMiddleware',
