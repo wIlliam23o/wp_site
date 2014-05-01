@@ -14,7 +14,7 @@ _log = logger('middleware.responses').log
 re_email_address = r'[\d\w\-\.]+@[\d\w\-\.]+\.[\w\d\-\.]+'
 
 
-class WpResponseMiddleware (object):
+class WpCleanResponseMiddleware (object):
 
     """ This does what it is supposed to do (cleans html),
         but it takes forever. It has been disabled for now.
@@ -24,6 +24,7 @@ class WpResponseMiddleware (object):
         self.rawbytes = None
         self.text = None
         self.lines = None
+        self.log = logger('middleware.responses.wpcleanresponse')
 
     def apply_changes(self, response):
         """ Apply modified WpResponseMiddleware.content to a response. """
@@ -37,7 +38,7 @@ class WpResponseMiddleware (object):
         try:
             encoded = self.text.encode('utf-8')
         except UnicodeEncodeError as exuni:
-            _log.error('Error encoding final text:\n{}'.format(exuni))
+            self.log.error('Error encoding final text:\n{}'.format(exuni))
             return False
 
         # Encoded all changes, apply it to the original response.
@@ -115,14 +116,16 @@ class WpResponseMiddleware (object):
             mailtos = self.find_mailtos()
             for mailto in mailtos:
                 b64_mailto = encode(mailto.encode('utf-8'))
-                sline = sline.replace(mailto,
-                                      b64_mailto.decode('utf-8').replace('\n', ''))
+                sline = sline.replace(
+                    mailto,
+                    b64_mailto.decode('utf-8').replace('\n', ''))
 
             emails = self.find_email_addresses()
             for email in emails:
                 b64_addr = encode(email.encode('utf-8'))
-                sline = sline.replace(email,
-                                      b64_addr.decode('utf-8').replace('\n', ''))
+                sline = sline.replace(
+                    email,
+                    b64_addr.decode('utf-8').replace('\n', ''))
 
             # add line (encoded or not)
             final_output.append(sline)
@@ -152,7 +155,8 @@ class WpResponseMiddleware (object):
         try:
             self.lines = self.rawbytes.decode('utf-8').split('\n')
         except UnicodeError as exuni:
-            _log.error('Error decoding response content:\n{}'.format(exuni))
+            self.log.error('Error decoding response content:\n'
+                           '{}'.format(exuni))
             # Nothing else can be done if we have no content to work with.
             return None
 
