@@ -4,9 +4,10 @@
 """xtools.py
 
     Various tools to use with xchat,
-    includes /commands that provide specific functionality
-    not normally found in xchat/irc, or /commands that enhance the
-    xchat experience.
+    hexchat also works  (as long as the API stays compatible).
+    This includes /commands that provide specific functionality
+    not normally found in xchat/hexchat/irc, or /commands that enhance the
+    irc experience.
 
     This script is now over 2000+ lines, and I really wish it weren't so.
     It's time to shut this little project down before it requires a
@@ -29,7 +30,7 @@ __module_name__ = 'xtools'
 __module_version__ = '0.3.5'
 __module_description__ = 'Various tools/commands for extending XChat...'
 # really minor changes bump this 'versionx'
-VERSIONX = '0'
+VERSIONX = '2'
 # Convenience version str for help commands.
 VERSIONSTR = '{} v. {}-{}'.format(__module_name__,
                                   __module_version__,
@@ -87,6 +88,8 @@ xtools = XToolsConfig()
 class StdOutCatcher(object):
 
     """ Context that catches stdout for code inside the 'with' block.
+        This only catches sys.stdout, otherwise you can use:
+            contextlib.redirect_stdout(fileobj)
 
 
         Usage:
@@ -138,7 +141,10 @@ class StdOutCatcher(object):
 
 class StdErrCatcher(StdOutCatcher):
 
-    """ Same as StdOutCatcher, but works with stderr instead. """
+    """ Same as StdOutCatcher, but works with stderr instead.
+        This only catches sys.stderr, otherwise you can use:
+            contextlib.redirect_stderr(fileobj)
+    """
 
     def __enter__(self):
         self.oldstderr = sys.stderr
@@ -162,7 +168,7 @@ class TabWaiter(object):
         self.focus = focus
         self._context = None
 
-    def check_tab(self):
+    def _check_tab(self):
         """ This must run in a seperate thread, or xchat will lock up. """
         foundtab = xchat.find_context(channel=self.tabtitle)
         while not foundtab:
@@ -190,7 +196,7 @@ class TabWaiter(object):
             xchat.command('QUERY -nofocus {}'.format(self.tabtitle))
 
     def wait_for_tab(self):
-        finder = Thread(target=self.check_tab, name='TabWaiter')
+        finder = Thread(target=self._check_tab, name='TabWaiter')
         finder.start()
         finder.join(timeout=self.timeout)
         return self._context
@@ -277,7 +283,9 @@ def add_caught_msg(msginfo):
     # Print to caught-msgs tab?
     if xtools.settings.get('redirect_msgs', False):
         # Check latest channel/nick lengths. Update spacing for msgs as needed.
-        # It will eventually max out.
+        # It will eventually max out. Adding a lot of extra space when
+        # channels names/nicks may be short looks ugly. So always use the
+        # current longest nick/channel as the max.
         chanspace = longest(get_channel_names())
         nickspace = len(remove_mirc_color(msginfo['nick']))
         if chanspace > xtools.format_settings['chanspace']:
@@ -391,7 +399,7 @@ def add_ignored_nick(nickstr):
     return []
 
 
-def add_message(addfunc, nick, msgtext, msgtype=None):
+def add_message(addfunc, nick, msgtext, **kwargs):
     """ Uses the given 'add function' to add a filtered/saved msg.
         This builds a universal message format that should be used
         anywhere a message is saved.
@@ -401,9 +409,23 @@ def add_message(addfunc, nick, msgtext, msgtype=None):
             add_message(add_caught_msg, 'user2', 'my msg')
             .. will use xtools.ignored_msgs.append, or add_caught_msg
                to save the message.
-        The function has to receive a single argument, which is a msg in the
-        universal format.
+        The addfunc function has to receive a single argument,
+        which is a msg in the universal format.
+
+        Arguments:
+            addfunc     : Function that will deal with the msg after its built.
+            nick        : Nick the message came from.
+            msgtext     : Text for the message.
+            msgtype     : The XChat/HexChat message type (Channel Message,etc.)
+            matchlist   : [.group()] or .groups() from the regex match.
+                          Whichever one isn't empty :)
+            filtertype  : Type of filter that caught the message,
+                          'nick' or 'message'.
     """
+    msgtype = kwargs.get('msgtype', None)
+    matchlist = kwargs.get('matchlist', None)
+    filtertype = kwargs.get('filtertype', None)
+
     chan = xchat.get_context().get_info('channel')
     msgtime = datetime.now()
     if msgtype:
@@ -412,12 +434,16 @@ def add_message(addfunc, nick, msgtext, msgtype=None):
     else:
         # no message type set.
         msgtype = ''
-    msg = {'nick': nick,
-           'time': msgtime.time().strftime('%H:%M:%S'),
-           'date': msgtime.date().strftime('%m-%d-%Y'),
-           'channel': chan,
-           'type': msgtype,
-           'msg': msgtext}
+    msg = {
+        'nick': nick,
+        'time': msgtime.time().strftime('%H:%M:%S'),
+        'date': msgtime.date().strftime('%m-%d-%Y'),
+        'channel': chan,
+        'type': msgtype,
+        'msg': msgtext,
+        'matchlist': matchlist,
+        'filtertype': filtertype,
+    }
     try:
         addfunc(msg)
         return True
@@ -880,6 +906,34 @@ def get_xtools_window(focus=True):
     tabwaiter = TabWaiter(tabtitle=xtools.xtools_tab_title, focus=focus)
     xchatwin = tabwaiter.ensure_tab()
     return xchatwin
+
+
+def indentlines(s, padding=8, maxlength=40):
+    """ Turns a single line of text into an indented block.
+        The first line (within maxlength) isn't touched. Any line
+        after that is indented to 'padding' length.
+        Returns a list of lines.
+    """
+    lines = []
+    currentline = []
+    words = s.split()
+    for i, word in enumerate(words):
+        currentlinestr = ' '.join(currentline)
+        if len(currentlinestr) < (maxlength - len(word) + 1):
+            currentline.append(word)
+        else:
+            lines.append(currentlinestr)
+            currentline = [word]
+    else:
+        # Append the last line we built.
+        if currentline:
+            lines.append(' '.join(currentline))
+    
+    if lines:
+        spc = ' ' * padding
+        return ['{}{}'.format(spc, l) if i else l for i, l in enumerate(lines)]
+    # No lines were built.
+    return [s]
 
 
 def is_filtered_msg(msginfo):
@@ -1444,6 +1498,81 @@ def print_ignored_nicks(newtab=False):
     return True
 
 
+def print_saved_msg(msg, chanspace=16, nickspace=16,
+                    newtab=False, focus=True, redirect=False):
+    """ Print a single saved msg from xtools.ignored_msgs,
+        or xtools.caught_msgs.
+        Must be the actual msg, not the msg id
+        ..from xtools.ignored_msgs, or xtools.caught_msgs[msgid].
+    """
+
+    msgtime = '({})'.format(colorstr('grey', msg['time']))
+    chan = '[{}]'.format(colorstr('green', msg['channel']))
+    # manually get channel spacing, instead of .ljust() including color codes
+    chan = '{}{}'.format(chan, (' ' * (chanspace - len(msg['channel']))))
+    # strip color from nick, and add our own.
+    nick = remove_mirc_color(msg['nick'])
+    if 'action' in msg['type']:
+        nick = colorstr('darkblue', nick.ljust(nickspace))
+        # user action, add a big * on it.
+        nick = '{}{}'.format(colorstr('red', '*', bold=True), nick)
+    else:
+        # normal channel msg
+        nick = colorstr('darkblue', nick.ljust(nickspace + 1))
+
+    # Format long messages
+    msglabel = '{} {} {}: '.format(msgtime, chan, nick)
+    # Figure maximum width for label + msg, and for msg alone.
+    # Making the max width of a message shorter than the usual chat window,
+    # so maybe it will look good under normal circumstances.
+    maxoverall = 130  # 160 if redirect else 130 --> using only 1 width now.
+    # Indenting messages by 4.
+    # Figure label length for spacing without colors.
+    msgspace = len(remove_mirc_color(msglabel))
+    maxmsglen = maxoverall - msgspace
+    # Function to add proper space for a long wrapped line.
+    #fmtline = lambda s: '{}{}'.format((' ' * msgspace), s.strip())
+
+    def msglines(s):
+        """ Chunk a msg, add space to all but the first line. """
+
+        #msgchunks = [s[x:x + maxmsglen] for x in range(0, len(s), maxmsglen)]
+        # return [fmtline(l) if i else l for i, l in enumerate(msgchunks)]
+        return indentlines(s, padding=msgspace, maxlength=maxmsglen)
+
+    # Wrap long lines with msglines() if needed, colorize highlighted msgs.
+    if 'hilight' in msg['type']:
+        # highlighted msg.
+        msgtext = '\n'.join([colorstr('red', s) for s in msglines(msg['msg'])])
+    else:
+        # normal msg.
+        msgtext = '\n'.join(msglines(msg['msg']))
+        # Highlight matching text if available.
+        for matchtext in msg['matchlist']:
+            colormatch = colorstr(color='red', text=matchtext, bold=True)
+            msgtext = re.sub(matchtext, colormatch, msgtext)
+
+    # Build final message.
+    msgfmt = '{}{}'.format(msglabel, msgtext)
+
+    # Print it to the correct tab.
+    if redirect:
+        # This is a redirected msg, print to the xtools-msgs tab.
+        print_totab(xtools.msgs_tab_title, msgfmt, focus=False)
+    else:
+        # This could be an ignored msg, or a caught msg.
+        # Whether or not it's printed to the xtools tab is determined
+        # by the user with the --tab argument (which sets newtab)
+        print_(msgfmt, newtab=newtab, focus=focus)
+
+
+def print_status(msg, newtab=False):
+    """ Print an xtools status message. """
+
+    finalmsg = '\n{} {}'.format(colorstr('grey', 'xtools:'), msg)
+    print_(finalmsg, newtab=newtab)
+
+
 def print_tochan(msg, channel=None):
     """ Prints a message as the user to a channel. 
         If no channel is given, the current channel is used.
@@ -1475,72 +1604,6 @@ def print_totab(tabtitle, msg, focus=True):
     else:
         # print to xtools tab.
         context.prnt(msg)
-
-
-def print_saved_msg(msg, chanspace=16, nickspace=16,
-                    newtab=False, focus=True, redirect=False):
-    """ Print a single saved msg from xtools.ignored_msgs,
-        or xtools.caught_msgs.
-        Must be the actual msg, not the msg id.
-        from xtools.ignored_msgs, or xtools.caught_msgs[msgid].
-    """
-
-    msgtime = '({})'.format(colorstr('grey', msg['time']))
-    chan = '[{}]'.format(colorstr('green', msg['channel']))
-    # manually get channel spacing, instead of .ljust() including color codes
-    chan = '{}{}'.format(chan, (' ' * (chanspace - len(msg['channel']))))
-    # strip color from nick, and add our own.
-    nick = remove_mirc_color(msg['nick'])
-    if 'action' in msg['type']:
-        nick = colorstr('darkblue', nick.ljust(nickspace))
-        # user action, add a big * on it.
-        nick = '{}{}'.format(colorstr('red', '*', bold=True), nick)
-    else:
-        # normal channel msg
-        nick = colorstr('darkblue', nick.ljust(nickspace + 1))
-
-    # Format long messages
-    msglabel = '{} {} {}: '.format(msgtime, chan, nick)
-    # Figure label length for spacing without colors.
-    msgspace = len(remove_mirc_color(msglabel))
-    # Figure maximum width for label + msg, and for msg alone.
-    maxoverall = 160 if redirect else 130
-    maxmsglen = maxoverall - msgspace
-    # Function to add proper space for a long wrapped line.
-    fmtline = lambda s: '{}{}'.format((' ' * msgspace), s)
-
-    def msglines(s):
-        """ Chunk a msg, add space to all but the first line. """
-        msgchunks = [s[x:x + maxmsglen] for x in range(0, len(s), maxmsglen)]
-        return [fmtline(l) if i else l for i, l in enumerate(msgchunks)]
-
-    # Wrap long lines with msglines() if needed, colorize highlighted msgs.
-    if 'hilight' in msg['type']:
-        # highlighted msg.
-        msgtext = '\n'.join([colorstr('red', s) for s in msglines(msg['msg'])])
-    else:
-        # normal msg.
-        msgtext = '\n'.join(msglines(msg['msg']))
-
-    # Build final message.
-    msgfmt = '{}{}'.format(msglabel, msgtext)
-
-    # Print it to the correct tab.
-    if redirect:
-        # This is a redirected msg, print to the xtools-msgs tab.
-        print_totab(xtools.msgs_tab_title, msgfmt, focus=False)
-    else:
-        # This could be an ignored msg, or a caught msg.
-        # Whether or not it's printed to the xtools tab is determined
-        # by the user with the --tab argument (which sets newtab)
-        print_(msgfmt, newtab=newtab, focus=focus)
-
-
-def print_status(msg, newtab=False):
-    """ Print an xtools status message. """
-
-    finalmsg = '\n{} {}'.format(colorstr('grey', 'xtools:'), msg)
-    print_(finalmsg, newtab=newtab)
 
 
 def print_version(newtab=False):
@@ -2498,19 +2561,29 @@ def filter_chanmsg(word, word_eol, userdata=None):
     msg = ' '.join(word[1:]).strip('@').strip()
     for nickkey in xtools.ignored_nicks.keys():
         nickpat = xtools.ignored_nicks[nickkey]['pattern']
-        if nickpat.search(msgnick):
+        nickmatch = nickpat.search(msgnick)
+        if nickmatch:
             # Ignore this message.
             add_message(xtools.ignored_msgs.append,
-                        msgnick, msg, msgtype=userdata)
+                        msgnick,
+                        msg,
+                        msgtype=userdata,
+                        matchlist=nickmatch.groups() or [nickmatch.group()],
+                        filtertype='nick')
             return xchat.EAT_ALL
 
     # Caught msgs, needs add_caught_msg because of other scripts emitting
     # duplicate msgs. The add_caught_msg function handles this.
     for catchmsg in xtools.msg_catchers.keys():
         msgpat = xtools.msg_catchers[catchmsg]['pattern']
-        if msgpat.search(msg):
+        msgmatch = msgpat.search(msg)
+        if msgmatch:
             add_message(add_caught_msg,
-                        msgnick, msg, msgtype=userdata)
+                        msgnick,
+                        msg,
+                        msgtype=userdata,
+                        matchlist=msgmatch.groups() or [msgmatch.group()],
+                        filtertype='nick')
             return xchat.EAT_NONE
     # Nothing will be done to this message.
     return xchat.EAT_NONE
