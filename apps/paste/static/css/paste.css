@@ -102,6 +102,7 @@
 #paste-private-opt {
   width: 15px;
   height: 15px;
+  margin-left: 0px;
   vertical-align: middle; }
 
 .paste-private-verbose {
