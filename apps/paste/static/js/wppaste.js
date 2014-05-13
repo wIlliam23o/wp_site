@@ -6,11 +6,11 @@ var wppaste = {
         modes.sort(function (a, b) {
             // Sort modes by 'caption' text
             if (a.caption < b.caption) {
-                return -1
+                return -1;
             } else if (a.caption > b.caption) {
-                return 1
+                return 1;
             } else {
-                return 0
+                return 0;
             }
         });
         // create a doc fragment to build on.
@@ -48,9 +48,9 @@ var wppaste = {
             if (a.caption < b.caption) {
                 return -1
             } else if (a.caption > b.caption) {
-                return 1
+                return 1;
             } else {
-                return 0
+                return 0;
             }
         });
         // Doc frag to build on.
@@ -95,6 +95,12 @@ var wppaste = {
         return $(selected).attr('val');
     },
 
+    get_selected_private : function () {
+        /* Get 'private' option selection. */
+        var chk = $('#paste-private-opt');
+        return $(chk).prop('checked');
+    },
+
     get_selected_theme : function () {
         /* Get selected ace-editor theme ('ace/theme/themename'). */
         var themeselect = document.getElementById('themeselect');
@@ -132,24 +138,39 @@ var wppaste = {
         $('#paste-author-entry').val(author);
     },
 
-    on_mode_change: function () {
-        /* Change Ace mode when language is selected. */
+    on_mode_change: function (opts) {
+        /* Change Ace mode when language is selected.
+            Arguments:
+                opts  : object containing options for this functions.
+
+                Options:
+                    save : true/false to save the new mode to a cookie.
+        */
         var modestr = wppaste.get_selected_mode();
         wp_content.getSession().setMode(modestr);
         //console.log('mode set to: ' + modestr);
 
         // Save user language to a cookie for next time.
-        wppaste.update_paste_settings({'lang': wppaste.get_selected_lang()});
+        if (opts && opts['save']) {
+            wppaste.update_paste_settings({'lang': wppaste.get_selected_lang()});
+        }
     },
 
-    on_theme_change: function () {
-        /* Change Ace theme when theme option is selected. */
+    on_theme_change: function (opts) {
+        /* Change Ace theme when theme option is selected.
+            Arguments:
+                opts  : Object containing options for this function.
+                    Options:
+                        save : true/false, whether the theme is saved to a cookie.
+        */
         var themestr = wppaste.get_selected_theme();
         wp_content.setTheme(themestr);
         //console.log('theme set to: ' + themestr);
 
         // Save user theme to a cookie for next time.
-        wppaste.update_paste_settings({'theme': wppaste.get_selected_theme_name()});
+        if (opts && opts['save']) {
+            wppaste.update_paste_settings({'theme': wppaste.get_selected_theme_name()});
+        }
     },
 
     save_paste_settings : function () {
@@ -164,7 +185,10 @@ var wppaste = {
     },
 
     set_selected_mode : function (name) {
-        /* set selected mode by name */
+        /* set selected mode by name 
+            Arguments:
+                name  : Name of mode to select.
+        */
         var langselect = document.getElementById('langselect');
         var langlen = langselect.options.length;
         for (var i=0; i < langlen; i++) {
@@ -179,6 +203,18 @@ var wppaste = {
         langselect.selectedIndex = 0;
         wppaste.on_mode_change();
         return false;
+    },
+
+    set_selected_private : function (checked) {
+        /* set selected 'private' option.
+            Arguments:
+                checked  : true/false, whether the private opt. is checked.
+        */
+
+        var chk = $('#paste-private-opt');
+        var boolval = checked || false
+        $(chk).attr({'checked': boolval});
+
     },
 
     set_selected_theme : function (name) {
@@ -213,12 +249,13 @@ var wppaste = {
         } else {
             var pastedata = {};
         }
-        pastedata.author = wppaste.get_paste_author();
-        pastedata.content = wp_content.getValue();
-        pastedata.title = wppaste.get_paste_title();
-        pastedata.language = wppaste.get_selected_lang();
+        pastedata['author'] = wppaste.get_paste_author();
+        pastedata['content'] = wp_content.getValue();
+        pastedata['title'] = wppaste.get_paste_title();
+        pastedata['language'] = wppaste.get_selected_lang();
+        pastedata['private'] = wppaste.get_selected_private();
         var replyto = $('#replyto-id').attr('value');
-        pastedata.replyto = replyto
+        pastedata['replyto'] = replyto
 
         // TODO: include 'onhold', make author textbox.
 

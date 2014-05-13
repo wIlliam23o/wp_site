@@ -26,14 +26,14 @@
         <div class='paste-button-box'>
             <!-- New paste button -->
             <a href='/paste'>
-                <div id='paste-new' class='wpbutton paste-button'>
+                <div id='paste-new' class='wpbutton paste-button' title='Create a new paste..'>
                     New Paste..
                 </div>
             </a>
             {% if not listing_title|lower|contains:"latest" %}
                 <!-- View latest -->
                 <a href='/paste/latest'>
-                    <div class='wpbutton paste-button'>
+                    <div class='wpbutton paste-button' title='View the latest public pastes..'>
                         View Latest
                     </div>
                 </a>
@@ -41,7 +41,7 @@
             {% if not listing_title|lower|contains:"top" %}
                 <!-- View top -->
                 <a href='/paste/top'>
-                    <div class='wpbutton paste-button'>
+                    <div class='wpbutton paste-button' title='View the top pastes by view count..'>
                         View Top
                     </div>
                 </a>

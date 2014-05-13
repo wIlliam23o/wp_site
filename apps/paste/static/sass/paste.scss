@@ -124,8 +124,35 @@
     color: $greymain;
     padding-top: 2px;    
 }
+
 .paste-author-label {
     @extend .paste-lang-label;
+}
+
+.paste-private-box {
+  display: block;
+}
+
+.paste-private-label {
+  @extend .paste-lang-label;
+}
+
+#paste-private-opt {
+    width: 15px;
+    height: 15px;
+    margin-left: 0px;
+    vertical-align: middle;
+}
+
+.paste-private-verbose {
+    display: inline-block;
+    color: $greylight;
+    font-family: $fontssmall;
+    font-size: $fontsmall;
+    font-weight: bold;
+    vertical-align: top;
+    padding-top: 5px;
+
 }
 
 .paste-date-box {

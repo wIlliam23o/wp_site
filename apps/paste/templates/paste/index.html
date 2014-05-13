@@ -111,10 +111,11 @@
                 <div class='paste-title-box'>
                     {% if not paste %}
                         {# New Paste #}
-                        <div class='paste-title-label'>
+                        <div class='paste-title-label' title='Optional title for this paste.'>
                             Title:
                         </div>
-                        <input id='paste-title-entry' type='text' class='input-text' value='{% if replyto.title %}re: {{ replyto.title }}{% endif %}'/>
+                        <input id='paste-title-entry' type='text' class='input-text' value='{% if replyto.title %}re: {{ replyto.title }}{% endif %}' title='Optional title for this paste.'/>
+                        
                     {% else %}
                         {# Existing paste #}
                         <span class='paste-title-label'>
@@ -130,7 +131,7 @@
                             </span>
 
                             {% if paste.publish_date %}
-                                <div class='paste-date-box'>
+                                <div class='paste-date-box' title='Publish date for this paste.'>
                                     <span class='paste-date'>
                                         {{ paste.publish_date|paste_time }}
                                     </span>
@@ -151,16 +152,40 @@
                             </div>
                         </div>
                     {% endif %}
+                    {# Grab paste's 'private' setting #}
+                    <div class='paste-private-box' title='Private pastes are not listed publicly,
+                                                          but are viewable to anyone that knows the URL or ID.'>
+                        <div class='paste-private-label'>
+                            Private:
+                        </div>
+                        <div class='paste-private-verbose'>
+                            {% if paste.private %}
+                                Yes
+                            {% else %}
+                                No
+                            {% endif %}
+                        </div>
+                    </div>
                 {% else %}
                     {# Show author box for new pastes, or replytos #}
-                    <div class='paste-author-box'>
+                    <div class='paste-author-box' title='Optional author for this paste.'>
                         <div class='paste-author-label'>
                             Author:
                         </div>
                         <input id='paste-author-entry' type='text' class='input-text' value=''/>
                     </div>
+                    {# Make a 'private' option for the new paste. #}
+                    <div class='paste-private-box' title='Check this box to make this a private paste.
+                                                          Private pastes are not listed publicly,
+                                                          but are viewable to anyone that knows the URL or ID.'>
+                        <div class='paste-private-label'>
+                            Private:
+                        </div>
+                        <input id='paste-private-opt' type='checkbox' {% if replyto and replyto.private %}checked='checked' {% endif %}/>
+
+                    </div>
                 {% endif %}
-                <div class='paste-replyto-box'>
+                <div class='paste-replyto-box' title='This paste is a reply to another paste (id: {{ replyto.paste_id }}).'>
                     {% if replyto %}
                         {# Paste is a reply to another paste. #}
                         <span class='paste-replyto-label'>
@@ -181,11 +206,11 @@
                     {% endif %}
                 </div>
             </div>
-            <div class='paste-lang-box'>
+            <div class='paste-lang-box' title='Language or syntax-mode for this paste.'>
                 <span class='paste-lang-label'>
                     Language:
                 </span>
-                <select id='langselect' onchange='javascript: wppaste.on_mode_change();'>
+                <select id='langselect' onchange='javascript: wppaste.on_mode_change({save:true});'>
                 </select>
             </div>
 
@@ -193,7 +218,7 @@
             <div class='paste-button-box'>
                 {% if not paste %}
                     <a href='javascript: void(0);' onclick='javascript: wppaste.submit_paste();'>
-                        <div id='paste-btn' class='wpbutton paste-button'>
+                        <div id='paste-btn' class='wpbutton paste-button' title='Submit this {% if replyto %}reply {% endif %}paste.'>
                             {% if replyto %}
                                 Paste Reply!
                             {% else %}
@@ -204,32 +229,32 @@
                 {% else %}
                     <!-- Reply to paste -->
                     <a href='/paste/?replyto={{ paste.paste_id }}'>
-                        <div id='reply-btn' class='wpbutton paste-button'>
+                        <div id='reply-btn' class='wpbutton paste-button' title='Create a reply paste by editing this one, or starting a new one.'>
                             Reply..
                         </div>
                     </a>
                     <!--  Plain text button -->
                     <a href='/paste/raw/?id={{ paste.paste_id }}'>
-                        <div id='view-raw-btn' class='wpbutton paste-button'>
+                        <div id='view-raw-btn' class='wpbutton paste-button' title='View raw paste data..'>
                             View raw..
                         </div>
                     </a>
                 {% endif %}
                 <!-- New paste button -->
                 <a href='/paste'>
-                    <div id='paste-new' class='wpbutton paste-button'>
+                    <div id='paste-new' class='wpbutton paste-button' title='Create a new paste..'>
                         New Paste..
                     </div>
                 </a>
                 <!-- View latest -->
                 <a href='/paste/latest'>
-                    <div class='wpbutton paste-button'>
+                    <div class='wpbutton paste-button' title='View the latest public pastes..'>
                         View Latest
                     </div>
                 </a>
                 <!-- View top -->
                 <a href='/paste/top'>
-                    <div class='wpbutton paste-button'>
+                    <div class='wpbutton paste-button' title='View the top pastes by view count..'>
                         View Top
                     </div>
                 </a>
@@ -244,11 +269,11 @@
         <!-- Bottom Buttons (Theme Change) -->
         <div class='paste-bottom-button-box'>
             <!-- Theme Change Buttons -->
-            <div class='paste-theme-box'>
+            <div class='paste-theme-box' title='Change the editor/highlighting theme.'>
                 <div class='paste-theme-label'>
                     Highlight Theme:
                 </div>
-                <select id='themeselect' onchange='javascript: wppaste.on_theme_change();'></select>
+                <select id='themeselect' onchange='javascript: wppaste.on_theme_change({save:true});'></select>
             </div>
         </div>
 
