@@ -6,7 +6,7 @@
 #  2.0 is considered a new beginning because the project
 #  is moving towards a backward-incompatible state,
 #  where all python 2 'hacks' will be removed.)
-WPVERSION = '2.1.3'
+WPVERSION = '2.1.4'
 
 # file/path (path joining)
 import os.path
