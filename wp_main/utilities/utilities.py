@@ -427,6 +427,16 @@ def logtraceback(log=None, message=None):
     return logged
 
 
+def parse_bool(s):
+    """ Parse a string as a boolean.
+        Values for True: '1', 'T[rue]', 't[rue]', 'Y[es]', 'y[es]'
+        Values for False: ..everything else.
+    """
+    if s:
+        return s.lower().startswith(('1', 't', 'y'))
+    return False
+
+
 def prepend_path(prepend_this, prependto_path):
     """ os.path.join fails if prependto_path starts with '/'.
         so I made my own. it's not as dynamic as os.path.join, but

@@ -13,7 +13,9 @@ from django.views.decorators.cache import never_cache
 
 from wp_main.utilities import responses
 from wp_main.utilities.wp_logging import logger
-from wp_main.utilities.utilities import get_object, get_remote_ip
+from wp_main.utilities.utilities import (
+    get_object, get_remote_ip, parse_bool
+)
 
 # For creating/accessing wp_paste() objects.
 from apps.paste.models import wp_paste
@@ -226,6 +228,10 @@ def submit_public(request):
     # Try using GET/POST..
     if not submitdata:
         submitdata = responses.get_request_args(request)
+        # Parse a few args that string values would break.
+        onhold = parse_bool(submitdata.get('onhold', ''))
+        private = parse_bool(submitdata.get('private', ''))
+        submitdata.update({'onhold': onhold, 'private': private})
 
     if (not submitdata) or (not submitdata.get('content', False)):
         # No valid submit data.
