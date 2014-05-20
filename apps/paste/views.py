@@ -27,7 +27,7 @@ REPLYMAX = 10
 # Maximum amount of pastes to show in simple listings.
 LISTINGMAX = 25
 # Minimum seconds allowed between public api paste submits.
-MIN_SUBMIT_SECS = 120
+MIN_SUBMIT_SECS = 15
 
 
 def invalidate_submit(submitdata):
