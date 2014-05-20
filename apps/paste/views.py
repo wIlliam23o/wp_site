@@ -297,6 +297,7 @@ def view_json(request):
             'author': '',
             'date': '',
             'content': '',
+            'language': '',
             'id': '',
             'pastes': [],
             'views': 0,
@@ -317,6 +318,7 @@ def view_json(request):
             'content': paste.content,
             'id': paste.paste_id,
             'views': paste.view_count,
+            'language': paste.language,
         }
         if doreplies:
             replies = paste.children.filter(disabled=False)
