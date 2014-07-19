@@ -494,8 +494,16 @@ def json_get(data):
     except TypeError as extype:
         _log.debug('Wrong type passed in: {}\n{}'.format(originaltype, extype))
     except ValueError as exval:
-        _log.debug('Bad data passed in: {}\n{}'.format(data, exval))
-
+        # This happens when url-encoded data is sent in, but we try to get json
+        # data first. Logging a 65 line file that has been urlencoded sucks.
+        # It could be a real error, so instead of ignoring it
+        # I am trimming the data to a smaller size, and logging that and the
+        # error.
+        sampledata = data[:64]
+        _log.debug(('Bad data passed in: '
+                    '(first {} chars) == {}\n{}').format(len(sampledata),
+                                                         sampledata,
+                                                         exval))
     return datadict
 
 

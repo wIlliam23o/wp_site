@@ -7,13 +7,13 @@
         ex:
             where mailto:cj@test.com = bWFpbHRvOmNqQHRlc3QuY29tCg==
             
-            <a class='wp-address' href="bWFpbHRvOmNqQHRlc3QuY29tCg==">Mail Me</a>
+            <a class='wp-address' href='bWFpbHRvOmNqQHRlc3QuY29tCg=='>Mail Me</a>
         or:
         
             where mailto:cj@welbornprod.com = bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQo=
             and cj@welbornprod.com = Y2pAd2VsYm9ybnByb2QuY29tCg==
             
-            <a class='wp-address' href="bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQo=">
+            <a class='wp-address' href='bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQo='>
                 Y2pAd2VsYm9ybnByb2QuY29tCg==
             </a>
     
@@ -25,6 +25,191 @@
 */
 
 var wptools = {
+    center_element : function (selector, usevertical) {
+        // first arg is css selector for elem.
+        // second arg (true/false) whether or not to center on vertical.
+        var screen_width = $(document).width();
+        var elem = $(selector);
+        var newx = -1;
+        var newy = -1;
+        if (elem) {
+            newx = (screen_width - elem.width()) / 2;
+            $(selector).css({'right': newx + 'px'}); 
+            if (usevertical) {
+                newy = (window.innerHeight / 2) - elem.height();
+                elem.css({'top': newy + 'px'});
+            }
+        }
+        return {'x': newx, 'y': newy};
+    },
+        
+    csrf_safe_method : function (method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    },
+
+    elem_is_hidden : function(selector_) {
+        /* determines if element is hidden 
+         * by checking the display property */
+        var box_display = $(selector_).css('display');
+        return (box_display === '' || box_display == 'none');
+    },
+                    
+    getid : function (id_) {
+        /* convenience function (shorter than the document method.) */
+        return document.getElementById(id_);
+    },
+        
+    is_address : function (input_) {
+        /* checks for email address */
+        var regex_ = /^[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
+        return input_.search(regex_) > -1;
+    },
+
+    is_emptystr : function (s) {
+        if (s) {
+            // we have a string or something. Try replacing whitespace.
+            if (s.replace && (s.replace(/\s/g, '') === '')) {
+                // It was an empty string (whitespace doesn't count)
+                return true;
+            }
+        } else {
+            if (!s) {
+                // Falsey values pass as empty string.
+                return true;
+            }
+        }
+        // Was not empty string, or it is some other truthy object.
+        return false;
+    },
+
+    is_mailto : function (input_) {
+        /* checks for mailto: email address */
+        var regex_ = /^mailto:[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
+        return input_.search(regex_) > -1;
+    },
+
+    has_localstorage : function () {
+        /* Determine if the current browser supports localStorage. */
+        try {
+            return ('localStorage' in window) && (window['localStorage'] != null);
+        } catch (e) {
+            return false;
+        }
+    },
+
+    hide_debug : function () {
+        /* hides the debug box */
+        this.set_display('.debug-box', 'none');
+        $('.debug-button-text').text('show debug');
+    },
+
+    navigateto : function (url) {
+        window.location.href = url;
+    },
+        
+	pre_ajax : function () {
+		// setup ajax
+		$.ajaxSettings.traditional = true;
+		$.ajaxSetup(wptools.pre_ajax_setup());
+	},
+
+	pre_ajax_setup : function () { 
+		// info dict needed for .ajaxSetup()
+		var csrftoken = $.cookie('csrftoken');
+		data = {crossDomain: false,
+				beforeSend: function(xhr, settings) {
+					if (!wptools.csrf_safe_method(settings.type)) {
+                        xhr.setRequestHeader('X-CSRFToken', csrftoken);
+					}
+				}
+		};
+		
+		return data;
+	},
+
+	scroll_element : function (selector, toppos) {
+		if (!toppos) { toppos = 0; }
+		var el=$(selector);
+		var elpos=el.offset().top;
+		$(window).scroll(function () {
+			if (!wptools.element_is_hidden(selector)) {
+				var y=$(this).scrollTop();
+				if(y<elpos){el.stop().animate({'top': toppos},500);}
+				else{el.stop().animate({'top':y-elpos},500);}
+			}
+		});
+	},
+		
+    send_post : function (url, data_dict, done_func) {
+        // setup ajax
+        $.ajaxSetup(wptools.pre_ajax_setup());
+        // Submit data to url, invoke done_func() on done.
+        $.post(url, data_dict).done(done_func);
+    },
+
+    set_display : function (selector_, display_property) {
+        /* sets display property for element */
+        // uses first element in query, so choose selectors wisely.
+        $(selector_).css('display', display_property);
+    },
+            
+    show_debug : function () {
+        /* displays the debug box */
+        this.set_display('.debug-box', 'block');
+        $('.debug-button-text').text('hide debug');
+    },
+
+    strdup : function (char_, count_ ) {
+        var s = '';
+        if (count_ && count_ > 0) {
+            for (i=0; i < count_; i++) {
+                s = s + char_;
+            }
+        }
+        return s;
+    },
+
+    toggle_debug : function () {
+        /* toggles debug-box between shown and hidden. */
+        if (this.elem_is_hidden('.debug-box')) {
+            this.show_debug();
+        } else {
+            this.hide_debug();
+        }
+
+    },
+
+    trim_whitespace : function (s) {
+        /* Trim all whitespace from a string. */
+        if (s.replace) {
+            return s.replace(/\s/g, '');
+        }
+        // not a string.
+        return s
+    },
+        
+	vertical_element : function (selector, toppos) {
+		if (!toppos) { toppos = 0; }
+		var elem = $(selector);
+		if (elem.length > 1) { 
+            elem = elem[0];
+        }
+		var y = $(this).scrollTop();
+		elem.css({'top': y + toppos + 'px' });
+	},
+		
+    wpaddress : function (input_) {
+        /* decodes base64 email and mailto if base64 is present, 
+         * otherwise returns original string */
+        var decoded_ = Base64.decode(input_).replace('\n', '');
+        if (this.is_address(decoded_) || this.is_mailto(decoded_)) {
+            return decoded_;
+        } else {
+            return input_;
+        }
+          },
+
     wpreveal : function (selector) {
         /* Reveals all base64 encoded mailto: and 
          * email addresses with selector */
@@ -50,188 +235,16 @@ var wptools = {
             }
         }
         return true;
-    },
+    }
 
-    wpaddress : function (input_) {
-        /* decodes base64 email and mailto if base64 is present, 
-         * otherwise returns original string */
-        var decoded_ = Base64.decode(input_).replace('\n', '');
-        if (this.is_address(decoded_) || this.is_mailto(decoded_)) {
-            return decoded_;
-        } else {
-            return input_;
-        }
-          },
-
-    is_mailto : function (input_) {
-        /* checks for mailto: email address */
-        var regex_ = /^mailto:[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
-        return input_.search(regex_) > -1;
-    },
-
-    is_address : function (input_) {
-        /* checks for email address */
-        var regex_ = /^[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
-        return input_.search(regex_) > -1;
-    },
-
-    is_emptystr : function (s) {
-        if (s) {
-            // we have a string or something. Try replacing whitespace.
-            if (s.replace && (s.replace(/\s/g, '') === '')) {
-                // It was an empty string (whitespace doesn't count)
-                return true;
-            }
-        } else {
-            if (!s) {
-                // Falsey values pass as empty string.
-                return true;
-            }
-        }
-        // Was not empty string, or it is some other truthy object.
-        return false;
-    },
-
-    set_display : function (selector_, display_property) {
-        /* sets display property for element */
-        // uses first element in query, so choose selectors wisely.
-        $(selector_).css("display", display_property);
-    },
-            
-    show_debug : function () {
-        /* displays the debug box */
-        this.set_display('.debug-box', 'block');
-        $('.debug-button-text').text('hide debug');
-    },
-
-    hide_debug : function () {
-        /* hides the debug box */
-        this.set_display('.debug-box', 'none');
-        $('.debug-button-text').text('show debug');
-    },
-
-    elem_is_hidden : function(selector_) {
-        /* determines if element is hidden 
-         * by checking the display property */
-        var box_display = $(selector_).css("display");
-        return (box_display === '' || box_display == 'none');
-    },
-                    
-    toggle_debug : function () {
-        /* toggles debug-box between shown and hidden. */
-        if (this.elem_is_hidden('.debug-box')) {
-            this.show_debug();
-        } else {
-            this.hide_debug();
-        }
-
-    },
-
-    trim_whitespace : function (s) {
-        /* Trim all whitespace from a string. */
-        if (s.replace) {
-            return s.replace(/\s/g, '');
-        }
-        // not a string.
-        return s
-    },
-        
-    center_element : function (selector, usevertical) {
-        // first arg is css selector for elem.
-        // second arg (true/false) whether or not to center on vertical.
-        var screen_width = $(document).width();
-        var elem = $(selector);
-        var newx = -1;
-        var newy = -1;
-        if (elem) {
-            newx = (screen_width - elem.width()) / 2;
-            $(selector).css({"right": newx + "px"}); 
-            if (usevertical) {
-                newy = (window.innerHeight / 2) - elem.height();
-                elem.css({'top': newy + 'px'});
-            }
-        }
-        return {'x': newx, 'y': newy};
-    },
-        
-    getid : function (id_) {
-        /* convenience function (shorter than the document method.) */
-        return document.getElementById(id_);
-    },
-        
-    strdup : function (char_, count_ ) {
-        var s = "";
-        if (count_ && count_ > 0) {
-            for (i=0; i < count_; i++) {
-                s = s + char_;
-            }
-        }
-        return s;
-    },
-
-    csrf_safe_method : function (method) {
-		// these HTTP methods do not require CSRF protection
-		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-	},
-
-	pre_ajax : function () {
-		// setup ajax
-		$.ajaxSettings.traditional = true;
-		$.ajaxSetup(wptools.pre_ajax_setup());
-	},
-
-	send_post : function (url, data_dict, done_func) {
-		// setup ajax
-		$.ajaxSetup(wptools.pre_ajax_setup());
-		// Submit data to url, invoke done_func() on done.
-		$.post(url, data_dict).done(done_func);
-	},
-
-	pre_ajax_setup : function () { 
-		// info dict needed for .ajaxSetup()
-		var csrftoken = $.cookie('csrftoken');
-		data = {crossDomain: false,
-				beforeSend: function(xhr, settings) {
-					if (!wptools.csrf_safe_method(settings.type)) {
-                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
-					}
-				}
-		};
-		
-		return data;
-	},
-
-	navigateto : function (url) {
-		window.location.href = url;
-	},
-		
-	scroll_element : function (selector, toppos) {
-		if (!toppos) { toppos = 0; }
-		var el=$(selector);
-		var elpos=el.offset().top;
-		$(window).scroll(function () {
-			if (!wptools.element_is_hidden(selector)) {
-				var y=$(this).scrollTop();
-				if(y<elpos){el.stop().animate({'top': toppos},500);}
-				else{el.stop().animate({'top':y-elpos},500);}
-			}
-		});
-	},
-		
-	vertical_element : function (selector, toppos) {
-		if (!toppos) { toppos = 0; }
-		var elem = $(selector);
-		if (elem.length > 1) { 
-            elem = elem[0];
-        }
-		var y = $(this).scrollTop();
-		elem.css({'top': y + toppos + 'px' });
-	}
-		
         
 };
 
-/* Various tools for Misc section */
+/* Various tools for Misc section
+    ..instead of adding yet another file for this small amount of code.
+      it is kept here in the 'global' utilities. If the code ever grows
+      beyond these few things it may be moved to its own file in misc/static/js
+*/
 var misctools = {
     fixLongDescBtn: function (alias) {
         var miscbtnid = '#misclongdescbtn-' + alias;
@@ -245,19 +258,20 @@ var misctools = {
         }
     },
         
+    submitMisc: function (f) {
+        $('#viewer-filename').val(f);
+        $('#file-viewer').submit();
+    },
+
     toggleLongDesc: function (alias) {
-        var longdescid = "#misclongdesc-" + alias;
+        var longdescid = '#misclongdesc-' + alias;
         var longdesc = $(longdescid);
         longdesc.slideToggle();
         this.fixLongDescBtn(alias);
-    },
-        
-    submitMisc: function (f) {
-        $("#viewer-filename").val(f);
-        $("#file-viewer").submit();
-    },
+    }
+};
 
-};    
+
 /**
 *
 *  Base64 encode / decode
@@ -267,11 +281,11 @@ var misctools = {
 var Base64 = {
  
     // private property
-    _keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+    _keyStr : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
  
     // public method for encoding
     encode : function (input) {
-        var output = "";
+        var output = '';
         var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
         var i = 0;
  
@@ -305,12 +319,12 @@ var Base64 = {
  
     // public method for decoding
     decode : function (input) {
-        var output = "";
+        var output = '';
         var chr1, chr2, chr3;
         var enc1, enc2, enc3, enc4;
         var i = 0;
 
-        input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+        input = input.replace(/[^A-Za-z0-9\+\/\=]/g, '');
 
         while (i < input.length) {
             enc1 = this._keyStr.indexOf(input.charAt(i++));
@@ -338,8 +352,8 @@ var Base64 = {
  
     // private method for UTF-8 encoding
     _utf8_encode : function (string) {
-        string = string.replace(/\r\n/g,"\n");
-        var utftext = "";
+        string = string.replace(/\r\n/g,'\n');
+        var utftext = '';
 
         for (var n = 0; n < string.length; n++) {
             var c = string.charCodeAt(n);
@@ -364,7 +378,7 @@ var Base64 = {
  
     // private method for UTF-8 decoding
     _utf8_decode : function (utftext) {
-        var string = "";
+        var string = '';
         var i = 0;
         var c = 0;
         var c1 = 0;
@@ -406,13 +420,13 @@ var wprotator_settings = {
 	auto_start:true,
 	delay:5000,
 	play_once:false,
-	transition:"fade",
+	transition:'fade',
 	transition_speed:1000,
 	auto_center:true,
-	easing:"easeInBack",
-	cpanel_position:"inside",
-	cpanel_align:"BL",
-	timer_align:"top",
+	easing:'easeInBack',
+	cpanel_position:'inside',
+	cpanel_align:'BL',
+	timer_align:'top',
 	display_thumbs:true,
 	display_dbuttons:true,
 	display_playbutton:true,
@@ -424,9 +438,9 @@ var wprotator_settings = {
 	mouseover_pause:true,
 	cpanel_mouseover:true,
 	text_mouseover:false,
-	text_effect:"fade",
+	text_effect:'fade',
 	text_sync:false,
-	tooltip_type:"none",
+	tooltip_type:'none',
 	shuffle:false,
 	block_size:75,
 	vert_size:55,
