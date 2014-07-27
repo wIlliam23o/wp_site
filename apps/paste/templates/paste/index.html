@@ -36,7 +36,7 @@
         </p>
     </div>
 {% endblock %}
-<!-- File browser menu -->
+<!-- Reply browser menu -->
 {% block verticalmenu %}
     <div id="reply-menu" class="vertical-menu">
         {% if replies %}
@@ -45,7 +45,7 @@
                     {% if replycount == 1 %}
                         Reply:
                     {% else %}
-                        Replies: 
+                        Replies:
                     {% endif %}
                     {# Show actual reply count, but only link to the latest. #}
                     <div class='vertical-menu-reply-count'>
@@ -100,7 +100,11 @@
                     Edit this paste, or start all over.
                 {% endif %}
             {% else %}
-                This paste will be deleted in about one day.
+                {% if paste.onhold %}
+                    This paste is on hold.
+                {% else %}
+                    This paste will be deleted in about one day.
+                {% endif %}
             {% endif %}
         </div>
     </div>
@@ -115,7 +119,7 @@
                             Title:
                         </div>
                         <input id='paste-title-entry' type='text' class='input-text' value='{% if replyto.title %}re: {{ replyto.title }}{% endif %}' title='Optional title for this paste.'/>
-                        
+
                     {% else %}
                         {# Existing paste #}
                         <span class='paste-title-label'>
@@ -259,9 +263,20 @@
                     </div>
                 </a>
 
+                {# Just an experiment, not really needed with Ace Editor #}
+                {# ..like it is on some sites                            #}
+                {# (where reading a long line is impossible)             #}
+                {#{% if paste|needs_line_breaks %}#}
+                {#    <!-- Fix Linebreaks -->#}
+                {#    <a href='#' onclick='javascript: wppaste.fix_line_breaks();'>#}
+                {#        <div class='wpbutton paste-button' title='Insert line breaks into this paste..'>#}
+                {#            Fix Line Breaks#}
+                {#        </div>#}
+                {#    </a>#}
+                {#{% endif %}#}
             </div>
         </div>
-        
+
         <!-- Ace Editor content for pastes -->
         <div id='paste-content'>
         </div>
@@ -282,7 +297,7 @@
             <input id='replyto-id' type='hidden' value='{{ replyto.paste_id }}'/>
         {% endif %}
 
-        <!-- Hidden paste-content. -->       
+        <!-- Hidden paste-content. -->
         {# paste content is used if available, otherwise replyto content #}
         {# no line breaks/tabs, so no unwanted blanks are introduced. #}
         <pre id='hidden-content' style='display: none;'>{% if paste.content %}{{ paste.content }}{% elif replyto.content %}{{ replyto.content }}{% endif %}</pre>
@@ -293,11 +308,11 @@
 
         var doreadonly = {% if paste %}true{% else %}false{% endif %};
 
-        // setup basic settings for ace.
+        {# setup basic settings for ace. #}
         setup_ace(doreadonly);
-        
 
-        // setup individual-paste-related settings.
+
+        {# setup individual-paste-related settings. #}
         {% if paste.language %}
             wppaste.set_selected_mode('{{ paste.language }}');
             wppaste.load_paste_settings({'nolangset': true});
@@ -305,31 +320,36 @@
             wppaste.set_selected_mode('{{ replyto.language }}');
             wppaste.load_paste_settings({'nolangset': true});
         {% else %}
-            // Try loading cookie info to set ace mode.
+            {# Try loading cookie info to set ace mode. #}
             wppaste.load_paste_settings();
         {% endif %}
 
         {% if paste.content or replyto.content %}
+
             {# Load paste content.. #}
             var content = $('#hidden-content').text();
             wp_content.getSession().setValue(content);
+
         {% else %}
+
             {# Clear editor #}
             wp_content.getSession().setValue('');
         {% endif %}
-
     </script>
 {% endblock content %}
 
 {% block bodyend %}
     <script type="text/javascript">
-        
+
         $(document).ready( function () {
-            
-            // position floater
+            {# position floater #}
             wptools.center_element('#floater', true);
-            // setup ajax
+
+            {# setup ajax #}
             wptools.pre_ajax();
+
+            {# Scroll to content #}
+            wptools.scroll_to_anchor('#paste-content-box');
 
         });
 
@@ -337,6 +357,6 @@
             wptools.center_element('#floater', true);
         };
 
-        
+
     </script>
 {% endblock %}

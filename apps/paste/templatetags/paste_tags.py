@@ -12,6 +12,7 @@ _log = logger('apps.paste.paste_tags').log
 register = template.Library()
 
 
+@register.filter
 def child_count(paste):
     """ Get count of children for this paste. """
     if paste and hasattr(paste, 'children'):
@@ -20,6 +21,15 @@ def child_count(paste):
     return 0
 
 
+@register.filter
+def needs_line_breaks(paste):
+    """ Return true if this pastes content is long and has no line breaks. """
+    if (not paste) or (not paste.content):
+        return False
+    return (len(max(paste.content.split('\n'))) > 80)
+
+
+@register.filter
 def paste_children(paste):
     """ Makes paste.children available in the templates. """
     c = [p for
@@ -27,6 +37,7 @@ def paste_children(paste):
     return c
 
 
+@register.filter
 def paste_time(date, shortdate=False):
     """ Parse a date, and return human readable time-elapsed since the date.
         If it has been more than 1 day, the full Weekday, Month, Day, Time,
@@ -64,20 +75,10 @@ def paste_time(date, shortdate=False):
     return '{} ago'.format(since)
 
 
+@register.filter
 def trim_reply_title(title):
     """ Make sure a paste title is trimmed to fit in the vertical menu. """
 
     if title and len(title) > 20:
         return '{}...'.format(title[:20])
     return title
-
-registered_filters = (
-    child_count,
-    paste_children,
-    paste_time,
-    trim_reply_title,
-)
-
-# register all filters in the registered tuple.
-for filter_ in registered_filters:
-    register.filter(filter_.__name__, filter_)

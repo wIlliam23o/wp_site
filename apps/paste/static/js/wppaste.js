@@ -72,6 +72,21 @@ var wppaste = {
         $('#themeselect').append(themefrag);
     },
 
+    fix_line_breaks : function (size) {
+        /* Fix line breaks in current paste content.
+            Line breaks are added to lines longer than 80 chars.
+            This will break code formatting! (meant to be used on data/text)
+        */
+        var content = wp_content.getValue();
+        if (!content) {
+            return false;
+        }
+        var chunksize = size || 80;
+        var chunks = wppaste.split_string(content, chunksize);
+        wp_content.getSession().setValue(chunks.join('\n'));
+        return true;
+    },
+
     get_paste_author : function () {
         /* not implemented yet. */
         return $('#paste-author-entry').val();
@@ -185,7 +200,7 @@ var wppaste = {
     },
 
     set_selected_mode : function (name) {
-        /* set selected mode by name 
+        /* set selected mode by name
             Arguments:
                 name  : Name of mode to select.
         */
@@ -235,6 +250,11 @@ var wppaste = {
         return false;
     },
 
+    split_string: function (string, size) {
+        var re = new RegExp('.{1,' + size + '}', 'g');
+        return string.match(re);
+    },
+
     submit_paste : function (existingdata) {
         // TODO: Think about, and implement, how a paste should be submitted,
         //       What kind of response, or redirect there should be.
@@ -272,7 +292,7 @@ var wppaste = {
 
         // change the loading message.
         update_loading_msg('<span>Submitting paste...</span>');
-        
+
         $.ajax({
             type: 'post',
             contentType: 'application/json',
@@ -283,7 +303,7 @@ var wppaste = {
                 console.log('failure: ' + status);
             },
             complete: function (xhr, status) {
-                            
+
                 // handle errors...
                 if (status == 'error') {
                     // TODO: Handle errors. :)
@@ -334,7 +354,7 @@ var wppaste = {
 
             Returns updated JSON (Does not modify the original.)
         */
-        
+
         if (!jsondata) { return JSON.stringify(newdata) || ''; }
         else if (!newdata) { return jsondata;}
 
@@ -399,7 +419,7 @@ var wppaste = {
                 if (newobj[newkey]) {
                     // new key is truthy, update the old one.
                     tmpobj[newkey] = newobj[newkey]
-                } 
+                }
                 // otherwise the old key/value is kept.
             }
         }
@@ -423,7 +443,7 @@ function setup_ace (doreadonly) {
     wp_content.getSession().setUseSoftTabs(true);
     // ensure read-only access to content
     if (doreadonly) {
-        wp_content.setReadOnly(true);        
+        wp_content.setReadOnly(true);
     }
     // Get mode/theme list for ace. We will be using them later.
     wp_modelist = ace.require('ace/ext/modelist');
@@ -439,7 +459,7 @@ function update_loading_msg (message) {
     var floater = $('#floater');
     var scrollpos = $(this).scrollTop();
     //floater.css({'top': scrollpos + 'px'});
-    
+
     $('#floater').fadeIn();
 }
 
