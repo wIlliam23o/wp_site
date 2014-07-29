@@ -1,5 +1,5 @@
 '''django_startup.py
-    
+
     Ensures that django environment is ready to be used by other scripts.
     Whether its from the command-line or from the running django app.
     Created on Nov 1, 2013
@@ -25,7 +25,7 @@ initialized = False
 def get_root_parent(scriptpath):
     """ Retrieves the parent dir for the whole project.
         This is a good place to start building relative
-        paths.
+        paths. It has to do this without django.conf.settings.BASE_DIR.
     """
 
     if not '/' in scriptpath:
@@ -48,7 +48,7 @@ def get_root_parent(scriptpath):
         parent = '/'.join(parts[:parts.index('wp_site')])
     elif parts.count('wp_site') > 1:
         parent = '/'.join(parts[:parts.index('wp_site') + 1])
-    
+
     return parent
 
 
@@ -56,7 +56,7 @@ def initialize_django():
     global project_dir, settings_dir, scripts_dir, initialized
 
     # Set environment variable (if not set already.)
-    if not 'DJANGO_SETTINGS_MODULE' in os.environ.keys():
+    if not os.environ.get('DJANGO_SETTINGS_MODULE', False):
         os.environ['DJANGO_SETTINGS_MODULE'] = 'wp_main.settings'
 
     # Find first real sys.path (first is empty sometimes from cmdline)
@@ -81,7 +81,7 @@ def initialize_django():
         if not os.path.isdir(require_dir):
             print('\nUnable to find dir: {}'.format(require_dir))
             return False
-    
+
     # Insert paths for this project (if they aren't already in there)
     # Insert main path.
     if not project_dir in sys.path:
