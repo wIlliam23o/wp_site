@@ -41,7 +41,7 @@ _*Language/Libraries*_:
 
 **Python 3+**
 
-  <small>...just waiting for the right libraries before I switch to 3.</small>
+  <small>...this isn't 100% Python 2 compatible anymore.</small>
 
 **Django 1.5+**
 
@@ -57,9 +57,17 @@ _*Language/Libraries*_:
 
   <small>...currently looking for alternative methods.</small>
 
+**Django Extensions**
+
+  <small>...several extra tools to use with Django.
+
 **Pygments**
 
   <small>...used for source code highlighting</small>
+
+**Twython**
+
+  <small>...uses the Twitter API to retrieve latest tweets.</small>
 
 
 **...various other standard libraries.**
