@@ -256,14 +256,7 @@ var wppaste = {
     },
 
     submit_paste : function (existingdata) {
-        // TODO: Think about, and implement, how a paste should be submitted,
-        //       What kind of response, or redirect there should be.
-        //       How to handle reply-tos/forks.
-        //       Whether or not the paste is private/public
-        //       Language preference.
-
         // JSON data to send...
-        // TODO: Build suitable data for submitting a paste...
         if (existingdata) {
             var pastedata = existingdata;
         } else {
@@ -277,7 +270,7 @@ var wppaste = {
         var replyto = $('#replyto-id').attr('value');
         pastedata['replyto'] = replyto
 
-        // TODO: include 'onhold', make author textbox.
+        // TODO: include 'onhold' on frontend.
 
         // Parse some of the user input.
         if (wptools.is_emptystr(pastedata.content)) {
@@ -306,19 +299,24 @@ var wppaste = {
 
                 // handle errors...
                 if (status == 'error') {
-                    // TODO: Handle errors. :)
+                    // TODO: Handle server errors.
+                    // TODO: App errors are handled, but what if the app doesn't
+                    // TODO: ..even get to talk to the client? :)
                     console.log('wp-error response: ' + xhr.responseText);
+                    if (xhr.responseText) {
+                        // This will probably be an ugly message.
+                        show_error_msg('<span class="warning-msg">' + xhr.responseText + '</span>');
+                    }
                 } else {
                     // Paste was successfully submitted.
-                    // TODO: Decide what to do afterwards :)
                     var respdata = JSON.parse(xhr.responseText);
 
                     if (respdata.status && respdata.status === 'error') {
-                        // Server sent an error msg back.
+                        // App sent an error msg back.
                         show_error_msg('<span class="warning-msg">' + respdata.message + '</span>');
                         console.log('error: ' + respdata.message);
                     } else {
-                        // Server sent back a success.
+                        // App sent back a success.
                         wppaste.submit_success(respdata);
                         // done loading success
                         $('#floater').fadeOut();
