@@ -33,6 +33,7 @@ try:
     from twython import Twython
 except ImportError as eximp:
     _log.error('Cannot load Twython! Tweets will not be available.')
+    _log.error('Twython error was: {}'.format(eximp))
     available = False
 
 APIKEYFILE = os.path.join(settings.BASE_DIR, 'secretapikeys.json')
@@ -81,7 +82,7 @@ def get_tweets(screen_name, count=1):
     if twitter is None:
         try:
             twitter = Twython(twitterkeys['key'], twitterkeys['secret'])
-            auth = twitter.get_authorization_tokens()
+            auth = twitter.get_authentication_tokens()
         except Exception as ex:
             _log.error('Error authorizing with twitter:\n{}'.format(ex))
             return {}

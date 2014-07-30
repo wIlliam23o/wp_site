@@ -39,14 +39,14 @@ def convert_pblock(pblock):
 def index(request):
     """ serve up main page (home, index, landing) """
     # Get latest tweet (if available.)
-    latesttweet = tweets.get_tweets('cjwelborn', count=1)
+    latest_tweet = tweets.get_tweets('cjwelborn', count=1)
     # render main page
     context = {
         'request': request,
         'blog_post': htools.get_latest_blog(),
         'featured_project': htools.get_featured_project(),
         'featured_app': htools.get_featured_app(),
-        'latest_tweet': latesttweet,
+        'latest_tweet': latest_tweet[0] if latest_tweet else None,
         'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('home/index.html', context)

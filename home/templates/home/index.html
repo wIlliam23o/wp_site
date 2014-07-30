@@ -32,7 +32,7 @@
 				<div id='test-site-box'>
 					<span style='color: #B90000; font-size: 1.2em;'>
 						You are viewing the test-site!
-						<br/> 
+						<br/>
 						I cannot be held responsible for anything bad that may happen.
 					</span>
 					<br/>
@@ -41,20 +41,20 @@
 					</span>
 				</div>
 			{% endif %}
-			
+
 			<!-- Welcome Message -->
 		    Welcome to the <span class='I'>Welborn Productions</span> site.<br>
 		    This is a place for my projects, code snippets, and whatever else I think
-		    might be useful. 
+		    might be useful.
 		</p>
 		<p>
 			Feel free to browse my <a href='/projects'>projects</a>,
 			<a href='/apps'>apps</a>,
 			or <a href='/misc'>miscellaneous stuff</a>,
-			and for the latest information my <a href='/blog'>blog</a> is here.		
+			and for the latest information my <a href='/blog'>blog</a> is here.
 		</p>
 	</div>
-	
+
 	{% if featured_project %}
 	<!-- Main Featured Box: Project -->
 		<div class='featured-main-box'>
@@ -66,7 +66,7 @@
 				<!-- Project Header (Title, Version) -->
 				<div class='featured-header-box'>
 					<a href='/projects/{{ featured_project.alias }}'>
-						<span class='header featured-name'>{{ featured_project.name }}</span>						
+						<span class='header featured-name'>{{ featured_project.name }}</span>
 					</a>
 					<br/>
 					<span class='featured-version'>version {{ featured_project.version }}</span>
@@ -119,7 +119,7 @@
 				<!-- Blog Post Header (Title, Date) -->
 				<div class='featured-header-box'>
 					<a href='/blog/view/{{ blog_post.slug }}'>
-						<span class='header featured-name'>{{ blog_post.title }}</span>						
+						<span class='header featured-name'>{{ blog_post.title }}</span>
 					</a>
 					<br/>
 					<span class='featured-version'>{{ blog_post.posted }}</span>
@@ -148,13 +148,47 @@
 			</div>
 		</div>
 	{% endif %}
+	<!-- Latest Tweet -->
+	{% if latest_tweet %}
+		<div class='featured-main-box'>
+			<div class='title-box'>
+				<h3 class='title'>
+					Latest Tweet
+				</h3>
+			</div>
+			<div class='featured-item-container'>
+				<div class='tweet-box'>
+					{% if latest_tweet.user.profile_image_url %}
+						<div class='tweet-profile-image'>
+							<img id='tweet-home-profile-img' src='{{ latest_tweet.user.profile_image_url }}'>
+						</div>
+					{% endif %}
+					{% if latest_tweet.user.screen_name %}
+						<div class='tweet-screen-name'>
+							<a href='http://twitter.com/CjWelborn' target='_blank'>
+								{{ latest_tweet.user.screen_name }}
+							</a>
+						</div>
+					{% endif %}
+					{% if latest_tweet.text %}
+						<div class='tweet-text'>
+							{{ latest_tweet.text }}
+						</div>
+					{% endif %}
+					{# TODO: Add entities.media.media_url to get photos. #}
+					{# TODO: Make a parse_tweet filter to render tweets to html #}
+				</div>
+			</div>
+		</div>
+	{% endif %}
 {% endblock %}
 
 <!-- Insert before closing BODY -->
 {% block bodyend %}
-	{% if request|is_test_site %}
-		<script type='text/javascript'>
+	<script type='text/javascript'>
+		{# Show the 'test site' warning #}
+		{% if request|is_test_site %}
 			setTimeout( function () { $('#test-site-box').fadeOut(500); }, 7000);
-		</script>
-	{% endif %}
+		{% endif %}
+	</script>
 {% endblock %}
