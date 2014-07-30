@@ -12,6 +12,9 @@
    start date: May 25, 2013
 '''
 
+# TODO: Ditch wpstats.py for a stats library. Use wpstats as a cmdline tool only.
+# TODO: New wpstats-lib will be for using with template-based views.
+
 import sys
 
 NAME = 'WpStats'
