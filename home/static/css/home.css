@@ -1,6 +1,4 @@
 /* -------------------------- home.css -------------------------- */
-/* welcome message */
-/* container for 'Featured Project/Latest Blog */
 .featured-main-box, .home-welcome-box {
   padding-left: 40px;
   padding-right: 40px;
@@ -8,25 +6,33 @@
   margin-top: 10px;
   margin: 15px;
   position: relative;
-  border-radius: 5px;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
   border-color: rgba(202, 217, 224, 0.5);
   border-style: solid;
   border-width: 1px;
+  -webkit-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  -moz-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  -ms-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  -o-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
   box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
   background: white; }
 
-/* container for feature/blog entry/project */
 .featured-item-container {
   margin: 15px;
   padding: 10px;
   background-color: #fafafa;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
   box-shadow: #bac2c7 0px 0px 15px;
   text-align: left; }
 
-/* Header box with name/title version/date*/
 .featured-header-box {
   text-align: left;
   width: 100%; }
@@ -42,11 +48,63 @@
   text-align: right;
   padding-left: 0%; }
 
-/* box holding description/body */
 .featured-desc {
   margin-top: 10px;
   padding: 5px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -o-border-radius: 10px;
   border-radius: 10px;
   border-color: rgba(202, 217, 224, 0.5);
   border-style: solid;
   border-width: 2px; }
+
+.tweet-box {
+  padding: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px; }
+
+.tweet-text {
+  font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
+  font-size: 1em;
+  padding: 5px;
+  margin-top: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(202, 217, 224, 0.5); }
+
+.tweet-screen-name, .tweet-screen-name a {
+  display: inline-block;
+  position: relative;
+  font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
+  font-size: 1.2em;
+  color: #26a1f4;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  vertical-align: super; }
+  .tweet-screen-name a:before {
+    content: '@';
+    color: #919191; }
+
+.tweet-profile-image {
+  display: inline-block; }
+  .tweet-profile-image img {
+    border-width: 0px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+    border-radius: 5px;
+    -webkit-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
+    -ms-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
+    -o-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
+    box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4); }
