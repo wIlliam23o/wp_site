@@ -424,7 +424,7 @@ class PrintBlock(OrderedDict):
         # iterate through keys
         for keyname, values in self.items():
             if not values:
-                raise self.NoValueError("No values in: " + keyname)
+                raise self.NoValueError("No values in: {}".format(keyname))
 
             # Yield first line (because the key and value should be in the same line)
             keyformat_args = {'prepend_text': prepend_text,
