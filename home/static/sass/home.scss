@@ -114,3 +114,30 @@
     }
 }
 
+.tweet-photo-box {
+    display: block;
+    padding: 5px;
+    //border-width: 1px;
+    //border-style: solid;
+    //border-color: $bordermain;
+    @include border-radius(5px);
+    //@include box-shadow($shadowbox);
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
+
+
+    &:before {
+        display: block;
+        content: 'Photo:';
+        color: $greylight;
+        margin-bottom: 5px;
+    }
+}
+
+.tweet-photo {
+    display: inline-block;
+    border-radius: 5px;
+}
+

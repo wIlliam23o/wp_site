@@ -1,7 +1,7 @@
 {% extends "home/main.html" %}
 {% load blogger_tags %}
 {% load wp_tags %}
-
+{% load tweet_tags %}
 {% block title %}- Home{% endblock %}
 
 {% block metainfo %}
@@ -172,7 +172,7 @@
 					{% endif %}
 					{% if latest_tweet.text %}
 						<div class='tweet-text'>
-							{{ latest_tweet.text }}
+							{{ latest_tweet|parse_tweet_html }}
 						</div>
 					{% endif %}
 					{# TODO: Add entities.media.media_url to get photos. #}
