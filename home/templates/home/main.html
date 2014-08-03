@@ -201,7 +201,9 @@
 			{% if request|is_test_site and not request.user.is_staff %}
 			    <!-- Show no access msg for non-admins on test site. -->
 			    <div class='alert'>
-			    	<span class='alert-message'>Permission Denied</span>
+			    	<span class='alert-message'>
+			    		Permission Denied{% if request.user %}: {{ request.user.username }}{% endif %}
+			    	</span>
 			    </div>
 			{% else %}
 			    <!-- Alert area built based on alert_content or alert_message. -->
