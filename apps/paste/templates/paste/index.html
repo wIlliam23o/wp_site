@@ -188,6 +188,15 @@
                         <input id='paste-private-opt' type='checkbox' {% if replyto and replyto.private %}checked='checked' {% endif %}/>
 
                     </div>
+                    {# Show the 'onhold' option for registered users. except no one is registered but me! :) #}
+                    {% if request|is_authenticated %}
+                        <div class='paste-onhold-box' title='Check this box to mark this paste as "on hold".'>
+                            <div class='paste-onhold-label'>
+                                On Hold:
+                            </div>
+                            <input id='paste-onhold-opt' type='checkbox' {% if paste and paste.onhold %}checked='checked'{% endif %}/>
+                        </div>
+                    {% endif %}
                 {% endif %}
                 <div class='paste-replyto-box' title='This paste is a reply to another paste (id: {{ replyto.paste_id }}).'>
                     {% if replyto %}
@@ -264,18 +273,6 @@
                         View Top
                     </div>
                 </a>
-
-                {# Just an experiment, not really needed with Ace Editor #}
-                {# ..like it is on some sites                            #}
-                {# (where reading a long line is impossible)             #}
-                {#{% if paste|needs_line_breaks %}#}
-                {#    <!-- Fix Linebreaks -->#}
-                {#    <a href='#' onclick='javascript: wppaste.fix_line_breaks();'>#}
-                {#        <div class='wpbutton paste-button' title='Insert line breaks into this paste..'>#}
-                {#            Fix Line Breaks#}
-                {#        </div>#}
-                {#    </a>#}
-                {#{% endif %}#}
             </div>
         </div>
 
@@ -327,14 +324,12 @@
         {% endif %}
 
         {% if paste.content or replyto.content %}
-
-            {# Load paste content.. #}
+            {# ---- Load paste content.. ---- #}
             var content = $('#hidden-content').text();
             wp_content.getSession().setValue(content);
-
         {% else %}
 
-            {# Clear editor #}
+            {# Clear editor, This is a new paste. #}
             wp_content.getSession().setValue('');
         {% endif %}
     </script>

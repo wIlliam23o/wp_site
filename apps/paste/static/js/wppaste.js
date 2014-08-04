@@ -110,6 +110,17 @@ var wppaste = {
         return $(selected).attr('val');
     },
 
+    get_selected_onhold : function () {
+        /* Get 'on hold' option selection. */
+        var chk = $('#paste-onhold-opt');
+        // This option is not always created. (only authenticated users see it)
+        if (chk.length) {
+            return $(chk).prop('checked');
+        } else {
+            return false;
+        }
+    },
+
     get_selected_private : function () {
         /* Get 'private' option selection. */
         var chk = $('#paste-private-opt');
@@ -220,6 +231,19 @@ var wppaste = {
         return false;
     },
 
+    set_selected_onhold : function (checked) {
+        /* set selected 'onhold' option.
+            Arguments:
+                checked : true/false, whether onhold opt is checked.
+        */
+        var chk = $('#paste-onhold-opt');
+        // This option is not always created. (only authenticated users see it)
+        if (chk.length) {
+            var boolval = checked || false;
+            $(chk).attr({'checked': boolval});
+        }
+    },
+
     set_selected_private : function (checked) {
         /* set selected 'private' option.
             Arguments:
@@ -227,7 +251,7 @@ var wppaste = {
         */
 
         var chk = $('#paste-private-opt');
-        var boolval = checked || false
+        var boolval = checked || false;
         $(chk).attr({'checked': boolval});
 
     },
@@ -266,6 +290,7 @@ var wppaste = {
         pastedata['content'] = wp_content.getValue();
         pastedata['title'] = wppaste.get_paste_title();
         pastedata['language'] = wppaste.get_selected_lang();
+        pastedata['onhold'] = wppaste.get_selected_onhold();
         pastedata['private'] = wppaste.get_selected_private();
         var replyto = $('#replyto-id').attr('value');
         pastedata['replyto'] = replyto

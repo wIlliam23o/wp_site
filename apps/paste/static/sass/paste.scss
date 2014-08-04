@@ -122,7 +122,7 @@
     font-size: $fontnormal;
     font-weight: bold;
     color: $greymain;
-    padding-top: 2px;    
+    padding-top: 2px;
 }
 
 .paste-author-label {
@@ -130,7 +130,7 @@
 }
 
 .paste-private-box {
-  display: block;
+  display: inline-block;
 }
 
 .paste-private-label {
@@ -153,6 +153,18 @@
     vertical-align: top;
     padding-top: 5px;
 
+}
+
+.paste-onhold-box {
+    display: inline-block;
+}
+
+.paste-onhold-label {
+    @extend .paste-lang-label;
+}
+
+#paste-onhold-opt {
+    @extend #paste-private-opt;
 }
 
 .paste-date-box {
@@ -365,7 +377,7 @@
     font-family: $fontsnormal;
     font-weight: bold;
     font-size: $fontsmaller;
-    
+
     color: $bluemain;
 
     a {

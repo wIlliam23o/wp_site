@@ -71,7 +71,7 @@
 .paste-lang-box {
   display: inline-block; }
 
-.paste-lang-label, .paste-title-label, .paste-author-label, .paste-private-label, .paste-date-label, .paste-replyto-label, .paste-theme-label {
+.paste-lang-label, .paste-title-label, .paste-author-label, .paste-private-label, .paste-onhold-label, .paste-date-label, .paste-replyto-label, .paste-theme-label {
   font-size: 0.75em;
   display: inline-block;
   vertical-align: top;
@@ -97,9 +97,9 @@
   padding-top: 2px; }
 
 .paste-private-box {
-  display: block; }
+  display: inline-block; }
 
-#paste-private-opt {
+#paste-private-opt, #paste-onhold-opt {
   width: 15px;
   height: 15px;
   margin-left: 0px;
@@ -113,6 +113,9 @@
   font-weight: bold;
   vertical-align: top;
   padding-top: 5px; }
+
+.paste-onhold-box {
+  display: inline-block; }
 
 .paste-date-box, .replies-date-box {
   display: block; }

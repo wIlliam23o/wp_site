@@ -48,7 +48,7 @@ else:
 
 # Static/Media directories.
 MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
-    
+
 # main app (location of settings.py)
 MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
@@ -247,9 +247,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    # make requests available in templates...
-    #'django.core.context_processors.request',
 
     # django debug tools
     'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -273,7 +270,7 @@ INSTALLED_APPS = (
     # admin enabled:
     'django.contrib.admin',
     'django.contrib.admindocs',
-    
+
     # django debug tools (for test-site and local development)
     'debug_toolbar',
     'django_extensions',
@@ -292,7 +289,7 @@ INSTALLED_APPS = (
     'apps',  # handles urls for all sub-apps.
     'apps.phonewords',
     'apps.paste',
-    
+
 )
 
 # A sample logging configuration. The only tangible logging
@@ -309,7 +306,7 @@ LOGGING = {
         }
     }
 }
-    
+
 
 # Only turn error emails on with the remote server
 # They are driving me nuts when I'm expirimenting locally and DEBUG == False.

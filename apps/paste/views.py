@@ -67,7 +67,7 @@ def invalidate_submit(submitdata):
     content = submitdata.get('content', None)
     if not content:
         return 'Paste has no content.'
-    
+
     lang = submitdata.get('language', None)
     if (content == lastpaste.content) and (lang == lastpaste.language):
         return 'Same as last paste.'
@@ -188,6 +188,7 @@ def process_submit(submitdata, apisubmit=False):
 def submit_ajax(request):
     """ Handles ajax paste submits.
         Reads json data from request and handles accordingly.
+        These requests must come from the welbornprod site.
     """
     # Submits should always be ajax/POST.
     if not request.is_ajax():
@@ -196,11 +197,10 @@ def submit_ajax(request):
             remoteip = '<Unknown IP>'
         _log.error('Received non-ajax request from: {}'.format(remoteip))
         errormsgs = ['Invalid request.']
-        usermsg = ''.join([
-            'Try entering a valid url, ',
-            'or using the forms/buttons ',
-            'provided. -Cj',
-        ])
+        usermsg = ''.join((
+            'Try entering a valid url, or using the forms/buttons provided.',
+            ' -Cj'
+        ))
         return responses.error500(request, msgs=errormsgs, user_error=usermsg)
 
     # Get the request args for this submit (JSON only).
@@ -269,7 +269,7 @@ def view_index(request):
     if app:
         app.view_count += 1
         app.save()
-    
+
     # If the request has args pass it on down to view_paste()
     try:
         reqargs = request.REQUEST
