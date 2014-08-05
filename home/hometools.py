@@ -36,15 +36,27 @@ def get_featured_app():
         if the app isn't found, return None.
     """
 
-    appalias = homeconfig.featured_app_alias
     try:
-        app = wp_app.objects.get(alias=appalias)
+        app = homeconfig.featured_app
+        return app if app else get_latest_app()
     except Exception as ex:
-        _log.error('Unable to retrieve featured app: '
-                   '{}\n{}'.format(appalias, ex))
-        app = get_latest_app()
+        _log.error('Unable to retrieve featured app:\n{}'.format(ex))
+    return get_latest_app()
 
-    return app
+
+def get_featured_blog():
+    """ retrieve the featured blog post from home_config
+        as a wp_blog object.
+        if the post isn't set or can't be retrieved, the latest post is used.
+        returns None on ultimate failure.
+    """
+
+    try:
+        post = homeconfig.featured_blog
+        return post if post else get_latest_blog()
+    except Exception as ex:
+        _log.error('Unable to retrieve featured blog post:\n{}'.format(ex))
+        return get_latest_blog()
 
 
 def get_featured_project():
@@ -55,17 +67,14 @@ def get_featured_project():
         returns wp_project object.
     """
 
-    projalias = homeconfig.featured_project_alias
     try:
         # get featured project by alias.
-        proj = wp_project.objects.get(alias=projalias)
+        proj = homeconfig.featured_project
+        return proj if proj else get_latest_project()
     except Exception as ex:
         # bad alias?
-        _log.error('Unable to retrieve featured project: '
-                   '{}\n{}'.format(projalias, ex))
-        proj = get_latest_project()
-
-    return proj
+        _log.error('Unable to retrieve featured project:\n{}'.format(ex))
+    return get_latest_project()
 
 
 def get_latest_app():

@@ -540,6 +540,7 @@ def subtract(val, otherval=None):
 
 # tuple of basic (no arg) functions/filters to register from other modules.
 registered_filters = (
+    mark_safe,
     utilities.get_date,
     utilities.get_datetime,
     utilities.get_time,

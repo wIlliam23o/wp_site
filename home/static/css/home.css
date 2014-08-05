@@ -1,4 +1,10 @@
 /* -------------------------- home.css -------------------------- */
+.home-welcome-text {
+  margin-bottom: 10px; }
+
+.home-welcome-extra-msg {
+  margin-bottom: 10px; }
+
 .featured-main-box, .home-welcome-box {
   padding-left: 40px;
   padding-right: 40px;

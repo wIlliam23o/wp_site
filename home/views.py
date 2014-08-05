@@ -50,9 +50,10 @@ def index(request):
     # render main page
     context = {
         'request': request,
-        'blog_post': hometools.get_latest_blog(),
+        'featured_blog_post': hometools.get_featured_blog(),
         'featured_project': hometools.get_featured_project(),
         'featured_app': hometools.get_featured_app(),
+        'welcome_message': homeconfig.welcome_message,
         'latest_tweet': latest_tweet,
         'extra_style_link_list': [utilities.get_browser_style(request)],
     }

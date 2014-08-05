@@ -25,7 +25,7 @@
 {% block content %}
 	<div class='home-welcome-box'>
 	    <!-- Welcome Box -->
-		<p class='home-welcome-text'>
+		<div class='home-welcome-text'>
 			<!-- Test-Site warning -->
 			{% if request|is_test_site %}
 				<!-- test box is initially hidden, JS below will show it. -->
@@ -46,13 +46,20 @@
 		    Welcome to the <span class='I'>Welborn Productions</span> site.<br>
 		    This is a place for my projects, code snippets, and whatever else I think
 		    might be useful.
-		</p>
-		<p>
+
+		</div>
+		<div class='home-welcome-text'>
 			Feel free to browse my <a href='/projects'>projects</a>,
 			<a href='/apps'>apps</a>,
 			or <a href='/misc'>miscellaneous stuff</a>,
 			and for the latest information my <a href='/blog'>blog</a> is here.
-		</p>
+		</div>
+		<!-- Extra Welcome Message -->
+		{% if welcome_message %}
+			<div class='home-welcome-extra-msg'>
+				{{ welcome_message|mark_safe }}
+			</div>
+		{% endif %}
 	</div>
 
 	{% if featured_project %}
@@ -108,34 +115,34 @@
 		</div>
 	{% endif %}
 
-	{% if blog_post %}
+	{% if featured_blog_post %}
 	<!-- Main Featured Box: Blog Post -->
 		<div class='featured-main-box'>
 			<div class='title-box'>
-				<h3 class='title'>Latest Blog Post</h3>
+				<h3 class='title'>Featured Blog Post</h3>
 			</div>
 			<!-- Latest Blog Post Box -->
 			<div class='featured-item-container'>
 				<!-- Blog Post Header (Title, Date) -->
 				<div class='featured-header-box'>
 					<a href='/blog/view/{{ blog_post.slug }}'>
-						<span class='header featured-name'>{{ blog_post.title }}</span>
+						<span class='header featured-name'>{{ featured_blog_post.title }}</span>
 					</a>
 					<br/>
-					<span class='featured-version'>{{ blog_post.posted }}</span>
+					<span class='featured-version'>{{ featured_blog_post.posted }}</span>
 				</div>
 				<!-- Project Desc -->
 				<div class='featured-desc'>
 					<div class='desc'>
-						{{ blog_post|get_body_short }}
+						{{ featured_blog_post|get_body_short }}
 					</div>
 				</div>
 				<!-- Related Projects -->
-				{% if blog_post|get_projects %}
+				{% if featured_blog_post|get_projects %}
 					<div class='blog-related-projects-box-index'>
 						<span class='blog-related-projects-label'>related projects:&nbsp;</span>
 						<div class='blog-related-projects-list'>
-							{% for project in blog_post|get_projects %}
+							{% for project in featured_blog_post|get_projects %}
 								<div class='blog-related-project'>
 									<a href='/projects/{{ project.alias }}'>
 										<span>{{ project.name }}</span>
