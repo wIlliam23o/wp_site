@@ -16,7 +16,7 @@ import os.path  # @UnusedImport: os is used.
 
 # Home settings
 from .models import home_config
-homeconfig = home_config.objects.get()
+
 
 # Blog/Projects info
 from blogger.models import wp_blog
@@ -30,46 +30,52 @@ from wp_main.utilities import utilities
 _log = logger('home.tools').log
 
 
-def get_featured_app():
+def get_featured_app(config=None):
     """ retrieve the featured web app from home_config
         as a wp_app object.
         if the app isn't found, return None.
+        A prefetched home_config can be passed to cut down on sql queries.
     """
-
+    if config is None:
+        config = home_config.objects.get()
     try:
-        app = homeconfig.featured_app
+        app = config.featured_app
         return app if app else get_latest_app()
     except Exception as ex:
         _log.error('Unable to retrieve featured app:\n{}'.format(ex))
     return get_latest_app()
 
 
-def get_featured_blog():
+def get_featured_blog(config=None):
     """ retrieve the featured blog post from home_config
         as a wp_blog object.
         if the post isn't set or can't be retrieved, the latest post is used.
         returns None on ultimate failure.
+        A prefetched home_config can be passed to cut down on sql queries.
     """
-
+    if config is None:
+        config = home_config.objects.get()
     try:
-        post = homeconfig.featured_blog
+        post = config.featured_blog
         return post if post else get_latest_blog()
     except Exception as ex:
         _log.error('Unable to retrieve featured blog post:\n{}'.format(ex))
         return get_latest_blog()
 
 
-def get_featured_project():
+def get_featured_project(config=None):
     """ retrieve the featured project from home_config
         as a wp_project object.
         if the project isn't found, we will use the last published
         project.
         returns wp_project object.
+        A prefetched home_config can be passed to cut down on sql queries.
     """
-
+    if config is None:
+        config = home_config.objects.get()
     try:
         # get featured project by alias.
-        proj = homeconfig.featured_project
+        proj = config.featured_project
         return proj if proj else get_latest_project()
     except Exception as ex:
         # bad alias?

@@ -22,7 +22,6 @@ _log = logger("home").log
 # Home tools
 from home import hometools
 from home.models import home_config
-homeconfig = home_config.objects.get()
 
 
 def convert_line(line):
@@ -40,6 +39,9 @@ def convert_pblock(pblock):
 
 def index(request):
     """ serve up main page (home, index, landing) """
+    # Grab config on every request, to keep it fresh without restarting.
+    homeconfig = home_config.objects.get()
+
     # Get latest tweet (if available.)
     if homeconfig.show_latest_tweet:
         latest_tweets = tweets.get_tweets('cjwelborn', count=1)
@@ -50,9 +52,9 @@ def index(request):
     # render main page
     context = {
         'request': request,
-        'featured_blog_post': hometools.get_featured_blog(),
-        'featured_project': hometools.get_featured_project(),
-        'featured_app': hometools.get_featured_app(),
+        'featured_blog_post': hometools.get_featured_blog(homeconfig),
+        'featured_project': hometools.get_featured_project(homeconfig),
+        'featured_app': hometools.get_featured_app(homeconfig),
         'welcome_message': homeconfig.welcome_message,
         'latest_tweet': latest_tweet,
         'extra_style_link_list': [utilities.get_browser_style(request)],
