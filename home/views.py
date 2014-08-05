@@ -20,7 +20,9 @@ from wp_main.utilities.wp_logging import logger
 _log = logger("home").log
 # @todo: make log_context() so context keys/values can be passed to logging!
 # Home tools
-from home import hometools as htools
+from home import hometools
+from home.models import home_config
+homeconfig = home_config.objects.get()
 
 
 def convert_line(line):
@@ -39,14 +41,19 @@ def convert_pblock(pblock):
 def index(request):
     """ serve up main page (home, index, landing) """
     # Get latest tweet (if available.)
-    latest_tweet = tweets.get_tweets('cjwelborn', count=1)
+    if homeconfig.show_latest_tweet:
+        latest_tweets = tweets.get_tweets('cjwelborn', count=1)
+        latest_tweet = latest_tweets[0] if latest_tweets else None
+    else:
+        latest_tweet = None
+
     # render main page
     context = {
         'request': request,
-        'blog_post': htools.get_latest_blog(),
-        'featured_project': htools.get_featured_project(),
-        'featured_app': htools.get_featured_app(),
-        'latest_tweet': latest_tweet[0] if latest_tweet else None,
+        'blog_post': hometools.get_latest_blog(),
+        'featured_project': hometools.get_featured_project(),
+        'featured_app': hometools.get_featured_app(),
+        'latest_tweet': latest_tweet,
         'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('home/index.html', context)
@@ -217,7 +224,7 @@ def view_scriptkids(request):
     _log.error('ScriptKid Access from: {} -> {}'.format(ip_address, path))
 
     # get insulting image to display
-    scriptkid_img = htools.get_scriptkid_image()
+    scriptkid_img = hometools.get_scriptkid_image()
     if scriptkid_img is not None:
         scriptkid_img = utilities.get_relative_path(scriptkid_img)
     use_img = (scriptkid_img is not None)

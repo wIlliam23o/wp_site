@@ -94,8 +94,9 @@ def colorize_admin_css(item):
 
     # no object found for this type.
     if obj is None:
-        _log.debug('Admin-disable: Can\'t find: '
-                   '{} [{}]'.format(name, otype))
+        _log.debug(''.join((
+            'Colorize-Admin: Can\'t find: '
+            '{} [{}]')).format(name, otype))
         return item
 
     # List of classes to add to this link.

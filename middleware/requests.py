@@ -52,7 +52,7 @@ class WpBanIpMiddleware(object):
         self.configraw = []
         # Compiled regex patterns (after successful file load/parse)
         self.banpatterns = []
-        self.log = logger('middleware.requests.wpbanip')
+        self.log = logger('middleware.requests.wpbanip').log
         if isfile(self.configfile):
             self.parse_config()
 
@@ -64,6 +64,12 @@ class WpBanIpMiddleware(object):
             return None
 
         self.banpatterns = [p for p in self.iter_compile() if p]
+        if self.banpatterns:
+            banlen = len(self.banpatterns)
+            ipstr = 'IP is' if banlen == 1 else 'IPs are'
+            self.log.debug('{} {} in the banned list.'.format(banlen, ipstr))
+        else:
+            self.log.debug('No IPs are in the ban list.')
 
     def iter_compile(self):
         """ Iterate over self.configraw,

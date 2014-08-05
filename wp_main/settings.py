@@ -229,7 +229,7 @@ TEMPLATE_DIRS = (
     os.path.join(TEMPLATES_BASE, 'admindoc/templates'),
     # Include project pages as possible templates.
     os.path.join(BASE_DIR, 'projects/static/html'),
-    # Include blog pages as possible templates.
+    # Include blog post html as possible templates.
     os.path.join(BASE_DIR, 'blogger/static/html'),
 )
 
@@ -274,6 +274,9 @@ INSTALLED_APPS = (
     # django debug tools (for test-site and local development)
     'debug_toolbar',
     'django_extensions',
+
+    # singleton configuration for home app.
+    'solo',
 
     # for making get_user_agent(request) available.
     'wp_user_agents',

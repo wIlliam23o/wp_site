@@ -125,7 +125,8 @@
     display: block;
     content: 'Photo:';
     color: #afafaf;
-    margin-bottom: 5px; }
+    margin-bottom: 5px;
+    margin-left: 5px; }
 
 .tweet-photo {
   display: inline-block;

@@ -5,17 +5,19 @@
       project: welborn productions - home - tools
      @summary: various functions for home views
                (latest blog, featured project, news, etc.)
-    
+
       @author: Christopher Welborn <cj@welbornproductions.net>
 @organization: welborn productions <welbornproductions.net>
- 
+
    start date: Apr 1, 2013
 '''
 import os
 import os.path  # @UnusedImport: os is used.
 
 # Home settings
-from home import homesettings as hsettings
+from .models import home_config
+homeconfig = home_config.objects.get()
+
 # Blog/Projects info
 from blogger.models import wp_blog
 from projects.models import wp_project
@@ -29,67 +31,78 @@ _log = logger('home.tools').log
 
 
 def get_featured_app():
-    """ retrieve the featured web app from homesettings
+    """ retrieve the featured web app from home_config
         as a wp_app object.
         if the app isn't found, return None.
     """
 
-    appalias = hsettings.featured_app_alias
+    appalias = homeconfig.featured_app_alias
     try:
         app = wp_app.objects.get(alias=appalias)
     except Exception as ex:
         _log.error('Unable to retrieve featured app: '
                    '{}\n{}'.format(appalias, ex))
-        return None
-    
+        app = get_latest_app()
+
     return app
 
 
 def get_featured_project():
-    """ retrieve the featured project from homesettings 
+    """ retrieve the featured project from home_config
         as a wp_project object.
         if the project isn't found, we will use the last published
         project.
         returns wp_project object.
     """
-    
-    salias = hsettings.featured_project_alias
+
+    projalias = homeconfig.featured_project_alias
     try:
         # get featured project by alias.
-        proj = wp_project.objects.get(alias=salias)
+        proj = wp_project.objects.get(alias=projalias)
     except Exception as ex:
         # bad alias?
         _log.error('Unable to retrieve featured project: '
-                   '{}\n{}'.format(salias, ex))
+                   '{}\n{}'.format(projalias, ex))
         proj = get_latest_project()
-        
+
     return proj
+
+
+def get_latest_app():
+    """ retrieve the last published web app (wp_app object) """
+    try:
+        app = wp_app.objects.filter(disabled=False).latest('publish_date')
+    except Exception as ex:
+        _log.error('Unable to retrieve latest app:\n{}'.format(ex))
+        return None
+    return app
 
 
 def get_latest_blog():
     """ retrieve the last posted blog entry (wp_blog object)"""
-    
-    for post in wp_blog.objects.order_by('-posted_datetime'):
-        if post.disabled:
-            continue
-        return post
-    return None
+
+    try:
+        post = wp_blog.objects.filter(disabled=False).latest('posted_datetime')
+    except Exception as ex:
+        _log.error('Unable to retrieve latest blog post:\n{}'.format(ex))
+        return None
+    return post
 
 
 def get_latest_project():
     """ retrieve the last published project (wp_project object) """
-    
+
     try:
-        proj = wp_project.objects.order_by('-publish_date').first()
+        proj = wp_project.objects.filter(disabled=False).latest('publish_date')
     except Exception as ex:
-        _log.error('Unable to retrieve first():\n{}'.format(ex))
+        _log.error('Unable to retrieve latest project:\n{}'.format(ex))
         return None
     return proj
 
 
 def get_scriptkid_image():
     """ returns a random image filename from /images/scriptkid """
-    
+
     import random
     image_dir = utilities.get_absolute_path("images/scriptkids")
     goodexts = ("jpeg", ".jpg", ".png", ".gif", ".bmp")
@@ -102,6 +115,6 @@ def get_scriptkid_image():
     if not images:
         _log.error("images was empty!")
         return None
-    
+
     randomindex = random.randint(0, len(images) - 1)
     return os.path.join(image_dir, images[randomindex])
