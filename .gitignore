@@ -16,3 +16,4 @@ misc/static/files/pi*
 *.wparc
 *.log
 *banned*
+initenv
