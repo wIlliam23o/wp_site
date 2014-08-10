@@ -82,7 +82,7 @@ The site is live, if you'd like to see what I have so far you can do so here:
 
 It's running on an [Apache] server, hosted by [WebFaction].
 
-[![I Love Open Source](http://www.iloveopensource.io/images/logo-lightbg.png)](http://www.iloveopensource.io/projects/53e6d33587659fce660044fb)
+[![I Love Open Source](http://www.iloveopensource.io/images/logo-lightbg.png)](http://www.iloveopensource.io/projects/53e6d33587659fce660044fe)
 
    [welbornprod.com]: http://welbornprod.com "welbornprod.com"
    [welbornprod.info]: http://welbornprod.info "welbornprod.info"
