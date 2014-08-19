@@ -119,7 +119,7 @@ def view_results(request, args=None):
 
 
 def fix_results(results):
-    """ Fixes results from phone_words.get_phonenumber and 
+    """ Fixes results from phone_words.get_phonenumber and
         phone_words.get_phonewords so they return the same types.
     """
 
