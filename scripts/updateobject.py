@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 '''updateobject.py
-    Busybox-style command that updates various models depending on the 
+    Busybox-style command that updates various models depending on the
     name it is called by.
-    If it is called using a symlink named 'updateproject', the wp_project model 
+    If it is called using a symlink named 'updateproject', the wp_project model
     will be used to lookup objects. Same idea with 'updateblog', 'updatemisc',
     etc.
-    The name determines which model we will start with, and what the friendly 
+    The name determines which model we will start with, and what the friendly
     names for objects are ('Project', 'Blog Post', etc.). From there, its a
     matter of knowing what attributes are available for the model and
     modifiying them (when --update is used).
@@ -36,7 +36,7 @@
     If it fails to convert the type, the action is aborted.
     All basic python types work, plus datetime.date.
 
-    See: objectupdater.py for the internal workings, 
+    See: objectupdater.py for the internal workings,
          this script (updateobject.py) is only the loader.
 
 Created on Nov 1, 2013
@@ -163,12 +163,13 @@ _VERSION = '1.1.0'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 
 # Usage string to use with docopt.
-usage_str = objectupdater.base_usage_str.format(name=_NAME,
-                                                ver=_VERSION,
-                                                script=_SCRIPT,
-                                                properid=modelused['name'],
-                                                lowerid=modelused['name'].lower(),
-                                                attrstr=', '.join(modelused['attrs']))
+usage_str = objectupdater.base_usage_str.format(
+    name=_NAME,
+    ver=_VERSION,
+    script=_SCRIPT,
+    properid=modelused['name'],
+    lowerid=modelused['name'].lower(),
+    attrstr=', '.join(modelused['attrs']))
 
 
 def main(argd):
@@ -296,7 +297,7 @@ def do_list_projects(model=None):
         If miscmodel is passed, it is used instead of wp_project
         since they are printed in the same fashion.
     """
-    
+
     if not model:
         model = wp_project
         objtype = 'projects'
@@ -313,25 +314,30 @@ def do_list_projects(model=None):
     if not projs:
         print('\nNo {} found!'.format(objtype))
         return 1
-    
-    longestname = max((len(p.name) for p in projs))
-    longestalias = max((len(p.alias) for p in projs))
-    
-    print('Found {} {}:'.format(str(len(projs)), objtype))
-    for proj in projs:
-        namespace = (' ' * ((longestname - len(proj.name)) + 1))
-        aliasspace = (' ' * ((longestalias - len(proj.alias)) + 1))
-        versionstr = 'v. {}'.format(proj.version) if proj.version else ''
+    # Instead of doing max(len()) on the projects twice, just iterate once
+    # and update both longestname and longestalias.
+    # longestname = max(len(p.name) for p in projs))
+    # longestalias = max(len(p.alias) for p in projs))
+    longestname = 0
+    longestalias = 0
+    for p in projs:
+        paliaslen = len(p.alias)
+        pnamelen = len(p.name)
+        if paliaslen > longestalias:
+            longestalias = paliaslen
+        if pnamelen > longestname:
+            longestname = pnamelen
 
-        infostrfmt = '    {name}{namespace}({alias}){aliasspace}{ver}'
+    print('Found {} {}:'.format(str(len(projs)), objtype))
+    infostrfmt = '    {name} ({alias}) {ver}'
+    for proj in projs:
+        versionstr = 'v. {}'.format(proj.version) if proj.version else ''
         infostrargs = {
-            'name': proj.name,
-            'alias': proj.alias,
+            'name': str(proj.name).ljust(longestname),
+            'alias': str(proj.alias).ljust(longestalias),
             'ver': versionstr,
-            'namespace': namespace,
-            'aliasspace': aliasspace
         }
-        infostr = infostrfmt.format(infostrargs)
+        infostr = infostrfmt.format(**infostrargs)
         if usemisc:
             infostr = '{} {}'.format(infostr, proj.filename)
         print(infostr)
