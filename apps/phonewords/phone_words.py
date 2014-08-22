@@ -12,7 +12,6 @@ import os.path
 import sys
 from datetime import datetime
 from multiprocessing import Pool
-from os import cpu_count
 from docopt import docopt
 
 NAME = 'PhoneWords'
@@ -907,7 +906,7 @@ class WordFinder(object):
         self.wordlen = len(self.wordlist)
         self.chunksize = (self.wordlen // 2) if self.wordlen else 1
         self.totallen = self.combolen * self.wordlen
-        self.processes = processes or cpu_count()
+        self.processes = processes
         self.results = {}
 
     def find_word(self, word):
