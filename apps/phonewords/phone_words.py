@@ -914,8 +914,8 @@ class WordFinder(object):
             Used with Pool.map...
         """
         # Iterating over self.combos (up to ~5184 items)
-        # for every word (up to ~30981 items) for total of
-        # ~160,605,504 iterations really sucks.
+        # for every word (up to ~53981 items) for total of
+        # ~279,837,504 iterations really sucks.
         # There has to be another way,
         # The requirements are: Check every combo for existence of every word.
         # Words are checked only once, combos are checked for every word.
