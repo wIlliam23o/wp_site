@@ -41,22 +41,22 @@
         $ cedit myfile2.py
 
 
-    If you are using Python2 the pip command can install requirements, 
+    If you are using Python2 the pip command can install requirements,
     otherwise pip3 or a Python3-compatible package installer should be used.
-    
-    Requires: 
-        easysettings 
+
+    Requires:
+        easysettings
                 saves configuration, to install: pip3 install easysettings
-        docopt 
+        docopt
                 parses arguments, to install: pip3 install docopt
-    
+
     Installation:
-        To install cedit as a global terminal command you can use 
+        To install cedit as a global terminal command you can use
         the 'install' command.
 
         For installing for a single user run:
             ./cedit.py --install --user
-        
+
         For installing in /usr/bin (for all users) run:
             sudo ./cedit.py --install
 
@@ -83,7 +83,7 @@ if not PYTHON3:
 NAME = 'cedit'
 # Current version
 VERSION = '1.4.0'
-VERSIONX = '0'
+VERSIONX = '1'
 VERSIONSTR = '{} v. {}-{}'.format(NAME, VERSION, VERSIONX)
 SCRIPT = os.path.split(sys.argv[0])[1]
 
@@ -115,7 +115,7 @@ usage_str = """{verstr} (running on Python {pyversion})
         {script} -i [-u | -p dir]
         {script} -l
         {script} -r
-        
+
     Options:
         -A,--about              : show message about {name}.
         -c file,--elevcmd file  : set favorite elevation command, where
@@ -146,28 +146,29 @@ usage_str = """{verstr} (running on Python {pyversion})
                                   current settings.
         -p dir,--path dir       : when installing, install to specified
                                   directory.
+        -q,--quiet              : Don't warn about non-existing files.
         -r,--remove             : remove the installed symlink for {name} if
                                   installed. (may require permissions)
         -s,--shellall           : shell one process per file, instead of
                                   sending all file names at once.
-        -u,--user               : when installing, only install for user.                                       
+        -u,--user               : when installing, only install for user.
                                   $PATH is searched for dirs like
                                   /home/{user}/bin.
-                                  without $PATH, common dirs are looked for. 
+                                  without $PATH, common dirs are looked for.
         -v,--version            : show version.
         filename                : file to open.
-    
+
     Notes:
         You can pass arguments on to the editor using the '--' option.
         Any arguments after the '--' are passed on to your editor.
         Example:
             {script} -- --help
             ..this would send the --help flag to your editor.
-                                     
+
     Settings:
         editor   : path to favorite editor.
         elevcmd  : path to favorite elevation command.
-        
+
     Example:
         cedit myfile.txt
             ...opens myfile.txt, using elevation command if needed.
@@ -188,7 +189,7 @@ usage_str = """{verstr} (running on Python {pyversion})
 
         cedit --dirs /home/{user},/home/{user}/dump
             ...adds 2 directories to cedit's search path.
-            
+
 """.format(**usage_args)
 
 
@@ -256,7 +257,7 @@ def warn_module(importname, pipver):
 
 def warn_pip(importname):
     """ Module couldn't be imported, so show a message about it.
-        Also, show a warning about needing pip installed if it isn't already, 
+        Also, show a warning about needing pip installed if it isn't already,
         or having only pip2 installed while using Python3.
         If all pip requirements are met,
         it doesn't show a warning about it, just the module.
@@ -305,7 +306,7 @@ def warn_pip(importname):
 
 # Try importing EasySettings, I doubt that anyone has this installed yet.
 try:
-    from easysettings import easysettings
+    from easysettings import EasySettings
 except ImportError as ex_es:
     warn_pip('EasySettings')
     sys.exit(1)
@@ -319,7 +320,7 @@ except ImportError as ex_es:
 
 def can_write(filename):
     """ checks for write access on a file/dir. """
- 
+
     return (os.access(filename, os.W_OK))
 
 
@@ -327,7 +328,7 @@ def check_file(filename):
     """ checks if a file exists, if not asks user if we should continue.
         returns True if user says yes, otherwise False.
     """
-    
+
     if os.path.isfile(filename):
         return True
     else:
@@ -382,7 +383,7 @@ def clear_cedit_paths():
 
 def cmd_list():
     """ list command. """
-    
+
     alloptions = sorted(settings.list_options())
     if not alloptions:
         print(''.join(['no settings yet.\n'
@@ -408,7 +409,7 @@ def cmd_list():
             val = '(not set yet!)'
         print('  {} : {}'.format(optname.ljust(longestnamelen), val))
     return 0
-            
+
 
 def cmd_location(shortname):
     """ Like cmd_exists() except, it returns the output from 'which'.
@@ -495,7 +496,7 @@ def cmd_install(userdir=None):
     except Exception as ex:
         print('unable to create symlink with: {}\n{}'.format(finalname, ex))
         return 1
-    
+
     return 0
 
 
@@ -649,7 +650,7 @@ def get_userhome():
 
 def get_username():
     """ trys several different ways to get user name """
-    
+
     uname = os.environ.get('USER', None)
     if uname is None:
         uname = os.environ.get('LOGNAME', None)
@@ -658,7 +659,7 @@ def get_username():
             if uname is not None:
                 uname = os.path.split(uname)[1]
     return uname
- 
+
 
 def get_editor():
     if not settings.get('editor', ''):
@@ -688,7 +689,7 @@ def get_editor():
               '{} set editor=[editor or /path/to/editor]'.format(SCRIPT))
         sys.exit(1)
 
-        
+
 def get_elevcmd():
     if not settings.get('elevcmd', ''):
         # no editor set
@@ -770,7 +771,7 @@ def print_debug(s):
     if DEBUG:
         print('DEBUG: {}'.format(s))
 
-    
+
 def printdict(d, indention=0):
     if isinstance(d, dict):
         for k, v in d.items():
@@ -781,7 +782,7 @@ def printdict(d, indention=0):
     else:
         print('{}{}'.format((' ' * indention), d))
 
-             
+
 def run_exec(cmdlist):
     # runs a command with arguments.
     if hasattr(cmdlist, 'lower'):
@@ -799,7 +800,7 @@ def run_exec(cmdlist):
             ret = os.system(' '.join(cmdlist))
         except Exception as ex:
             raise Exception(ex)
-        
+
     return ret
 
 
@@ -987,14 +988,14 @@ def main(argd):
         if argd['--shellall']:
             returns = []
             for filename in filenames:
-                if check_file(filename):
+                if argd['--quiet'] or check_file(filename):
                     returns.append(good_return(shell_file([filename])))
                 else:
                     returns.append(1)
             return 0 if all(returns) else 1
 
         # Send all file names to one process.
-        if check_files(filenames):
+        if argd['--quiet'] or check_files(filenames):
             return shell_file(filenames)
     else:
         # No cedit args, possibly editor args though.
@@ -1020,7 +1021,7 @@ if __name__ == '__main__':
     mainargd = docopt(usage_str, argv=ceditargs, version=VERSIONSTR)
     # Initialize config
     configfile = os.path.join(sys.path[0], '{}.conf'.format(NAME))
-    settings = easysettings.easysettings(configfile)
+    settings = EasySettings(configfile)
     settings.name = NAME
     settings.version = VERSION
     mainret = main(mainargd)
