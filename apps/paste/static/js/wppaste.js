@@ -210,6 +210,16 @@ var wppaste = {
         return $.cookie('pastesettings', cookieinfo, {expires: 365, path:'/'});
     },
 
+    set_editor_size: function (csssize) {
+        /* Sets the size for the editor by setting the paste-content
+           size and calling wp_content.resize().
+        */
+        if (csssize) {
+            $('#paste-content').height(csssize);
+            wp_content.resize();
+        }
+    },
+
     set_selected_mode : function (name) {
         /* set selected mode by name
             Arguments:
@@ -369,6 +379,10 @@ var wppaste = {
         }
     },
 
+    toggle_editor_size: function () {
+        /* TODO: Implement this size toggler. */
+    },
+
     updatejson : function (jsondata, newdata) {
         /* Update JSON object data with new keys/values.
             Arguments:
@@ -453,6 +467,9 @@ var wppaste = {
 
 };
 
+/* I don't think there's a real reason for these to not be part of
+    wppaste.
+*/
 
 // setup initial ace editor
 function setup_ace (doreadonly) {

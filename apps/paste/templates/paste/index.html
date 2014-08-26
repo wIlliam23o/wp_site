@@ -13,7 +13,7 @@
     <style type='text/css'>
         <!-- Height must be set inline here (for Ace) -->
         #paste-content {
-            height: 550px;
+            height: 500px;
         }
     </style>
 {% endblock %}
@@ -278,6 +278,7 @@
         <div id='paste-content'>
         </div>
 
+
         <!-- Bottom Buttons (Theme Change) -->
         <div class='paste-bottom-button-box'>
             <!-- Theme Change Buttons -->
@@ -326,7 +327,6 @@
             var content = $('#hidden-content').text();
             wp_content.getSession().setValue(content);
         {% else %}
-
             {# Clear editor, This is a new paste. #}
             wp_content.getSession().setValue('');
         {% endif %}

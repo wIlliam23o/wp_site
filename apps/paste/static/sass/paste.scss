@@ -1,10 +1,11 @@
 @import 'welbornprod';
 
 #paste-content {
-    // This must be set inline inside of apps/paste/templates/index.html
+    // The height must be set inline inside of apps/paste/templates/index.html
     // ..You can set other style properties that don't resize anything though.
     border-radius: 5px;
 }
+
 
 #langselect {
     @include border-radius(3px);
