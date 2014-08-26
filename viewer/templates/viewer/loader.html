@@ -50,18 +50,18 @@
 	<div id="title-header" class='title-box'>
 		<h3 class='title'>Source View</h3>
 	</div>
-	
+
 	<!-- Project Info -->
 	<div id="project-info">
 	    <a id="project-link" href='javascript: void(0);' onclick='javascript: void(0);'>
 	        <div id="project-title" class='project-title'>
 	            <h1 id="project-title-name" class='project-header'> </h1>
 	            <br/>
-	            
+
 	        </div>
 	    </a>
 	</div>
-	
+
 	<!-- File Info -->
 	<div id="file-info">
 	    <a id="file-link" href='javascript: void(0);' onclick='javascript: void(0);'>
@@ -89,20 +89,23 @@
 {% block bodyend %}
 	<script type="text/javascript">
 		$(document).ready( function () {
-			
-			// position floater
+
+			{# position floater #}
 			wptools.center_element('#floater', true);
-			// setup ajax
+			{# setup ajax #}
 			wptools.pre_ajax();
 
-			// Load initial file
+			{# Load initial file #}
 			wpviewer.set_current_file('{{ file }}');
 			view_file('{{ file }}');
+
+			{# Scroll to file view #}
+			wptools.scroll_to_anchor('#file-content-box');
 		});
 
 		window.onresize = function () {
 			wptools.center_element('#floater', true);
 		};
-		
+
 	</script>
 {% endblock %}
