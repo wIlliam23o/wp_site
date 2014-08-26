@@ -121,12 +121,12 @@ def view_badlogin(request):
 @login_required(login_url='/login')
 def view_debug(request):
     """ return the django debug info page. """
-    siteversion = settings.SITE_VERSION
     context = {
         'request': request,
         'djangoversion': get_django_version(),
-        'sysversion': sysversion,
-        'siteversion': siteversion,
+        'sysversion': getattr(settings, 'SYSVERSION', ''),
+        'siteversion': getattr(settings, 'SITE_VERSION', ''),
+        'siteversionnum': getattr(settings, 'WPVERSION', ''),
         'extra_style_link_list': [
         utilities.get_browser_style(request),
         '/static/css/highlighter.min.css'],

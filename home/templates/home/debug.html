@@ -23,7 +23,7 @@
 				</span>
 				<br>
 				<span class='version'>
-					Site Version: {{ siteversion }}
+					Site Version: {{ siteversion }} {% if siteversionnum %}v. {{ siteversionnum }}{% endif %}
 				</span>
 		</div>
 		<div class='debug-page-box'>
@@ -45,4 +45,4 @@
 			</span>
 		</div>
 	{% endif %}
-{% endblock %}	
+{% endblock %}
