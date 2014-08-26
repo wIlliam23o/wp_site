@@ -31,7 +31,7 @@
 		<a href="http://github.com/welbornprod/easysettings.git" target="_blank">
 			EasySettings (github)
 		</a>
-		&nbsp;- Source code hosted at <a href="http://github.com" target="_blank">github.</a> 
+		&nbsp;- Source code hosted at <a href="http://github.com" target="_blank">github.</a>
 	</span>
 	{{ source_view }}
 </div>
@@ -71,7 +71,7 @@
 
 <!-- PYPI Package -->
 <div class="wp-block feature-list">
-		
+
 	<div class="title-box">
 		<h3 class="title">PyPi Package</h3>
 	</div>
@@ -129,6 +129,23 @@
 		<h3 class="title">Updates</h3>
 	</div>
     <div class='update-box'>
+    	<!-- 1.9.3 -->
+    	<span class='update-title'>Update: Version 1.9.3</span>
+    	<ul class='circle blue'>
+    		<li>
+    			Added [code]EasySettings.header[?code] attribute.
+    		</li>
+    		<div class='listdesc'>
+    			This header will be added to the top of the config file under the name and version on [code]save()[?code].
+    		</div>
+    		<li>
+    			Added initialization args for [code]name[?code], [code]version[?code], and [code]header[?code].
+    		</li>
+    		<div class='listdesc'>
+    			You can now do: [code]es = EasySettings('myfile.conf', name='MyApp', version='1.0.0', header='Helps you do stuff.')[?code].
+    		</div>
+    	</ul>
+
     	<!-- 1.8.9 -->
         <span class='update-title'>Update: Version 1.8.9</span>
         <ul class='circle blue'>
@@ -164,7 +181,7 @@
 				Fixed small bug in `setsave()` where `setsave('opt', False)` caused errors.
 			</li>
 		</ul>
-        
+
         <!-- 1.8.3 -->
         <span class='update-title'>Update: Version 1.8.3</span>
         <ul class='circle blue'>
@@ -209,7 +226,7 @@ print settings.get('mytext')
 	<div class="title-box">
 		<h3 class="title">Example Usage</h3>
 	</div>
-	
+
 	<h2 class='title'>
 		Basic Usage
 	</h2>
@@ -217,7 +234,7 @@ print settings.get('mytext')
 	<pre class='python'>
 #!/usr/bin/env python
 # --------------- Creation ----------------
-	
+
 from easysettings import EasySettings
 
 settings = EasySettings("myconfigfile.conf")
@@ -231,7 +248,7 @@ settings = EasySettings("myconfigfile.conf")
 # set without saving
 settings.set("username", "cjw")
 settings.set("firstrun", False)
-	
+
 print settings.get("username")
 # this results in "cjw"
 
@@ -262,7 +279,7 @@ if settings.has_option('username'):
 mysettings = settings.list_settings()
 myoptions = settings.list_options()
 myvalues = settings.list_values()
-	
+
 # remove setting
 settings.remove('homedir')
 
@@ -285,12 +302,12 @@ if settings.compare_opts(settings2):
 	print "these have the same exact options, values may differ"
 if settings.compare_vals(settings2):
 	print "these have the exact same values, options may differ"
-	
+
 if settings == settings2:
 	print "these have the exact same settings/values"
 	# can also be written as settings.compare_settings(settings2)
 	# if you like typing.. :)
-	
+
 if settings > settings2:
 	print "settings has more options than settings2"
 # all of them work ==, !=, <=, >= , > , <
@@ -302,11 +319,11 @@ if settings > settings2:
 	<h2 class="title">
 		Features
 	</h2>
-	
+
 	<p>
 		Easy Settings has the basic features you would expect out of a settings module,
 		and it's very easy to use. If your project needs to save simple settings without
-		the overhead and complication of other modules then this is for you. Save, load, set, &amp; 
+		the overhead and complication of other modules then this is for you. Save, load, set, &amp;
 		get are very easy to grasp. The more advanced features are there for you to use,
 		but don't get in the way. Settings, options, &amp; values can be listed, searched,
 		detected, removed, &amp; cleared.
@@ -333,7 +350,7 @@ settings.clear_values(mydebugoptions)
 	</p>
 	<pre class='python'>
 es = EasySettings('myconfigfile.conf)
-	
+
 # Boolean
 es.set("newuser", True)
 if es.get('newuser'):
@@ -351,7 +368,7 @@ f_withtax = es.get('soda') * 1.08
 es.set('users', ['cjw', 'joseph', 'amy']) # lists as settings, very convenient
 for suser in es.get('users'):
 	print "retrieved user name: " + suser
-	
+
 # i won't do them all, but if you can pickle it, you can use it with EasySettings.
 	</pre>
 
@@ -392,7 +409,7 @@ settings = EasySettings('myconfigfile.conf')
 	<pre class='python'>
 settings = EasySettings()
 settings.configfile = 'myconfigfile.conf'
-# file has not been created or loaded. 
+# file has not been created or loaded.
 # file must exist before calling 'load_file'
 if settings.load_file():
 	# all settings were loaded.
