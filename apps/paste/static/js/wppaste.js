@@ -173,7 +173,11 @@ var wppaste = {
                     save : true/false to save the new mode to a cookie.
         */
         var modestr = wppaste.get_selected_mode();
-        wp_content.getSession().setMode(modestr);
+        var session = wp_content.getSession();
+        // Clear any error annotations that selecting a bad lang may have caused.
+        session.clearAnnotations();
+        // Set the new mode (causes re-highlighing)
+        session.setMode(modestr);
         //console.log('mode set to: ' + modestr);
 
         // Save user language to a cookie for next time.
