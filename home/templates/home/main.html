@@ -27,6 +27,7 @@
  	<link rel='stylesheet' href='/static/css/main.min.css' type='text/css'/>
 	<link rel='stylesheet'  href='/static/css/dock.min.css' type='text/css' media='screen'/>
 	<link rel='stylesheet' href='/static/css/wt-rotator.min.css' type='text/css'/>
+
 	<!-- Browser-Specific or Extra CSS Files (Browser detected in views...) -->
 	{% block extrastylelink %}
 		{% if extra_style_link_list %}
@@ -100,9 +101,7 @@
 
 	<!-- Javascript: Image Rotator -->
 	<script type='text/javascript' src='/static/js/jquery.wt-rotator-wp.min.js'></script>
-	<!--<script type='text/javascript' src='/static/js/jquery.banner-rotator-wp.js'></script>-->
 	<script type='text/javascript' src='/static/js/jquery.easing.1.3.min.js'></script>
-
 	<!-- Javascript: Local Tools (email protection) -->
 	<script type='text/javascript' src='/static/js/wptools.min.js'></script>
 
@@ -386,7 +385,7 @@
 	<script type='text/javascript'>
 		$(document).ready( function () {
 			wptools.wpreveal('.wp-address');
-			/* fix iFisheye's weird dock positioning. */
+			<!-- fix iFisheyes weird dock positioning. -->
 			wptools.getid('dock-box').style.left = '0px';
 
 		});
