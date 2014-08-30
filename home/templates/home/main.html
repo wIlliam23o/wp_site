@@ -181,6 +181,7 @@
 		</div>
 
 		<!-- Content based on live/test site and access. -->
+		{#{% if false %} {# <-- TESTING PURPOSES #}
 		{% if request|is_test_site and not request.user.is_staff %}
 		    <!-- Show no access msg for non-admins on test site. -->
 		    <div class='alert'>
@@ -189,9 +190,9 @@
 		    	</span>
 		    </div>
 			<div id='page-surround' class='wp-block'>
-				<span style='color: darkred; font-weight: bold;'>
+				<div class='error-noaccess-message'>
 					Sorry, you do not have access to the test site.
-				</span>
+				</div>
 			</div>
 
 		{% else %}
