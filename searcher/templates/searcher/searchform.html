@@ -12,7 +12,7 @@
 				<h3 class='header'>Search</h3>
 			</a>
 		</div>
-		
+
 		<div class="search-header-text">
 				<span class="title">Search welborn productions</span>
 		</div>
@@ -30,8 +30,6 @@
 					<span>search</span>
 				</div>
 			</a>
-			<!--<input type="submit" id="search-button" class="submit-button" title="Search"></input>-->
-			
 		</form>
 	</div>
 {% endblock %}
@@ -39,7 +37,10 @@
 {% block bodyend %}
 	<script type="text/javascript">
 		function do_search() {
-			$("#search-form").submit();
+			var searchtext = $('#searchbox').val();
+			if (searchtext) {
+				$("#search-form").submit();
+			}
 		}
 	</script>
 {% endblock %}

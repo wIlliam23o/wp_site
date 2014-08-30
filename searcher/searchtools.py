@@ -1,47 +1,59 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+''' Welborn Productions - Search - Tools
+        Provides various functions for searching welbornproductions
+
+    -Christopher Welborn Mar 28, 2013
 '''
-      project: welborn productions - search - tools
-     @summary: provides various functions for searching welbornproductions
-    
-      @author: Christopher Welborn <cj@welbornproductions.net>
-@organization: welborn productions <welbornproductions.net>
- 
-   start date: Mar 28, 2013
-'''
+
 # Global settings
-#from django.conf import settings
+from django.conf import settings
+# For getting searchable apps.
+from django.utils.module_loading import import_module
 # Safe to view generated html
 from django.utils.safestring import mark_safe
 # Logging
 from wp_main.utilities.wp_logging import logger
 _log = logger("search.tools").log
 
-# Project Info/Tools
-from projects.models import wp_project
-from projects import tools as ptools
-# Blog Info/Tools
-from blogger.models import wp_blog
-from blogger import blogtools
-# Misc Info
-from misc.models import wp_misc
-from misc import tools as misctools
-# App Info
-from apps.models import wp_app
+# Apps must have a search.py module that implements these functions:
+must_implement = (
+    # Desc: Returns full content to search, or None.
+    # Signature: get_content(obj)
+    # Ex: get_content = lambda post: post.body
+    'get_content',
+
+    # Desc: Returns decription to search and display, or None.
+    # Signature: get_desc(obj)
+    # Ex: get_desc = lambda post: post.body[:80]
+    'get_desc',
+
+    # Desc: Returns searchable objects for the app.
+    # Signature: get_objects()
+    # Ex: get_objects = lambda : mymodel.objects.filter(disabled=False)
+    'get_objects',
+
+    # Desc: Returns target strings to search (built with app.model attributes.)
+    # Signature: get_targets(obj, content=None, desc=None)
+    # Ex: get_targets = lambda post: (post.title, post.body, post.author)
+    'get_targets',
+
+    # Desc: Returns dict of {
+    #       'title': Title for the result (str),
+    #       'desc': Description for the result (str),
+    #       'link': Relative link for the result (str),
+    #       'posted': Published date for the result (str),
+    #       'restype': Verbose name for the object (str) (like 'Blog Post')
+    #       }
+    # Signature: result_args(obj, desc=None)
+    'result_args'
+)
 
 
 class WpResult(object):
 
     """ holds search result information """
-    # A map to type aliases and proper names for result types.
-    types = {
-        'post': 'Blog Post',
-        'project': 'Project',
-        'misc': 'Misc.',
-        'app': 'Web App.',
-        'none': '',
-    }
 
     def __init__(self, title='', link='', desc='', posted='', restype=''):
         # Title for the link that is generated in this result.
@@ -53,10 +65,37 @@ class WpResult(object):
         # Publish date for this result.
         self.posted = posted
         # Type of result (project, blog post, misc, etc.)
-        if restype in WpResult.types:
-            self.restype = WpResult.types[restype]
+        if not restype:
+            self.restype = 'Unknown'
         else:
-            self.restype = WpResult.types['none']
+            self.restype = str(restype).title()
+
+    def __str__(self):
+        """ String version, for debugging. """
+        fmtlines = [
+            'WpResult:',
+            '  restype: {}',
+            '  title  : {}',
+            '  link   : {}',
+            '  desc   : {}',
+            '  posted : {}'
+        ]
+        return '\n'.join(fmtlines).format(
+            self.restype,
+            self.title,
+            self.link,
+            self.description,
+            self.posted)
+
+    def __repr__(self):
+        """ repr() for debugging. """
+        fmt = 'WpResult(\'{t}\', \'{l}\', \'{d}\', \'{p})\', \'{r}\')'
+        return fmt.format(
+            t=self.title,
+            l=self.link,
+            d=self.description,
+            p=self.posted,
+            r=self.restype)
 
 
 def fix_query_string(querystr):
@@ -68,7 +107,7 @@ def fix_query_string(querystr):
         querystr = querystr.replace('  ', ' ')
     while '++' in querystr:
         querystr = querystr.replace('++', '+')
-        
+
     return querystr
 
 
@@ -81,43 +120,75 @@ def force_query_list(querystr):
 
     if not hasattr(querystr, 'encode'):
         querystr = str(querystr)
-    
+
     # string with ' '
     if ' ' in querystr:
         return [q for q in querystr.split(' ') if len(q.replace(' ', '')) > 2]
     # string, no spaces
     return [querystr]
 
-  
+
+def get_apps():
+    """ Returns all installed apps modules.
+        ...not used right now.
+    """
+    apps = []
+    for appname in settings.INSTALLED_APPS:
+        if not appname.startswith('django'):
+            try:
+                app = import_module(appname)
+            except ImportError as ex:
+                _log.error('Error importing app: {}\n{}'.format(appname, ex))
+    return apps
+
+
+def get_searchable(apps=None):
+    """ Returns only apps that are searchable by the searcher app. """
+    searchable = []
+    for appname in settings.INSTALLED_APPS:
+        if appname.startswith('django'):
+            continue
+        searchmod = '{}.search'.format(appname)
+        try:
+            appsearch = import_module(searchmod)
+            if is_searchable(appsearch):
+                searchable.append(appsearch)
+        except ImportError:
+            # This app doesn't implement the 'search' module.
+            pass
+
+    return searchable
+
+
 def has_illegal_chars(querystr):
     """ check for illegal characters in query,
         returns True on first match, otherwise False.
     """
-    
+
     illegalchars = (':', '<', '>', ';', 'javascript:', '{', '}', '[', ']')
     for char in illegalchars:
         #_log.debug("checking " + char_ + " in " + query_.replace(' ', ''))
         if char in querystr.replace(' ', ''):
             return True
-        
+
     return False
 
 
-def highlight_queries(queriestr, scontent):
+def highlight_queries(querystr, scontent):
     """ makes all query words found in the content bold
         by wrapping them in a <strong> tag.
     """
-    
+
     word_list = scontent.split(' ')
-    if isinstance(queriestr, (list, tuple)):
-        queries = queriestr
+    if isinstance(querystr, (list, tuple)):
+        queries = querystr
     else:
-        if ',' in queriestr:
-            queriestr = queriestr.replace(',', ' ')
-        if ' ' in queriestr:
-            queries = queriestr.split(' ')
+        if ',' in querystr:
+            querystr = querystr.replace(',', ' ')
+        if ' ' in querystr:
+            queries = querystr.split(' ')
         else:
-            queries = [queriestr]
+            queries = [querystr]
     # fix queries.
     queries_lower = [q.lower() for q in queries]
     # regex was not working for me. i'll look into it later.
@@ -126,7 +197,7 @@ def highlight_queries(queriestr, scontent):
         for punc in puncuation:
             queries_lower.append(qcopy + punc)
             queries_lower.append(punc + qcopy)
-                 
+
     fixed_words = []
     for i in range(0, len(word_list)):
         word_ = word_list[i]
@@ -167,160 +238,78 @@ def is_empty_query(querystring):
     return (querystring == '') or (len(querystring) < 3)
 
 
-def search_all(querystr, projects_first=True):
-    """ searches both projects and blog posts """
-    
-    if projects_first:
-        results = search_projects(querystr)
-        results.extend(search_apps(querystr))
-        results.extend(search_misc(querystr))
-        results.extend(search_blog(querystr))
-    else:
-        results = search_blog(querystr)
-        results.extend(search_projects(querystr))
-        results.extend(search_apps(querystr))
-        results.extend(search_misc(querystr))
-    return results
+def is_searchable(searchmod):
+    """ Checks whether a search.py implements all the must-have functions. """
+    # Searching can be disabled simply by putting 'disabled = True' in the
+    # module.
+    disabled = getattr(searchmod, 'disabled', False)
+    if disabled:
+        return False
+
+    missing = []
+    for funcname in must_implement:
+        if not hasattr(searchmod, funcname):
+            missing.append(funcname)
+
+    if missing:
+        name = getattr(searchmod, '__name__', '<unknown>')
+        loglines = [
+            'Module {} is missing search functions:'.format(name),
+            '    {}'.format('\n    '.join(missing))
+        ]
+        _log.debug('\n'.join(loglines))
+        return False
+    # Module implements all must-have functions.
+    return True
 
 
-def search_apps(querystr):
-    """ search all wp_app objects and return a list of results (WpResults).
-        returns empty list on failure.
+def search_all(querystr):
+    """ Searches all searchable apps.
+        Arguments:
+            querystr       : Query string to search for.
     """
     if is_empty_query(querystr):
         return []
 
-    # Forces list, and trims queries len > 2.
-    queries = force_query_list(querystr)
-    if not queries:
-        # empty queries, or too short queries in the string.
-        return []
-
-    if not wp_app.objects.count():
-        # Nothing to search.
-        return []
-
-    results = []
-    for app in wp_app.objects.filter(disabled=False).order_by('-publish_date'):
-        acontent = app.description
-        targets = (app.name, app.alias,
-                   app.version, app.description,
-                   str(app.publish_date),
-                   )
-        got_match = search_targets(queries, targets)
-        if got_match:
-            goodresult = WpResult(title=app.name,
-                                  desc=highlight_queries(queries,
-                                                         acontent),
-                                  link='/apps/{}'.format(app.alias),
-                                  posted=str(app.publish_date),
-                                  restype='app')
-            results.append(goodresult)
-    return results
-
-
-def search_blog(querystr):
-    """ search all wp_blogs and return a list of results (WpResults).
-        returns empty list on failure.
-    """
-    if is_empty_query(querystr):
-        return []
-    
-    queries = force_query_list(querystr)
-    
-    if not wp_blog.objects.count():
-        # Nothing to search
-        return []
-    
-    results = []
-    for post in wp_blog.objects.filter(disabled=False).order_by('-posted'):
-        praw = blogtools.get_post_body_short(post, max_text_lines=16)
-        pdesc = blogtools.prepare_content(praw)
-        targets = (post.title, post.slug,
-                   blogtools.get_post_body(post), pdesc,
-                   str(post.posted),
-                   )
-
-        got_match = search_targets(queries, targets)
-        if got_match:
-            results.append(WpResult(title=post.title,
-                                    desc=highlight_queries(queries, pdesc),
-                                    link="/blog/view/" + post.slug,
-                                    posted=str(post.posted),
-                                    restype='post'))
-    return results
-
-
-def search_misc(querystr):
-    """ search all wp_misc objects and return a list of results (WpResults).
-        returns empty list on failure.
-    """
-    if is_empty_query(querystr):
-        return []
-    # Forces list, and trims queries len > 2
-    queries = force_query_list(querystr)
-    if not queries:
-        # probably had empty or too short queries in the string.
-        return []
-    
-    if not wp_misc.objects.count():
-        # Nothing to search
-        return []
-    
-    results = []
-    miscobjs = wp_misc.objects.filter(disabled=False)
-    for misc in miscobjs.order_by('-publish_date'):
-        mcontent = misctools.get_long_desc(misc)
-        targets = (misc.name, misc.alias,
-                   misc.version, misc.filetype,
-                   misc.language, mcontent,
-                   misc.description, str(misc.publish_date),
-                   )
-        got_match = search_targets(queries, targets)
-        if got_match:
-            goodresult = WpResult(title=misc.name,
-                                  desc=highlight_queries(queries,
-                                                         misc.description),
-                                  link='/misc/#{}'.format(misc.alias),
-                                  posted=str(misc.publish_date),
-                                  restype='misc')
-            results.append(goodresult)
-    return results
-                
-        
-def search_projects(querystr):
-    """ search all wp_projects and return a list of results (WpResults).
-        returns empty list on failure.
-    """
-    if is_empty_query(querystr):
-        return []
-    
     queries = force_query_list(querystr)
     if not queries:
         return []
-        
+
+    searchmods = get_searchable()
+    # TODO: if search_app() returned (relevance_number, item) this could be
+    #       ..reworked to sort items based on relevance.
     results = []
-    if not wp_project.objects.count():
-        # Nothing to search
-        return []
-    projobjs = wp_project.objects.filter(disabled=False)
-    for proj in projobjs.order_by('-publish_date'):
-        targets = (proj.name, proj.alias,
-                   proj.version, proj.description,
-                   str(proj.publish_date), ptools.get_html_content(proj),
-                   )
-        
-        got_match = search_targets(queries, targets)
-        # Add this project if it matched any of the queries.
-        if got_match:
-            goodresult = WpResult(title=proj.name + " v." + proj.version,
-                                  desc=highlight_queries(queries,
-                                                         proj.description),
-                                  link='/projects/' + proj.alias,
-                                  posted=str(proj.publish_date),
-                                  restype='project')
-            results.append(goodresult)
-    
+    for searchmod in searchmods:
+        appresults = search_app(searchmod, queries)
+        if appresults:
+            results.extend(appresults)
+
+    return results
+
+
+def search_app(searchmod, queries):
+    """ Search an apps searchable objects and return a list of WpResults.
+        Arguments:
+            searchmod  : The apps search.py module, imported already.
+            queries    : List of string queries to search for.
+    """
+    results = []
+    # TODO: if search_targets() returned a list of matches, then
+    #       ..search_app() could return (relevance_numbers, items)
+    try:
+        for obj in searchmod.get_objects():
+            content = searchmod.get_content(obj)
+            desc = searchmod.get_desc(obj)
+            targets = searchmod.get_targets(obj, content=content, desc=desc)
+            if search_targets(queries, targets):
+                resultargs = searchmod.result_args(obj, desc=desc)
+                # Highlight queries for the description.
+                resultargs['desc'] = highlight_queries(queries, desc)
+                results.append(WpResult(**resultargs))
+    except Exception as ex:
+        logfmt = 'Error searching app: {}\n{}'
+        modname = getattr(searchmod, '__name__', '<unknown>')
+        _log.error(logfmt.format(modname, ex))
     return results
 
 
@@ -329,10 +318,12 @@ def search_targets(queries, targets):
         Returns True on first match, False on no match.
         (no regex used, just 'if s.lower() in t.lower()')
     """
-    
+
+    # TODO: This could be reworked to show relevance.
+    # TODO: The search_all() function could sort items based on relevance.
     if not queries:
         return False
-    
+
     for target in targets:
         if target:
             target = target.lower()
@@ -346,10 +337,10 @@ def search_targets(queries, targets):
 def valid_query(querystr):
     """ check for gotchas in search query,
         returns Warning string on failure to pass. """
-    
+
     # Remove double spaces.
     querystr = fix_query_string(querystr)
-    
+
     search_warning = ''
     # Gotcha checkers: 3 character minimum, too many spaces, etc.
     if len(querystr.replace(' ', '')) < 3:
