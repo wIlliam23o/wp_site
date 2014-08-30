@@ -1,0 +1,12 @@
+#sandbox {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgba(202, 217, 224, 0.5);
+  background: #fafafa;
+  padding: 10px;
+  margin: 10px; }
