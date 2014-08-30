@@ -289,6 +289,7 @@ INSTALLED_APPS = (
     'blogger',
     'searcher',
     'misc',
+    'sandbox',  # private sandbox for testing code or features.
     'apps',  # handles urls for all sub-apps.
     'apps.phonewords',
     'apps.paste',
