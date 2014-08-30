@@ -499,7 +499,7 @@ function setup_ace (doreadonly) {
 // update floater message and size/position
 function update_loading_msg (message) {
     $('#floater-msg').html(message);
-    wptools.center_element('#floater');
+    wptools.center('#floater');
     var floater = $('#floater');
     var scrollpos = $(this).scrollTop();
     //floater.css({'top': scrollpos + 'px'});
@@ -509,7 +509,7 @@ function update_loading_msg (message) {
 
 function show_error_msg (message) {
     $('#floater-msg').html(message);
-    wptools.center_element('#floater');
+    wptools.center('#floater');
     var floater = $('#floater');
     var scrollpos = $(this).scrollTop();
     //floater.css({'top': scrollpos + 'px'});
