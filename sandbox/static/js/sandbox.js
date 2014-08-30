@@ -1,7 +1,6 @@
 var sandbox = {
     get_json: function (url, cb) {
         /* Just a snippet really, an example of using $.ajax and deferreds. */
-        var response = null;
         return $.ajax({'url': url})
             .done(function (data, txtstatus, xhr) {
                 if (cb !== 'undefined' && cb !== null) {

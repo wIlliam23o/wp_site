@@ -8,8 +8,8 @@
 
 {% block extrastylelink %}
 	{{ block.super }}
-	<link rel="stylesheet" href="/static/css/blogger.min.css" type="text/css"/>
-	<link rel="stylesheet" href="/static/css/tags.min.css" type="text/css"/>
+	<link type="text/css" rel="stylesheet" href="/static/css/blogger.min.css"/>
+	<link type="text/css" rel="stylesheet" href="/static/css/tags.min.css"/>
 {% endblock %}
 
 {% block contentabove %}
@@ -19,7 +19,7 @@
 				<h3 class='header'>Blog Tags</h3>
 			</a>
 		</div>
-		
+
 		<div class="blog-header-text">
 				<span class="blog-header-text">Viewing all </span>
 					<span class="blog-header-count">{{ tag_count }}</span>

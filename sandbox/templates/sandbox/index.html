@@ -2,7 +2,7 @@
 {% block title %}- Sandbox{% endblock %}
 
 {% block extrastyle %}
-    <link rel='stylesheet' href='/static/css/sandbox.min.css' type='text/css'/>
+    <link type='text/css' rel='stylesheet' href='/static/css/sandbox.min.css'/>
 {% endblock %}
 
 {% block javascript %}
@@ -19,8 +19,7 @@
     <script type='text/javascript'>
         $(document).ready(function () {
             wptools.pre_ajax();
-            //sandbox.get_json2('/static/json/sandbox.json', function (data) {
-            sandbox.get_json3('/static/json/sandbox.json')
+            $.get('/static/json/sandbox.json')
                 .then(
                     // success
                     function (data, statustype, xhrobj) {

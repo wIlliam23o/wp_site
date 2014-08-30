@@ -23,28 +23,28 @@
     <link rel='shortcut icon' href='/static/images/favicon.ico' type='image/x-icon'/> <!-- vnd.microsoft.icon'-->
 
 	<!-- CSS Links -->
- 	<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400|Open+Sans:400italic,600italic,700italic,800italic,400,800,600,700|Ubuntu+Mono:400,700,400italic,700italic' rel='stylesheet' type='text/css'/>
- 	<link rel='stylesheet' href='/static/css/main.min.css' type='text/css'/>
-	<link rel='stylesheet'  href='/static/css/dock.min.css' type='text/css' media='screen'/>
-	<link rel='stylesheet' href='/static/css/wt-rotator.min.css' type='text/css'/>
+ 	<link type='text/css' rel='stylesheet' href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400|Open+Sans:400italic,600italic,700italic,800italic,400,800,600,700|Ubuntu+Mono:400,700,400italic,700italic'/>
+ 	<link type='text/css' rel='stylesheet' href='/static/css/main.min.css'/>
+	<link type='text/css' rel='stylesheet' href='/static/css/dock.min.css' media='screen'/>
+	<link type='text/css' rel='stylesheet' href='/static/css/wt-rotator.min.css'/>
 
 	<!-- Browser-Specific or Extra CSS Files (Browser detected in views...) -->
 	{% block extrastylelink %}
 		{% if extra_style_link_list %}
 			<!-- add all extra style links -->
 			{% for extra_link in extra_style_link_list %}
-				<link rel='stylesheet' href='{{ extra_link }}' type='text/css'/>
+				<link type='text/css' rel='stylesheet' href='{{ extra_link }}'/>
 			{% endfor %}
 			<!-- add highlighter css if not already added for debug (test-site) -->
 			{% if request|is_test_site %}
 				{% if not extra_style_link_list|contains:'/static/css/highlighter.min.css' %}
-					<link rel='stylesheet' href='/static/css/highlighter.min.css' type='text/css'/>
+					<link type='text/css' rel='stylesheet' href='/static/css/highlighter.min.css'/>
 				{% endif %}
 			{% endif %}
 		{% else %}
 			<!-- no extra style, but we need highlighter css for debug (test-site) -->
 			{% if request|is_test_site %}
-				<link rel='stylesheet' href='/static/css/highlighter.min.css' type='text/css'/>
+				<link type='text/css' rel='stylesheet' href='/static/css/highlighter.min.css'/>
 			{% endif %}
 		{% endif %}
 	{% endblock %}
@@ -88,7 +88,6 @@
 	<!-- Javascript: jQuery -->
 	<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
 	<script type='text/javascript' src='/static/js/jquery.cookie.min.js'></script>
-	<!--             jQueryUI (might be removed from here and used per-page) -->
 	<script type='text/javascript' src='/static/js/jqueryui/jquery-ui.min.js'></script>
 
 	<!-- Javascript: Fisheye Dock -->
