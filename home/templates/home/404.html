@@ -6,9 +6,9 @@
 {% endblock %}
 
 {% block content %}
-	<div class='notfound-box'>
-		<div class='notfound-image-box'>
-			<img class='notfound-image' src='/static/images/404.png'>
+	<div class='error-box'>
+		<div class='error-image-box'>
+			<img class='error-image' src='/static/images/404.png'>
 		</div>
 		{# Show messages from the messages framework #}
 		{% if messages %}
@@ -21,21 +21,32 @@
 			    {% endfor %}
 		{% else %}
 			{# Typical 404 message #}
-			<div class='notfound-message'>
+			<div class='error-message'>
 				Sorry, I can't find this page:
 			</div>
 
-			<div class='notfound-path'>
+			<div class='error-path'>
 				{{ request_path }}
 			</div>
 
 		{% endif %}
-		<span class='notfound-home-message'>
-			<br/>
-			<a href='/'>Click here to go to the home page</a>,
-			<br/>
-			<br/>
-			Or you can browse my <a href='/projects'>projects</a> or <a href='/blog'>blog</a>.
-		</span>		
+		<div class='error-home-message'>
+			{% if user_error %}
+				{{ user_error|safe }}
+			{% endif %}
+
+			<div>
+				<div>
+					<a href='/'>Click here to go to the home page</a>,
+				</div>
+				<div>
+					Or you can browse my
+					<a href='/projects'>projects</a>,
+					<a href='/blog'>blog</a>,
+					<a href='/misc'>misc. stuff</a>,
+					or <a href='/apps'>apps</a> page.
+				</div>
+			</div>
+		</div>
 	</div>
 {% endblock %}
