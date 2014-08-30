@@ -151,7 +151,7 @@
 	   	{% if request|debug_allowed and request|is_test_site %}
 	   		<!-- show/hide debug btn (top button) -->
 	   		<div class='debug-button' id='debug-button-top'>
-	   			<a href='javascript: wptools.toggle_debug();'>
+	   			<a href='#' onclick='javascript: wptool.toggle_debug();'>
 	   				<span class='debug-button-text'>
 	   					show debug
 	   				</span>
@@ -164,7 +164,7 @@
 	   			{% endfilter %}
 	   			<!-- hide debug btn -->
 	   			<div class='debug-button' id='debug-button-bottom'>
-	   				<a href='javascript: wptools.toggle_debug();'>
+	   				<a href='#' onclick='javascript: wptools.toggle_debug();'>
 	   					<span class='debug-button-text'>
 	   						hide debug
 	   					</span>
@@ -179,53 +179,35 @@
 	    <div id='bg-pattern' class='main-pattern'>
 	    	<div class='pattern-gradient'></div>
 		</div>
-		<!-- Login Box -->
-		<!-- {% block login %} -->
-		<!-- <div class='login-box' id='login'> -->
-		<!-- 	<span class='login-label'>Please login to continue:</span> -->
-		<!-- 	<form action='/login'> -->
-		<!-- 		<span class='login-label'>User: </span> -->
-		<!-- 		<input id='login-user' type='text' name='user' class='input-text' required=True> -->
-		<!-- 		<br> -->
-		<!-- 		<span class='login-label'>Password:</span> -->
-		<!-- 		<input id='login-pw' type='password' name='pw' class='input-text' required=True> -->
-		<!-- 	<br> -->
-		<!-- 		<input type='submit' title='ok' class='submit-button' onclick='javascript: wptools.hide_element("#login");'> -->
-		<!-- 	</form> -->
-		<!-- </div> -->
-		<!-- {% endblock %} -->
 
-		<!-- Alert Area -->
-		{% block alert %}
-			{% if request|is_test_site and not request.user.is_staff %}
-			    <!-- Show no access msg for non-admins on test site. -->
-			    <div class='alert'>
-			    	<span class='alert-message'>
-			    		Permission Denied{% if request.user %}: {{ request.user.username }}{% endif %}
-			    	</span>
-			    </div>
-			{% else %}
-			    <!-- Alert area built based on alert_content or alert_message. -->
-				{% if alert_content %}
-					<div class='alert'>
-						{{ alert_content }}
-					</div>
-				{% elif alert_message %}
-					<div class='alert'>
-						<span class='alert-message'>{{ alert_message }}</span>
-					</div>
-				{% endif %}
-			{% endif %}
-		{% endblock %}
-
+		<!-- Content based on live/test site and access. -->
 		{% if request|is_test_site and not request.user.is_staff %}
-			<!-- No Test Site Access for non-admins. -->
+		    <!-- Show no access msg for non-admins on test site. -->
+		    <div class='alert'>
+		    	<span class='alert-message'>
+		    		Permission Denied{% if request.user.username %}: {{ request.user.username }}{% endif %}
+		    	</span>
+		    </div>
 			<div id='page-surround' class='wp-block'>
 				<span style='color: darkred; font-weight: bold;'>
 					Sorry, you do not have access to the test site.
 				</span>
 			</div>
+
 		{% else %}
+		    <!-- Alert area built based on alert_content or alert_message. -->
+			{% if alert_content %}
+				{# html-formatted block for alert-message #}
+				<div class='alert'>
+					{{ alert_content }}
+				</div>
+			{% elif alert_message %}
+				{# single alert-message #}
+				<div class='alert'>
+					<span class='alert-message'>{{ alert_message }}</span>
+				</div>
+			{% endif %}
+
 			<!-- Floating Box placeholder -->
 			{% block floater %}
 			{% endblock %}
@@ -386,7 +368,11 @@
 		$(document).ready( function () {
 			wptools.wpreveal('.wp-address');
 			<!-- fix iFisheyes weird dock positioning. -->
-			wptools.getid('dock-box').style.left = '0px';
+			var dockbox = $('#dock-box');
+			if (dockbox.length) {
+				// Some error pages don't have the dock-box.
+				$('#dock-box').css({'left':'0px'});
+			}
 
 		});
 	</script>
