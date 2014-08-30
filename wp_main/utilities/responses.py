@@ -617,6 +617,53 @@ def render_response(template_name, context_dict):
                              'Sorry, there was an error loading this page.')
 
 
+class staff_required(object):
+
+    """ Decorator for views. Redirects straight to 403 if the user isn't staff.
+        Allows you to pass in messages for the messages-framework.
+        Arguments:
+            msgs       : List of error messages to pass to the framework.
+                         Can be a list/tuple of strings, or just a string.
+            user_error : A friendlier error message for the user.
+                         (not in bold red like the error messages.)
+                         Can be a string, newline-separated string,
+                         or list/tuple of strings.
+
+            * Arguments are for error_response().
+    """
+
+    def __init__(self, msgs=None, user_error=None):
+        self.msgs = msgs
+        self.user_error = self.format_error(user_error)
+
+    def __call__(self, func):
+        """ Decorator to wrap views.
+            If the user is not logged in and staff,
+            a 403 page is returned instead of asking them to log in.
+        """
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if not args[0].user.is_staff:
+                return responses.error403(
+                    args[0],
+                    msgs=self.msgs,
+                    user_error=self.user_error)
+            return func(*args, **kwargs)
+        return wrapper
+
+    @staticmethod
+    def format_error(usererr):
+        """ Formats a list/str of msgs into basic divs. """
+        if not usererr:
+            return None
+        if isinstance(usererr, (list, tuple)):
+            lines = usererr
+        else:
+            lines = str(usererr).split('\n')
+        linefmt = '</div>\n<div>'.join(lines)
+        return '\n<div>{}</div>\n'.format(linefmt)
+
+
 def text_response(text_content, content_type='text/plain'):
     """ sends basic HttpResponse with content type as text/plain """
 
