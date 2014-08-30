@@ -137,6 +137,7 @@ def get_apps():
         if not appname.startswith('django'):
             try:
                 app = import_module(appname)
+                apps.append(app)
             except ImportError as ex:
                 _log.error('Error importing app: {}\n{}'.format(appname, ex))
     return apps
@@ -240,6 +241,7 @@ def is_empty_query(querystring):
 
 def is_searchable(searchmod):
     """ Checks whether a search.py implements all the must-have functions. """
+
     # Searching can be disabled simply by putting 'disabled = True' in the
     # module.
     disabled = getattr(searchmod, 'disabled', False)
@@ -257,7 +259,7 @@ def is_searchable(searchmod):
             'Module {} is missing search functions:'.format(name),
             '    {}'.format('\n    '.join(missing))
         ]
-        _log.debug('\n'.join(loglines))
+        _log.error('\n'.join(loglines))
         return False
     # Module implements all must-have functions.
     return True

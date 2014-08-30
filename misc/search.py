@@ -3,12 +3,12 @@
     -Christopher Welborn 08-30-14
 """
 from misc.models import wp_misc
-from misc import misctools
+from misc import tools
 
 
 def get_content(miscobj):
     """ Return the full content for a misc object. """
-    return misctools.get_long_desc(miscobj)
+    return tools.get_long_desc(miscobj)
 
 
 def get_desc(miscobj):
