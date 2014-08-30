@@ -25,9 +25,12 @@
 */
 
 var wptools = {
-    center_element : function (selector, usevertical) {
-        // first arg is css selector for elem.
-        // second arg (true/false) whether or not to center on vertical.
+    center: function (selector, usevertical) {
+        /*  Centers an element on screen.
+            Arguments:
+                selector     : selector for elem.
+                usevertical  : (true/false) center on vertical also.
+        */
         var screen_width = $(document).width();
         var elem = $(selector);
         var newx = -1;
@@ -35,7 +38,7 @@ var wptools = {
         if (elem) {
             newx = (screen_width - elem.width()) / 2;
             $(selector).css({'right': newx + 'px'});
-            if (usevertical) {
+            if (usevertical || usevertical.usevertical) {
                 newy = (window.innerHeight / 2) - elem.height();
                 elem.css({'top': newy + 'px'});
             }
@@ -48,16 +51,11 @@ var wptools = {
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     },
 
-    elem_is_hidden : function(selector_) {
+    is_hidden : function(selector_) {
         /* determines if element is hidden
          * by checking the display property */
         var box_display = $(selector_).css('display');
         return (box_display === '' || box_display == 'none');
-    },
-
-    getid : function (id_) {
-        /* convenience function (shorter than the document method.) */
-        return document.getElementById(id_);
     },
 
     is_address : function (input_) {
@@ -99,8 +97,8 @@ var wptools = {
     },
 
     hide_debug : function () {
-        /* hides the debug box */
-        this.set_display('.debug-box', 'none');
+        /* Hides the debug box and changes it's label text. */
+        $('.debug-box').hide();
         $('.debug-button-text').text('show debug');
     },
 
@@ -109,23 +107,23 @@ var wptools = {
     },
 
 	pre_ajax : function () {
-		// setup ajax
+		/*  Set global options for jQuery.ajax using $.ajaxSetup
+            Django needs it's csrftoken cookie for all requests.
+        */
+        // This cookie is needed for Django.
+        var csrftoken = $.cookie('csrftoken');
+        // Build a dict of options and return it.
+        var settings = {
+            crossDomain: false,
+            beforeSend: function(xhr, settings) {
+                if (!wptools.csrf_safe_method(settings.type)) {
+                    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+                }
+            }
+        };
+
 		$.ajaxSettings.traditional = true;
-		$.ajaxSetup(wptools.pre_ajax_setup());
-	},
-
-	pre_ajax_setup : function () {
-		// info dict needed for .ajaxSetup()
-		var csrftoken = $.cookie('csrftoken');
-		data = {crossDomain: false,
-				beforeSend: function(xhr, settings) {
-					if (!wptools.csrf_safe_method(settings.type)) {
-                        xhr.setRequestHeader('X-CSRFToken', csrftoken);
-					}
-				}
-		};
-
-		return data;
+		$.ajaxSetup(settings);
 	},
 
 	scroll_element : function (selector, toppos) {
@@ -150,22 +148,9 @@ var wptools = {
         }
     },
 
-    send_post : function (url, data_dict, done_func) {
-        // setup ajax
-        $.ajaxSetup(wptools.pre_ajax_setup());
-        // Submit data to url, invoke done_func() on done.
-        $.post(url, data_dict).done(done_func);
-    },
-
-    set_display : function (selector_, display_property) {
-        /* sets display property for element */
-        // uses first element in query, so choose selectors wisely.
-        $(selector_).css('display', display_property);
-    },
-
     show_debug : function () {
-        /* displays the debug box */
-        this.set_display('.debug-box', 'block');
+        /* Displays the debug box and changes it's label text. */
+        $('.debug-box').show();
         $('.debug-button-text').text('hide debug');
     },
 
@@ -180,11 +165,15 @@ var wptools = {
     },
 
     toggle_debug : function () {
-        /* toggles debug-box between shown and hidden. */
-        if (this.elem_is_hidden('.debug-box')) {
-            this.show_debug();
+        /*  Toggles debug-box between shown and hidden.
+            This also changes the label text for it through
+            show_debug() and hide_debug().
+        */
+        var debugbox = $('.debug-box');
+        if (wptools.is_hidden(debugbox)) {
+            wptools.show_debug();
         } else {
-            this.hide_debug();
+            wptools.hide_debug();
         }
 
     },
