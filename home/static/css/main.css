@@ -1133,6 +1133,13 @@ code, samp {
   font-weight: bold;
   font-size: 1.5em; }
 
+.error-noaccess-message {
+  color: darkred;
+  font-weight: bold;
+  font-size: 2em;
+  text-align: center;
+  text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5); }
+
 .error-path {
   color: #4d4d4d;
   font-weight: normal;
@@ -1141,6 +1148,10 @@ code, samp {
 .error-home-message {
   font-size: 0.9em;
   margin-top: 10px; }
+
+.error-home-link {
+  font-size: 0.9em;
+  margin-top: 15px; }
 
 .error-image-box {
   text-align: center; }

@@ -863,6 +863,14 @@ code, samp {
     font-size: $fontmedium;
 }
 
+.error-noaccess-message {
+    // Message displayed on the test site for anons.
+    color: darkred;
+    font-weight: bold;
+    font-size: 2em;
+    text-align: center;
+    text-shadow: $shadowtextbig;
+}
 .error-path {
     color: $greydark;
     font-weight: normal;
@@ -872,6 +880,11 @@ code, samp {
 .error-home-message {
     font-size: 0.9em;
     margin-top: 10px;
+}
+
+.error-home-link {
+    font-size:0.9em;
+    margin-top:15px;
 }
 
 .error-image-box {
