@@ -1,5 +1,6 @@
 var sandbox = {
     get_json: function (url, cb) {
+        /* Just a snippet really, an example of using $.ajax and deferreds. */
         var response = null;
         return $.ajax({'url': url})
             .done(function (data, txtstatus, xhr) {
@@ -11,13 +12,5 @@ var sandbox = {
                 console.log('Error retrieving JSON: ' + txtstatus);
                 console.log(errorthrown);
             })
-    },
-
-    get_json2: function (url) {
-        return $.getJSON(url);
-    },
-
-    get_json3: function (url) {
-        return $.get(url)
     }
 };
