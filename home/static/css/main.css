@@ -468,7 +468,7 @@ a.jumpto-nav {
   position: absolute;
   /* trying out a fixed menu, doesn't really fit.
   position: fixed;
-  z-index: 999; 
+  z-index: 999;
   */
   left: 5px;
   top: 220px;
@@ -1114,37 +1114,38 @@ code, samp {
   font-weight: bold;
   font-size: 1.5em; }
 
-.notfound-box {
+.error-box {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   -ms-border-radius: 5px;
   -o-border-radius: 5px;
   border-radius: 5px;
-  background: white;
+  background: #fafafa;
+  height: 300px;
   border-style: solid;
   border-width: 2px;
   border-color: rgba(202, 217, 224, 0.5);
   padding: 5px;
   text-align: center; }
 
-.notfound-message {
+.error-message {
   color: black;
   font-weight: bold;
   font-size: 1.5em; }
 
-.notfound-path {
+.error-path {
   color: #4d4d4d;
   font-weight: normal;
   font-size: 1.2em; }
 
-.notfound-home-message {
+.error-home-message {
   font-size: 0.9em;
   margin-top: 10px; }
 
-.notfound-image-box {
+.error-image-box {
   text-align: center; }
 
-.notfound-image {
+.error-image {
   -webkit-border-radius: 30px;
   -moz-border-radius: 30px;
   -ms-border-radius: 30px;
