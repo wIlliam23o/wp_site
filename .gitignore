@@ -17,3 +17,6 @@ misc/static/files/pi*
 *.log
 *banned*
 initenv
+package.json
+node_modules
+Gruntfile.js
