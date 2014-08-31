@@ -192,10 +192,12 @@ def build_css_file(filename):
     except ToolNotFound:
         raise
 
-    outfile = filename.replace('.css', '.min.css')
-
+    relpath = filename.split('static/')[1].replace('.css', '.min.css')
+    outfile = os.path.join(settings.STATIC_ROOT, relpath)
+    #outfile = filename.replace('.css', '.min.css')
     cmdargs = ['java', '-jar', yui, filename, '-o', outfile]
-
+    if settings.SITE_VERSION.lower().startswith('local'):
+        cmdargs.insert(0, 'sudo')
     procret = subprocess.check_call(cmdargs)
     return (procret == 0)
 
@@ -366,8 +368,13 @@ def build_js_file(filename):
     outfile = os.path.join(settings.STATIC_ROOT, relpath)
     #outfile = filename.replace('.js', '.min.js')
 
-    cmdargs = ['java', '-jar', closure, '--language_in', 'ECMASCRIPT5',
-               '--js', filename, '--js_output_file', outfile]
+    cmdargs = [
+        'java',
+        '-jar', closure,
+        '--warning_level', 'QUIET',
+        '--language_in', 'ECMASCRIPT5',
+        '--js', filename,
+        '--js_output_file', outfile]
 
     procret = subprocess.check_call(cmdargs)
     return (procret == 0)
@@ -537,6 +544,9 @@ def get_modified_duration(filename):
     if not is_min:
         minfile = '{}.min{}'.format(filebase, fileext)
         if not os.path.isfile(minfile):
+            relpath = minfile.split('static/')[1]
+            minfile = os.path.join(settings.STATIC_ROOT, relpath)
+        if not os.path.isfile(minfile):
             # No min file, has never been created. (force it)
             print('\nNew file: {}'.format(filename))
             return 0
@@ -632,6 +642,10 @@ def is_modified(filename):
         print('\nUnable to determine target file '
               'in is_modified()!: {}'.format(filename))
         return False
+
+    if not os.path.isfile(targetfile):
+        relpath = targetfile.split('static/')[1]
+        targetfile = os.path.join(settings.STATIC_ROOT, relpath)
 
     if not os.path.isfile(targetfile):
         # No target file, has never been created. (force update)

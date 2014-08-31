@@ -152,7 +152,7 @@ def build_files(wponly=False):
     if os.path.isfile(builder_py):
         print('\nRunning builder...')
         build_cmd = ['python3', builder_py]
-        if settings.SITE_VERSION.startswith('Local'):
+        if settings.SITE_VERSION.lower().startswith('local'):
             build_cmd.insert(0, 'sudo')
 
         if wponly:
