@@ -10,6 +10,6 @@ var sandbox = {
             .fail(function (xhr, txtstatus, errorthrown) {
                 console.log('Error retrieving JSON: ' + txtstatus);
                 console.log(errorthrown);
-            })
+            });
     }
 };
