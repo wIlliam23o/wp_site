@@ -46,13 +46,19 @@ from django.conf import settings
 _FILE = sys.argv[0]
 _SCRIPT = os.path.split(_FILE)[1]
 _NAME = 'Builder'
-_VERSION = '1.0.0'
+_VERSION = '1.0.1'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 DEBUG = False
 # These strings will always be filtered.
 #    ace is already minimized. .min and -min is already minimized.
 #    _welbornprod.scss need not be minimized. it is to be human-readable.
-DEFAULT_FILTERS = ['.min.', '-min.', '_welbornprod.scss', 'js/ace']
+DEFAULT_FILTERS = [
+    'node_modules',
+    '.min.',
+    '-min.',
+    '_welbornprod.scss',
+    'js/ace'
+]
 # These are the default extensions to use (when build_files() is called)
 DEFAULT_EXTENSIONS = ['.css', '.js', '.scss']
 
@@ -109,11 +115,12 @@ def main(argd):
 
     included = parse_commas(argd['--included'])
     filtered = parse_commas(argd['--filtered'])
-    buildargs = {'included': included,
-                 'filtered': filtered,
-                 'forced': argd['--all'],
-                 'matchpath': argd['--path'],
-                 }
+    buildargs = {
+        'included': included,
+        'filtered': filtered,
+        'forced': argd['--all'],
+        'matchpath': argd['--path'],
+    }
 
     if argd['<file>']:
         # Build a single file.
@@ -355,7 +362,9 @@ def build_js_file(filename):
         raise
 
     # Build command args:
-    outfile = filename.replace('.js', '.min.js')
+    relpath = filename.split('static/')[1].replace('.js', '.min.js')
+    outfile = os.path.join(settings.STATIC_ROOT, relpath)
+    #outfile = filename.replace('.js', '.min.js')
 
     cmdargs = ['java', '-jar', closure, '--language_in', 'ECMASCRIPT5',
                '--js', filename, '--js_output_file', outfile]
