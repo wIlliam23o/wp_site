@@ -6,7 +6,7 @@
 #  2.0 is considered a new beginning because the project
 #  is moving towards a backward-incompatible state,
 #  where all python 2 'hacks' will be removed.)
-WPVERSION = '2.1.2'
+WPVERSION = '2.1.5'
 
 # file/path (path joining)
 import os.path
@@ -27,6 +27,9 @@ BASE_DIR = os.path.split(SCRIPT_PARENT)[0]
 # get parent of application
 BASE_PARENT = os.path.split(BASE_DIR)[0]
 
+# File for list of IP's to ban.
+SECRET_BAN_FILE = os.path.join(BASE_DIR, 'wp_banned.lst')
+
 # test or live?
 if 'webapps' in BASE_PARENT:
     # live site directories
@@ -45,7 +48,7 @@ else:
 
 # Static/Media directories.
 MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
-    
+
 # main app (location of settings.py)
 MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
@@ -226,11 +229,14 @@ TEMPLATE_DIRS = (
     os.path.join(TEMPLATES_BASE, 'admindoc/templates'),
     # Include project pages as possible templates.
     os.path.join(BASE_DIR, 'projects/static/html'),
-    # Include blog pages as possible templates.
+    # Include blog post html as possible templates.
     os.path.join(BASE_DIR, 'blogger/static/html'),
 )
 
 MIDDLEWARE_CLASSES = (
+    # WelbornProd IP bans..
+    'middleware.requests.WpBanIpMiddleware',
+    # Standard middleware chain.
     'django.middleware.gzip.GZipMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -241,9 +247,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    # make requests available in templates...
-    #'django.core.context_processors.request',
 
     # django debug tools
     'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -267,10 +270,13 @@ INSTALLED_APPS = (
     # admin enabled:
     'django.contrib.admin',
     'django.contrib.admindocs',
-    
+
     # django debug tools (for test-site and local development)
     'debug_toolbar',
     'django_extensions',
+
+    # singleton configuration for home app.
+    'solo',
 
     # for making get_user_agent(request) available.
     'wp_user_agents',
@@ -283,10 +289,11 @@ INSTALLED_APPS = (
     'blogger',
     'searcher',
     'misc',
+    'sandbox',  # private sandbox for testing code or features.
     'apps',  # handles urls for all sub-apps.
     'apps.phonewords',
     'apps.paste',
-    
+
 )
 
 # A sample logging configuration. The only tangible logging
@@ -303,7 +310,7 @@ LOGGING = {
         }
     }
 }
-    
+
 
 # Only turn error emails on with the remote server
 # They are driving me nuts when I'm expirimenting locally and DEBUG == False.

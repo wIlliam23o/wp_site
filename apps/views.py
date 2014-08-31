@@ -12,4 +12,5 @@ def view_index(request):
             '/static/css/apps.min.css'],
         'apps': apps,
     }
+
     return responses.clean_response('apps/index.html', context)

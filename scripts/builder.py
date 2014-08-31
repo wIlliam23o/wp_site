@@ -46,13 +46,19 @@ from django.conf import settings
 _FILE = sys.argv[0]
 _SCRIPT = os.path.split(_FILE)[1]
 _NAME = 'Builder'
-_VERSION = '1.0.0'
+_VERSION = '1.0.1'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 DEBUG = False
 # These strings will always be filtered.
 #    ace is already minimized. .min and -min is already minimized.
 #    _welbornprod.scss need not be minimized. it is to be human-readable.
-DEFAULT_FILTERS = ['.min.', '-min.', '_welbornprod.scss', 'js/ace']
+DEFAULT_FILTERS = [
+    'node_modules',
+    '.min.',
+    '-min.',
+    '_welbornprod.scss',
+    'js/ace'
+]
 # These are the default extensions to use (when build_files() is called)
 DEFAULT_EXTENSIONS = ['.css', '.js', '.scss']
 
@@ -109,11 +115,12 @@ def main(argd):
 
     included = parse_commas(argd['--included'])
     filtered = parse_commas(argd['--filtered'])
-    buildargs = {'included': included,
-                 'filtered': filtered,
-                 'forced': argd['--all'],
-                 'matchpath': argd['--path'],
-                 }
+    buildargs = {
+        'included': included,
+        'filtered': filtered,
+        'forced': argd['--all'],
+        'matchpath': argd['--path'],
+    }
 
     if argd['<file>']:
         # Build a single file.
@@ -185,10 +192,12 @@ def build_css_file(filename):
     except ToolNotFound:
         raise
 
-    outfile = filename.replace('.css', '.min.css')
-
+    relpath = filename.split('static/')[1].replace('.css', '.min.css')
+    outfile = os.path.join(settings.STATIC_ROOT, relpath)
+    #outfile = filename.replace('.css', '.min.css')
     cmdargs = ['java', '-jar', yui, filename, '-o', outfile]
-
+    if settings.SITE_VERSION.lower().startswith('local'):
+        cmdargs.insert(0, 'sudo')
     procret = subprocess.check_call(cmdargs)
     return (procret == 0)
 
@@ -355,10 +364,17 @@ def build_js_file(filename):
         raise
 
     # Build command args:
-    outfile = filename.replace('.js', '.min.js')
+    relpath = filename.split('static/')[1].replace('.js', '.min.js')
+    outfile = os.path.join(settings.STATIC_ROOT, relpath)
+    #outfile = filename.replace('.js', '.min.js')
 
-    cmdargs = ['java', '-jar', closure, '--language_in', 'ECMASCRIPT5',
-               '--js', filename, '--js_output_file', outfile]
+    cmdargs = [
+        'java',
+        '-jar', closure,
+        '--warning_level', 'QUIET',
+        '--language_in', 'ECMASCRIPT5',
+        '--js', filename,
+        '--js_output_file', outfile]
 
     procret = subprocess.check_call(cmdargs)
     return (procret == 0)
@@ -528,6 +544,9 @@ def get_modified_duration(filename):
     if not is_min:
         minfile = '{}.min{}'.format(filebase, fileext)
         if not os.path.isfile(minfile):
+            relpath = minfile.split('static/')[1]
+            minfile = os.path.join(settings.STATIC_ROOT, relpath)
+        if not os.path.isfile(minfile):
             # No min file, has never been created. (force it)
             print('\nNew file: {}'.format(filename))
             return 0
@@ -623,6 +642,10 @@ def is_modified(filename):
         print('\nUnable to determine target file '
               'in is_modified()!: {}'.format(filename))
         return False
+
+    if not os.path.isfile(targetfile):
+        relpath = targetfile.split('static/')[1]
+        targetfile = os.path.join(settings.STATIC_ROOT, relpath)
 
     if not os.path.isfile(targetfile):
         # No target file, has never been created. (force update)

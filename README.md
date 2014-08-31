@@ -13,11 +13,18 @@ I wasn't able to find many pre-made 'apps' to do exactly what I wanted,
 so I ended up making my own. I admit that most of these apps couldn't be
 'dropped into' another project without bringing the 'wp_main' app and some
 other stuff with it, but in the beginning of this project I wasn't sure about
-what a 'good django project' looked like. The 'searcher' app depends heavily on
-the other apps (to know what to search, and where). The 'downloads' also, as it
-updates the 'download_count' on many objects. The 'viewer' will show extra info
-depending on whether a file is related to a project or not, and also updates
-the 'view_count' on objects that have one.
+what a 'good django project' looked like.
+
+The 'searcher' app is now decoupled from the models. It depends on
+`INSTALLED_APPS`, and looks for a `search.py` within the apps. As long as the
+"must-have" functions are implemented in `search.py` the app's models can
+be searched.
+
+The 'downloads' depends on the other apps, as it updates the 'download_count'
+on many objects.
+
+The 'viewer' will show extra info depending on whether a file is related to a
+project or not, and also updates the 'view_count' on objects that have one.
 
 
 There is one section where things are much more isolated. The 'apps' are meant
@@ -41,7 +48,7 @@ _*Language/Libraries*_:
 
 **Python 3+**
 
-  <small>...just waiting for the right libraries before I switch to 3.</small>
+  <small>...this isn't 100% Python 2 compatible anymore.</small>
 
 **Django 1.5+**
 
@@ -57,9 +64,17 @@ _*Language/Libraries*_:
 
   <small>...currently looking for alternative methods.</small>
 
+**Django Extensions**
+
+  <small>...several extra tools to use with Django.
+
 **Pygments**
 
   <small>...used for source code highlighting</small>
+
+**Twython**
+
+  <small>...uses the Twitter API to retrieve latest tweets.</small>
 
 
 **...various other standard libraries.**
@@ -74,6 +89,7 @@ The site is live, if you'd like to see what I have so far you can do so here:
 
 It's running on an [Apache] server, hosted by [WebFaction].
 
+[![I Love Open Source](http://www.iloveopensource.io/images/logo-lightbg.png)](http://www.iloveopensource.io/projects/53e6d33587659fce660044fe)
 
    [welbornprod.com]: http://welbornprod.com "welbornprod.com"
    [welbornprod.info]: http://welbornprod.info "welbornprod.info"

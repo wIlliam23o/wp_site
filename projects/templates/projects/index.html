@@ -9,7 +9,7 @@
 
 {% block extrastyle %}
 	<!-- Style for Video.js -->
-    <link rel='stylesheet' href='/static/css/video-js.css' rel='stylesheet' type='text/css'/>
+    <link type='text/css' rel='stylesheet' href='/static/css/video-js.css' rel='stylesheet'/>
 
 	<style type='text/css'>
 		.wpbutton.project-edit-button {
@@ -65,7 +65,7 @@
 						<span class="version">version {{ project.version }}</span>
 						<br/>
 					</div>
-				
+
 					<!-- Description -->
 					<div class="project-desc">
 						<span class="desc">{{ project.description|safe }}</span>

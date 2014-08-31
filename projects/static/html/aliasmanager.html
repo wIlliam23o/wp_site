@@ -23,6 +23,22 @@
 		<h3 class='title'>New Features</h3>
 	</div>
 	<div class='update-box'>
+		<!-- Update 1.7.6 -->
+		<span class='update-title'>Update: version 1.7.6</span>
+		<ul class='blue circle'>
+			<li>
+				Added [bash]-C[?bash] flag to convert functions or aliases to standalone scripts.
+			</li>
+			<div class='listdesc'>
+				A script will be generated containing a function definition and a call of that function (with all args).
+				<br>
+				Usage: <code class='bash'>aliasmgr -C &lt;known_alias&gt; [&lt;target_file.sh&gt;] [-o]</code>
+				<br>
+				The [bash]-o[?bash] flag will overwrite existing files. The default action is to add a number
+				to existing filenames ([bash]myscript.sh[?bash], [bash]myscript2.sh[?bash]).
+			</div>
+		</ul>
+
 		<!-- Update 1.7.5 -->
 		<span class='update-title'>Update: version 1.7.5</span>
 		<ul class='blue circle'>
@@ -82,7 +98,7 @@
 	    <a href='https://github.com/welbornprod/aliasmanager.git' target='blank'>
 	    Alias Manager (github)
 	    </a>
-	    &nbsp;- current <strong>Alias Manager</strong> source code at 
+	    &nbsp;- current <strong>Alias Manager</strong> source code at
 	    <a href='http://github.com' target="_blank">github</a>.
 	</p>
 	{{ source_view }}

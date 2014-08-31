@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block content %}
-	<div class='notfound-box'>
+	<div class='error-box'>
 		{# Show messages from the messages framework #}
 		{% if messages %}
 			    {% for message in messages %}
@@ -20,18 +20,18 @@
 			<div class='msg-framework-error'>
 				Server Error.
 			</div>
-			<div class='notfound-message'>
+			<div class='error-message'>
 				Something very bad just happened.
 			</div>
 		{% endif %}
 
 		{% if request_path %}
-			<div class='notfound-path'>
+			<div class='error-path'>
 				{{ request_path }}
 			</div>
 		{% endif %}
 
-		<div class='notfound-home-message'>
+		<div class='error-home-message'>
 			{% if user_error %}
 				{{ user_error|safe }}
 			{% else %}
@@ -40,15 +40,15 @@
 				It will be fixed as soon as possible. -Cj
 			{% endif %}
 		</div>
-		<div class='notfound-home-message'>
+		<div class='error-home-link'>
 			<a href='/'>Click here to go to the home page</a>,
 		</div>
-		<div class='notfound-home-message'>
-			Or you can browse my 
+		<div class='error-home-message'>
+			or try my
 			<a href='/projects'>projects</a>,
 			<a href='/blog'>blog</a>,
 			<a href='/misc'>misc. stuff</a>,
 			or <a href='/apps'>apps</a> page.
-		</div>		
+		</div>
 	</div>
 {% endblock %}

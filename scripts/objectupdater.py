@@ -13,8 +13,8 @@ import os
 import re
 import zlib
 
-from sys import version as sysversion
-PY3 = (sysversion[0] == '3')
+from sys import version_info as sysversion_info
+PY3 = (sysversion_info.major == 3)
 
 # fix for input function if py2 is used. (remove when py2 is disabled)
 if not PY3:
@@ -88,18 +88,25 @@ def convert_attr(oldattr, val):
 
 def do_fields(model):
     """ List all the model fields. """
-    
+
     print('\nFields for {}:'.format(model.__name__))
     tmpobject = model.objects.create()
     tmpobject.delete()
     fieldnames = get_model_fields(model)
-    longestname = max((len(f) for f in fieldnames))
-    
+    longestname = len(max(fieldnames, key=len))
+    typepat = re.compile(r'\'([_\.\w]+)\'')
     for fieldname in fieldnames:
         attr = getattr(tmpobject, fieldname)
-        fieldtype = str(type(int)) if fieldname == 'id' else str(type(attr))
-        spacing = (' ' * (longestname - len(fieldname)))
-        print('    {}{} : {}'.format(str(fieldname), spacing, fieldtype))
+        fieldtype = str(type(int())) if fieldname == 'id' else str(type(attr))
+        if fieldtype.startswith('<class'):
+            # Make the type names prettier.
+            typematch = typepat.search(fieldtype)
+            typematchgrps = typematch.groups() if typematch else None
+            if typematchgrps:
+                fieldtype = typematchgrps[0]
+
+        fieldfmt = str(fieldname).ljust(longestname)
+        print('    {} : {}'.format(fieldfmt, fieldtype))
     return 0
 
 
@@ -107,7 +114,7 @@ def do_headerstr(ident, model, attrs=None):
     """ Print just the header string for an object.
         Arguments:
             ident  : name, title or part of a name to retrieve object.
-            model  : model containing the objects to retrieve from 
+            model  : model containing the objects to retrieve from
                      (wp_project, wp_blog, etc.)
 
         Keyword Arguments:
@@ -161,7 +168,7 @@ def do_object_archive(ident, model, attrs, usefile=False):
 
         # print the archive string.
         print(arcstr)
-    
+
     return 0
 
 
@@ -245,7 +252,7 @@ def do_object_info(ident, model, attrs):
 
     pinfo = get_object_info(obj)
     keynames = sorted(list(pinfo.keys()))
-    longestkey = max((len(k) for k in keynames))
+    longestkey = len(max(keynames, key=len))
 
     # retrieve proper header string for this model.
     headerstr = get_headerstr(obj)
@@ -278,10 +285,10 @@ def do_object_info(ident, model, attrs):
     # print functions last.
     print('\nFunctions for {}:'.format(headerstr))
     print('\n'.join(functionlines))
-    
+
     print(' ')
     return 0
-        
+
 
 def do_object_json(ident, model, attrs):
     """ Retrieves an objects simple JSON representation.
@@ -342,12 +349,12 @@ def do_object_update(ident, model, attrs, data=None):
                      (attr:val, or "attr:space value")
                      Must be able to do getattr(obj, attr).
     """
-    
+
     obj = get_object(ident, model, attrs=attrs)
     if not obj:
         print_notfound(ident, model, attrs)
         return 1
-    
+
     return update_object_bydata(obj, data)
 
 
@@ -355,7 +362,7 @@ def get_convert_func(oldattr):
     """ Retrieves the conversion function needed based on oldattrs type. """
     # Get attribute type.
     requiredtype = type(oldattr)
-    
+
     def makebool(s):
         """ helper for converting to bool (since bool("False") == True). """
         trues = ('true', '1')
@@ -403,7 +410,7 @@ def get_convert_func(oldattr):
     # No conversion function is set yet, it's not a 'dumb' type.
     if convertfunc is None:
         convertfunc = requiredtype
-    
+
     # Return the function that will be used.
     return convertfunc
 
@@ -414,6 +421,9 @@ def get_headerstr(obj):
             model : model this object belongs to. (to determine header style.)
             obj   : object to get header info from. (obj.name, obj.title, etc.)
     """
+    # TODO: This could be built into the model, like a 'console_repr' attribute
+    # TODO: ..then get_headerstr() would be: obj.console_repr()
+    # TODO: ..so this hardcoded mess (attrs as strings that are loaded) dies.
 
     # Default header string.
     headerstr = 'object'
@@ -487,7 +497,7 @@ def get_model_fields(model, includefunctions=False, exclude=None):
         testattrs['name'] = 'testitem'
     elif hasattr(model, 'title'):
         testattrs['title'] = 'testitem'
-    
+
     tmpobject = model.objects.create(**testattrs)
     tmpobject.delete()
     attrs = [a for a in dir(tmpobject) if not a.startswith('_')]
@@ -509,7 +519,7 @@ def get_model_fields(model, includefunctions=False, exclude=None):
             except:
                 #print('skipping: {}'.format(aname))
                 continue
-            
+
             if not hasattr(attr, '__call__'):
                 basicattrs.append(aname)
         attrs = basicattrs
@@ -527,18 +537,18 @@ def get_object(ident, model, attrs=None):
             attrs  : attributes to search.
                      (id is always searched because all models contain an id.)
     """
-    
+
     try:
         intval = int(ident)
     except:
         intval = None
-    
+
     # Try id
     if intval:
         obj = try_get(model, id=intval)
         if obj:
             return obj
-    
+
     # Build keyword args for attributes, and get().
     attrset = {}
     for aname in attrs:
@@ -561,6 +571,9 @@ def get_object_archive(obj):
     """ Retrieve archive format for an object.
         For storing and recreating objects at a later date.
     """
+
+    # TODO: This should be on the model itself.
+    # TODO: ..like: wp_blog.archive(filename=None), .archive_bytes()
 
     model = obj.__class__
     # Can't recreate an object with these fields.
@@ -596,6 +609,8 @@ def get_object_archive(obj):
 def get_object_fromarchive(data):
     """ Creates an object from an archive. """
 
+    # TODO: This should be on the model itself.
+    # TODO: ..like: wp_blog.from_archive_bytes(b), .from_archive_file(filename)
     if isinstance(data, str):
         # We need bytes for these operations.
         data = bytes(data, 'utf-8')
@@ -654,7 +669,7 @@ def get_object_by_partname(partname, model, attrs=None, objects=None):
             objects   : objects to search
                         (won't fetch them again if you provide them here.)
     """
-    
+
     if not attrs:
         print('\nNo attributes to search with! Programmer error!')
         return None
@@ -664,7 +679,7 @@ def get_object_by_partname(partname, model, attrs=None, objects=None):
     except Exception as ex:
         print('\nInvalid pattern for name!: {}\n{}'.format(partname, ex))
         return None
-    
+
     # Determing orderby
     orderbyinfo = {'wp_project': 'name',
                    'wp_blog': '-posted',
@@ -700,7 +715,7 @@ def get_object_by_partname(partname, model, attrs=None, objects=None):
             attrmatch = repat.search(attrval)
             if attrmatch:
                 return obj
-    
+
     # No match.
     return None
 
@@ -709,7 +724,7 @@ def get_object_info(obj, includefunctions=True):
     """ Retrieves all info about a model object (wp_project, wp_blog, etc.)
         returns a dict containing relavent info.
     """
-    
+
     filtered = ('objects',)
     info = {}
     for aname in dir(obj):
@@ -730,7 +745,7 @@ def get_object_info(obj, includefunctions=True):
         else:
             info[aname]['value'] = str(attrval)
         info[aname]['function'] = isfunction
-        
+
     return info
 
 
@@ -847,7 +862,7 @@ def print_notfound(ident, model, attrs):
 
 def try_get(model, **kwargs):
     """ Try doing a get(key=val), if it fails return None """
-    
+
     try:
         proj = model.objects.get(**kwargs)
     except model.DoesNotExist:
@@ -883,7 +898,7 @@ def update_object(obj, attr, val, objectname=None):
             val  : value to assign attribute (string get converted to
                    required type.)
     """
-    
+
     try:
         objname = obj.__class__.__name__
     except:
@@ -893,13 +908,13 @@ def update_object(obj, attr, val, objectname=None):
         # No attr by that name.
         print('\n{} doesn\'t have that attribute!: {}'.format(objname, attr))
         return 1
-    
+
     # Check old setting.
     oldattr = getattr(obj, attr)
     if val == oldattr:
         print('\n{}.{} already set to: {}'.format(objname, attr, val))
         return 1
-    
+
     try:
         # Use the conversion function to make sure proper types are set
         # (in Django/Database)
@@ -911,7 +926,7 @@ def update_object(obj, attr, val, objectname=None):
         print('\nError converting value to required type!: '
               '{}\n{}'.format(val, ex))
         return 1
-    
+
     # Set the attribute.
     try:
         setattr(obj, attr, val)

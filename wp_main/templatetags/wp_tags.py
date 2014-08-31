@@ -4,10 +4,10 @@
 '''
       project: welbornproductions - global template tags
      @summary: provides template tags that can be used in any wp app.
-    
+
       @author: Christopher Welborn <cj@welbornproductions.net>
 @organization: welborn productions <welbornproductions.net>
- 
+
    start date: Mar 29, 2013
 '''
 # For insert_video, building a mimetype from file extension.
@@ -44,12 +44,13 @@ disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
 
 
+@register.filter
 def colorize_admin_css(item):
     """ applies class='item-disabled' to admin change_list.results.item
         if the object has .disabled attribute and it is set to True.
         This is used in change_list_results.html template for admin.
     """
- 
+
     obj_match = disabled_pat.search(item)
     if obj_match is None:
         # This is not an object link.
@@ -75,7 +76,7 @@ def colorize_admin_css(item):
             # failed to match our pattern exactly.
             _log.debug("Incorrect number of items in match: " + str(item))
             return item
-    
+
     # convert to object
     objectsets = {
         'wp_app': wp_app.objects,
@@ -93,8 +94,9 @@ def colorize_admin_css(item):
 
     # no object found for this type.
     if obj is None:
-        _log.debug('Admin-disable: Can\'t find: '
-                   '{} [{}]'.format(name, otype))
+        _log.debug(''.join((
+            'Colorize-Admin: Can\'t find: '
+            '{} [{}]')).format(name, otype))
         return item
 
     # List of classes to add to this link.
@@ -108,7 +110,7 @@ def colorize_admin_css(item):
     if is_onhold(obj):
         # Item is onhold.
         newclasses.append('item-onhold')
-        
+
     if is_private(obj):
         # Item is a private paste.
         newclasses.append('item-private')
@@ -125,27 +127,30 @@ def colorize_admin_css(item):
         return item
 
 
+@register.filter
 def contains(str_or_list, val_to_find):
     """ uses 'if val in str_or_list'.
         returns True if val_to_find is in str_or_list.
     """
-    
+
     return (val_to_find in str_or_list)
 
 
+@register.filter
 def debug_allowed(request_object):
-    """ uses utilities to determine if debug 
+    """ uses utilities to determine if debug
         info is allowed for this request.
     """
-    
+
     return utilities.debug_allowed(request_object)
 
 
+@register.filter
 def dict_value(dict_object, dictkey):
     """ retrieves value for dict key,
         like: value['dictkey'].
     """
-    
+
     try:
         val = dict_object[dictkey]
     except:  # Exception as ex:
@@ -153,14 +158,16 @@ def dict_value(dict_object, dictkey):
     return val
 
 
+@register.filter
 def ends(str_, val_to_check):
     """ uses str_.endswith() to check a value.
         returns True if str_.endswith(val_to_check)
     """
-    
+
     return (str_.endswith(val_to_check))
 
 
+@register.filter
 def exceeds_max(value, max_):
     """ checks if a value exceeds the maximum allowed """
 
@@ -171,7 +178,7 @@ def exceeds_max(value, max_):
             val_ = int(value)
         except:
             val_ = value
-    
+
     if isinstance(max_, (float, int)):
         return (val_ > max_)
     else:
@@ -184,6 +191,7 @@ def exceeds_max(value, max_):
     return False
 
 
+@register.filter
 def exceeds_min(value, min_):
     """ checks if a value exceeds the minimum allowed """
 
@@ -203,15 +211,16 @@ def exceeds_min(value, min_):
                 return (val_ < imin)
             except:
                 pass
-    
+
     return False
 
 
+@register.filter
 def getlength(lennable):
     """ Tag for len() """
     if not lennable:
         return 0
-    
+
     try:
         return len(lennable)
     except TypeError:
@@ -219,26 +228,30 @@ def getlength(lennable):
         return 0
 
 
+@register.filter
 def get_filename(filename):
     """ uses utilities and os.path to return only
         the short filename (no path)
     """
-    
+
     return utilities.get_filename(filename)
 
 
+@register.filter
 def get_remote_host(request):
     """ Same as get_remote_ip, except for hostname. """
-    
+
     return utilities.get_remote_host(request)
 
 
+@register.filter
 def get_remote_ip(request):
     """ Make the convenience function available for templates. """
-    
+
     return utilities.get_remote_ip(request)
 
 
+@register.filter
 def hcodes(content):
     """ Highlight using short codes found with highlighter.highlight_codes.
         Example:
@@ -249,12 +262,13 @@ def hcodes(content):
     return mark_safe(highlight_codes(content))
 
 
+@register.filter
 def highlight_python(scontent):
     """ highlight code using lexer by name.
         line numbers are optional.
         This is really for the debug page.
     """
-    
+
     try:
         highlighter = wp_highlighter(lexer_name='python', line_nums=False)
         highlighter.code = scontent
@@ -265,6 +279,7 @@ def highlight_python(scontent):
     return results
 
 
+@register.filter
 def insert_video(videourl, posterimg=None, id_=None):
     """ Return a Video.js video player with a url to a video.
         video.css and video.js must be included in <head>!
@@ -306,16 +321,44 @@ def insert_video(videourl, posterimg=None, id_=None):
     return basehtml.format(**formatargs)
 
 
+@register.filter
+def is_authenticated(req_or_user):
+    """ Shortcut to request.user.is_authenticated() """
+    if not req_or_user:
+        errmsgfmt = 'Falsey object passed to is_authenticated(): {!r}'
+        _log.error(errmsgfmt.format(req_or_user))
+        return False
+
+    if hasattr(req_or_user, 'user'):
+        user = getattr(req_or_user, 'user')
+    else:
+        user = req_or_user
+
+    if hasattr(user, 'is_authenticated'):
+        try:
+            isauthed = user.is_authenticated()
+            return isauthed
+        except Exception as exauthcall:
+            errmsgfmt = 'Can\'t call is_authenticated() on: {}\n{}'
+            _log.error(errmsgfmt.format(user, exauthcall))
+            return False
+    # Request or User was not passed!
+    _log.error('is_authenticated(): No \'user\' or \'is_authenticated\' attr!')
+    return False
+
+
+@register.filter
 def is_disabled(model_obj):
     """ if object has .disabled attribute, returns it,
         if not, returns False.
     """
-    
+
     if hasattr(model_obj, 'disabled'):
         return model_obj.disabled
     return False
 
 
+@register.filter
 def is_expired(paste_obj):
     """ if object has .is_expired() function, returns the result.
         if not, returns False.
@@ -331,36 +374,41 @@ def is_expired(paste_obj):
     return expired
 
 
+@register.filter
 def is_false(value):
     """ checks python value for false """
-    
+
     return (value is False)
 
 
+@register.filter
 def is_mobile(request_object):
     """ determines whether or not the client is mobile/tablet.
         requires a request object.
         returns True/False.
     """
-    
+
     return utilities.is_mobile(request_object)
 
 
+@register.filter
 def is_none(obj):
     """ Return whether a value is actually None (not falsey) """
     return obj is None
 
 
+@register.filter
 def is_onhold(model_obj):
     """ if object has .disabled attribute, returns it,
         if not, returns False.
     """
-    
+
     if hasattr(model_obj, 'onhold'):
         return model_obj.onhold
     return False
 
 
+@register.filter
 def is_private(obj):
     """ If object has a .private attribute, returns it.
         if not, returns False.
@@ -370,6 +418,7 @@ def is_private(obj):
     return False
 
 
+@register.filter
 def is_staff(request):
     """ Returns true if the user is an admin. """
 
@@ -379,6 +428,7 @@ def is_staff(request):
     return False
 
 
+@register.filter
 def is_test_site(request_object):
     """ determines whether or not the site is a test-server.
         looks for 'test.welbornprod' domains.
@@ -395,22 +445,24 @@ def is_test_site(request_object):
     # Could be the live server, test server, or local server
     # the local server_name changes depending on where it's accessed from.
     server_name = request_object.META['SERVER_NAME']
-    
+
     return (server_name.startswith('test.') or      # remote test site
             (server_name in settings.INTERNAL_IPS))  # local dev
 
 
+@register.filter
 def is_true(value):
     """ checks python value for true """
-    
+
     return (value is True)
 
 
+@register.filter
 def log_debug(data):
     """ writes something to the log. str(data) is used on objects,
         returns original object.
     """
-    
+
     if hasattr(data, 'encode'):
         s = data
     elif isinstance(data, (list, tuple)):
@@ -421,9 +473,10 @@ def log_debug(data):
     return data
 
 
+@register.filter
 def meta_value(request_object, dictkey):
     """ returns .META dict value from request """
-    
+
     try:
         val = request_object.META[dictkey]
     except:  # Exception as ex:
@@ -431,11 +484,13 @@ def meta_value(request_object, dictkey):
     return val
 
 
+@register.filter
 def repr_(object_):
     """ returns repr(object_) to the template """
     return repr(object_)
 
 
+@register.filter
 def sortdict(d):
     """ Generator for returning an iterable of a sorted dict.
         Can be retrieved like:
@@ -448,25 +503,29 @@ def sortdict(d):
         yield (skey, d[skey])
 
 
+@register.filter
 def sortitems(o):
     """ wrapper for sorted() """
 
     return sorted(o)
 
 
+@register.filter
 def starts(str_, val_to_check):
     """ uses str_.startswith() to check a value.
         returns True if str_.startswith(val_to_check)
     """
-    
+
     return (str_.startswith(val_to_check))
 
 
+@register.filter
 def str_(object_):
     """ returns str(object_) to the template. """
     return str(object_)
 
 
+@register.filter
 def subtract(val, otherval=None):
     """ Do subtraction in a template. """
     if otherval is None:
@@ -479,37 +538,9 @@ def subtract(val, otherval=None):
         return val
 
 
-# tuple of filters to register.
+# tuple of basic (no arg) functions/filters to register from other modules.
 registered_filters = (
-    colorize_admin_css,
-    contains,
-    debug_allowed,
-    dict_value,
-    ends,
-    exceeds_max,
-    exceeds_min,
-    getlength,
-    get_filename,
-    get_remote_host,
-    get_remote_ip,
-    hcodes,
-    highlight_python,
-    insert_video,
-    is_disabled,
-    is_false,
-    is_mobile,
-    is_none,
-    is_staff,
-    is_test_site,
-    is_true,
-    log_debug,
-    meta_value,
-    repr_,
-    sortdict,
-    sortitems,
-    starts,
-    str_,
-    subtract,
+    mark_safe,
     utilities.get_date,
     utilities.get_datetime,
     utilities.get_time,

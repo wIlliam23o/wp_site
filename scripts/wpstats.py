@@ -5,12 +5,15 @@
       project: Welborn Productions - Statistics
      @summary: Gathers info about blog/project views/downloads and any other
                info I can grab.
-    
+
       @author: Christopher Welborn <cj@welbornprod.com>
 @organization: welborn productions <welbornprod.com>
- 
+
    start date: May 25, 2013
 '''
+
+# TODO: Ditch wpstats.py for a stats library. Use wpstats as a cmdline tool only.
+# TODO: New wpstats-lib will be for using with template-based views.
 
 import sys
 
@@ -48,11 +51,11 @@ except ImportError as eximp:
 
 # import local tools
 try:
-    from scripts.wpdict import print_block
+    from scripts.wpdict import PrintBlock
 except ImportError as eximp:
     print("unable to import wpdict.py!\n" +
           "is it in the same directory as this script?\n\n" + str(eximp))
-          
+
 # local tools were imported correctly.
 #print( "local tools imported...\n")
 
@@ -67,7 +70,7 @@ possible_args = (('-a', '--all', 'Print info about all models.'),
                  ('-p', '--projects', 'Print info about projects.'),
                  ('-v', '--views', 'Print objects with the most views.'),
                  )
-# print formatting for print_block()
+# print formatting for PrintBlock()
 printblock_args = {'prepend_text': '    ',
                    'append_key': ': ',
                    'prepend_val': None}
@@ -85,18 +88,18 @@ def main(args):
         return print_all()
     ret = None
     argd = make_arg_dict(args, possible_args)
-    
+
     if argd['--help']:
         print_help()
         return 0
-    
+
     orderby = argd['--orderby']
     if orderby is not None:
         orderby = orderby.lower()  # all my attr's are lowercase.
-    
+
     if argd['--all']:
         return print_all(order=orderby)
-    
+
     if argd['--blog']:
         ret = print_blogs_info(order=orderby)
     if argd['--projects']:
@@ -109,7 +112,7 @@ def main(args):
         ret = print_most_views()
     if argd['--downloads']:
         ret = print_most_downloads()
-        
+
     if ret is None:
         # try getting object from argument...
         obj = get_object_byname(args[0])
@@ -140,7 +143,7 @@ def make_arg_dict(args, arg_tuples):
                     return None
         # option wasn't found in args
         return None
-    
+
     # parse args
     for argoption in arg_tuples:
         if '=' in argoption[0]:
@@ -165,7 +168,7 @@ def get_objects_safe(model_, orderby=None):
         return objs
     except:
         return None
-    
+
 
 def get_object_id(obj):
     obj_type = get_object_type(obj).lower().replace(' ', '')
@@ -179,7 +182,7 @@ def get_object_id(obj):
         return obj.name
     else:
         return 'Unknown Object!'
-    
+
 
 def get_object_type(obj):
     if hasattr(obj, 'version'):
@@ -192,7 +195,7 @@ def get_object_type(obj):
         return 'Misc'
     else:
         return 'Unknown'
-    
+
 
 def get_object_byname(partialname):
     """ Return any object by name or partial name. """
@@ -219,7 +222,7 @@ def get_object_byname(partialname):
             except:
                 # Failed to get object, move to the next searchkey/model.
                 continue
-                
+
     # Try partial match, search all models
     for modelname in objectinfo.keys():
         # Search objects for this model
@@ -231,7 +234,7 @@ def get_object_byname(partialname):
                 if modelattr.lower().startswith(partialname.lower()):
                     # Found a match.
                     return objitem
-        
+
     return None
 
 
@@ -252,11 +255,11 @@ def print_all(order=None):
 
 
 def print_blogs_info(order=None):
-    """ Print all info gathered with get_blogs_info(), formatted with a print_block() """
+    """ Print all info gathered with get_blogs_info(), formatted with a PrintBlock() """
     if wp_blog.objects.count() == 0:
         print('\nNo blog posts to gather info for!')
         return 1
-    
+
     if order is None:
         order = orderby_posts
     else:
@@ -271,31 +274,31 @@ def print_blogs_info(order=None):
 
 
 def print_misc_info(order=None):
-    """ Print all info gathered with get_misc_info(), formatted with print_block() """
+    """ Print all info gathered with get_misc_info(), formatted with PrintBlock() """
     if wp_misc.objects.count() == 0:
         print('\nNo misc objects to gather info for!')
         return 1
-    
+
     if order is None:
         order = orderby_misc
     else:
         if not validate_orderby(wp_misc, order):
             print('Misc objects don\'t have a \'' + order + '\' attribute, using the default: ' + orderby_misc)
             order = orderby_misc
-    
+
     misc_info = get_misc_info(order)
     print('Misc Stats ordered by ' + order + ':')
     misc_info.printblock(**printblock_args)
     print(' ')
     return 0
-        
+
 
 def print_projects_info(order=None):
-    """ Print all info gathered with get_projects_info(), formatted with a print_block() """
+    """ Print all info gathered with get_projects_info(), formatted with a PrintBlock() """
     if wp_project.objects.count() == 0:
         print('\nNo projects to gather info for!')
         return 1
-    
+
     if order is None:
         order = orderby_projects
     else:
@@ -306,29 +309,29 @@ def print_projects_info(order=None):
     print('Project Stats ordered by ' + order + ':')
     proj_info.printblock(**printblock_args)
     print(' ')
-    
+
     return 0
 
 
 def print_files_info(order=None):
     """ Print all info gathered with get_files_info(), formatted with a print block. """
-    
+
     if file_tracker.objects.count() == 0:
         print('\nNo file-trackers to gather info for.')
         return 1
-    
+
     if order is None:
         order = orderby_files
     else:
         if not hasattr(file_tracker.objects.all()[0], order.strip('-')):
             print("File Trackers don't have a '" + order + "' attribute, using the default: " + orderby_files)
             order = orderby_files
-            
+
     file_info = get_files_info(order)
     print("File Stats ordered by " + order + ":")
     file_info.printblock(**printblock_args)
     print(' ')
-    
+
     return 0
 
 
@@ -339,7 +342,7 @@ def print_help():
         optlen = len('{},{}'.format(shortopt, longopt))
         if optlen > maxlen:
             maxlen = optlen
-            
+
     print('wpstats v. {}\n    Usage: wpstats [options]\n'.format(__VERSION__))
     print('Options:')
     for shortopt, longopt, helpstr in possible_args:
@@ -355,13 +358,13 @@ def print_object_info(obj):
     obj_info = get_object_info(obj)
     if obj_info is None:
         return 1
-    
+
     obj_type = get_object_type(obj)
-    
+
     print('Stats for: ' + get_object_id(obj) + ' [' + obj_type + ']')
     obj_info.printblock(**printblock_args)
     print(' ')
-    
+
     return 0
 
 
@@ -387,31 +390,31 @@ def print_most_downloads():
         pblock.printblock(**printblock_args)
         print(' ')
         return 0
-    
+
 
 def get_misc_info(orderby=None):
-    pblock = print_block()
+    pblock = PrintBlock()
     if wp_misc.objects.count() == 0:
         return pblock
-    
+
     if orderby is None:
         orderby = orderby_misc
     if not validate_orderby(wp_misc, orderby):
         orderby = orderby_misc
-    
+
     for misc in wp_misc.objects.order_by(orderby):
         newpblock = get_miscobj_info(misc, pblock)
         if newpblock is not None:
             pblock = newpblock
-    
+
     return pblock
 
 
 def get_projects_info(orderby=None):
-    pblock = print_block()
+    pblock = PrintBlock()
     if wp_project.objects.count() == 0:
         return pblock
-    
+
     if orderby is None:
         orderby = orderby_projects
     if not validate_orderby(wp_project, orderby):
@@ -420,20 +423,20 @@ def get_projects_info(orderby=None):
         newpblock = get_project_info(proj, pblock)
         if newpblock is not None:
             pblock = newpblock
-    
+
     return pblock
 
 
 def get_blogs_info(orderby=None):
-    pblock = print_block()
+    pblock = PrintBlock()
     if wp_blog.objects.count() == 0:
         return pblock
-    
+
     if orderby is None:
         orderby = orderby_posts
     if not validate_orderby(wp_blog, orderby):
         orderby = orderby_posts
-        
+
     for post in wp_blog.objects.order_by(orderby):
         newpblock = get_post_info(post, pblock)
         if newpblock is not None:
@@ -443,26 +446,26 @@ def get_blogs_info(orderby=None):
 
 
 def get_files_info(orderby=None):
-    pblock = print_block()
+    pblock = PrintBlock()
     if file_tracker.objects.count() == 0:
         return pblock
-    
+
     filetrackers = file_tracker.objects.all()
     if filetrackers is None:
         return pblock
     elif filetrackers == []:
         return pblock
-    
+
     if orderby is None:
         orderby = orderby_files
     if not validate_orderby(file_tracker, orderby):
         orderby = orderby_files
-    
+
     for filetracker in filetrackers.order_by(orderby):
         newpblock = get_file_info(filetracker, pblock)
         if newpblock is not None:
             pblock = newpblock
-    
+
     return pblock
 
 
@@ -470,8 +473,8 @@ def get_file_info(filetrack_obj, pblock=None):
     if filetrack_obj is None:
         return None
     if pblock is None:
-        pblock = print_block()
-    
+        pblock = PrintBlock()
+
     try:
         pblock[filetrack_obj.shortname] = ["downloads: " + str(filetrack_obj.download_count)]
         pblock[filetrack_obj.shortname].append("    views: " + str(filetrack_obj.view_count))
@@ -486,8 +489,8 @@ def get_miscobj_info(miscobj, pblock=None):
     if miscobj is None:
         return None
     if pblock is None:
-        pblock = print_block()
-    
+        pblock = PrintBlock()
+
     try:
         pblock[miscobj.name] = ['downloads: ' + str(miscobj.download_count)]
         pblock[miscobj.name].append('    views: ' + str(miscobj.view_count))
@@ -501,14 +504,14 @@ def get_post_info(post_object, pblock=None):
     if post_object is None:
         return None
     if pblock is None:
-        pblock = print_block()
-    
+        pblock = PrintBlock()
+
     try:
         pblock[post_object.slug] = ['    views: ' + str(post_object.view_count)]
     except Exception as ex:
         print("unable to retrieve blog post info!\n" + str(ex))
         return None
-    
+
     return pblock
 
 
@@ -516,10 +519,10 @@ def get_object_info(obj):
     """ pass it an object from 'get_object_byname' and this will
         decide whether its a blog or project, and return its info.
     """
-    
+
     if obj is None:
         return None
-    
+
     if hasattr(obj, 'posted'):
         return get_post_info(obj)
     elif hasattr(obj, 'name'):
@@ -528,15 +531,15 @@ def get_object_info(obj):
         return get_file_info(obj)
     else:
         return None
-    
+
 
 def get_project_info(proj_object, pblock=None):
     if proj_object is None:
         return None
-    
+
     if pblock is None:
-        pblock = print_block()
-    
+        pblock = PrintBlock()
+
     try:
         pblock[proj_object.name] = ["downloads: " + str(proj_object.download_count)]
         pblock[proj_object.name].append("    views: " + str(proj_object.view_count))
@@ -548,12 +551,12 @@ def get_project_info(proj_object, pblock=None):
 
 def get_most_info(orderby):
     """ finds objects with the most views """
-    
+
     models = (('[ Projects ]', wp_project, get_project_info),
               ('[ Misc ]', wp_misc, get_miscobj_info),
               ('[ Posts ]', wp_blog, get_post_info),
               ('[ Files ]', file_tracker, get_file_info))
-    pblock = print_block()
+    pblock = PrintBlock()
     # Cycle through all models.
     for header, modelobj, infofunc in models:
         # Make sure this orderby applies to this model (download_count doesn't apply to all)
@@ -586,13 +589,13 @@ def try_top_item(model_, orderby):
             modelname = 'unknown model'
         print('\nUnable to get top-most item for {}: {}\n{}'.format(modelname, orderby, str(ex)))
         return None
-    
+
 
 def validate_orderby(modelobj, orderby):
     """ make sure this orderby is valid for this modelobj.
         also watches for -orderby.
     """
-    
+
     try:
         tempobj = modelobj.objects.create()
     except Exception as ex:

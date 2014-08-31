@@ -27,7 +27,7 @@
 					<div class="submit-button">
 						<span>search</span>
 					</div>
-				</a>			
+				</a>
 			</form>
 		</div>
 
@@ -63,7 +63,7 @@
 		<div class="search-results">
 			{% for result in results_list %}
 				<div class="search-listing">
-                      
+
 				    <div class='search-listing-title-box'>
 				    	<a href="{{ result.link }}">
                             <span class="search-listing-title">
@@ -101,6 +101,11 @@
 
 {% block bodyend %}
 	<script type="text/javascript">
-		function do_search() { $("#search-form").submit(); }
+		function do_search() {
+			var searchtext = $('#searchbox').val();
+			if (searchtext) {
+				$("#search-form").submit();
+			}
+		}
 	</script>
 {% endblock %}

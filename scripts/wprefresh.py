@@ -8,10 +8,10 @@
                refreshes admin css (static/admin/css),
                and Restarts the server.
 
-    
+
       @author: Christopher Welborn <cj@welbornprod.com>
 @organization: welborn productions <welbornprod.com>
- 
+
    start date: May 29, 2013
 '''
 
@@ -24,6 +24,8 @@ from docopt import docopt
 NAME = 'WpRefresh'
 VERSION = '1.2.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
+
+
 # Initialize Django stuff.
 try:
     import django_init
@@ -40,7 +42,7 @@ except Exception as ex:
 if sys.version < '3':
     input = raw_input  # noqa
 
-# Get Settings..
+# Get Django Settings and Cache to work with..
 from django.conf import settings
 from django.core.cache import cache
 
@@ -126,7 +128,7 @@ def apache_restart():
     else:
         apachecmd = os.path.join('/etc', 'init.d', 'apache2') + ' '
         use_elevation = True
-   
+
     print("\nRestarting apache... (" + apachecmd + 'restart)')
     if (os.path.isfile(apachecmd.strip(' ')) or
        os.path.isdir(apachecmd.strip('/').strip('. '))):
@@ -150,6 +152,9 @@ def build_files(wponly=False):
     if os.path.isfile(builder_py):
         print('\nRunning builder...')
         build_cmd = ['python3', builder_py]
+        if settings.SITE_VERSION.lower().startswith('local'):
+            build_cmd.insert(0, 'sudo')
+
         if wponly:
             # only build wp*.js files. not external stuff. (takes too long)
             build_cmd = build_cmd + ['-i', 'wp', '-f', '-wp']
@@ -318,7 +323,7 @@ def warn_live():
         print('\nCancelling, goodbye.')
         return False
     return True
-    
+
 
 # START OF SCRIPT ------------------------------------------------------------
 if __name__ == '__main__':

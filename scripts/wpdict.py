@@ -1,12 +1,5 @@
 from __future__ import print_function
-
-
-class NoItemError(Exception):
-    pass
-
-
-class NoValueError(Exception):
-    pass
+from collections import OrderedDict, UserDict
 
 
 def safe_dict_val(dict_, keyname_, default_value=None):
@@ -18,203 +11,66 @@ def safe_dict_val(dict_, keyname_, default_value=None):
             # if any word in ('nonewlines', 'no_newlines', 'no_newline') is found as an argument
             # the first one found is returned.
     """
-    
+
     if isinstance(keyname_, (list, tuple)):
         # a list of acceptable key names can be passed.
         # this will try them all.
+        keynames = dict_.keys()
         for trykey in keyname_:
-            if trykey in dict_.keys():
+            if trykey in keynames:
                 return dict_[trykey]
     else:
         default_value = dict_.get(keyname_, default_value)
     return default_value
 
 
-class tracked_dict(dict):
+class JSDict(UserDict):
 
-    """ An extension for the dict object,
-        It adds the ability to keep track of items in
-        the order they were added.
+    """ A dict that allows attribute access for keys, and will return a
+        default value for keys that are missing (without creating the key).
+        This hides errors that would otherwise be useful for
+        dict-key and attribute access, but in this case we just want a
+        value or None.
 
-        tracked_dict.tracked_keys is a list() containing all key names in
-        this order. removing a key removes it from this list.
-
-        iterkeys(), itervalues(), iteritems(), and keys() are all based on this
-        'tracked_keys' list, so using those will yield items in the order they
-        were added.
-
-        ** WARNING: this tracked dict is much slower than a normal one.
-                    if performance is an issue you may want to do some
-                    testing first.
-
-        if items are passed in from another dict, they may
-        not keep the proper order. they will be stored in the same order
-        as the dict they came from. however, using a tuple/list of
-        key,value pairs seems to keep the proper order.
-
-        Example of tracked usage:
-            d = tracked_dict()
-            d['key1'] = "Z"
-            d['key2'] = "A"
-            d['key3'] = 1
-            d['another_key'] = 'blah'
-            # A normal dict() would return:
-                d.keys() = ['key3', 'key2', 'key1', 'another_key']
-            # A tracked dict() will return:
-                d.keys() = ['key1', 'key2', 'key3', 'another_key']
-                # iterkeys(), iteritems(), and tracked_keys use this order.
-
-        Initialization:
-            initializing this "tracked dict" with a normal dict may return undesired results.
-            the best way to initialize is with a tuple of key,value pairs.
-            Example:
-                # with normal dict initialization:
-                tracked = tracked_dict({"A":1, "b":"two", "C":3.0})
-                print repr(tracked)
-                returns: {'A': 1, 'C': 3.0, 'b': 'two' } # items out of order!
-
-                # with key,value pairs
-                tracked = tracked_dict((("A", 1), ("b", "two"), ("C", 3.0)))
-                print repr(tracked)
-                returns: {'A': 1, 'b': 'two', 'C': 3.0} # correct order...
-
-        Assignment:
-            assigning new values is just like a normal dict, and items will be tracked as they are
-            added. changing an existing value does not change its tracked position.
-            deleting an item automatically removes it from the list.
-
-            d = tracked_dict()
-            # assign some items.
-            d['key1'] = 'test'
-            d['key2'] = 'test2'
-            print repr(d.keys())  # same as doing d.tracked_keys
-            # returns: ['key1', 'key2']
-            # normal dict returns: ['key2', 'key1'] # out of order
-
-            # remove an item
-            del d['key2']
-            d['key3'] = 'test3'
-            print repr(d.tracked_keys)
-            # returns: ['key1', 'key3']
-            # normal dict (with d.keys()) returns: ['key3', 'key1']
-
-            # change an item
-            d['key1'] = 'replacement'
-            print repr(d.keys())
-            # returns: ['key1', 'key3']
-            
-            for key,value in d.iteritems():
-                print key + ': ' + value
-            # returns:
-            #     key1: replacement
-            #     key3: test3
-            
+        t = JSDict({'name': {'first': 'cj', 'last': 'w'}}, default=None)
+        t['name']['first'] == t.name.first
+        t.missing_key == None
     """
-    
-    def __init__(self, KV=None, **F):
-        if KV is not None:
-            dict.__init__(self, KV, **F)
-        else:
-            dict.__init__(self, **F)
-            
-        if (KV is not None) and hasattr(KV, 'keys'):
-            # copied from another dict, hope they're in order.
-            self.tracked_keys = [k for k in KV.keys()]
-        elif isinstance(KV, (list, tuple)):
-            # process key names in order of discovery
-            self.tracked_keys = [k for k, v in KV]
-        else:
-            self.tracked_keys = []
-            
-    def __repr__(self):
-        repritems = []
-        for k, v in self.iteritems():
-            repritems.append(': '.join(("'" + str(k) + "'", str(v))))
-        return '{' + ', '.join(repritems) + '}'
 
-    def __str__(self):
-        return str(self.__repr__())
+    def __init__(self, data=None, default=None):
+        if data is None:
+            data = {}
+        self.default = default
+        self.data = self._convert_data(data)
 
-    def __unicode(self):
-        return unicode(self.__str__(), encoding='utf-8')
-                             
-    def __setitem__(self, key, val):
-        dict.__setitem__(self, key, val)
-        # don't add the same key twice (may be re-set later)
-        if not key in self.tracked_keys:
-            self.tracked_keys.append(key)
+    def _convert_data(self, start=None):
+        if not start:
+            return start
 
-    def __getitem__(self, val):
-        item = dict.__getitem__(self, val)
-        return item
-    
-    def __delitem__(self, val):
-        dict.__delitem__(self, val)
-        if val in self.tracked_keys:
-            self.tracked_keys.remove(val)
-
-    def __iter__(self):
-        for keyname in self.tracked_keys:
-            yield keyname
-            
-    def iterkeys(self):
-        for keyname in self.tracked_keys:
-            yield keyname
-
-    def itervalues(self):
-        for keyname in self.tracked_keys:
-            yield self[keyname]
-
-    def iteritems(self):
-        for keyname in self.tracked_keys:
-            yield (keyname, self[keyname])
-
-    def update(self, KV=None, **kwargs):
-        dict.update(self, KV, **kwargs)
-        # update tracked keys from existing dict.
-        if KV is not None and hasattr(KV, 'keys'):
-            for keyname in KV.keys():
-                if not keyname in self.tracked_keys:
-                    self.tracked_keys.append(keyname)
-        # update from key,value pairs.
-        elif isinstance(KV, (list, tuple)):
-            for k, v in KV:
-                if not k in self.tracked_keys:
-                    self.tracked_keys.append(k)
-
-    def clear(self):
-        dict.clear(self)
-        self.tracked_keys = []
-        
-    def keys(self):
-        return self.tracked_keys
-
-    def values(self):
-        return [self[key] for key in self.tracked_keys]
-
-    def pop(self, key, default_val=None):
-        if key in self.keys():
-            popped_val = dict.pop(self, key, default_val)
-            if key in self.tracked_keys:
-                self.tracked_keys.remove(key)
-        else:
-            if default_val is None:
-                raise KeyError("Cannot pop, mapping key not found.")
+        converted = {}
+        for key, val in start.items():
+            if isinstance(val, dict):
+                converted[key] = JSDict(val)
             else:
-                popped_val = default_val
-        return popped_val
+                converted[key] = val
+        return converted
 
-    def popitem(self):
-        if len(self.keys()) == 0:
-            raise NoItemError("No items to pop, dictionary is empty.")
-        firstkey = self.tracked_keys[0]
-        self.tracked_keys.remove(firstkey)
-        val = self[firstkey]
-        del self[firstkey]
-        return (firstkey, val)
-    
+    def __getattr__(self, attr):
+        try:
+            val = super().__getattribute(attr)
+        except AttributeError:
+            return self.__getitem__(attr)
+        return val
 
-class print_block(tracked_dict):
+    def __getitem__(self, item):
+        try:
+            val = self.data[item]
+        except KeyError:
+            return self.default
+        return val
+
+
+class PrintBlock(OrderedDict):
 
     """ Another dict() extension that allows you to
         build a block of text and print it out with some
@@ -236,17 +92,17 @@ class print_block(tracked_dict):
             myfilename = "data.txt"
             myblockstring = (("warning: ", "this file is broken.", "don't use it."),
                              ("file: ", myfilename))
-            myprintblock = print_block(myblockstring)
+            myprintblock = PrintBlock(myblockstring)
             myprintblock.printblock()
             # prints:
             warning: this file is broken.
                      don't use it.
                file: data.txt
-               
+
         Example of advanced usage:
             myblockstring = (("warning: ", "line1\nline2"),
                              ("tag2: ", ("line1\nline2", "line3")))
-            myprintblock = print_block(myblockstring)
+            myprintblock = PrintBlock(myblockstring)
             myprintblock.printblock()
             # prints:
             warning: line1
@@ -254,7 +110,7 @@ class print_block(tracked_dict):
                tag2: line1
                      line2
                      line3
-                     
+
         Adding stuff after initialization:
             # After the above 'advanced example' has been carried out:
             myprintblock['third tag: '] = ("some more", "stuff", "and lines")
@@ -272,7 +128,7 @@ class print_block(tracked_dict):
             # to the right, to fit the new longer tag 'third tag'.
 
         Adding extra padding:
-            myprintblock = print_block((("info:", "extra spaces have been added."),
+            myprintblock = PrintBlock((("info:", "extra spaces have been added."),
                                         ("tag2:", "this\nwill\work\nalso")))
             myprintblock.extra_spaces = 10
             myprintblock.printblock()
@@ -289,7 +145,7 @@ class print_block(tracked_dict):
             the newlines will be split and formatted,
             even inside the tuples (to one level deep, don't get crazy).
             like this:
-            p = print_block(("info:", ("my\nlines", "within\ntuple\nvalues"))).printblock()
+            p = PrintBlock(("info:", ("my\nlines", "within\ntuple\nvalues"))).printblock()
             # prints:
             info:my
                  lines
@@ -298,12 +154,12 @@ class print_block(tracked_dict):
                  values
 
             **  notice there is no space between 'info:' and the values.
-                print_block only prints what you tell it to. nothing else.
-                
+                PrintBlock only prints what you tell it to. nothing else.
+
                 if you want space you need to do something like:
-                    p = print_block(("info: ", "value1"))
+                    p = PrintBlock(("info: ", "value1"))
                 or using keyword arguments:
-                    p = print_block(("info", "value1", "value2"))
+                    p = PrintBlock(("info", "value1", "value2"))
                     p.printblock(append_key=': ')
                         or:
                     p.printblock(prepend_val=': ')
@@ -327,41 +183,33 @@ class print_block(tracked_dict):
                                    ..........value2
                                    .mykey2 : value1
                                    ..........value2
-                
+
                 newline_keys : adds a blank line after each key section.
-                
-                               
-            
+
+
+
     """
-    
-    def __init__(self, KV=None, **F):
-        tracked_dict.__init__(self, KV, **F)
+    class NoItemError(Exception):
+        pass
+
+    class NoValueError(Exception):
+        pass
+
+    def __init__(*args, **kwargs):
+        OrderedDict.__init__(*args, **kwargs)
+        self = args[0]
         self.extra_spaces = 0
         self.space_char = ' '
-        self._maxlen = self._get_maxlen()
-        
-    def __setitem__(self, key, val):
-        tracked_dict.__setitem__(self, key, val)
-        self._maxlen = self._get_maxlen()
-
-    def __getitem__(self, val):
-        item = tracked_dict.__getitem__(self, val)
-        return item
-
-    def __delitem__(self, val):
-        tracked_dict.__delitem__(self, val)
         self._maxlen = self._get_maxlen()
 
     def _get_maxlen(self):
         """ gets the longest key name, so we can align everything else to it.
         """
-        current_len = 0
-        for key in self.tracked_keys:
-            keylen = len(key)
-            if keylen > current_len:
-                current_len = keylen
-        return current_len + self.extra_spaces
-    
+        if len(self) == 0:
+            return self.extra_spaces
+
+        return len(max(self.keys(), key=len)) + self.extra_spaces
+
     def _formatkey(self, k, **kwargs):
         """ formats the key name. applies the correct amount of self.space_char's
             and prepends/appends text where needed.
@@ -382,13 +230,13 @@ class print_block(tracked_dict):
         ins_ = '' if prepend_insert is None else prepend_insert
         # prepend insert affects space formatting, so do it first.
         k = ins_ + k + app_
-        
+
         if no_format:
             formatted_ = ''
         else:
             formatted_ = (self.space_char * (self._maxlen - len(k)))
         return pre_ + formatted_ + k
-    
+
     def _formatval(self, v, **kwargs):
         """ formats the value. applies the correct amount of self.space_char's
             and prepends/appends text where needed.
@@ -409,7 +257,7 @@ class print_block(tracked_dict):
         ins_ = '' if prepend_insert is None else prepend_insert
         # prepend insert affects space formatting, so do it first.
         v = ins_ + v
-        
+
         if no_format:
             formatted_ = ''
         else:
@@ -426,7 +274,7 @@ class print_block(tracked_dict):
             it just means that the original format was WAY off the mark for
             "correct".
         """
-        for key, val in self.iteritems():
+        for key, val in self.items():
             fixedvals = []
 
             # strings are added, newlines are split
@@ -446,10 +294,10 @@ class print_block(tracked_dict):
                             fixedvals.append(subval)
                     elif isinstance(subval, (list, tuple)):
                         fixedvals += list(subval)
-                        
+
             # update values
             self.update([(key, fixedvals)])
-            
+
     def printblock(self, **kwargs):
         """ convenience function to print the block of text.
             keyword arguments:
@@ -467,10 +315,10 @@ class print_block(tracked_dict):
                                    ..........value2
                                    .mykey2 : value1
                                    ..........value2
-                
+
                 newline_keys : adds a blank line after each key section.
-                
-                
+
+
             returns True, or raises Error if needed (see iterblock() for more detailed info).
         """
 
@@ -485,8 +333,8 @@ class print_block(tracked_dict):
                     'extra_spaces': safe_dict_val(kwargs, 'extra_spaces', None),
                     'newline_keys': safe_dict_val(kwargs, ('newline_keys', 'newline_key'), False),
                     }
-        
-        if len(self.tracked_keys) == 0:
+
+        if len(self) == 0:
             raise self.NoItemError("No items to print.")
 
         # cyle thru the block, preparing text where needed.
@@ -501,7 +349,7 @@ class print_block(tracked_dict):
                    notice the space after the keyname.
                    you must add your own ':' and space for keynames,
                    or pass append_key=': ' to regular key names like 'key1'.
-                   
+
             extra_spaces : adds a number extra space_char's to the beginning of each line.
                            same as append_text=(' ' * extra_spaces)
             space_char   : character to use where spaces would normally be used.
@@ -539,9 +387,9 @@ class print_block(tracked_dict):
                                 key1: value1
                                       value2
 
-                               mykey: value1       
+                               mykey: value1
 `       """
-        if len(self.tracked_keys) == 0:
+        if len(self) == 0:
             raise self.NoItemError("No items to iterate through.")
 
         # get keyword arguments, with safe default values
@@ -559,7 +407,7 @@ class print_block(tracked_dict):
             self.extra_spaces = extra_spaces
         if space_char is not None:
             self.space_char = space_char
-            
+
         # update maxlen, extra_spaces may have been changed.
         # extra_spaces has changed.
         self._maxlen = self._get_maxlen()
@@ -568,17 +416,15 @@ class print_block(tracked_dict):
             self._maxlen += len(prepend_key)
         if append_key is not None:
             self._maxlen += len(append_key)
-            
+
         # make values compatible with this method
         # (we are overwriting values here)
         self._fixvalues()
 
         # iterate through keys
-        for keyname in self.iterkeys():
-            values = self.__getitem__(keyname)
-            
-            if values is None:
-                raise self.NoValueError("No values in: " + keyname)
+        for keyname, values in self.items():
+            if not values:
+                raise self.NoValueError("No values in: {}".format(keyname))
 
             # Yield first line (because the key and value should be in the same line)
             keyformat_args = {'prepend_text': prepend_text,
@@ -614,7 +460,7 @@ class print_block(tracked_dict):
 def printx(s, endline='\n'):
     if not hasattr(s, 'encode'):
         s = str(s)
-    
+
     print(s, end=endline)
     return s
 
@@ -622,8 +468,8 @@ if __name__ == "__main__":
     myblockstring = [["warning", "don't do this mang"],
                      ["also", ["dont", "do", "this", "either"]]
                      ]
-    
-    d = print_block(myblockstring)
+
+    d = PrintBlock(myblockstring)
     format_args = {'append_text': '!',
                    'append_key': ': ',
                    'prepend_val': '..',

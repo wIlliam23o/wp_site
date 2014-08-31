@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block extrastyle %}
-    <link rel="stylesheet" type="text/css" href="/static/css/phonewords.min.css"/>
+    <link type="text/css" rel="stylesheet" href="/static/css/phonewords.min.css"/>
 {% endblock %}
 
 {% block javascript %}
@@ -133,7 +133,7 @@
                                 Phone numbers are cached for fast lookup,
                                 but no identifying information is attached to
                                 the number.
-                                There is no way for it to know if you are entering your 
+                                There is no way for it to know if you are entering your
                                 <span class='I'>real number</span> anyway.
                                 <br><br>
                                 This is an open-source site, you can look at the source
@@ -188,10 +188,10 @@
     <script type='text/javascript'>
         // Initialization
         $(document).ready(function () {
-            wptools.center_element('#floater', true);
+            wptools.center('#floater', true);
         });
         window.onresize = function () {
-            wptools.center_element('#floater', true);
+            wptools.center('#floater', true);
         };
     </script>
 {% endblock %}

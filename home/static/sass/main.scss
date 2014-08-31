@@ -8,7 +8,7 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
     font-size: 1em;
     background: transparent;
 }
-    
+
 /* Mobile Reset for Doubled Font Headers */
 h1, h2, h3, h4, h5, h6, span, p {
     font-weight: normal;
@@ -21,11 +21,11 @@ html {
     margin-bottom: 1px;
     height: 100%;
 }
-    
+
 body {
     min-width: 960px;
     background-color: black;
-    background-repeat:no-repeat; 
+    background-repeat:no-repeat;
     background-attachment:fixed;
     height: 100%;
     margin-bottom: 1px;
@@ -33,11 +33,11 @@ body {
     font-weight: Normal;
     color: $greydark;
     }
-    
+
 body.component-body {
     min-width: 320px;
     }
-    
+
 a {
     color: $bluelink;
     font-weight: normal;
@@ -74,7 +74,7 @@ h1, h2, .module-title h2, h3, h4, h5 {
     padding-bottom: 5px;
     text-transform: lowercase;
     }
-    
+
 
 h1.title {
     font-size: $fontmedium;
@@ -103,16 +103,16 @@ h5 {
     text-transform: lowercase;
     font-size: 100%;
 }
-blockquote {  
-    background: none;  
-    margin: 1em 3em;   
-    color: $greymain;   
-    border-left: 2px solid $greymain;   
-    padding-left: 2em; 
+blockquote {
+    background: none;
+    margin: 1em 3em;
+    color: $greymain;
+    border-left: 2px solid $greymain;
+    padding-left: 2em;
     }
-blockquote p { 
-    background: none; 
-    margin: 10; 
+blockquote p {
+    background: none;
+    margin: 10;
     }
 
 strong {
@@ -156,7 +156,7 @@ a .header:hover, a .header.featured-name:hover {
     padding-left: 40px;
     padding-right: 40px;
     }
-    
+
 .hidden {
     display: none;
    }
@@ -222,22 +222,22 @@ a .header:hover, a .header.featured-name:hover {
 
 /* Containers */
 .wp-container {
-    position: relative; 
+    position: relative;
     @include border-radius(5px);
-    background: transparent; 
+    background: transparent;
     margin-top: 0;
     margin-bottom: 0;
     margin-left: 16%;
     margin-right: 5%;
     width: auto;
     }
-    
+
 .wp-block {
     position: relative;
-    margin: 15px 0; 
+    margin: 15px 0;
     @include border-radius(5px);
     }
-    
+
 .contentbox {
     padding: 10px;
     margin-bottom: 10px;
@@ -245,11 +245,11 @@ a .header:hover, a .header.featured-name:hover {
     @include border-radius(5px);
     box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.17);
     }
-.bottom { 
+.bottom {
     background-color: $blackmain;
     margin-top: -10px;
     }
-    
+
 #bg-surround {
     overflow: hidden;
     position: relative;
@@ -257,7 +257,7 @@ a .header:hover, a .header.featured-name:hover {
     height: auto;
     padding-bottom: 20px;
     }
-    
+
 #page-surround {
     background-color: $greysurround;
     padding: 10px;
@@ -281,7 +281,7 @@ a .header:hover, a .header.featured-name:hover {
     border-right-width: 2px;
     border-right-color: $borderlight;
     margin-bottom: 10px;
-    
+
 }
 
 .screenshots-box {
@@ -292,7 +292,7 @@ a .header:hover, a .header.featured-name:hover {
     background: white;
     padding: 5px;
     @include border-radius(5px);
-    @include box-shadow(4px 4px 5px rgba(0, 0, 0, 0.13)); 
+    @include box-shadow(4px 4px 5px rgba(0, 0, 0, 0.13));
 }
 
 .img-rounded {
@@ -347,7 +347,7 @@ a .header:hover, a .header.featured-name:hover {
     border-style: solid;
     border-color: $bordermain;
     text-align: left;
-}   
+}
 
 .jumpto-title {
     padding-left: 40px;
@@ -453,7 +453,7 @@ a.jumpto-nav {
     background: transparent;
     display: inline-block;
     position: relative;
-    
+
 }
 .menu-block {
     padding: 0;
@@ -471,7 +471,7 @@ a.jumpto-nav {
     position: absolute;
     /* trying out a fixed menu, doesn't really fit.
     position: fixed;
-    z-index: 999; 
+    z-index: 999;
     */
     left: 5px;
     top: 220px;
@@ -490,7 +490,7 @@ a.jumpto-nav {
     padding: 5px;
     list-style: none;
     list-image-style: none;
-    
+
 }
 
 .vertical-menu-item {
@@ -553,19 +553,19 @@ a.jumpto-nav {
 .grad-bottom {
     position: absolute;
     right: 0;left: 0;bottom: 0;height: 250px;
-    background: linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%); 
+    background: linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
     background: -webkit-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
     background: -moz-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
     }
-             
+
 .pattern-gradient {
     position: absolute;
     right: 0; left: 0; bottom: 0; height: 350px;
-    background: linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%); 
+    background: linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
     background: -webkit-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
     background: -moz-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
     }
-                  
+
 #bg-pattern {
     position: absolute;
     width: 100%;
@@ -580,7 +580,7 @@ a.jumpto-nav {
     }
 
 
-                                
+
 /* Logo */
 #wp-logo {
     width:516px;
@@ -620,14 +620,14 @@ a.jumpto-nav {
     position: relative;
     margin-top: 30px;
     text-align: center;
-    
+
 }
-.donations-desc { 
-    font-size: $fontsmall; 
+.donations-desc {
+    font-size: $fontsmall;
     color: $greymain;
 }
-.donations-title { 
-    font-size: 12px; 
+.donations-title {
+    font-size: 12px;
     color: $greylight
 }
 
@@ -665,7 +665,7 @@ a.jumpto-nav {
     &:hover {
         color: $greydark;
     }
-}      
+}
 
 .input-label {
     font-size: .8em;
@@ -765,14 +765,14 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
 .approved {background-color: #74924A;background-image: url(/static/images/typography/dark/approved.png);color: #232F12;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}
 .attention, #system-message dd.notice ul {background-color: #D69839; background-image: url(/static/images/typography/dark/attention.png);color: #5A3800;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}
 .alert, #system-message dd.error ul {background-color: #BD5151; background-image: url(/static/images/typography/dark/alert.png);color: #4C1818;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}
-.notice, #system-message dd ul {background-color: #488AAD; background-image: url(/static/images/typography/dark/notice.png);color: #133548;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}   
+.notice, #system-message dd ul {background-color: #488AAD; background-image: url(/static/images/typography/dark/notice.png);color: #133548;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}
 
 .alert-message {
     font-weight: bold;
 }
 
 /* Code wrap. Border with blueish text. (use pre for indention) */
-.codewrap,.sampwrap { 
+.codewrap,.sampwrap {
     margin: 2px;
     display: inline-block;
     border: 1px solid $bordercode;
@@ -846,9 +846,10 @@ code, samp {
     font-size: $fontmedium;
 }
 
-.notfound-box {
+.error-box {
     @include border-radius(5px);
-    background: white;
+    background: $whitedull;
+    height: 300px;
     border-style: solid;
     border-width: 2px;
     border-color: $bordermain;
@@ -856,28 +857,41 @@ code, samp {
     text-align: center;
 }
 
-.notfound-message {
+.error-message {
     color: $blackmain;
     font-weight: bold;
     font-size: $fontmedium;
 }
 
-.notfound-path {
+.error-noaccess-message {
+    // Message displayed on the test site for anons.
+    color: darkred;
+    font-weight: bold;
+    font-size: 2em;
+    text-align: center;
+    text-shadow: $shadowtextbig;
+}
+.error-path {
     color: $greydark;
     font-weight: normal;
     font-size: $fontbigger;
 }
 
-.notfound-home-message {
+.error-home-message {
     font-size: 0.9em;
     margin-top: 10px;
 }
 
-.notfound-image-box {
+.error-home-link {
+    font-size:0.9em;
+    margin-top:15px;
+}
+
+.error-image-box {
     text-align: center;
 }
 
-.notfound-image {
+.error-image {
     @include border-radius(30px);
     border-width: 4px;
     border-style: dashed;
@@ -940,7 +954,7 @@ code, samp {
     color: darkgray;
     font-size:  $fontsmall;
 }
-    
+
 
 /* Login Box Styles */
 .login-box {
@@ -970,7 +984,7 @@ code, samp {
 /* Stats page */
 .stats-block {
     display: block;
-    
+
 }
 
 .stats-lines {
@@ -982,11 +996,11 @@ code, samp {
 
 /* Test-site only stuff */
 #test-site-box {
-    text-align: center; 
-    border-style: solid; 
-    border-color: $borderred; 
-    border-width: 2px; 
-    @include border-radius(15px); 
+    text-align: center;
+    border-style: solid;
+    border-color: $borderred;
+    border-width: 2px;
+    @include border-radius(15px);
     margin-bottom: 20px;
 }
 
@@ -1057,7 +1071,7 @@ code, samp {
 }
 
 .video-title {
-    // Title for video (seated above the video desc.) 
+    // Title for video (seated above the video desc.)
     font-family: $fontsnormal;
     font-size: $fontbigger;
     color: $bluemain;

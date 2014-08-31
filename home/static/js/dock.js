@@ -1,4 +1,4 @@
-$(function () { 
+$(function () {
 	// Dock initialize
 	$('#dock').Fisheye(
 		{
@@ -6,11 +6,11 @@ $(function () {
 			items: 'a',
 			itemsText: 'span',
 			container: '.dock-container',
-			itemWidth: 60, /* 50 */
+			itemWidth: 60, /* 60 */
 			proximity: 60, /* 60 */
-			alignment : 'left',
-			valign: 'bottom',
-			halign : 'center'
+			alignment : 'left', /* left */
+			valign: 'bottom', /* top */
+			halign : 'center' /* left */
 		}
 	);
 });

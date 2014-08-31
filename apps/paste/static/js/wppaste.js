@@ -6,11 +6,11 @@ var wppaste = {
         modes.sort(function (a, b) {
             // Sort modes by 'caption' text
             if (a.caption < b.caption) {
-                return -1
+                return -1;
             } else if (a.caption > b.caption) {
-                return 1
+                return 1;
             } else {
-                return 0
+                return 0;
             }
         });
         // create a doc fragment to build on.
@@ -48,9 +48,9 @@ var wppaste = {
             if (a.caption < b.caption) {
                 return -1
             } else if (a.caption > b.caption) {
-                return 1
+                return 1;
             } else {
-                return 0
+                return 0;
             }
         });
         // Doc frag to build on.
@@ -70,6 +70,21 @@ var wppaste = {
         }
         // Add whole theme-menu fragment to the <select> tag.
         $('#themeselect').append(themefrag);
+    },
+
+    fix_line_breaks : function (size) {
+        /* Fix line breaks in current paste content.
+            Line breaks are added to lines longer than 80 chars.
+            This will break code formatting! (meant to be used on data/text)
+        */
+        var content = wp_content.getValue();
+        if (!content) {
+            return false;
+        }
+        var chunksize = size || 80;
+        var chunks = wppaste.split_string(content, chunksize);
+        wp_content.getSession().setValue(chunks.join('\n'));
+        return true;
     },
 
     get_paste_author : function () {
@@ -93,6 +108,23 @@ var wppaste = {
         var langselect = document.getElementById('langselect');
         var selected = langselect.options[langselect.selectedIndex];
         return $(selected).attr('val');
+    },
+
+    get_selected_onhold : function () {
+        /* Get 'on hold' option selection. */
+        var chk = $('#paste-onhold-opt');
+        // This option is not always created. (only authenticated users see it)
+        if (chk.length) {
+            return $(chk).prop('checked');
+        } else {
+            return false;
+        }
+    },
+
+    get_selected_private : function () {
+        /* Get 'private' option selection. */
+        var chk = $('#paste-private-opt');
+        return $(chk).prop('checked');
     },
 
     get_selected_theme : function () {
@@ -132,24 +164,43 @@ var wppaste = {
         $('#paste-author-entry').val(author);
     },
 
-    on_mode_change: function () {
-        /* Change Ace mode when language is selected. */
+    on_mode_change: function (opts) {
+        /* Change Ace mode when language is selected.
+            Arguments:
+                opts  : object containing options for this functions.
+
+                Options:
+                    save : true/false to save the new mode to a cookie.
+        */
         var modestr = wppaste.get_selected_mode();
-        wp_content.getSession().setMode(modestr);
+        var session = wp_content.getSession();
+        // Clear any error annotations that selecting a bad lang may have caused.
+        session.clearAnnotations();
+        // Set the new mode (causes re-highlighing)
+        session.setMode(modestr);
         //console.log('mode set to: ' + modestr);
 
         // Save user language to a cookie for next time.
-        wppaste.update_paste_settings({'lang': wppaste.get_selected_lang()});
+        if (opts && opts['save']) {
+            wppaste.update_paste_settings({'lang': wppaste.get_selected_lang()});
+        }
     },
 
-    on_theme_change: function () {
-        /* Change Ace theme when theme option is selected. */
+    on_theme_change: function (opts) {
+        /* Change Ace theme when theme option is selected.
+            Arguments:
+                opts  : Object containing options for this function.
+                    Options:
+                        save : true/false, whether the theme is saved to a cookie.
+        */
         var themestr = wppaste.get_selected_theme();
         wp_content.setTheme(themestr);
         //console.log('theme set to: ' + themestr);
 
         // Save user theme to a cookie for next time.
-        wppaste.update_paste_settings({'theme': wppaste.get_selected_theme_name()});
+        if (opts && opts['save']) {
+            wppaste.update_paste_settings({'theme': wppaste.get_selected_theme_name()});
+        }
     },
 
     save_paste_settings : function () {
@@ -163,8 +214,21 @@ var wppaste = {
         return $.cookie('pastesettings', cookieinfo, {expires: 365, path:'/'});
     },
 
+    set_editor_size: function (csssize) {
+        /* Sets the size for the editor by setting the paste-content
+           size and calling wp_content.resize().
+        */
+        if (csssize) {
+            $('#paste-content').height(csssize);
+            wp_content.resize();
+        }
+    },
+
     set_selected_mode : function (name) {
-        /* set selected mode by name */
+        /* set selected mode by name
+            Arguments:
+                name  : Name of mode to select.
+        */
         var langselect = document.getElementById('langselect');
         var langlen = langselect.options.length;
         for (var i=0; i < langlen; i++) {
@@ -179,6 +243,31 @@ var wppaste = {
         langselect.selectedIndex = 0;
         wppaste.on_mode_change();
         return false;
+    },
+
+    set_selected_onhold : function (checked) {
+        /* set selected 'onhold' option.
+            Arguments:
+                checked : true/false, whether onhold opt is checked.
+        */
+        var chk = $('#paste-onhold-opt');
+        // This option is not always created. (only authenticated users see it)
+        if (chk.length) {
+            var boolval = checked || false;
+            $(chk).attr({'checked': boolval});
+        }
+    },
+
+    set_selected_private : function (checked) {
+        /* set selected 'private' option.
+            Arguments:
+                checked  : true/false, whether the private opt. is checked.
+        */
+
+        var chk = $('#paste-private-opt');
+        var boolval = checked || false;
+        $(chk).attr({'checked': boolval});
+
     },
 
     set_selected_theme : function (name) {
@@ -199,28 +288,28 @@ var wppaste = {
         return false;
     },
 
-    submit_paste : function (existingdata) {
-        // TODO: Think about, and implement, how a paste should be submitted,
-        //       What kind of response, or redirect there should be.
-        //       How to handle reply-tos/forks.
-        //       Whether or not the paste is private/public
-        //       Language preference.
+    split_string: function (string, size) {
+        var re = new RegExp('.{1,' + size + '}', 'g');
+        return string.match(re);
+    },
 
+    submit_paste : function (existingdata) {
         // JSON data to send...
-        // TODO: Build suitable data for submitting a paste...
         if (existingdata) {
             var pastedata = existingdata;
         } else {
             var pastedata = {};
         }
-        pastedata.author = wppaste.get_paste_author();
-        pastedata.content = wp_content.getValue();
-        pastedata.title = wppaste.get_paste_title();
-        pastedata.language = wppaste.get_selected_lang();
+        pastedata['author'] = wppaste.get_paste_author();
+        pastedata['content'] = wp_content.getValue();
+        pastedata['title'] = wppaste.get_paste_title();
+        pastedata['language'] = wppaste.get_selected_lang();
+        pastedata['onhold'] = wppaste.get_selected_onhold();
+        pastedata['private'] = wppaste.get_selected_private();
         var replyto = $('#replyto-id').attr('value');
-        pastedata.replyto = replyto
+        pastedata['replyto'] = replyto
 
-        // TODO: include 'onhold', make author textbox.
+        // TODO: include 'onhold' on frontend.
 
         // Parse some of the user input.
         if (wptools.is_emptystr(pastedata.content)) {
@@ -235,7 +324,7 @@ var wppaste = {
 
         // change the loading message.
         update_loading_msg('<span>Submitting paste...</span>');
-        
+
         $.ajax({
             type: 'post',
             contentType: 'application/json',
@@ -246,22 +335,27 @@ var wppaste = {
                 console.log('failure: ' + status);
             },
             complete: function (xhr, status) {
-                            
+
                 // handle errors...
                 if (status == 'error') {
-                    // TODO: Handle errors. :)
+                    // TODO: Handle server errors.
+                    // TODO: App errors are handled, but what if the app doesn't
+                    // TODO: ..even get to talk to the client? :)
                     console.log('wp-error response: ' + xhr.responseText);
+                    if (xhr.responseText) {
+                        // This will probably be an ugly message.
+                        show_error_msg('<span class="warning-msg">' + xhr.responseText + '</span>');
+                    }
                 } else {
                     // Paste was successfully submitted.
-                    // TODO: Decide what to do afterwards :)
                     var respdata = JSON.parse(xhr.responseText);
 
                     if (respdata.status && respdata.status === 'error') {
-                        // Server sent an error msg back.
+                        // App sent an error msg back.
                         show_error_msg('<span class="warning-msg">' + respdata.message + '</span>');
                         console.log('error: ' + respdata.message);
                     } else {
-                        // Server sent back a success.
+                        // App sent back a success.
                         wppaste.submit_success(respdata);
                         // done loading success
                         $('#floater').fadeOut();
@@ -289,6 +383,10 @@ var wppaste = {
         }
     },
 
+    toggle_editor_size: function () {
+        /* TODO: Implement this size toggler. */
+    },
+
     updatejson : function (jsondata, newdata) {
         /* Update JSON object data with new keys/values.
             Arguments:
@@ -297,7 +395,7 @@ var wppaste = {
 
             Returns updated JSON (Does not modify the original.)
         */
-        
+
         if (!jsondata) { return JSON.stringify(newdata) || ''; }
         else if (!newdata) { return jsondata;}
 
@@ -362,7 +460,7 @@ var wppaste = {
                 if (newobj[newkey]) {
                     // new key is truthy, update the old one.
                     tmpobj[newkey] = newobj[newkey]
-                } 
+                }
                 // otherwise the old key/value is kept.
             }
         }
@@ -373,6 +471,9 @@ var wppaste = {
 
 };
 
+/* I don't think there's a real reason for these to not be part of
+    wppaste.
+*/
 
 // setup initial ace editor
 function setup_ace (doreadonly) {
@@ -386,7 +487,7 @@ function setup_ace (doreadonly) {
     wp_content.getSession().setUseSoftTabs(true);
     // ensure read-only access to content
     if (doreadonly) {
-        wp_content.setReadOnly(true);        
+        wp_content.setReadOnly(true);
     }
     // Get mode/theme list for ace. We will be using them later.
     wp_modelist = ace.require('ace/ext/modelist');
@@ -398,17 +499,17 @@ function setup_ace (doreadonly) {
 // update floater message and size/position
 function update_loading_msg (message) {
     $('#floater-msg').html(message);
-    wptools.center_element('#floater');
+    wptools.center('#floater');
     var floater = $('#floater');
     var scrollpos = $(this).scrollTop();
     //floater.css({'top': scrollpos + 'px'});
-    
+
     $('#floater').fadeIn();
 }
 
 function show_error_msg (message) {
     $('#floater-msg').html(message);
-    wptools.center_element('#floater');
+    wptools.center('#floater');
     var floater = $('#floater');
     var scrollpos = $(this).scrollTop();
     //floater.css({'top': scrollpos + 'px'});

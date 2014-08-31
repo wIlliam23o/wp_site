@@ -13,7 +13,9 @@ from django.views.decorators.cache import never_cache
 
 from wp_main.utilities import responses
 from wp_main.utilities.wp_logging import logger
-from wp_main.utilities.utilities import get_object, get_remote_ip
+from wp_main.utilities.utilities import (
+    get_object, get_remote_ip, parse_bool
+)
 
 # For creating/accessing wp_paste() objects.
 from apps.paste.models import wp_paste
@@ -27,7 +29,7 @@ REPLYMAX = 10
 # Maximum amount of pastes to show in simple listings.
 LISTINGMAX = 25
 # Minimum seconds allowed between public api paste submits.
-MIN_SUBMIT_SECS = 120
+MIN_SUBMIT_SECS = 15
 
 
 def invalidate_submit(submitdata):
@@ -65,7 +67,7 @@ def invalidate_submit(submitdata):
     content = submitdata.get('content', None)
     if not content:
         return 'Paste has no content.'
-    
+
     lang = submitdata.get('language', None)
     if (content == lastpaste.content) and (lang == lastpaste.language):
         return 'Same as last paste.'
@@ -186,6 +188,7 @@ def process_submit(submitdata, apisubmit=False):
 def submit_ajax(request):
     """ Handles ajax paste submits.
         Reads json data from request and handles accordingly.
+        These requests must come from the welbornprod site.
     """
     # Submits should always be ajax/POST.
     if not request.is_ajax():
@@ -194,11 +197,10 @@ def submit_ajax(request):
             remoteip = '<Unknown IP>'
         _log.error('Received non-ajax request from: {}'.format(remoteip))
         errormsgs = ['Invalid request.']
-        usermsg = ''.join([
-            'Try entering a valid url, ',
-            'or using the forms/buttons ',
-            'provided. -Cj',
-        ])
+        usermsg = ''.join((
+            'Try entering a valid url, or using the forms/buttons provided.',
+            ' -Cj'
+        ))
         return responses.error500(request, msgs=errormsgs, user_error=usermsg)
 
     # Get the request args for this submit (JSON only).
@@ -226,6 +228,10 @@ def submit_public(request):
     # Try using GET/POST..
     if not submitdata:
         submitdata = responses.get_request_args(request)
+        # Parse a few args that string values would break.
+        onhold = parse_bool(submitdata.get('onhold', ''))
+        private = parse_bool(submitdata.get('private', ''))
+        submitdata.update({'onhold': onhold, 'private': private})
 
     if (not submitdata) or (not submitdata.get('content', False)):
         # No valid submit data.
@@ -263,7 +269,7 @@ def view_index(request):
     if app:
         app.view_count += 1
         app.save()
-    
+
     # If the request has args pass it on down to view_paste()
     try:
         reqargs = request.REQUEST
@@ -297,6 +303,7 @@ def view_json(request):
             'author': '',
             'date': '',
             'content': '',
+            'language': '',
             'id': '',
             'pastes': [],
             'views': 0,
@@ -317,6 +324,7 @@ def view_json(request):
             'content': paste.content,
             'id': paste.paste_id,
             'views': paste.view_count,
+            'language': paste.language,
         }
         if doreplies:
             replies = paste.children.filter(disabled=False)

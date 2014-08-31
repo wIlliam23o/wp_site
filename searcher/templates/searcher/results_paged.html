@@ -11,7 +11,7 @@
 		<div class="search-header-title">
 				<h3 class='header'>Results</h3>
 		</div>
-		
+
 		<div class="search-header-text">
 				<div class='search-header'>
 					{% if search_warning %}
@@ -27,15 +27,19 @@
 						          <span class="search-header-count">{{ results_count }}</span>
 						            <span class="search-header-text"> for: </span>
 						              <span class="search-header-query">{{ query_text }}</span>
-					{% endif %}  
+					{% endif %}
 				</div>
 				<!-- Search Box -->
 				<div class="search-form" style="top: 50px;">
 					<span class="search-label">Enter something to search for: </span>
 					<form>
 						<input type="search" name="q" id="searchbox" class="search-textbox" required=True></input>
-						<input type="submit" id="search-button" class="submit-button" title="Search"></input>
-			
+						<!-- Search Button -->
+						<a href="javascript: void(0);" onclick="javascript: do_search();">
+							<div class="submit-button">
+								<span>search</span>
+							</div>
+						</a>
 					</form>
 				</div>
 
@@ -124,4 +128,15 @@
 			</div>
 		{% endif %}
 	{% endif %}
+{% endblock %}
+
+{% block bodyend %}
+	<script type="text/javascript">
+		function do_search() {
+			var searchtext = $('#searchbox').val();
+			if (searchtext) {
+				$("#search-form").submit();
+			}
+		}
+	</script>
 {% endblock %}

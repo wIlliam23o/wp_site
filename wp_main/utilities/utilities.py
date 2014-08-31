@@ -4,7 +4,7 @@
 """
           project: utilities.py
          @summary: various tools/utilities for Welborn Prod.
-    
+
           @author: Christopher Welborn <cj@welbornprod.com>
     @organization: welborn productions <welbornprod.com>
 """
@@ -31,40 +31,41 @@ def append_path(appendto_path, append_this):
         ex:
             mypath = append_path("/view" , project.source_dir)
     """
-    
+
     if append_this.startswith('/'):
         spath = (appendto_path + append_this)
     else:
         spath = (appendto_path + '/' + append_this)
     return spath.replace("//", '/')
 
-           
+
 def debug_allowed(request):
     """ returns True if the debug info is allowed for this ip/request.
         inspired by debug_toolbar's _show_toolbar() method.
     """
-    
+
     # full test mode, no debug allowed (as if it were the live site.)
     if getattr(settings, 'TEST', False):
         return False
-    
+
     # If user is admin/authenticated we're okay.
     if request.user.is_authenticated() and request.user.is_staff:
         return True
-    
+
     # Non-authenticated users:
     # Get ip for this user
     remote_addr = get_remote_ip(request)
     if not remote_addr:
         return False
-    
+
     # run address through our quick debug security check
     # (settings.INTERNAL_IPS and settings.DEBUG)
     ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
     # log all invalid ips that try to access debug
     if settings.DEBUG and (not ip_in_settings):
-        ipwarnmsg = 'Debug not allowed for ip: {}'.format(str(remote_addr))
-        ipwarnmsg += '\n    ...DEBUG is {}.'.format(str(settings.DEBUG))
+        ipwarnmsg = '\n'.join((
+            'Debug not allowed for ip: {}'.format(str(remote_addr)),
+            '             ...DEBUG is: {}'.format(str(settings.DEBUG))))
         _log.warn(ipwarnmsg)
     return (ip_in_settings and bool(settings.DEBUG))
 
@@ -75,14 +76,14 @@ def get_absolute_path(relative_file_path):
         restricted to public STATIC_PARENT dir.
         if no_dir is True, then only file paths are returned.
     """
-    
+
     if relative_file_path == "":
         return ""
-    
+
     # Guard against ../ tricks.
     if '..' in relative_file_path:
         return ''
-    
+
     sabsolutepath = ''
     # Remove '/static' from the file path.
     if relative_file_path.startswith(('static', '/static')):
@@ -106,21 +107,21 @@ def get_absolute_path(relative_file_path):
     # Guard against files outside of the public /static dir.
     if not sabsolutepath.startswith(settings.STATIC_ROOT):
         return ''
-    
+
     return sabsolutepath
 
 
 def get_browser_name(request):
     """ return the user's browser name """
-    
+
     # get user agent
     user_agent = get_user_agent(request)
     return user_agent.browser.family.lower()
-    
+
 
 def get_browser_style(request):
     """ return browser-specific css file (or False if not needed) """
-    
+
     browser_name = get_browser_name(request)
     # get browser css to use...
     if browser_name.startswith("ie"):
@@ -131,7 +132,7 @@ def get_browser_style(request):
         return "/static/css/main-webkit.min.css"
     else:
         return False
-    
+
 
 def get_datetime(date=None, shortdate=False):
     """ Return date/time string.
@@ -170,26 +171,26 @@ def get_filename(file_path):
         _log.error('error in os.path.split({})'.format(file_path))
         sfilename = file_path
     return sfilename
-    
+
 
 def get_objects_enabled(objects_):
     """ Safely retrieves all objects where disabled == False.
         Handles 'no objects', returns [] if there are no objects.
     """
-    
+
     # Model was passed instead of model.objects.
     if hasattr(objects_, 'objects'):
         objects_ = getattr(objects_, 'objects')
-    
+
     try:
         allobjs = objects_.filter(disabled=False)
     except Exception as ex:
         _log.error('No objects to get!: {}\n{}'.format(objects_.__name__, ex))
         allobjs = None
-    
+
     return allobjs
 
-    
+
 def get_object_safe(objects_, **kwargs):
     """ does a mymodel.objects.get(kwargs),
         Other Keyword Arguments:
@@ -199,14 +200,14 @@ def get_object_safe(objects_, **kwargs):
     if hasattr(objects_, 'objects'):
         # Main Model passed instead of Model.objects.
         objects_ = getattr(objects_, 'objects')
-        
+
     try:
         obj = objects_.get(**kwargs)
     except Exception:
         # No Error is raised, just return None
         obj = None
     return obj
-    
+
 # Alias for function.
 get_object = get_object_safe
 
@@ -215,7 +216,7 @@ def get_relative_path(spath):
     """ removes base path to make it django-relative.
         if its a '/static' related dir, just trim up to '/static'.
     """
-    
+
     if not spath:
         return ''
 
@@ -236,7 +237,7 @@ def get_relative_path(spath):
 
 def get_remote_host(request):
     """ Returns the HTTP_HOST for this user. """
-    
+
     host = request.META.get('REMOTE_HOST', None)
     return host
 
@@ -300,7 +301,7 @@ def get_time_since(date, humanform=True):
     """ Parse a datetime object,
         return human-readable time-elapsed.
     """
-    
+
     secs = (datetime.now() - date).total_seconds()
     if secs < 60:
         if humanform:
@@ -369,7 +370,7 @@ def get_time_since(date, humanform=True):
 
 def is_file_or_dir(spath):
     """ returns true if path is a file, or is a dir. """
-    
+
     return (os.path.isfile(spath) or os.path.isdir(spath))
 
 
@@ -377,12 +378,12 @@ def is_mobile(request):
     """ determine if the client is a mobile phone/tablet
         actually, determine if its not a pc.
     """
-    
+
     if request is None:
         # happens on template errors,
         # which hopefully never make it to production.
         return False
-    
+
     return (not get_user_agent(request).is_pc)
 
 
@@ -427,6 +428,16 @@ def logtraceback(log=None, message=None):
     return logged
 
 
+def parse_bool(s):
+    """ Parse a string as a boolean.
+        Values for True: '1', 'T[rue]', 't[rue]', 'Y[es]', 'y[es]'
+        Values for False: ..everything else.
+    """
+    if s:
+        return s.lower().startswith(('1', 't', 'y'))
+    return False
+
+
 def prepend_path(prepend_this, prependto_path):
     """ os.path.join fails if prependto_path starts with '/'.
         so I made my own. it's not as dynamic as os.path.join, but
@@ -434,7 +445,7 @@ def prepend_path(prepend_this, prependto_path):
         ex:
             mypath = prepend_path("/view" , project.source_dir)
     """
-    
+
     if prependto_path.startswith('/'):
         spath = (prepend_this + prependto_path)
     else:
@@ -447,17 +458,17 @@ def remove_list_dupes(list_, max_allowed=1):
         default allowed duplicates is 1, you can allow more if needed.
         minimum allowed is 1. this is not a list deleter.
     """
-    
+
     for item_ in [item_copy for item_copy in list_]:
         while list_.count(item_) > max_allowed:
             list_.remove(item_)
-    
+
     return list_
 
 
 def safe_arg(_url):
     """ basically just trims the / from the POST args right now """
-    
+
     s = _url
     if s.endswith('/'):
         s = s[:-1]
@@ -475,7 +486,7 @@ def slice_list(list_, starting_index=0, max_items=-1):
         return []
     if len(list_) == 0:
         return []
-    
+
     sliced_ = list_[starting_index:]
     if ((max_items > 0) and
        (len(sliced_) > max_items)):
@@ -486,15 +497,15 @@ def slice_list(list_, starting_index=0, max_items=-1):
 
 def trim_special(source_string):
     """ removes all html, and other code related special chars.
-        so <tag> becomes tag, and javascript.code("write"); 
+        so <tag> becomes tag, and javascript.code("write");
         becomes javascriptcodewrite.
         to apply some sort of safety to functions that generate html strings.
-        incase someone did this (all one line): 
+        incase someone did this (all one line):
             welbornprod.com/blog/tag/<script type="text/javascript">
                 document.write("d");
             </script>
     """
-    
+
     special_chars = "<>/.'" + '"' + "#!;:&"
     working_copy = source_string
     for char_ in source_string:

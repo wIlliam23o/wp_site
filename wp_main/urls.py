@@ -113,6 +113,13 @@ urlpatterns += patterns(
         include('searcher.urls'))
 )
 
+# Private Sandbox views.
+urlpatterns += patterns(
+    '',
+    url(r'[Ss]and[Bb]ox',
+        include('sandbox.urls'))
+)
+
 # Admin/Other
 urlpatterns += patterns(
     '',

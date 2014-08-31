@@ -1,5 +1,12 @@
 @import 'welbornprod';
 
+#paste-content {
+    // The height must be set inline inside of apps/paste/templates/index.html
+    // ..You can set other style properties that don't resize anything though.
+    border-radius: 5px;
+}
+
+
 #langselect {
     @include border-radius(3px);
     border-color: $bordermain;
@@ -122,10 +129,49 @@
     font-size: $fontnormal;
     font-weight: bold;
     color: $greymain;
-    padding-top: 2px;    
+    padding-top: 2px;
 }
+
 .paste-author-label {
     @extend .paste-lang-label;
+}
+
+.paste-private-box {
+  display: inline-block;
+}
+
+.paste-private-label {
+  @extend .paste-lang-label;
+}
+
+#paste-private-opt {
+    width: 15px;
+    height: 15px;
+    margin-left: 0px;
+    vertical-align: middle;
+}
+
+.paste-private-verbose {
+    display: inline-block;
+    color: $greylight;
+    font-family: $fontssmall;
+    font-size: $fontsmall;
+    font-weight: bold;
+    vertical-align: top;
+    padding-top: 5px;
+
+}
+
+.paste-onhold-box {
+    display: inline-block;
+}
+
+.paste-onhold-label {
+    @extend .paste-lang-label;
+}
+
+#paste-onhold-opt {
+    @extend #paste-private-opt;
 }
 
 .paste-date-box {
@@ -338,7 +384,7 @@
     font-family: $fontsnormal;
     font-weight: bold;
     font-size: $fontsmaller;
-    
+
     color: $bluemain;
 
     a {
