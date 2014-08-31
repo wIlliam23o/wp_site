@@ -13,6 +13,9 @@
 # For insert_video, building a mimetype from file extension.
 import os
 
+# For base64 encoding/decoding
+import base64
+
 # Django stuff
 from django import template
 from django.conf import settings
@@ -42,6 +45,18 @@ disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
 #disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
 #disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
+
+
+@register.filter
+def b64decode(s):
+    """ Decode a Base64 string. """
+    return base64.decodebytes(s.encode('utf-8')).decode('utf-8')
+
+
+@register.filter
+def b64encode(s):
+    """ Base64 encode a string. """
+    return base64.encodebytes(s.encode('utf-8')).decode('utf-8').strip()
 
 
 @register.filter
