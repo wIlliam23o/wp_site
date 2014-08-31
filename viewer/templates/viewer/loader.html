@@ -82,7 +82,7 @@
 	</div>
 	<!-- Setup ace editor.. -->
 	<script type='text/javascript'>
-	    setup_ace('{{ file }}');
+	    wpviewer.setup_ace('{{ file }}');
 	</script>
 {% endblock %}
 
@@ -97,7 +97,7 @@
 
 			{# Load initial file #}
 			wpviewer.set_current_file('{{ file }}');
-			view_file('{{ file }}');
+			wpviewer.view_file('{{ file }}');
 
 			{# Scroll to file view #}
 			wptools.scroll_to_anchor('#file-content-box');
