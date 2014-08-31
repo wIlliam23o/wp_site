@@ -152,6 +152,9 @@ def build_files(wponly=False):
     if os.path.isfile(builder_py):
         print('\nRunning builder...')
         build_cmd = ['python3', builder_py]
+        if settings.SITE_VERSION.startswith('Local'):
+            build_cmd.insert(0, 'sudo')
+
         if wponly:
             # only build wp*.js files. not external stuff. (takes too long)
             build_cmd = build_cmd + ['-i', 'wp', '-f', '-wp']
