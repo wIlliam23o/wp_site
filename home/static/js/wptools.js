@@ -38,7 +38,7 @@ var wptools = {
         if (elem) {
             newx = (screen_width - elem.width()) / 2;
             $(selector).css({'right': newx + 'px'});
-            if (usevertical || usevertical.usevertical) {
+            if (usevertical) {
                 newy = (window.innerHeight / 2) - elem.height();
                 elem.css({'top': newy + 'px'});
             }
