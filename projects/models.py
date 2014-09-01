@@ -10,7 +10,7 @@ import datetime
 
 def get_date_today():
     """ returns today's date for setting default publish_date value """
-        
+
     return datetime.date.today()
 
 
@@ -29,7 +29,7 @@ class wp_project(models.Model):
     description = models.CharField(blank=True, default="", max_length=1024,
                                    help_text="Short description for the project.")
     # version in the form of X.X.X or XX.X.X
-    version = models.CharField(blank=True, default="1.0.0", max_length=6,
+    version = models.CharField(blank=True, default="1.0.0", max_length=120,
                                help_text="Version string in the form of X.X.X")
     # url to image file (will be embedded in html)
     logo_url = models.CharField(blank=True, default="", max_length=512,
@@ -52,20 +52,20 @@ class wp_project(models.Model):
     # publish date (for sort-order mainly)
     publish_date = models.DateField(blank=False, default=get_date_today(),
                                     help_text="Date the project was published. (Automatically set to today.)")
-    
+
     # disables project (instead of deleting it, it simply won't be viewed)
     disabled = models.BooleanField(default=False)
-    
+
     # count of views/downloads
     view_count = models.IntegerField(default=0,
                                      help_text="How many times this project has been viewed. (Integer)")
     download_count = models.IntegerField(default=0,
                                          help_text="How many times this project has been downloaded. (Integer)")
-    
+
     # admin stuff
     date_hierarchy = 'publish_date'
     get_latest_by = 'publish_date'
-    
+
     def __unicode__(self):
         """ returns string/unicode representation of project """
         s = self.name
@@ -76,11 +76,11 @@ class wp_project(models.Model):
     def __str__(self):
         """ same as unicode() except str() """
         return str(self.__unicode__())
-    
+
     def __repr__(self):
         """ same as unicode() """
         return self.__unicode__()
-    
+
     # Meta info for the admin site
     class Meta:
         ordering = ['name']
