@@ -33,7 +33,7 @@ class wp_app(models.Model):
 
     # long description for the app.
     # version in the form of X.X.X or XX.X.X
-    version = models.CharField(blank=True, default='1.0.0', max_length=6,
+    version = models.CharField(blank=True, default='1.0.0', max_length=120,
                                help_text='Version string in the form of X.X.X')
     # url to image file (will be embedded in html)
     logo_url = models.CharField(blank=True, default='', max_length=512,
@@ -60,10 +60,10 @@ class wp_app(models.Model):
     publish_date = models.DateField(blank=False, default=get_date_today(),
                                     help_text=('Date the app was published, '
                                                'automatically set to today.'))
-    
+
     # disables app (instead of deleting it, it simply won't be viewed)
     disabled = models.BooleanField(default=False)
-    
+
     # count of views
     view_count = models.IntegerField(default=0,
                                      help_text=('How many times this project '
@@ -78,7 +78,7 @@ class wp_app(models.Model):
     # admin stuff
     date_hierarchy = 'publish_date'
     get_latest_by = 'publish_date'
-    
+
     def __unicode__(self):
         """ returns string/unicode representation of project """
         s = self.name
@@ -89,7 +89,7 @@ class wp_app(models.Model):
     def __str__(self):
         """ same as unicode() except str() """
         return str(self.__unicode__())
-    
+
     def __repr__(self):
         """ same as unicode() """
         return self.__unicode__()
