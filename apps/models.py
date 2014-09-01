@@ -8,9 +8,6 @@ from django.db import models
 import datetime
 import json
 
-# Returns today's date for setting default publish_date value
-get_date_today = lambda: datetime.date.today()
-
 
 class wp_app(models.Model):
 
@@ -80,7 +77,7 @@ class wp_app(models.Model):
     # publish date (for sort-order mainly)
     publish_date = models.DateField(
         blank=False,
-        default=get_date_today(),
+        default=datetime.date.today(),
         help_text=('Date the app was published, automatically set to today.'))
 
     # disables app (instead of deleting it, it simply won't be viewed)
