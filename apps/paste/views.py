@@ -224,7 +224,7 @@ def submit_public(request):
     """
 
     # Get the request args for this submit.
-    submitdata = responses.json_get_request(request)
+    submitdata = responses.json_get_request(request, suppress_errors=True)
     # Try using GET/POST..
     if not submitdata:
         submitdata = responses.get_request_args(request)

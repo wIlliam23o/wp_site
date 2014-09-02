@@ -521,7 +521,7 @@ def get_request_args(request, requesttype=None, default=None):
     return defaultargs
 
 
-def json_get(data):
+def json_get(data, suppress_errors=False):
     """ Retrieves a dict from json data string. """
 
     originaltype = type(data)
@@ -541,12 +541,14 @@ def json_get(data):
         # data first. Logging a 65 line file that has been urlencoded sucks.
         # It could be a real error, so instead of ignoring it
         # I am trimming the data to a smaller size, and logging that and the
-        # error.
-        sampledata = data[:64]
-        _log.debug(('Bad data passed in: '
-                    '(first {} chars) == {}\n{}').format(len(sampledata),
-                                                         sampledata,
-                                                         exval))
+        # error. This can be disabled completely by passing:
+        # suppress_errors=True, if you know beforehand that this might happen.
+        if not suppress_errors:
+            sampledata = data[:64]
+            _log.debug((
+                'Bad data passed in:  (first {} chars) == {}\n{}'
+            ).format(len(sampledata), sampledata, exval))
+
     return datadict
 
 
