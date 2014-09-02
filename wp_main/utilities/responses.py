@@ -647,7 +647,7 @@ class staff_required(object):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if not args[0].user.is_staff:
-                return responses.error403(
+                return error403(
                     args[0],
                     msgs=self.msgs,
                     user_error=self.user_error)
