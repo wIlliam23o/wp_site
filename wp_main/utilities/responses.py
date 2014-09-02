@@ -552,11 +552,11 @@ def json_get(data, suppress_errors=False):
     return datadict
 
 
-def json_get_request(request):
+def json_get_request(request, suppress_errors=False):
     """ retrieve JSON data from a request (uses json_get()). """
 
     if hasattr(request, 'body'):
-        return json_get(request.body)
+        return json_get(request.body, suppress_errors=suppress_errors)
     return None
 
 
