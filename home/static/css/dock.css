@@ -6,9 +6,9 @@
   /* padding-left: 20px;  <-disabled for left-align, getting rid of center. */ }
 
 a.dock-item {
+  position: absolute;
   display: block;
   width: 50px;
-  position: absolute;
   bottom: 0;
   font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
   font-weight: bold;

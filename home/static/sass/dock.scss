@@ -1,15 +1,17 @@
 @import 'welbornprod';
-.dock-container { 
-    position: relative; 
-    top: -8px; 
+
+.dock-container {
+    position: relative;
+    top: -8px;
     height: 50px;
     left: 0;
     /* padding-left: 20px;  <-disabled for left-align, getting rid of center. */
-    }
-a.dock-item { 
+}
+
+a.dock-item {
+    position: absolute;
     display: block;
     width: 50px;
-    position: absolute;
     bottom: 0;
     font-family: $fontsnormal;
     font-weight: bold;
@@ -17,18 +19,21 @@ a.dock-item {
     text-decoration: none;
     color: white;
     text-shadow: $shadowtext;
-    }
-.dock-item span { 
-    display: none; 
-    padding-left: 20px; 
-    }
-.dock-item img { 
-    border: 0; 
-    margin: 5px 10px 0px; 
-    width: 100%; 
-    }
+}
+
+.dock-item span {
+    display: none;
+    padding-left: 20px;
+}
+
+.dock-item img {
+    border: 0;
+    margin: 5px 10px 0px;
+    width: 100%;
+}
+
 #dock {
     /*margin-left: 60px;*/
     display: inline-block;
-    
+
 }

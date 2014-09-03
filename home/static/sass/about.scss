@@ -1,25 +1,16 @@
 @import 'welbornprod';
 /* ------------------------- about.css ------------------------- */
 .about-box {
+  @include box-shadow-normal();
+  @include border-radius(5px);
   background: $whitedull;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  box-shadow: $shadownormal;
-  -moz-box-shadow: $shadownormal;
-  -webkit-box-shadow: $shadownormal;
   padding: 5px;
 }
 
 .about-pic-box {
   background: $whitemain;
-  border-style: none;
-  border-width: 0px;
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  box-shadow: $shadownormal;
-  -moz-box-shadow: $shadownormal;
-  -webkit-box-shadow: $shadownormal;
+  @include border-radius-none(5px);
+  @include box-shadow-normal();
   float: left;
   margin-top: 30px;
   margin-bottom: 20px;
@@ -27,7 +18,8 @@
   height: auto;
   width: auto;
   padding: 5px;
-  text-align: center; }
+  text-align: center;
+}
 
 .about-img {
   border: none;
@@ -49,14 +41,12 @@
   margin-top: 5px; }
 
 .about-contact-button {
-  border-style: solid;
-  border-radius: 5px;
-  border-width: 1px;
-  border-color: $borderblue;
   display: inline-block;
+  @include border-radius-thin-color(5px, $borderblue);
   margin: 2px;
   padding-left: 2px;
-  padding-right: 2px; }
+  padding-right: 2px;
+}
 
 .about-contrib-box {
     border: 1px solid $borderlight;

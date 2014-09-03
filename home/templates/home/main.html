@@ -149,10 +149,10 @@
 
    	<!-- Debug box -->
 	{% block debug-box %}
-	   	{% if request|debug_allowed and request|is_test_site %}
+	   	{% if request|debug_allowed and request|is_test_site and request.user.is_staff %}
 	   		<!-- show/hide debug btn (top button) -->
 	   		<div class='debug-button' id='debug-button-top'>
-	   			<a href='#' onclick='javascript: wptool.toggle_debug();'>
+	   			<a href='#' onclick='javascript: wptools.toggle_debug();'>
 	   				<span class='debug-button-text'>
 	   					show debug
 	   				</span>
@@ -175,6 +175,35 @@
 	   	{% endif %}
 	{% endblock %}
 
+	{% if request|is_test_site and not request.user.is_staff %}
+		<!-- Build alert_message for test site. -->
+		<div id='alert-box' class='alert'>
+			<div id='alert-title'>
+		    	Permission Denied
+		    </div>
+		</div>
+	{% else %}
+	    <!-- Alert area built based on alert_content or alert_message. -->
+	    {% with default_alert_class="alert" %}
+			{% if alert_content %}
+				{# html-formatted block for alert-message #}
+				<div id='alert-box' class='{% if alert_class %}{{ alert_class }}{% else %}{{ default_alert_class }}{% endif %}'>
+					{% if alert_title %}
+						<div id='alert-title'>{{ alert_title|safe }}</div>
+					{% endif %}
+					{{ alert_content|safe }}
+				</div>
+			{% elif alert_message %}
+				{# single alert-message #}
+				<div id='alert-box' class='{% if alert_class %}{{ alert_class }}{% else %}{{ default_alert_class }}{% endif %}'>
+					{% if alert_title %}
+						<div id='alert-title'>{{ alert_title|safe }}</div>
+					{% endif %}
+					<span class='alert-message'>{{ alert_message|safe }}</span>
+				</div>
+			{% endif %}
+		{% endwith %}
+	{% endif %}
 	<!-- Whole Page Container (Background and everything inside) -->
 	<div id='bg-surround'>
 	    <div id='bg-pattern' class='main-pattern'>
@@ -185,11 +214,6 @@
 		{#{% if false %} {# <-- TESTING PURPOSES #}
 		{% if request|is_test_site and not request.user.is_staff %}
 		    <!-- Show no access msg for non-admins on test site. -->
-		    <div class='alert'>
-		    	<span class='alert-message'>
-		    		Permission Denied{% if request.user.username %}: {{ request.user.username }}{% endif %}
-		    	</span>
-		    </div>
 			<div id='page-surround' class='wp-block'>
 				<div class='error-noaccess-message'>
 					Sorry, you do not have access to the test site.
@@ -197,18 +221,6 @@
 			</div>
 
 		{% else %}
-		    <!-- Alert area built based on alert_content or alert_message. -->
-			{% if alert_content %}
-				{# html-formatted block for alert-message #}
-				<div class='alert'>
-					{{ alert_content }}
-				</div>
-			{% elif alert_message %}
-				{# single alert-message #}
-				<div class='alert'>
-					<span class='alert-message'>{{ alert_message }}</span>
-				</div>
-			{% endif %}
 
 			<!-- Floating Box placeholder -->
 			{% block floater %}
@@ -376,9 +388,20 @@
 				$('#dock-box').css({'left':'0px'});
 			}
 
-			window.onresize = function () {
-				wptools.flow_surround();
-			};
+			{# Make alert messages clickable. #}
+			{% if alert_message or alert_content %}
+				var alertbox = $('#alert-box');
+				$(alertbox).slideDown();
+				$(alertbox).click(function () {
+					$('#alert-box').slideUp();
+				});
+			{% elif request|is_test_site and not request.user.is_staff %}
+				var alertbox = $('#alert-box');
+				$(alertbox).slideDown();
+				$(alertbox).click(function () {
+					$('#alert-box').slideUp();
+				});
+			{% endif %}
 		});
 	</script>
 

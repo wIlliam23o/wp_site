@@ -13,12 +13,10 @@
 }
 
 .search-textbox {
-    background: white;
+    @include border-radius-thin(5px);
+    background: $whitedull;
     color: $greymain;
     font-family: $fontssmall;
-    border-color: $borderlight;
-    border-radius: 5px;
-    border-width: 1px;
     width: 200px;
 }
 /* Top of page */
@@ -46,21 +44,19 @@
 
 /* Listing */
 .search-listing {
+    @include box-shadow-normal();
+    @include border-radius(5px);
+    background: $whitedull;
     padding: 5px;
-    border-radius: 5px;
-    background: white;
-    box-shadow: $shadownormal;
-    -moz-box-shadow: $shadownormal;
-    -webkit-box-shadow: $shadownormal;
     margin-bottom: 10px;
 }
 
 .search-listing-title-box {
     position: relative;
     display: inline-block;
-    border-radius: 5px;
+    @include border-radius(5px);
     padding: 3px;
-    
+
 }
 .search-listing-title-box:hover {
     border-color: $borderhover;
@@ -73,7 +69,7 @@ a .search-listing-title, .search-listing-title {
     &:hover {
         color: $bluelink;
     }
-    
+
 }
 
 .search-listing-type-box {
@@ -101,10 +97,7 @@ a .search-listing-type-value:hover {
 }
 
 .search-listing-body {
-    border-radius: 5px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: $bordermain;
+    @include border-radius-thin(5px);
     margin-top: 10px;
     padding-left: 20px;
     padding-right: 20px;
@@ -114,31 +107,23 @@ a .search-listing-type-value:hover {
 
 .search-listing-date-box {
     display: inline-block;
+    position: absolute;
+    @include border-radius-thin(5px);
     margin-left: 5px;
-    border-style: solid;
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: $bordermain;
     padding: 2px;
     right: 15px;
-    position: absolute;
 }
 
 .search-listing-date {
     font-size:$fontsmall;
     font-weight: bold;
-    color: $greylight;  
+    color: $greylight;
 }
 
 /* Navigation */
 .search-nav-box {
-    //border-style: solid;
-    //border-radius: 5px;
-    //border-width: 1px;
-    //border-color: $bordermain;
     padding: 2px;
     display: inline-block;
-    //background: $whitedull;
 }
 
 .search-nav-label {
@@ -148,17 +133,13 @@ a .search-listing-type-value:hover {
     font-weight: bold;
     display: block;
     padding-bottom: 2px;
-    //padding-left: 5px;
 }
 
 .search-nav-button {
-    border-style: solid;
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: $borderblue;
+    display: inline-block;
+    @include border-radius-thin-color(5px, $borderblue);
     padding-left: 2px;
     padding-right: 2px;
-    display: inline-block;
 }
 
 .search-nav-button:hover {

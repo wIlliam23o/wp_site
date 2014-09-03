@@ -6,13 +6,13 @@
     text-align: center;
 }
 .misc-container {
+    position: relative;
     margin: 15px;
     padding: 10px;
     background-color: $whitedull;
-    border-radius: 5px;
-    box-shadow: $shadowmedium;
+    @include border-radius(5px);
+    @include box-shadow-medium();
     text-align: left;
-
 }
 
 .misc-header-box {
@@ -43,13 +43,10 @@
 }
 
 .misc-desc {
+    @include border-radius-thick(10px);
     background: $whitemain;
     margin-top: 10px;
     padding: 5px;
-    border-radius: 10px;
-    border-color: $bordermain;
-    border-style: solid;
-    border-width: 2px;
     padding-left: 20px;
     padding-right: 20px;
 }
@@ -58,30 +55,24 @@
     text-align: center;
 }
 .misc-download-box {
-    background: $whitemain;
-    border-style: solid;
-    border-radius: 5px;
-    border-width: 2px;
-    border-color: $bordermain;
-    padding: 5px;
     display: inline-block;
     position: relative;
+    @include border-radius-thick(5px);
+    background: $whitemain;
+    padding: 5px;
     font-size: $fontsmall;
 }
 
 .misc-download-button {
+    @include box-shadow-small();
+    @include border-radius(3px);
     font-family: $fontsnormal;
     font-size: 1em;
-    border-radius: 3px;
     display: inline-block;
     position: relative;
     margin-right: 5px;
     margin-left: 5px;
     margin-bottom: 5px;
-    box-shadow: $shadowsmall;
-    -moz-box-shadow: $shadowsmall;
-    -webkit-box-shadow: $shadowsmall;
-
     padding: 5px;
 }
 /* Smaller styles for misc index */
@@ -118,32 +109,26 @@
 }
 /* Show More/Less Button */
 .misclongdescbtn {
-    background: $whitemain;
-    border-radius: 9px;
-    border-style: solid;
-    border-color: $bordermain;
-    border-width: 2px;
-    padding: 5px;
     display: inline-block;
     position: relative;
+    @include border-radius-thick(9px);
+    background: $whitemain;
+    padding: 5px;
     margin-top: 5px;
     font-size:$fontsmall;
 }
 
 .misclongdescbtn-wrapper {
-    text-align: center;
-    position: relative;
     display: inline-block;
+    position: relative;
+    text-align: center;
 }
 /* Long Description */
 .misclongdesc {
+    @include border-radius-thick(5px);
+    @include box-shadow-normal();
     background: $whitemain;
     font-size:$fontsmall;
-    border-radius: 5px;
-    border-color: $bordermain;
-    border-style: solid;
-    border-width: 2px;
-    box-shadow: $shadownormal;
     padding: 5px;
     margin-bottom: 10px;
 }
@@ -154,20 +139,17 @@
 
 /* Sub styles for misc descriptions. */
 .misc-sub-desc {
+    @include border-radius-thin(5px);
     margin-top: 10px;
-    border-radius: 5px;
-    border-style: solid;
-    border-color: $borderlight;
-    border-width: 1px;
     padding: 5px;
 }
 
 .misc-sub-desc *.codewrap {
-font-size: 1em;
-padding-right: 10px;
-padding-left: 10px;
-margin-left: 20px;
-margin-top: 10px;
+    font-size: 1em;
+    padding-right: 10px;
+    padding-left: 10px;
+    margin-left: 20px;
+    margin-top: 10px;
 }
 
 /* ensure all usage strings are wrapped with proper font size */
@@ -187,14 +169,11 @@ margin-top: 10px;
 
 /* Style for auto-appended content such as Xchat warnings. */
 .misc-warning {
+    display: inline-block;
+    @include border-radius-thin(5px);
     color: $redmain;
-    border-style: solid;
-    border-radius: 5px;
-    border-color: $borderlight;
-    border-width: 1px;
     padding: 5px;
     font-family: $fontssmall;
     font-size: 1em;
     margin-top: 15px;
-    display: inline-block;
 }

@@ -34,6 +34,7 @@ $redmain: #B90000;
 $greenmain: #01941E;
 
 // Shadows
+$shadowfloater: 6px 6px 7px rgba(0, 0, 0, 0.52);
 $shadowbig:  #EEEEEE 0px 0px 20px;
 $shadowmedium: #bac2c7 0px 0px 15px;
 $shadownormal: 4px 4px 4px rgba(0, 0, 0, 0.07);
@@ -74,10 +75,93 @@ $lineheightnormal: 1.1em;
             border-radius: $radius;
 }
 
+@mixin border-radius-none($radius) {
+    @include border-radius($radius);
+    border-style: none;
+    border-width: 0px;
+}
+
+@mixin border-radius-thin($radius) {
+    @include border-radius($radius);
+    border-style: solid;
+    border-width: 1px;
+    border-color:$bordermain;
+}
+
+@mixin border-radius-thin-color($radius, $color) {
+    @include border-radius($radius);
+    border-style: solid;
+    border-width: 1px;
+    border-color: $color;
+}
+
+@mixin border-radius-thick($radius) {
+    @include border-radius($radius);
+    border-style: solid;
+    border-width: 2px;
+    border-color: $bordermain;
+}
+
+@mixin border-radius-thick-color($radius, $color) {
+    @include border-radius($radius);
+    border-style: solid;
+    border-width: 2px;
+    border-color: $color;
+}
+
 @mixin box-shadow($shadow) {
     -webkit-box-shadow: $shadow;
        -moz-box-shadow: $shadow;
         -ms-box-shadow: $shadow;
          -o-box-shadow: $shadow;
             box-shadow: $shadow;
+}
+
+@mixin box-shadow-big() {
+    @include box-shadow($shadowbig);
+}
+
+@mixin box-shadow-floater() {
+    @include box-shadow($shadowfloater);
+}
+
+@mixin box-shadow-normal() {
+    @include box-shadow($shadownormal);
+}
+
+@mixin box-shadow-medium() {
+    @include box-shadow($shadowmedium);
+}
+
+@mixin box-shadow-small() {
+    @include box-shadow($shadowsmall);
+}
+
+@mixin animation($anim) {
+  -webkit-animation: $anim;
+     -moz-animation: $anim;
+       -o-animation: $anim;
+          animation: $anim;
+}
+
+@mixin transform($trans) {
+  -webkit-transform: $trans;
+     -moz-transform: $trans;
+      -ms-transform: $trans;
+       -o-transform: $trans;
+          transform: $trans;
+}
+
+@mixin transition($transargs) {
+  -webkit-transition: $transargs;
+     -moz-transition: $transargs;
+       -o-transition: $transargs;
+          transition: $transargs;
+}
+
+@mixin user-select($sel) {
+  -webkit-user-select: $sel;
+     -moz-user-select: $sel;
+      -ms-user-select: $sel;
+          user-select: $sel;
 }

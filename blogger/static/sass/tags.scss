@@ -9,19 +9,16 @@
 }
 
 .blog-tag-list {
-    border-radius: 5px;
-    box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-    background: $whitemain;
+    @include border-radius(5px);
+    @include box-shadow-normal();
+    background: $whitedull;
     padding: 5px;
 }
 
 .blog-tag-list-item {
-    padding: 2px;
-    border-radius: 5px;
-    /*border-style: solid;
-    border-width: 1px;
-    border-color: $bordermain;*/
     display: inline-block;
+    padding: 2px;
+    @include border-radius(5px);
 }
 
 .blog-tag-list-text {

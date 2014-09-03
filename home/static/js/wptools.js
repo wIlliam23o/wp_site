@@ -51,21 +51,6 @@ var wptools = {
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     },
 
-    flow_surround : function () {
-        /* Flows the page surround around the vertical menu when needed. */
-        if ($(window).width() < 800) {
-            if (!wptools.squeezed) {
-                wptools.squeezed = true;
-                $('#page-surround').css({'margin-left': '20px'});
-            }
-        } else {
-            if (wptools.squeezed) {
-                wptools.squeezed = false;
-                $('#page-surround').css({'margin-left': '0px'});
-            }
-        }
-    },
-
     is_hidden : function(selector_) {
         /* determines if element is hidden
          * by checking the display property */

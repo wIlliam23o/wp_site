@@ -18,11 +18,11 @@
 }
 
 .apps-listing-item-box {
+    @include border-radius(5px);
+    @include box-shadow-medium();
     margin: 15px;
     padding: 10px;
     background-color: $whitedull;
-    border-radius: 5px;
-    box-shadow: $shadowmedium;
     text-align: left;
 }
 
@@ -46,13 +46,10 @@
 }
 
 .apps-desc {
-    background: $whitemain;
+    @include border-radius-thick(10px);
+    background: $whitedull;
     margin-top: 10px;
     padding: 5px;
-    border-radius: 10px;
-    border-color: $bordermain;
-    border-style: solid;
-    border-width: 2px;
     padding-left: 20px;
     padding-right: 20px;
 }
@@ -63,35 +60,30 @@
 
 /* Long Description */
 .apps-longdesc {
-    background: $whitemain;
+    @include border-radius-thick(5px);
+    @include box-shadow-normal();
+    background: $whitedull;
     font-size:$fontsmall;
-    border-radius: 5px;
-    border-color: $bordermain;
-    border-style: solid;
-    border-width: 2px;
-    box-shadow: $shadownormal;
     padding: 5px;
     margin-bottom: 10px;
 }
 
 /* Goto Button */
 .apps-button {
-    font-family: $fontsnormal;
-    font-size: $fontsmall;
-    border-radius: 3px;
     display: inline-block;
     position: relative;
+    @include box-shadow-small();
+    @include border-radius(3px);
+    font-family: $fontsnormal;
+    font-size: $fontsmall;
+    background-color: $whitedull;
     margin-top: 10px;
     margin-right: 5px;
     margin-left: 5px;
     margin-bottom: 5px;
-    box-shadow: $shadowsmall;
-    -moz-box-shadow: $shadowsmall;
-    -webkit-box-shadow: $shadowsmall;
     padding: 5px;
-    background-color: $whitemain;
 }
 
 a .apps-button {
-    background-color: $whitemain;
+    background-color: $whitedull;
 }

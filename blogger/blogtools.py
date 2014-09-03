@@ -3,7 +3,7 @@
 
 ''' Welborn Productions - Blogger - BlogTools
         Helps to build views/info for blog posts.
-    
+
     -Christopher Welborn <cj@welbornprod.com> - Mar 20, 2013
 '''
 
@@ -36,7 +36,7 @@ DEFAULT_MAXLENGTH = 2000
 
 def get_post_list(starting_index=0, max_posts=None, order_by=None):
     """ returns a list of posts, starting with starting_id,
-        as long as max_posts. 
+        as long as max_posts.
         this is for pageination.
     """
     if order_by is None:
@@ -45,14 +45,14 @@ def get_post_list(starting_index=0, max_posts=None, order_by=None):
         max_posts = DEFAULT_MAXPOSTS
     all_posts = wp_blog.objects.filter(disabled=False).order_by(order_by)
     return utilities.slice_list(all_posts, starting_index, max_posts)
-    
-    
+
+
 def fix_post_list(blog_posts, **kwargs):
     """ fixes all post.body in a list of posts.
         uses get_post_body to return the correct body to use.
         trims body length to fit maximum allowed for listing.
         trim settings can be disabled by setting to 0. (max_posts=0)
-        
+
         runs prepare_content on all post.body's for highlighting and whatnot.
         returns list of blog_posts.
 
@@ -61,7 +61,7 @@ def fix_post_list(blog_posts, **kwargs):
             max_text_length  : Maximum character length before trimming.
             max_text_lines   : Maximum number of lines before trimming.
     """
-    
+
     if blog_posts is None:
         return []
     max_posts = kwargs.get('max_posts', DEFAULT_MAXPOSTS)
@@ -73,7 +73,7 @@ def fix_post_list(blog_posts, **kwargs):
         new_body = get_post_body_short(post, max_text_length, max_text_lines)
         # set new body.
         post.body = new_body
-        
+
     # trim posts length
     if ((max_posts > 0) and
        (len(blog_posts) > max_posts)):
@@ -83,7 +83,7 @@ def fix_post_list(blog_posts, **kwargs):
 
 def get_all_tags():
     """ retrieve a list of all tags from all blog posts """
-    
+
     all_tags = []
     # add up all tags.
     for post_ in wp_blog.objects.filter(disabled=False):
@@ -97,19 +97,19 @@ def get_post_body(post_):
         if html_url is set, we will try to load the file
         if loading fails, or it is not set, we will use post.body.
     """
-    
+
     # TODO: Html content needs to be tied into template render.
     #       see: htmltools.load_html_file(), projects.tools.get_html_content(),
     #            misc.tools.get_long_desc()
     if post_ is None:
         _log.error("post_ = None!")
         return ""
-    
+
     absolute_path = utilities.get_absolute_path(post_.html_url)
     if absolute_path == "":
         # no valid html_url
         return post_.body
-    
+
     # load html file content
     scontent = htmltools.load_html_file(absolute_path)
     return scontent
@@ -125,30 +125,30 @@ def get_post_body_short(post, max_text_length=None, max_text_lines=None):
         max_text_lines = DEFAULT_MAXLINES
     new_body = get_post_body(post)
     trimmed = False
-    
+
     # trim by maximum text length
     if ((max_text_length > 0) and
        (len(new_body) > max_text_length)):
         new_body = new_body[:max_text_length]
         trimmed = True
-        
+
     # trim by maximum lines
     if ((max_text_lines > 0) and (new_body.count('\n') > max_text_lines)):
         # needs trimming.
         lines_ = new_body.split('\n')[:max_text_lines + 1]
         new_body = '\n'.join(lines_)
         trimmed = True
-            
+
     # trim by <br>'s
     if ((max_text_lines > 0) and (new_body.count('<br') > max_text_lines)):
         # needs trimming
         lines_ = new_body.split('<br')[:max_text_lines + 1]
         new_body = '<br'.join(lines_)
         trimmed = True
-    
+
     # Fix open tags
     new_body = htmltools.fix_open_tags(new_body)
-    
+
     # post was trimmed? add "...continued" and readmore box.
     if trimmed:
         readmorecontext = {
@@ -167,7 +167,7 @@ def get_post_body_short(post, max_text_length=None, max_text_lines=None):
 
 def get_post_byany(_identifier):
     """ retrieve blog post by any identifier, returns None on failure """
-    
+
     # by id
     try:
         id_ = int(_identifier)
@@ -178,7 +178,7 @@ def get_post_byany(_identifier):
     # by title
     if post_ is None:
         post_ = utilities.get_object_safe(wp_blog.objects, title=_identifier)
- 
+
     # by slug
     if post_ is None:
         # id and title failed, try slug.
@@ -187,7 +187,7 @@ def get_post_byany(_identifier):
             _identifier = _identifier[:-5]
         if _identifier.lower().endswith(".htm"):
             _identifier = _identifier[:-4]
-        
+
         # try quick slug id. (Case-insensitive because all slugs are lowercase)
         post_ = utilities.get_object_safe(wp_blog.objects,
                                           slug=_identifier.lower())
@@ -200,19 +200,19 @@ def get_post_byany(_identifier):
 
 def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, order_by=None):
     """ retrieve all posts with tag_ as a tag. """
-    
+
     if order_by is None:
         order_by = DEFAULT_ORDERBY
     if ',' in _tag:
         _tag = _tag.replace(',', ' ')
-        
+
     _tag = utilities.trim_special(_tag)
-    
+
     if ' ' in _tag:
         tag_queries = _tag.split(' ')
     else:
         tag_queries = [_tag]
-    
+
     # get all posts with these tags.
     found = []
     for post_ in wp_blog.objects.order_by(order_by):
@@ -229,7 +229,7 @@ def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, order_by=None):
             if tag_name in post_tag_list:
                 if not post_ in found:
                     found.append(post_)
-    
+
     # trim for optional pagination.
     return utilities.slice_list(found, starting_index, max_posts)
 
@@ -255,10 +255,10 @@ def get_tag_links(post):
         # remove empty items
         while tag_list.count('') > 0:
             tag_list.remove('')
-    
+
     context = {
         'post': post,
-        'tagnames': tag_list,
+        'tagnames': sorted(tag_list) if tag_list else [],
     }
     return htmltools.render_clean('blogger/taglinks.html',
                                   context_dict=context)
@@ -270,7 +270,7 @@ def get_tag_list(post_object_or_tag_string):
         fixes commas (replaces with spaces before splitting).
         returns list on success, empty list on failure.
     """
-    
+
     if hasattr(post_object_or_tag_string, 'encode'):
         # tag string was passed
         ptags = post_object_or_tag_string
@@ -293,7 +293,7 @@ def get_tag_list(post_object_or_tag_string):
     # remove empty items
     while tag_list.count("") > 0:
         tag_list.remove("")
-    
+
     return tag_list
 
 
@@ -301,9 +301,9 @@ def get_tags_post_count():
     """ retrieve the number of posts each tag has.
         returns a dict containing tag_name:count
     """
-    
+
     tag_counts = {}
-    
+
     for post in wp_blog.objects.filter(disabled=False):
         tags = get_tag_list(post)
         for tag in tags:
@@ -311,19 +311,19 @@ def get_tags_post_count():
                 tag_counts[tag] += 1
             else:
                 tag_counts[tag] = 1
-            
+
     return tag_counts
-    
+
 
 def get_tags_fontsizes(tags_dict=None):
     """ returns all tag name with font size according to post count.
         for listing all tags on the tags.html page.
         returns a dict with {tag_name:font size} (in em's)
     """
-    
+
     if not tags_dict:
         tags_dict = get_tags_post_count()
-    
+
     sizemap_max = '2em'
     # Sizes adjusted for small post count :) Can be changed later.
     sizemap = {
@@ -354,7 +354,7 @@ def get_tags_fontsizes(tags_dict=None):
 
 def prepare_content(body_content):
     """ runs various functions on the content, like source-highlighting """
-    
+
     # do auto source highlighting
     if "<pre class=" in body_content:
         body_content = highlighter.highlight_inline(body_content)

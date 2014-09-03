@@ -38,7 +38,7 @@ def index_page(request):
     """ return a slice of all posts using start_id and max_posts
         to determine the location.
     """
-    
+
     # get overall total of all blog posts
     post_count = wp_blog.objects.count()
     # get request args.
@@ -91,9 +91,9 @@ def view_post(request, identifier):
             slug
             title
     """
-    
+
     post = blogtools.get_post_byany(identifier)
-    
+
     if post is None:
         _log.error('Post not found: {}'.format(identifier))
         errmsg = 'Sorry, I can\'t find that post.'
@@ -105,13 +105,13 @@ def view_post(request, identifier):
         return responses.alert_message(request, errmsg, body_message=errlink)
 
     # build blog post.
-    
+
     # get short title for window-text
     if len(post.title) > 20:
         post_title_short = '..{}'.format(post.title[len(post.title) - 30:])
     else:
         post_title_short = post.title
-    
+
     # no content found.
     if not blogtools.get_post_body(post):
         errmsg = 'Sorry, no content found for this post.'
@@ -143,7 +143,7 @@ def view_post(request, identifier):
 
 def view_tags(request):
     """ list all posts by tags (categories) """
-    
+
     # get all tag counts
     tag_count = blogtools.get_tags_post_count()
     tag_sizes = blogtools.get_tags_fontsizes(tag_count)
@@ -167,7 +167,7 @@ def view_tags(request):
 
 def view_tag(request, tag):
     """ list all posts with these tags """
-    
+
     tag_name = utilities.trim_special(tag).replace(',', ' ')
     found_posts = blogtools.get_posts_by_tag(tag_name,
                                              starting_index=0,
@@ -189,7 +189,7 @@ def view_tag(request, tag):
 
 def tag_page(request, tag):
     """ view all posts with this tag, paged. """
-    
+
     # fix tag name
     tag_name = utilities.trim_special(tag).replace(',', ' ')
     # get all found posts. no slice.
@@ -209,7 +209,7 @@ def tag_page(request, tag):
                                             starting_index=startid,
                                             max_posts=maxitems,
                                             order_by=orderby)
-        
+
     # fix posts for listing.
     blog_posts = blogtools.fix_post_list(post_slice)
     # number of items in this slice (to get the last index)
@@ -235,5 +235,5 @@ def tag_page(request, tag):
 
 def no_identifier(request):
     """ Redirects when user forgets to add an identifier """
-    
+
     return responses.redirect_response('/blog')
