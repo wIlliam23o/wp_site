@@ -140,6 +140,14 @@
                                 </div>
                             {% endif %}
                         </div>
+                        <!-- Edit button for staff. -->
+                        {% if request.user.is_staff %}
+                            <a href='/adminpaste/wp_paste/{{ paste.id }}' title='Edit this paste.'>
+                                <div class='wpbutton paste-edit-button'>
+                                    <span>edit paste</span>
+                                </div>
+                            </a>
+                        {% endif %}
                     {% endif %}
                 </div>
                 {% if paste %}

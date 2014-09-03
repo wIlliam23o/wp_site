@@ -64,6 +64,15 @@
                                 {{ paste.title }}
                             </div>
                         </a>
+                        <!-- Edit button for admins. -->
+                        {% if request.user.is_staff %}
+                        <a href='/adminpaste/wp_paste/{{ paste.id }}' title='Edit this paste.'>
+                            <div class='wpbutton paste-edit-button'>
+                                <span>edit paste</span>
+                            </div>
+                        </a>
+                        {% endif %}
+
                         {% if paste.author %}
                             <div class='paste-item-author-label'>
                                 Author:

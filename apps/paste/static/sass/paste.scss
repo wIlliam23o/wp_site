@@ -31,7 +31,10 @@
     border-style: solid;
     padding: 5px;
     margin-bottom: 5px;
+    position: relative;
 }
+
+.paste-header { }// Paste info, above lang and buttons.
 
 .paste-page-header {
     margin-bottom: 10px;
@@ -107,7 +110,9 @@
     text-shadow: $shadowtextmedium;
 }
 
-.paste-title-box {}
+.paste-title-box {
+    position: relative;
+}
 
 .paste-title-label {
     @extend .paste-lang-label;
@@ -313,7 +318,7 @@
     padding: 5px;
     margin-bottom: 5px;
     display: block;
-
+    position: relative;
 }
 
 .paste-item-title {
@@ -512,5 +517,12 @@ a .paste-api-section-paragraph {
 .paste-api-section-json {
     font-size: $fontnormal;
     color: $greymain;
+}
+
+.paste-edit-button {
+    // edit button for admins.
+    position: absolute;
+    right: 10px;
+    top: 0px;
 }
 

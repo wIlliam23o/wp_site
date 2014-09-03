@@ -28,7 +28,8 @@
   border-color: #afafaf;
   border-style: solid;
   padding: 5px;
-  margin-bottom: 5px; }
+  margin-bottom: 5px;
+  position: relative; }
 
 .paste-page-header {
   margin-bottom: 10px; }
@@ -87,6 +88,9 @@
 .paste-title {
   font-size: 1.5em;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
+
+.paste-title-box {
+  position: relative; }
 
 .paste-title-date {
   position: relative;
@@ -234,7 +238,8 @@
   background-color: #fafafa;
   padding: 5px;
   margin-bottom: 5px;
-  display: block; }
+  display: block;
+  position: relative; }
 
 .paste-item-title, .paste-item-replyto, .paste-item-reply-title {
   display: block;
@@ -386,3 +391,8 @@ a .paste-api-section-paragraph {
 .paste-api-section-json {
   font-size: 1em;
   color: #919191; }
+
+.paste-edit-button {
+  position: absolute;
+  right: 10px;
+  top: 0px; }
