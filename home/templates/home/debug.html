@@ -25,6 +25,28 @@
 				<span class='version'>
 					Site Version: {{ siteversion }} {% if siteversionnum %}v. {{ siteversionnum }}{% endif %}
 				</span>
+
+				{# Extra pieces of debug info. #}
+				<div class='debug-info-box'>
+					<div>Client info:</div>
+					<div class='debug-info-item'>
+						<span class='debug-info-label'>
+							Height:
+						</span>
+						<span id='debug-height' class='debug-info-value'>
+							(loading)
+						</span>
+					</div>
+					<div class='debug-info-item'>
+						<span class='debug-info-label'>
+							Width:
+						</span>
+						<span id='debug-width' class='debug-info-value'>
+							(loading)
+						</span>
+					</div>
+				</div>
+
 		</div>
 		<div class='debug-page-box'>
 			{% filter highlight_python %}
@@ -45,4 +67,16 @@
 			</span>
 		</div>
 	{% endif %}
+{% endblock %}
+
+{% block bodyend %}
+	<script type='text/javascript'>
+		{# Load client-side debug info. #}
+		$(document).ready(function () {
+			var b = $('body');
+			$('#debug-width').text($(b).css('width'));
+			$('#debug-height').text($(b).css('height'));
+		});
+
+	</script>
 {% endblock %}

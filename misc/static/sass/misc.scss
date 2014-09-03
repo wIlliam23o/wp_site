@@ -1,7 +1,7 @@
 @import 'welbornprod';
 /* Styles for misc object listing/pages */
 
-/* Misc Object Listings */ 
+/* Misc Object Listings */
 .misc-listing {
     text-align: center;
 }
@@ -27,7 +27,7 @@
     color: $bluemain;
     text-transform: lowercase;
     }
-    
+
 .misc-name {
     font-size: $fontmedium;
     text-shadow: $shadowtextsmall;
@@ -66,6 +66,7 @@
     padding: 5px;
     display: inline-block;
     position: relative;
+    font-size: $fontsmall;
 }
 
 .misc-download-button {
@@ -80,7 +81,7 @@
     box-shadow: $shadowsmall;
     -moz-box-shadow: $shadowsmall;
     -webkit-box-shadow: $shadowsmall;
-    
+
     padding: 5px;
 }
 /* Smaller styles for misc index */

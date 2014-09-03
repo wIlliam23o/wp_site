@@ -54,14 +54,6 @@
 									<span class="blog-listing-title">{{ post.title }}</span>
 								</a>
 							</div>
-							<!-- Comments Button -->
-							{% if post.enable_comments %}
-								<a href='/blog/view/{{ post.slug }}#comments-box'>
-									<div class='comments-button'>
-										comments..
-									</div>
-								</a>
-							{% endif %}
 							<!-- EDIT -->
 		                    {% if request|is_staff %}
 	                            <a href='/adminblogger/wp_blog/{{ post.id }}'>
@@ -79,6 +71,14 @@
 							<div class="blog-listing-body">
 								{{ post|get_body_short }}
 							</div>
+							<!-- Comments Button -->
+							{% if post.enable_comments %}
+								<a href='/blog/view/{{ post.slug }}#comments-box'>
+									<div class='comments-button'>
+										comments..
+									</div>
+								</a>
+							{% endif %}
 							<!-- Related Projects links (if any) -->
 							{% if post|get_projects %}
 								<div class="blog-related-projects-box-index">

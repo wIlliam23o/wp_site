@@ -23,7 +23,7 @@ html {
 }
 
 body {
-    min-width: 960px;
+    min-width: 650px; // original: 960px (playing with responsive design)
     background-color: black;
     background-repeat:no-repeat;
     background-attachment:fixed;
@@ -32,10 +32,6 @@ body {
     font-family: $fontsnormal;
     font-weight: Normal;
     color: $greydark;
-    }
-
-body.component-body {
-    min-width: 320px;
     }
 
 a {
@@ -266,7 +262,9 @@ a .header:hover, a .header.featured-name:hover {
     @include border-radius(5px);
     box-shadow: $shadowbig;
     margin-bottom: 20px;
-    min-height: 240px; /* helps with short pages that have a vertical menu */
+    min-height: 240px; // helps with short pages that have a vertical menu
+    // margin-left is switched to JavaScript.
+    //margin-left: 20px; // helps when the window is squeezed.
     }
 
 .title-box {
@@ -415,7 +413,9 @@ a.jumpto-nav {
 
 .comments-button {
     @extend .wpbutton;
-    margin-left: 20px;
+    display: inline-block;
+    margin-top: 5px;
+    //margin-left: 20px; // TODO: playing with responsive, changing things around.
 }
 
 .continued {
@@ -469,6 +469,7 @@ a.jumpto-nav {
 /* Projects Vertical Menu */
 .vertical-menu {
     position: absolute;
+    z-index: 1;
     /* trying out a fixed menu, doesn't really fit.
     position: fixed;
     z-index: 999;
@@ -489,7 +490,7 @@ a.jumpto-nav {
     background: transparent;
     padding: 5px;
     list-style: none;
-    list-image-style: none;
+    list-style-image: none;
 
 }
 
@@ -916,6 +917,41 @@ code, samp {
     overflow-x: scroll;
     overflow-y: scroll;
 
+}
+
+.debug-info-box {
+    // Wrapper for pieces of debugging info.
+    // .debug-info-box
+    //     .debug-info-item
+    //        .debug-info-label
+    //        .debug-info-value
+    display: block;
+    margin-top: 10px;
+    @include border-radius(5px);
+    border-width: 2px;
+    border-style: solid;
+    border-color: $borderlight;
+    padding: 5px;
+    background: $whitedull;
+    font-size: $fontnormal;
+    font-family: $fontsmono;
+}
+
+.debug-info-item {
+    // Wrapper for a single piece of debugging info.
+    display: block;
+    padding-left: 20px;
+}
+.debug-info-label {
+    font-weight: normal;
+    font-size: $fontsmall;
+    display: inline-block;
+}
+
+.debug-info-value {
+    font-weight: bold;
+    font-size: $fontsmall;
+    display: inline-block;
 }
 
 .debug-page-box {

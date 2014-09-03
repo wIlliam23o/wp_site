@@ -22,7 +22,7 @@ html {
   height: 100%; }
 
 body {
-  min-width: 960px;
+  min-width: 650px;
   background-color: black;
   background-repeat: no-repeat;
   background-attachment: fixed;
@@ -31,9 +31,6 @@ body {
   font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
   font-weight: Normal;
   color: #4d4d4d; }
-
-body.component-body {
-  min-width: 320px; }
 
 a {
   color: #2358a6;
@@ -258,8 +255,7 @@ a .header:hover, a .header.featured-name:hover {
   border-radius: 5px;
   box-shadow: #eeeeee 0px 0px 20px;
   margin-bottom: 20px;
-  min-height: 240px;
-  /* helps with short pages that have a vertical menu */ }
+  min-height: 240px; }
 
 .title-box {
   border-bottom-style: solid;
@@ -416,7 +412,8 @@ a.jumpto-nav {
   display: inline-block; }
 
 .comments-button {
-  margin-left: 20px; }
+  display: inline-block;
+  margin-top: 5px; }
 
 .continued {
   font-size: 0.8em;
@@ -466,6 +463,7 @@ a.jumpto-nav {
 /* Projects Vertical Menu */
 .vertical-menu {
   position: absolute;
+  z-index: 1;
   /* trying out a fixed menu, doesn't really fit.
   position: fixed;
   z-index: 999;
@@ -485,7 +483,7 @@ a.jumpto-nav {
   background: transparent;
   padding: 5px;
   list-style: none;
-  list-image-style: none; }
+  list-style-image: none; }
 
 .vertical-menu-item {
   -webkit-border-radius: 10px;
@@ -1180,6 +1178,36 @@ code, samp {
   height: 300px;
   overflow-x: scroll;
   overflow-y: scroll; }
+
+.debug-info-box {
+  display: block;
+  margin-top: 10px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #afafaf;
+  padding: 5px;
+  background: #fafafa;
+  font-size: 1em;
+  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace; }
+
+.debug-info-item {
+  display: block;
+  padding-left: 20px; }
+
+.debug-info-label {
+  font-weight: normal;
+  font-size: 0.8em;
+  display: inline-block; }
+
+.debug-info-value {
+  font-weight: bold;
+  font-size: 0.8em;
+  display: inline-block; }
 
 .debug-page-box {
   position: relative;

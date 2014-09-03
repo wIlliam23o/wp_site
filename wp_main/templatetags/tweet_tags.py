@@ -8,6 +8,20 @@ from django import template
 register = template.Library()
 
 
+def force_size_suffix(n):
+    """ Ensure that a size for height/width ends with at least 'px'. """
+    if not n:
+        return n
+    s = str(n)
+    if s.lower() == 'auto':
+        return 'auto'
+    if not s.endswith(('%', 'px')):
+        return '{}px'.format(s)
+
+    # Size is fine.
+    return n
+
+
 def format_hashlink_html(hashtag):
     """ Create a link (html string) from a hashtag. """
     hashlinkfmt = 'https://twitter.com/hashtag/{}?src=hash'
@@ -40,31 +54,48 @@ def format_name_html(name):
     return template.format(n=name)
 
 
-def format_photo_html(src, href=None, height=None, width=None):
-    """ Create an img tag (html string) from an image href and optional sizes.
-        If href is passed, it is wrapped in a link (<a>).
-        The whole thing is wrapped in a div.
+def format_photo_html(
+        src, href=None, height=None, width=None, maxheight=None, maxwidth=None):
+        """ Create an img tag (html string) from an image href and optional sizes.
+            If href is passed, it is wrapped in a link (<a>).
+            The whole thing is wrapped in a div.
+        """
+        divclsname = 'tweet-photo-box'
+        imgclsname = 'tweet-photo'
+        divtemplate = '<div class=\'{cls}\'>{child}</a>'
+        linktemplate = '<a href=\'{href}\' target=\'_blank\'>{child}</a>'
+        imgtemplate = '<img class=\'{cls}\' src=\'{src}\'{style}>'
+
+        stylecss = parse_size(
+            height=height,
+            width=width,
+            maxheight=maxheight,
+            maxwidth=maxwidth)
+        style = ' style=\'{}\''.format(stylecss) if stylecss else ''
+
+        imgtag = imgtemplate.format(cls=imgclsname, src=src, style=style)
+        if href is None:
+            # Just an image tag.
+            return divtemplate.format(cls=divclsname, child=imgtag)
+
+        # Wrap it in a link to the original image.
+        linktag = linktemplate.format(href=href, child=imgtag)
+        return divtemplate.format(cls=divclsname, child=linktag)
+
+
+def parse_size(height=None, width=None, maxheight=None, maxwidth=None):
+    """ Parse a height and width into css attributes.
+        Height and width can be strings or integers, with or without
+        % or 'px' added. 'px' will be added if both are missing.
     """
-    divclsname = 'tweet-photo-box'
-    imgclsname = 'tweet-photo'
-    divtemplate = '<div class=\'{cls}\'>{child}</a>'
-    linktemplate = '<a href=\'{href}\' target=\'_blank\'>{child}</a>'
-    imgtemplate = '<img class=\'{cls}\' src=\'{src}\'{style}>'
+    cssstyle = {
+        'height': force_size_suffix(height),
+        'width': force_size_suffix(width),
+        'max-height': force_size_suffix(maxheight),
+        'max-width': force_size_suffix(maxwidth)
+    }
 
-    if (height is not None) and (width is not None):
-        stylecss = 'width: {w}px;height: {h}px'
-        style = ' style=\'{}\''.format(stylecss.format(h=height, w=width))
-    else:
-        style = ''
-
-    imgtag = imgtemplate.format(cls=imgclsname, src=src, style=style)
-    if href is None:
-        # Just an image tag.
-        return divtemplate.format(cls=divclsname, child=imgtag)
-
-    # Wrap it in a link to the original image.
-    linktag = linktemplate.format(href=href, child=imgtag)
-    return divtemplate.format(cls=divclsname, child=linktag)
+    return ';'.join(('{}: {}'.format(k, v) for k, v in cssstyle.items() if v))
 
 
 @register.filter
@@ -117,15 +148,18 @@ def parse_tweet_html(tweetdata):
         urlactual = mediainfo.get('url', None)
         urlimage = mediainfo.get('media_url', None)
         size = mediainfo.get('sizes', {}).get('medium', {})
-        height = size.get('h', None)
-        width = size.get('w', None)
+        maxheight = size.get('h', None)
+        maxwidth = size.get('w', None)
         if (urlactual is None) or (urlimage is None):
             continue
         imghtml = format_photo_html(
             urlimage,
             href=urlactual,
-            height=height,
-            width=width)
+            height=None,
+            width='100%',
+            maxheight=maxheight,
+            maxwidth=maxwidth)
+
         text = text.replace(urlactual, imghtml)
 
     # Parse the hashtags in this text (if any are available.)
