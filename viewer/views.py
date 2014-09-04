@@ -24,7 +24,7 @@ from wp_main.utilities import utilities
 from wp_main.utilities import responses
 # For source highlighting
 from wp_main.utilities.highlighter import (
-    wp_highlighter,
+    WpHighlighter,
     get_lexer_name_fromfile,
     get_lexer_name_fromcontent)
 
@@ -40,45 +40,45 @@ def logdebug(s):
     """ Write log message only if settings.DEBUG. """
     if settings.DEBUG:
         _log.debug(s)
-         
+
 
 @csrf_protect
 def ajax_contents(request):
     """ retrieves file contents per an ajax request. """
-    
+
     if not request.is_ajax():
         return responses.json_response_err(Http404("File not found, sorry."))
-    
+
     get_data = responses.json_get_request(request)
-    
+
     file_info = {}
     if get_data.get('file', False):
         logdebug('Loading info for file: {}'.format(get_data['file']))
-        
+
         try:
             file_info = get_file_info(get_data['file'])
         except Exception as ex:
             return responses.json_response_err(ex)
-            
+
         if not file_info:
             badfile = get_data.get('file', '<No Filename>')
             _log.error('ajax_contents(): File not found: {}'.format(badfile))
             exc = Http404('File not found, sorry.')
             return responses.json_response_err(exc)
-        
+
         # Grab DEBUG and send it.
         file_info['debug'] = settings.DEBUG
-        
+
         # Send raw file content in response (ace will load it and highlight it)
         file_info['file_content'] = file_info['file_content']
-        
+
         # override non-serializable project
         project = file_info['project']
         file_info.pop('project')
         # override non-serializable miscobj
         miscobj = file_info['miscobj']
         file_info.pop('miscobj')
-        
+
         # Fill in info for project/miscobj so it can be serialized
         for infoattr in ('name', 'alias', 'version'):
             # Key name for attributes (misc_name, project_version, etc.)
@@ -105,7 +105,7 @@ def ajax_contents(request):
         _log.error('ajax_contents(): No file name provided.')
         return responses.json_response_err(Http404("No file name provided!"))
 
-    
+
 @csrf_protect
 def view_loader(request):
     """ accepts GET/POST request containing a filename 'file'.
@@ -135,7 +135,7 @@ def get_source_files(project):
         uses relative static path. (/static/files/project/source/file.py)
         returns None on  failure.
     """
-    
+
     if project.source_dir == "":
         source_files = []
     else:
@@ -154,25 +154,25 @@ def get_source_files(project):
                     srelativepath = utilities.get_relative_path(os.path.join(project.source_dir, sfilename))  # noqa
                     source_files.append(srelativepath)
     return source_files
-    
+
 
 def get_using_paths(dir_path, absolute_path=None, proj=None):
-    """ When given a dir as a path, 
+    """ When given a dir as a path,
        find out which file is preferred to use first.
     """
-    
+
     if absolute_path is None:
         absolute_path = utilities.get_absolute_path(dir_path)
 
     if not os.path.isdir(absolute_path):
         return (None, None)
-    
+
     try:
         files = os.listdir(absolute_path)
     except Exception as ex:
         files = []
         _log.debug("unable to listdir: " + absolute_path + '\n' + str(ex))
-        
+
     # no files in this directory, or bad dir.
     if len(files) == 0:
         return (None, None)
@@ -206,9 +206,9 @@ def get_file_info(file_path):
         _log.error('Invalid file path for viewer.get_file_content(): '
                    '{}'.format(file_path))
         raise Http404("Sorry, that file doesn't exist.")
-        
+
     project = ptools.get_project_from_path(absolute_path)
-    
+
     # Directory was passed, get files to use. (based on project, dir listing)
     if os.path.isdir(absolute_path):
         if project:
@@ -220,7 +220,7 @@ def get_file_info(file_path):
                 raise Http404("Sorry, there was an error viewing that file.")
         else:
             raise Http404("Sorry, that file doesn't exist.")
-    
+
     # Update project view count tracker
     miscobj = None
     if project:
@@ -230,7 +230,7 @@ def get_file_info(file_path):
         # Not a project, may be a Misc Object.
         miscobj = misctools.get_by_filename(file_path)
         logdebug('Found Misc Object: {}'.format(repr(miscobj)))
-        
+
         # Update misc view count tracker
         if miscobj:
             miscobj.view_count += 1
@@ -238,7 +238,7 @@ def get_file_info(file_path):
         else:
             _log.debug('get_file_content: not a project or misc object: '
                        '{}'.format(file_path))
-            
+
     # Update file tracker
     if os.path.isfile(absolute_path):
         filetracker = dltools.get_file_tracker(absolute_path)
@@ -249,7 +249,7 @@ def get_file_info(file_path):
                                                 dosave=False)
             filetracker.view_count += 1
             filetracker.save()
-    
+
     # Get file content
     file_content = ""
     try:
@@ -258,14 +258,14 @@ def get_file_info(file_path):
     except Exception as ex:
         _log.error("Error loading file: " + absolute_path + '\n' + str(ex))
         raise Http404("Sorry, I can't load that file right now.")
-    
+
     fileinfo = {'project': project,
                 'miscobj': miscobj,
                 'static_path': static_path,
                 'absolute_path': absolute_path,
                 'file_content': file_content, }
     return fileinfo
-    
+
 
 def highlight_file(static_path, file_content):
     """ highlight file content for viewing
@@ -278,11 +278,11 @@ def highlight_file(static_path, file_content):
     if not lexername:
         # Try getting lexer from first line in file.
         lexername = get_lexer_name_fromcontent(file_content)
-    
+
     # Highlight the file (if needed)
     if lexername:
         try:
-            highlighter = wp_highlighter(lexername, 'default', line_nums=False)
+            highlighter = WpHighlighter(lexername, 'default', line_nums=False)
             highlighter.code = file_content
             file_content = highlighter.highlight()
         except Exception as ex:
@@ -291,5 +291,5 @@ def highlight_file(static_path, file_content):
     else:
         # No lexer, so no highlighting, still need to format it a bit.
         file_content = escape(file_content).replace('\n', '<br>')
-        
+
     return mark_safe(file_content)

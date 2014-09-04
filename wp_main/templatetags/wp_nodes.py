@@ -5,7 +5,7 @@
 
 import os
 from django import template
-from wp_main.utilities import utilities, htmltools
+from wp_main.utilities import utilities, htmltools, highlighter
 from wp_main.utilities.wp_logging import logger
 _log = logger('templatenodes').log
 
@@ -20,6 +20,19 @@ def article_ad(parser, token):
 
 
 @register.tag
+def highlight(parser, token):
+    """ Highlight code syntax, given a lexer name for pygments and a string.
+    """
+    try:
+        tag_name, lang, code = token.split_contents()
+    except ValueError:
+        tag_name = token.contents.split()[0]
+        errmsg = '{} expects 2 arguments. A lexer name and a string.'
+        raise template.TemplateSyntaxError(errmsg.format(tag_name))
+    return Highlighter(lexer_name=lang, code=code)
+
+
+@register.tag
 def image_viewer(parser, token):
     """ Renders screen shots box, given a path containing images. """
     try:
@@ -29,6 +42,22 @@ def image_viewer(parser, token):
         tagname = token.contents.split()[0]
         raise template.TemplateSyntaxError(errmsg.format(tagname))
     return ImageViewer(images_dir)
+
+
+def var_quotes(s, varname=None):
+    """ Make sure a string's quotes match.
+        Remove quotes from string.
+        For parsing Template.Variables.
+    """
+    if s.startswith(('"', "'")):
+        if not (s[0] == s[-1]):
+            errmsg = 'Mismatched quotes for \'{}\'!'.format(varname)
+            _log.error(errmsg)
+            raise template.TemplateSyntaxError(errmsg)
+        else:
+            return s[1:-1]
+    # Not a quoted string.
+    return s
 
 
 class ArticleAd(template.Node):
@@ -41,6 +70,32 @@ class ArticleAd(template.Node):
             'home/articlead.html',
             context_dict=context)
         return article_ad
+
+
+class Highlighter(template.Node):
+
+    """ Renders syntax highlighted code using pygments. """
+
+    def __init__(self, lexer_name=None, code=None):
+        self.lexer_name = lexer_name
+        self.code = code
+
+    def render(self, context):
+        """ Render the highlighted code according to the user's lexer name. """
+        try:
+            lexer_name = template.Variable(self.lexer_name).resolve(context)
+        except template.VariableDoesNotExist:
+            lexer_name = self.lexer_name
+
+        try:
+            code = template.Variable(self.code).resolve(context)
+        except template.VariableDoesNotExist:
+            code = self.code
+        code = var_quotes(code, varname='Highlighter.code')
+        lexername = var_quotes(lexer_name, varname='Highlighter.lexer_name')
+
+        hl = highlighter.WpHighlighter(lexer_name=lexer_name, code=code)
+        return hl.highlight()
 
 
 class ImageViewer(template.Node):
@@ -57,16 +112,11 @@ class ImageViewer(template.Node):
             imgdir = template.Variable(self.images_dir).resolve(context)
         except template.VariableDoesNotExist:
             # Using string path.
-            imgdir = self.images_dir
-            if imgdir.startswith(('"', "'")):
-                if not (imgdir[0] == imgdir[-1]):
-                    errmsg = 'Mismatched quotes for images_dir in ImageViewer.'
-                    _log.error(errmsg)
-                    return ''
-                else:
-                    imgdir = imgdir[1:-1]
+            imgdir = var_quotes(
+                self.images_dir,
+                varname='ImageViewer.images_dir')
 
-        _log.debug('ImageViewer.path: {}'.format(imgdir))
+        #_log.debug('ImageViewer.path: {}'.format(imgdir))
         self.images_dir = imgdir
         content = self.get_images()
         return content if content else ''

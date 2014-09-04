@@ -24,7 +24,7 @@ from django.utils.safestring import mark_safe
 
 # Local tools
 from wp_main.utilities import utilities
-from wp_main.utilities.highlighter import wp_highlighter, highlight_codes
+from wp_main.utilities.highlighter import WpHighlighter, highlight_codes
 from wp_main.utilities.wp_logging import logger
 # for admin site filtering
 from blogger.models import wp_blog
@@ -283,7 +283,7 @@ def highlight_python(scontent):
     """
 
     try:
-        highlighter = wp_highlighter(lexer_name='python', line_nums=False)
+        highlighter = WpHighlighter(lexer_name='python', line_nums=False)
         highlighter.code = scontent
         results = highlighter.highlight()
     except Exception as ex:

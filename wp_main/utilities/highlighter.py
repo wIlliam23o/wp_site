@@ -2,12 +2,12 @@
 
 '''
       project: welbornprod.viewer.highlighter
-     @summary: uses pygments to highlight source code and output it 
+     @summary: uses pygments to highlight source code and output it
                for welbornproductions.net
-    
+
       @author: Christopher Welborn <cj@welbornproductions.net>
 @organization: welborn productions <welbornproductions.net>
- 
+
    start date: Mar 14, 2013
 '''
 import pygments
@@ -59,19 +59,21 @@ STYLEALIASES = {'py': 'python',
                 }
 STYLENAMES = list(STYLECODES.keys())
 
- 
-class wp_highlighter(object):
+
+class WpHighlighter(object):
 
     """ Class for highlighting code and returning html markup. """
-    
-    def __init__(self, lexer_name=None, style_name=None, line_nums=True):
-        self.code = ""
-        self.lexer_name = lexer_name if lexer_name else 'python'
-        self.lexer = get_lexer_byname(self.lexer_name)
-        self.style_name = style_name if style_name else 'default'
-        self.line_nums = line_nums
-        self.formatter = formatters.html.HtmlFormatter(linenos=self.line_nums,
-                                                       style=self.style_name)
+
+    def __init__(
+        self, lexer_name=None, style_name=None, line_nums=False, code=None):
+            self.code = code or ''
+            self.lexer_name = lexer_name if lexer_name else 'python'
+            self.lexer = get_lexer_byname(self.lexer_name)
+            self.style_name = style_name if style_name else 'default'
+            self.line_nums = line_nums
+            self.formatter = formatters.html.HtmlFormatter(
+                linenos=self.line_nums,
+                style=self.style_name)
 
     def set_lexer(self, lexer_name):
         """ another way to set the lexer """
@@ -80,29 +82,31 @@ class wp_highlighter(object):
             self.lexer = trylexer
             self.lexer_name = lexer_name
 
-    def highlight(self):
+    def highlight(self, code=None):
         """ returns highlighted code in html format
             styles are not included, you must have a
             css file on hand and reference it.
         """
-        
+        if not code:
+            code = self.code
+
         try:
-            code = pygments.highlight(self.code, self.lexer, self.formatter)
-            highlighted = '\n'.join(['<div class=\'highlighted\'>\n',
-                                     code,
-                                     '\n</div>',
-                                     ])
+            codeh = pygments.highlight(code, self.lexer, self.formatter)
+            highlighted = '\n'.join([
+                '<div class=\'highlighted\'>',
+                codeh,
+                '</div>\n'])
         except Exception as ex:
-            _log.error('wp_highlighter.highlight() error:\n{}'.format(ex))
+            _log.error('WpHighlighter.highlight() error:\n{}'.format(ex))
             highlighted = ''
         return highlighted
-    
+
     def get_styledefs(self):
         """ return css style definitions (for debugging really) """
-        
+
         return self.formatter.get_style_defs()
-    
-    
+
+
 def get_tag_class(stext, tag_="pre"):
     """ grabs class name from a pre tag for auto-highlighting """
     if "<" + tag_ + " class=" in stext and ">" in stext:
@@ -128,10 +132,9 @@ def highlight_inline(scode, tag_="pre"):
         the class can be any valid pygments lexer name.
         if no tag is found the original string is returned.
     """
-    
+
     if not "<" + tag_ + " class=" in scode:
-        _log.debug('highlight_inline: no tag or class found, '
-                   'will not be highlighted.')
+        _log.debug('highlight_inline: Will not be highlighted.')
         return scode
     slines = scode.split('\n')
     sclass = ''
@@ -236,9 +239,9 @@ def highlight_inline(scode, tag_="pre"):
 
 
 def check_lexer_name(sname):
-    """ checks against all lexer names to make sure this is a valid lexer name 
+    """ checks against all lexer names to make sure this is a valid lexer name
     """
-    
+
     # searches all tuples, returns True if its found.
     for names_tuple in LEXERNAMES:
         if sname in names_tuple:
@@ -248,7 +251,7 @@ def check_lexer_name(sname):
 
 def get_all_lexer_names():
     """ retrieves list of all possible lexer names """
-    
+
     # retrieves list of tuples with valid lexer names
     lexer_names = []
     for names_tuple in LEXERNAMES:
@@ -263,13 +266,13 @@ def get_lexer_byname(sname):
         this way all lexers for welbornprod will have the same options
         and can be set in one place.
     """
-    
+
     return lexers.get_lexer_by_name(sname, stripall=True,)
 
 
 def get_lexer_name_fromcontent(content):
     """ determine lexer from shebang line if any is present. """
-    
+
     if isinstance(content, (list, tuple)):
         # readlines() was passed.
         firstline = content[0]
@@ -291,11 +294,11 @@ def get_lexer_name_fromcontent(content):
         return shebanglang.strip()
     # didn't work, no language found.
     return ''
-        
+
 
 def get_lexer_name_fromfile(sfilename):
     """ determine which lexer to use by file extension """
-    
+
     try:
         lexer_ = lexers.get_lexer_for_filename(sfilename)
         lexer_name = lexer_.aliases[0]
@@ -314,7 +317,7 @@ def get_lexer_fromfile(sfilename):
         # no lexer found.
         lexer_ = None
     return lexer_
-    
+
 
 def highlight_codes(scode):
     """ Highlights embedded wp highlight codes.
@@ -360,7 +363,7 @@ def highlight_codes(scode):
                 _log.debug('highlight_codes: No lexer found for '
                            '{}'.format(langname))
                 return code
-            
+
             highlighted = pygments.highlight(code, lexer, formatter)
             #_log.debug('highlight: {}, {}'.format(langname, highlighted))
             return ''.join(['<div class="highlighted-embedded">',
