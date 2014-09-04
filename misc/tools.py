@@ -9,6 +9,9 @@ Created on Oct 20, 2013
 
 import os
 
+from django.template import loader, Template
+from django.template.base import TemplateDoesNotExist
+
 from misc.models import wp_misc
 from misc.types import misctype_byname
 
@@ -23,21 +26,17 @@ def get_long_desc(miscobj):
         if contentfile is set, it trys that.
         otherwise it uses .content.
     """
+    # Try template first.
+    try:
+        fname = '{}.html'.format(miscobj.alias)
+        template = loader.get_template(fname)
+    except TemplateDoesNotExist:
+        # Fallback to content field.
+        template = Template(miscobj.content)
 
-    # TODO: Html content needs the power of template rendering.
-    #       see: htmltools.load_html_file(), projects.tools.get_html_content()
-    #            blogtools.get_post_body()...
-    # Try html file first.
-    htmlfile = htmltools.get_html_file(miscobj)
-    content = ''
-    if htmlfile:
-        content = htmltools.load_html_file(htmlfile)
-
+    content = htmltools.load_html_file(None, template=template)
     if not content:
-        # Try .content since html content failed.
-        content = miscobj.content
-        if not content:
-            _log.error('Misc object has no content!: {}'.format(miscobj.name))
+        _log.error('Misc object has no content!: {}'.format(miscobj.name))
 
     return content
 

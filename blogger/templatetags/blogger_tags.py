@@ -15,20 +15,16 @@ register = template.Library()
 def get_body(post):
     """ returns the body to use. see blogtools.get_post_body() """
 
-    return (
-        mark_safe(
-            blogtools.prepare_content(
-                blogtools.get_post_body(post))))
+    return mark_safe(
+        blogtools.get_post_body(post))
 
 
 @register.filter
 def get_body_short(post):
     """ returns the body for a listing, shortened if needed. """
 
-    return (
-        mark_safe(
-            blogtools.prepare_content(
-                blogtools.get_post_body_short(post))))
+    return mark_safe(
+        blogtools.get_post_body_short(post))
 
 
 @register.filter

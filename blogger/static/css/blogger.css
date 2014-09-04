@@ -13,6 +13,9 @@
   color: #4d4d4d;
   font-weight: bold; }
 
+.blog-posts {
+  position: relative; }
+
 .blog-listing {
   position: relative;
   padding: 5px;
@@ -58,6 +61,7 @@
 
 /* Post Styles */
 .blog-post {
+  position: relative;
   background: #fafafa;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;

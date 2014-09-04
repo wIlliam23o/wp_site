@@ -42,8 +42,6 @@ register = template.Library()
 import re
 #                               adminpage type  id     str()
 disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
-#disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
-#disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
 
 

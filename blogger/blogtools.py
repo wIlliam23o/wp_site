@@ -10,6 +10,9 @@
 
 # Global settings
 from django.conf import settings
+from django.template import loader, Template
+from django.template.base import TemplateDoesNotExist
+
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
@@ -32,19 +35,6 @@ DEFAULT_MAXPOSTS = 25
 DEFAULT_MAXLINES = 17
 # number of characters before adding 'more..' button on previews.
 DEFAULT_MAXLENGTH = 2000
-
-
-def get_post_list(starting_index=0, max_posts=None, order_by=None):
-    """ returns a list of posts, starting with starting_id,
-        as long as max_posts.
-        this is for pageination.
-    """
-    if order_by is None:
-        order_by = DEFAULT_ORDERBY
-    if max_posts is None:
-        max_posts = DEFAULT_MAXPOSTS
-    all_posts = wp_blog.objects.filter(disabled=False).order_by(order_by)
-    return utilities.slice_list(all_posts, starting_index, max_posts)
 
 
 def fix_post_list(blog_posts, **kwargs):
@@ -92,26 +82,37 @@ def get_all_tags():
     return utilities.remove_list_dupes(all_tags)
 
 
-def get_post_body(post_):
+def get_post_body(post):
     """ retrieves body for post.
         if html_url is set, we will try to load the file
         if loading fails, or it is not set, we will use post.body.
     """
 
-    # TODO: Html content needs to be tied into template render.
-    #       see: htmltools.load_html_file(), projects.tools.get_html_content(),
-    #            misc.tools.get_long_desc()
-    if post_ is None:
-        _log.error("post_ = None!")
-        return ""
+    # TODO: Test templates for blog posts.
+    if post is None:
+        _log.error('post is None!')
+        return ''
 
-    absolute_path = utilities.get_absolute_path(post_.html_url)
-    if absolute_path == "":
-        # no valid html_url
-        return post_.body
+    template = None
+    try:
+        slugfile = '{}.html'.format(post.slug)
+        template = loader.get_template(slugfile)
+        # We are bypassing file lookup, and going straight to template.
+        absolute_path = None
+    except TemplateDoesNotExist:
+        absolute_path = utilities.get_absolute_path(post.html_url)
+        if not absolute_path:
+            # no valid html_url, using post body as a Template.
+            # 'template' overrides the file path in load_html_file.
+            template = Template(post.body)
 
-    # load html file content
-    scontent = htmltools.load_html_file(absolute_path)
+    # load template content.
+    scontent = htmltools.load_html_file(
+        absolute_path,
+        template=template,
+        context={
+            'post': post
+        })
     return scontent
 
 
@@ -232,6 +233,19 @@ def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, order_by=None):
 
     # trim for optional pagination.
     return utilities.slice_list(found, starting_index, max_posts)
+
+
+def get_post_list(starting_index=0, max_posts=None, order_by=None):
+    """ returns a list of posts, starting with starting_id,
+        as long as max_posts.
+        this is for pageination.
+    """
+    if order_by is None:
+        order_by = DEFAULT_ORDERBY
+    if max_posts is None:
+        max_posts = DEFAULT_MAXPOSTS
+    all_posts = wp_blog.objects.filter(disabled=False).order_by(order_by)
+    return utilities.slice_list(all_posts, starting_index, max_posts)
 
 
 def get_tag_links(post):
@@ -356,9 +370,9 @@ def prepare_content(body_content):
     """ runs various functions on the content, like source-highlighting """
 
     # do auto source highlighting
-    if "<pre class=" in body_content:
-        body_content = highlighter.highlight_inline(body_content)
-    body_content = highlighter.highlight_codes(body_content)
+    # if "<pre class=" in body_content:
+    #    body_content = highlighter.highlight_inline(body_content)
+    #body_content = highlighter.highlight_codes(body_content)
     return body_content
 
 

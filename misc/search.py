@@ -6,7 +6,7 @@ from misc.models import wp_misc
 from misc import tools
 
 
-def get_content(miscobj):
+def get_content(miscobj, request=None):
     """ Return the full content for a misc object. """
     return tools.get_long_desc(miscobj)
 

@@ -6,7 +6,7 @@
 from apps.models import wp_app
 
 
-def get_content(app):
+def get_content(app, request=None):
     """ Returns None, apps don't have content. """
     return None
 

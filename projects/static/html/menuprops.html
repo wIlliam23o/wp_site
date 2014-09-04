@@ -1,3 +1,5 @@
+{% load wp_nodes %}
+{% load projects_tags %}
 
 <!-- Basic Description -->
 <div class='wp-block feature-list'>
@@ -6,11 +8,11 @@
 	 environments such as <strong>Gnome, XFCE, LXDE, Cinnamon, & KDE</strong>.
 	 Created with <strong>Python 2.7, GTK 2, & Glade 3</strong>. <strong>Menu
 	 Props</strong> allows you to view, create, delete, and modify launcher files
-	 (<span class='I'>.desktop</span>), directory files 
-	 (<span class='I'>.directory</span>), and menu files 
+	 (<span class='I'>.desktop</span>), directory files
+	 (<span class='I'>.directory</span>), and menu files
 	 (<span class='I'>.menu</span>).
 	</p>
-	
+
 	<!-- Menu Section -->
 	<p id='menusection'>
 	There are two main sections in <strong>Menu Props</strong>, the first is called
@@ -19,11 +21,11 @@
 	 editing, except has more features and options. <strong>Menu Props</strong> has a
 	 built-in properties editor for launchers and directories, and does not require
 	 an external command such as 'desktop-file-edit' to make basic changes. You can
-	 still choose to open items in an external editor using the context-menu 
+	 still choose to open items in an external editor using the context-menu
 	 (<span style="font-style: italic;">right-click</span>) if you like. The default
 	 external editor can be changed in "Settings".
 	</p>
-	
+
 	<!-- Items section -->
 	<p id='itemssection'>
 	The 'Items' section lists all launcher/directory files that are found in the
@@ -33,14 +35,14 @@
 	 and 'Search'. Here you can find all launchers or directories listed in order by
 	 name, and search both lists.
 	</p>
-	
+
 	<!-- Search section -->
 	<p id='searchsection'>
 	The 'Search' section lets you search all launchers/directories for text inside
 	 the file contents. All results can be viewed or modified the same way, as if you
 	 were looking at them from the 'Items' or 'Dirs' list.
 	</p>
-	
+
 	<!-- Note to previous users -->
 	<p>
 	<span style="text-decoration: underline;">Note to users:</span><br/>
@@ -69,7 +71,7 @@
 </div>
 
 <!-- Article Ad -->
-{{ article_ad }}
+{% article_ad %}
 
 <!-- Menu Props Download -->
 <div class="wp-block feature-list" id='download'>
@@ -173,10 +175,10 @@
 		 package. Basically, I made an install &amp; uninstall shell script that copies
 		 the necessary files to the appropriate location. To run it, open a terminal,
 		 'cd' to the /menupropsX.X.X directory, and type: <br />
-		[code]sudo ./install[?code]<br /> 
+		[code]sudo ./install[?code]<br />
 		If you do not wish to install the application you can always try it first by
 		 opening a terminal, 'cd' to the /menupropsX.X.X directory, and type: <br />
-		[code]./menuprops[?code]<br /> 
+		[code]./menuprops[?code]<br />
 		The install script just ensures that a <strong>Menu Props</strong> icon gets
 		 placed in the applications menu, and that the icon, desktop file, launch script,
 		 etc. are placed in their correct directory. If 'install', 'uninstall', or
@@ -270,9 +272,9 @@
 	</p>
 	<ul class="circle red">
 		<li>
-		<strong>KDE</strong> does not move items up or down. <strong>KDE</strong> 
+		<strong>KDE</strong> does not move items up or down. <strong>KDE</strong>
 		 uses an alphabetical listing as the default, so trying to move items up or
-		 down may not affect the Main Menu. (Even if it shows up in 
+		 down may not affect the Main Menu. (Even if it shows up in
 		 <strong>Menu Props</strong>.)
 		</li>
 		<li>
@@ -282,9 +284,9 @@
 		 discourage the use of sub-menus in the <strong>Cinnamon</strong> environment.
 		</li>
 		<li>
-		Setting <strong>OnlyShowIn</strong> causes items to disappear from 
+		Setting <strong>OnlyShowIn</strong> causes items to disappear from
 		 <strong>Menu Props</strong> on certain systems, with certain
-		 values set. (<span class='I'>Setting OnlyShowIn=KDE; 
+		 values set. (<span class='I'>Setting OnlyShowIn=KDE;
 		 using KDE will cause this.</span>) I believe this is a limitation of
 		 <strong>gmenu</strong> (<span class='I'>gnome-menus</span>),
 		 which <strong>Menu Props</strong> is built with. I am currently working to
@@ -294,11 +296,11 @@
 		</li>
 		<li>
 		<strong>Some systems don't have gmenu</strong> - Some systems need a little help
-		 to get gmenu going, here is some good info on 
+		 to get gmenu going, here is some good info on
 		 how to get it for your system. (<span class='I'>
 		 instructions are for <strong>Fedora</strong>, but it works for
-		<strong>Slackware</strong>. It may work on other systems too.</span>): 
-		<a href='http://blog.mclaughlinsoftware.com/2011/11/24/gnome-menu-editing-fix/' 
+		<strong>Slackware</strong>. It may work on other systems too.</span>):
+		<a href='http://blog.mclaughlinsoftware.com/2011/11/24/gnome-menu-editing-fix/'
 		target='_blank'>
 		<strong>gmenu editing fix</strong>
 		</a>
@@ -306,7 +308,7 @@
 	</ul>
 	<!-- Warning about duplicates -->
 	<p>
-	** If <strong>Menu Props</strong> shows duplicates this may not be a bug. 
+	** If <strong>Menu Props</strong> shows duplicates this may not be a bug.
 	 <strong>Menu Props</strong> will always show duplicates for certain
 	 applications, this is by design. For example, Konqueror shows duplicate
 	 entries in <strong>Menu Props</strong>, but not in the Main Menu. This is by
@@ -349,12 +351,12 @@
 		<h3 class='title'>Screen Shots</h3>
 	</div>
 	<!-- Screen Shots Code Here -->
-	{{ screenshots_code }}
+	{% image_viewer "{{ project.screenshot_dir }}" %}
 		<p>
 		    In <strong>Menu Props</strong> actions are in the 'context menu',
 		    right-click gives you the available actions or options for that launcher.
 		</p>
-	
+
 </div>
 <div class="wp-block feature-list">
 	<!-- Future -->
@@ -376,6 +378,6 @@
 		 applications). Now that I have a better understanding of how freedesktop.org
 		 works, I believe I can write a reliable module to be used in <strong>Menu
 		 Props</strong> or any other menu-related project for python. I will update
-		 <strong>Menu Props</strong> and this site as the project progresses.		
+		 <strong>Menu Props</strong> and this site as the project progresses.
 	</p>
 </div>

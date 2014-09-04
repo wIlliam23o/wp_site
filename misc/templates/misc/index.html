@@ -18,7 +18,7 @@
 {% endblock %}
 
 {% block javascript %}
-    <script type="text/javascript">        
+    <script type="text/javascript">
         $(document).ready( function () {
             // hide long descriptions on load.
             $(".misclongdesc").hide();
@@ -51,8 +51,8 @@
              <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
                   <!-- Includes Token for Django's CSRF handling. -->
                   <input id="viewer-filename" name="file" type="hidden" value="none">
-             </form>                            
-            
+             </form>
+
             {% for misc in miscobjects %}
                 <!-- Single misc listing. -->
                 <div id='{{ misc.alias }}' class="wp-block misc-container">
@@ -86,7 +86,7 @@
                             </div>
                         </div>
                     </div>
-                
+
                     <!-- Short Description -->
                     {% if misc.description %}
                         <div id="miscdesc" class="misc-desc misc-index">
@@ -104,7 +104,7 @@
                             <div class='misc-download-button misc-index'>
                                 <a href='javascript: void(0);' title='View source code for {{ misc.name }} locally.' onclick="javascript: misctools.submitMisc('{{ misc.filename }}');">
                                     View {{ misc.name }} (local)
-                                </a>                      
+                                </a>
                             </div>
                         {% endif %}
                         <!-- Screenshots Button -->
@@ -113,7 +113,7 @@
                                 <a href='/misc/{{ misc.alias }}#screenshots' title='View screenshot for {{ misc.name }}.'>
                                     Screenshots
                                 </a>
-                            </div>      
+                            </div>
                         {% endif %}
                         <!-- Long Description Button-->
                         {% if misc|has_html_content %}
@@ -122,13 +122,13 @@
                                         <span id="misclongdescbtn-{{ misc.alias }}">Show More</span>
                                 </a>
                             </div>
-                        {% endif %}                            
+                        {% endif %}
                     </div>
 
                     {% if misc|has_html_content %}
                         <!-- Long Description -->
                         <div id="misclongdesc-{{ misc.alias }}" class="misclongdesc">
-                            {{ misc|processed_content}}
+                            {{ misc|get_content}}
                             <!-- Possible Warning -->
                             {% if misc|has_warning %}
                                 <br>

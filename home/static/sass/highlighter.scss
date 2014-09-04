@@ -1,19 +1,5 @@
 @import 'welbornprod';
-/* ---------------------- highlighter.css ---------------------- */
-
-// Old style that isn't used anymore.
-//.highlighted {
-//    background: white;
-//    border-radius: 5px;
-//    /*box-shadow: $shadownormal;*/
-//    border-style: solid;
-//    border-width: 2px;
-//    border-color: $bordermain;
-//    padding: 5px;
-//    line-height: $lineheightnormal;
-//    font-size: $fontnormal;
-//    font-family: $fontsmono;
-//}
+// Styles for the pygments highlighter and friends.
 
 .highlighted-inline {
     // Code paragraphs that are highlighted using pygments.
@@ -56,7 +42,6 @@
     // Pygments style. (Borland I believe)
     // Only colors/font-weight and font-style here.
     // Any div wraps, font names, etc. are handled by .highlighted-inline
-    // TODO: use solarized with proper background color. (possibly Ace editor)
     .hll { background-color: #ffffcc }
     .n { color: #535353; } /* normal */
     .c { color: #B1B1B1; font-style: italic } /* Comment */

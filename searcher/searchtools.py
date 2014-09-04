@@ -20,7 +20,7 @@ _log = logger("search.tools").log
 # Apps must have a search.py module that implements these functions:
 must_implement = (
     # Desc: Returns full content to search, or None.
-    # Signature: get_content(obj)
+    # Signature: get_content(obj, request=None)
     # Ex: get_content = lambda post: post.body
     'get_content',
 
@@ -265,7 +265,7 @@ def is_searchable(searchmod):
     return True
 
 
-def search_all(querystr):
+def search_all(querystr, request=None):
     """ Searches all searchable apps.
         Arguments:
             querystr       : Query string to search for.
@@ -282,25 +282,26 @@ def search_all(querystr):
     #       ..reworked to sort items based on relevance.
     results = []
     for searchmod in searchmods:
-        appresults = search_app(searchmod, queries)
+        appresults = search_app(searchmod, queries, request=request)
         if appresults:
             results.extend(appresults)
 
     return results
 
 
-def search_app(searchmod, queries):
+def search_app(searchmod, queries, request=None):
     """ Search an apps searchable objects and return a list of WpResults.
         Arguments:
             searchmod  : The apps search.py module, imported already.
             queries    : List of string queries to search for.
+            request    : Optional Request, if apps need it in search.py.
     """
     results = []
     # TODO: if search_targets() returned a list of matches, then
     #       ..search_app() could return (relevance_numbers, items)
     try:
         for obj in searchmod.get_objects():
-            content = searchmod.get_content(obj)
+            content = searchmod.get_content(obj, request=request)
             desc = searchmod.get_desc(obj)
             targets = searchmod.get_targets(obj, content=content, desc=desc)
             if search_targets(queries, targets):

@@ -6,9 +6,9 @@ from projects.models import wp_project
 from projects import tools
 
 
-def get_content(proj):
+def get_content(proj, request=None):
     """ Returns the full content for a project for searching. """
-    return tools.get_html_content(proj)
+    return tools.get_html_content(proj, request)
 
 
 def get_desc(proj):

@@ -2,7 +2,7 @@
 
 '''Welborn productions - Utilities - HtmlTools
     Provides html string manipulation, code injection/generation
-    
+
    -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
 '''
 
@@ -19,6 +19,7 @@ import base64
 
 # Django template loaders
 from django.template import RequestContext, Context, loader
+from django.template.base import TemplateDoesNotExist
 
 # Basic utilities
 from wp_main.utilities import utilities
@@ -272,38 +273,6 @@ class html_content(object):
         """
 
         return check_replacement(self.content, target_replacement)
-
-    def inject_article_ad(self, target_replacement="{{ article_ad }}"):
-        """ basically does a text replacement,
-            see: htmltools.inject_article_ad()
-        """
-
-        self.content = inject_article_ad(self.content, target_replacement)
-        return self
-
-    def inject_screenshots(self, images_dir, **kwargs):
-        """ inject code for screenshots box.
-            see: htmltools.inject_screenshots()
-        """
-        self.content = inject_screenshots(self.content, images_dir, **kwargs)
-        return self
-
-    def inject_sourceview(self, project, **kwargs):
-        """ injects code for source viewing.
-            see: htmltools.inject_sourceview()
-        """
-        request = kwargs.get('request', None)
-        link_text = kwargs.get('link_text', None)
-        desc_text = kwargs.get('desc_text', None)
-        target_replacement = kwargs.get('target_replacement',
-                                        '{{ source_view }}')
-        self.content = inject_sourceview(project,
-                                         self.content,
-                                         request,
-                                         link_text,
-                                         desc_text,
-                                         target_replacement)
-        return self
 
     def remove_comments(self):
         """ splits source_string by newlines and
@@ -618,13 +587,16 @@ def clean_html(source_string):
     """
 
     # these things have to be done in a certain order to work correctly.
-    # hide_email, fix p spaces, remove_comments,
-    # remove_whitespace, remove_newlines
+    # hide_email, highlight, remove_comments, remove_whitespace
     if source_string is None:
         _log.debug('Final HTML for page was None!')
         return ''
 
-    return remove_whitespace(remove_comments(hide_email(source_string)))
+    return remove_whitespace(
+        remove_comments(
+            highlight(
+                hide_email(
+                    source_string))))
 
 
 def fatal_error_page(message=None):
@@ -872,7 +844,7 @@ def get_html_file(wpobj):
         # use default location if no manual override is set.
         possiblefile = 'static/html/{}.html'.format(wpobj.alias)
         html_file = utilities.get_absolute_path(possiblefile)
-    elif obj_file.lower() == "none":
+    elif obj_file.lower() == 'none':
         # html files can be disabled by putting None in the
         # html_url/contentfile field.
         return ''
@@ -898,7 +870,7 @@ def get_screenshots(images_dir, noscript_image=None):
 
     """
     # accceptable image formats (last 4 chars)
-    formats = [".png", ".jpg", ".gif", ".bmp", "jpeg"]
+    formats = ['.png', '.jpg', '.gif', '.bmp', 'jpeg']
 
     # Make sure we are using the right dir.
     # get absolute path for images dir,
@@ -914,7 +886,7 @@ def get_screenshots(images_dir, noscript_image=None):
     try:
         all_files = os.listdir(images_dir)
     except Exception as ex:
-        _log.debug("Can't list dir: " + images_dir + '\n' + str(ex))
+        _log.debug('Can\'t list dir: {}\n{}'.format(images_dir, ex))
         return None
 
     # Help functions for building screenshots.
@@ -932,10 +904,12 @@ def get_screenshots(images_dir, noscript_image=None):
         noscript_image = None
 
     # Render from template.
-    screenshots = render_clean("home/screenshots.html",
-                               context_dict={'images': good_pics,
-                                             'noscript_image': noscript_image,
-                                             })
+    screenshots = render_clean(
+        'home/imageviewer.html',
+        context_dict={
+        'images': good_pics,
+        'noscript_image': noscript_image,
+        })
     return screenshots
 
 
@@ -978,166 +952,67 @@ def hide_email(source_string):
     return '\n'.join(final_output)
 
 
-def inject_article_ad(source_string, target_replacement="{{ article_ad }}"):
-    """ basically does a text replacement,
-        replaces 'target_replacement' with the code for article ads.
-        returns finished html string.
-    """
-
-    # fail check.
-    target = check_replacement(source_string, target_replacement)
-    if target:
-        # at this moment article ad needs no Context.
-        article_ad = render_clean('home/articlead.html')
-        return source_string.replace(target, article_ad)
-
-    # target not found.
-    return source_string
+def highlight(content):
+    """ Uses the highlighter tools to syntax highlight everything. """
+    return highlighter.highlight_inline(
+        highlighter.highlight_codes(
+            content))
 
 
-def inject_screenshots(source_string, images_dir, **kwargs):
-    """ inject code for screenshots box.
-        walks image directory, grabbing images for the image rotator box.
-        uses screenshots.html template to display them.
-        Arguments:
-            source_string       : Original string containing the replacement
-                                  target.
-                                  like: '<body>{{ screenshots_code }}</body>'
-            images_dir          : Relative dir containing all the images.
-        Keyword Arguments:
-            target_replacement  : string to replace screenshot html with.
-                                  default: '{{ screenshots_code }}'
-            noscript_image      : Path to image to show for <noscript> tag.
-        examples:
-            s = inject_screenshots(s, "static/images/myapp")
-            s = inject_screenshots(s,
-                                   "images/myapp/",
-                                   noscript_image="sorry_no_javascript.png")
-            s = inject_screenshots(s,
-                                   "images/myapp",
-                                   "{{ screenshots }}",
-                                   "noscript.png")
-    """
-    # Grab kw args, set defaults.
-    target_replacement = kwargs.get('target_replacement',
-                                    '{{ screenshots_code }}')
-    noscript_image = kwargs.get('noscript_image', None)
-
-    # fail checks, make sure target exists in source_string
-    target = check_replacement(source_string, target_replacement)
-    if not target:
-        return source_string
-
-    screenshots = get_screenshots(images_dir, noscript_image=noscript_image)
-    if screenshots:
-        # Return fixed source_string with screenshots.
-        return source_string.replace(target, screenshots)
-    else:
-        # No screenshots found.
-        return source_string
-
-
-def inject_sourceview(project, source_string,
-                      request=None, link_text=None, desc_text=None,
-                      target_replacement="{{ source_view }}"):
-    """ injects code for source viewing.
-        needs wp_project (project) passed to gather info.
-        if target_replacement is not found, returns source_string.
-
-        uses sourceview.html template to display. the template handles
-        missing information.
-        returns rendered source_string.
-    """
-
-    # fail check.
-    target = check_replacement(source_string, target_replacement)
-    if not target:
-        return source_string
-
-    # has project info?
-    if project is None:
-        return source_string.replace(target, "")
-
-    # use source_file if no source_dir was set.
-    relativefile = utilities.get_relative_path(project.source_file)
-    relativedir = utilities.get_relative_path(project.source_dir)
-    relativepath = relativedir if relativedir else relativefile
-    # has good link?
-    if relativepath == "":
-        _log.debug("missing source file/dir for: " + project.name)
-
-    # get default filename to display in link.
-    if project.source_file:
-        file_name = utilities.get_filename(project.source_file)
-    else:
-        file_name = project.name
-
-    # get link text
-    if link_text is None:
-        link_text = file_name + " (local)"
-
-    sourceview = render_clean("home/sourceview.html",
-                              context_dict={'project': project,
-                                            'file_path': relativepath,
-                                            'link_text': link_text,
-                                            'desc_text': desc_text,
-                                            },
-                              request=request,
-                              )
-    return source_string.replace(target, sourceview)
-
-
-def load_html_file(sfile, request=None, context=None):
+def load_html_file(sfile, request=None, context=None, template=None):
     """ Trys loading a template by name,
         If context is passed it is used to render the template.
         If a request was passed then RequestContext is used,
         otherwise Context is used.
         If no template is found, it trys loading html content from file.
         returns string with html content.
+
+        This can all be short-circuited by passing in a pre-loaded template
+        with: template=load.get_template(templatename)
     """
 
-    # TODO: project pages and blogs don't need to use the old style
-    #       {{ inject_something }} tags. They need a new templatetag like:
-    #       {{ post|injectsomething }} or {{ project|sourceview }}.
-    # Template code is disabled until then.
-    # see: projects.tools.get_html_content()
+    # TODO: Test template loading for projects and blog.
+    if template is None:
+        try:
+            template = loader.get_template(sfile)
+        except TemplateDoesNotExist:
+            # It wasn't a template name.
+            _log.debug('Not a template: {}'.format(sfile))
 
-    # try:
-    #    template = loader.get_template(sfile)
-    # except Exception:
-    #    template = None
-    #
-    # if template:
-    # Found template for this file, use it.
-    #    if context:
-    #        if request:
-    # Try creating a request context.
-    #            try:
-    #                contextobj = RequestContext(request, context)
-    #            except Exception as ex:
-    #                _log.error('Error creating request context from: '
-    #                           '{}\n{}'.format(request, ex))
-    #                return ''
-    #        else:
-    # No request, use normal context.
-    #            contextobj = Context(context)
-    #    else:
-    # No context dict given, use empty context.
-    #        contextobj = Context({})
-    #
-    # Have context, try rendering.
-    #    try:
-    #        content = template.render(contextobj)
-    # Good content, return it.
-    #        return content
-    #    except Exception as ex:
-    #        _log.error(''.join(['Error rendering template: {} '.format(sfile),
-    #                            'Context: {}'.format(context),
-    #                            '\n{}'.format(ex),
-    #                            ]))
-    #        return ''
+    if template:
+        # Found template for this file, use it.
+        if context:
+            if request:
+                # Try creating a request context.
+                try:
+                    contextobj = RequestContext(request, context)
+                except Exception as ex:
+                    _log.error((
+                        'Error creating request context from: {}\n{}'
+                    ).format(request, ex))
+                    return ''
+            else:
+                # No request, use normal context.
+                contextobj = Context(context)
+        else:
+            # No context dict given, use empty context.
+            contextobj = Context({})
+
+        # Have context, try rendering.
+        try:
+            content = template.render(contextobj)
+            # Good content, return it.
+            return content
+        except Exception as ex:
+            _log.error(''.join([
+                'Error rendering template: {} '.format(sfile),
+                'Context: {}'.format(context),
+                '\n{}'.format(ex),
+            ]))
+            return ''
 
     # no template, probably a filename. check it:
+    _log.debug('No template, falling back to HTML: {}'.format(sfile))
     if not os.path.isfile(sfile):
         # try getting absolute path
         spath = utilities.get_absolute_path(sfile)
@@ -1158,8 +1033,9 @@ def load_html_file(sfile, request=None, context=None):
         return ''
 
     except OSError as exOS:
-        _log.error('Possible bad permissions opening file: {}'.format(sfile) +
-                   '{}'.format(exOS))
+        _log.error((
+            'Possible bad permissions opening file: {}\n{}'
+        ).format(sfile, exOS))
         return ''
 
     except Exception as ex:
@@ -1278,7 +1154,7 @@ def render_html(template_name, **kwargs):
         Keyword arguments are:
             context_dict : Context or RequestContext dict to be used
                            RequestContext is used if a request is passed in
-                           with 'request' kwarg. 
+                           with 'request' kwarg.
                            Default: {}
                  request : HttpRequest object to pass on to RequestContext
                            Default: False (causes Context to be used)
@@ -1287,7 +1163,7 @@ def render_html(template_name, **kwargs):
                            see: htmltools.auto_link()
                            Default: False (disables auto_link())
           auto_link_args : dict containing arguments for auto_link()
-                           ex: 
+                           ex:
                            render_html("mytemplate",
                                        link_list=my_link_list,
                                        auto_link_args={"target":"_blank",
@@ -1295,7 +1171,7 @@ def render_html(template_name, **kwargs):
                                                        })
                            Default: {}
     """
-    context_dict = kwargs.get('context_dict', {})
+    context_dict = kwargs.get('context', kwargs.get('context_dict', {}))
     request = kwargs.get('request', False)
     link_list = kwargs.get('link_list', False)
     auto_link_args = kwargs.get('auto_link_args', {})

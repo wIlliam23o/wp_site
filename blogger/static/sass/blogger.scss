@@ -20,7 +20,7 @@
 
 // Index Styles
 .blog-posts {
-
+    position: relative;
 }
 
 .blog-listing {
@@ -66,6 +66,7 @@
 
 /* Post Styles */
 .blog-post {
+    position: relative;
     background: $whitedull;
     @include border-radius(5px);
     @include box-shadow-normal();

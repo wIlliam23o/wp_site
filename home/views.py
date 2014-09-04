@@ -38,7 +38,7 @@ def convert_pblock(pblock):
 
 
 def index(request):
-    """ serve up main page (home, index, landing) """
+    """ Serve up main page (home, index, landing) """
     # Grab config on every request, to keep it fresh without restarting.
     homeconfig = home_config.objects.get()
 

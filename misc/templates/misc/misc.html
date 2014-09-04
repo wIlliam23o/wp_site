@@ -53,14 +53,14 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- misc Body -->
             <div class="misc-content">
                 <!-- Content -->
                 {% if misc|has_html_content %}
                     <!-- Process misc content and display it. -->
                     <div class='misc-desc'>
-                        {{ misc|processed_content }}
+                        {{ misc|get_content }}
                         <!-- Possible Warning -->
                         {% if misc|has_warning %}
                             <br>
@@ -92,10 +92,10 @@
                                     <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
                                         <!-- Includes Token for Django's CSRF handling. -->
                                         <input id="viewer-filename" name="file" type="hidden" value="{{ misc.filename }}">
-                                    </form>                            
+                                    </form>
                                     <a href='javascript: void(0);' onclick="javascript: $('#file-viewer').submit();">
                                         View {{ misc.name }} (local)
-                                    </a>                      
+                                    </a>
                                 </div>
                             {% endif %}
                         </div>
