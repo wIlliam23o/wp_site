@@ -34,7 +34,12 @@ def get_long_desc(miscobj):
         # Fallback to content field.
         template = Template(miscobj.content)
 
-    content = htmltools.load_html_file(None, template=template)
+    content = htmltools.load_html_file(
+        None,
+        template=template,
+        context={
+            'misc': miscobj
+        })
     if not content:
         _log.error('Misc object has no content!: {}'.format(miscobj.name))
 
