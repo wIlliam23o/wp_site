@@ -104,25 +104,18 @@ class WpCleanResponseMiddleware (object):
         if not self.lines:
             return False
 
-        # Fix py3 with base64.encodebytes(), encode/decode also added.
-        # TODO: Remove the hasattr() when py2 is completely phased out of this.
-        if hasattr(base64, 'encodebytes'):
-            encode = getattr(base64, 'encodebytes')
-        else:
-            encode = getattr(base64, 'encodestring')
-
         final_output = []
         for sline in self.lines:
             mailtos = self.find_mailtos()
             for mailto in mailtos:
-                b64_mailto = encode(mailto.encode('utf-8'))
+                b64_mailto = base64.encodebytes(mailto.encode('utf-8'))
                 sline = sline.replace(
                     mailto,
                     b64_mailto.decode('utf-8').replace('\n', ''))
 
             emails = self.find_email_addresses()
             for email in emails:
-                b64_addr = encode(email.encode('utf-8'))
+                b64_addr = base64.encodebytes(email.encode('utf-8'))
                 sline = sline.replace(
                     email,
                     b64_addr.decode('utf-8').replace('\n', ''))
@@ -139,7 +132,7 @@ class WpCleanResponseMiddleware (object):
                 (line.startswith('/*') and line.endswith('*/')))
 
     def process_content(self):
-        """ Runs all of the modifier functions in proper order. 
+        """ Runs all of the modifier functions in proper order.
             Sets self.finaltext
         """
         success = [

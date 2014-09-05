@@ -1,27 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
-      project: Welborn Productions - Switches - Tests
-     @summary: Tests wpswitch.py for regression, accuracy, and more.
-    
-      @author: Christopher Welborn <cj@welbornprod.com>
-@organization: welborn productions <welbornprod.com>
- 
-   start date: May 18, 2013
+''' Welborn Productions - Switches - Tests
+        Tests wpswitch.py for regression, accuracy, and more.
+
+    -Christopher Welborn May 18, 2013
 '''
 
-# TODO: Test does not currently run under normal pytest/nosetests execution,
-#      nor does it run with ./manage.py test
-#      import wpswitch -> ImportError
-#      Django environment not set up!
+# Meant to be ran with './manage.py test scripts' (django test runner)
 import sys
 import os
 import os.path
 import unittest
 import unittest.main
-import wpswitch
-
+from scripts import wpswitch
+# Make the wpswitch module quiet.
+wpswitch.printerror = lambda s: None
 
 # Test data to be used (should be valid, well-formed switch data).
 test_data_local = """
@@ -71,20 +65,21 @@ except Exception as exio:
 
 # create a valid switch manually
 # (can be accessed from any test as an example of a non-parsed, valid switch)
-switch1 = wpswitch.switch("test_switches_target.txt",
-                          "testmanualswitch",
-                          ("True", "False"),
-                          "testswitch =",
-                          "a test switch")
+switch1 = wpswitch.switch(
+    'test_switches_target.txt',
+    'testmanualswitch',
+    ('True', 'False'),
+    'testswitch =',
+    'a test switch')
 
 # Test Cases
 
 
 class test_wpswitch(unittest.TestCase):
-    
+
     def setUp(self):
         """ setup the test, creates a temporary switches.conf """
-        
+
         if USE_TEST_CONF:
             try:
                 with open(TEST_CONF, 'w') as ftestconf:
@@ -94,17 +89,17 @@ class test_wpswitch(unittest.TestCase):
             except (Exception, OSError, IOError) as exio:
                 print("setUp: cannot create test conf!: " + TEST_CONF + '\n' + str(exio))
                 self.created_test_conf = False
-                
+
         # Load switches for these tests to use (also tests whether they can be loaded)
         self.switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
                              msg="testCanLoadList: read_lines() returned None")
         self.assertNotEqual(self.switches, [],
                             msg="testCanLoadList: read_lines() returned empty list for test data")
-        
+
     def tearDown(self):
         """ tear down the test, remove temporary switches.conf if needed. """
-        
+
         # remove temporary switches.conf
         if self.created_test_conf:
             try:
@@ -127,7 +122,7 @@ class test_wpswitch(unittest.TestCase):
 
     def testCanLoadList(self):
         """ ....load switches from lines of strings. """
-        
+
         self.switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
                              msg="testCanLoadList: read_lines() returned None")
@@ -137,10 +132,10 @@ class test_wpswitch(unittest.TestCase):
     @unittest.skipIf(not USE_TEST_CONF, "no test file to use")
     def testCanLoadFile(self):
         """ ....loads switches from a file """
-        
+
         self.assertEqual(self.created_test_conf, True,
                          msg="testCanLoadFile: setUp did not create test switches.conf")
-        
+
         self.switches = wpswitch.read_file(TEST_CONF)
         self.assertIsNotNone(self.switches,
                              msg="testCanLoadFile: read_file() returned None")
@@ -149,7 +144,7 @@ class test_wpswitch(unittest.TestCase):
 
     def testFindSwitchIsRegEx(self):
         """ ....find regex test switch by name, is_regex() should return True """
-        
+
         #switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
                              msg="testFindSwitchIsRegEx: switches is None, could not read_lines()")
@@ -163,7 +158,7 @@ class test_wpswitch(unittest.TestCase):
 
     def testCanHandleGroups(self):
         """ ....retrieves all group names """
-        
+
         #switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
                              msg="self.switches is None, could not read_lines()")
@@ -179,7 +174,7 @@ class test_wpswitch(unittest.TestCase):
                          msg="switch group names did not match expected groups:\n" +
                              '    expected:\n        ' + '\n        '.join(test_expectednames) + '\n\n' +
                              '      actual:\n        ' + '\n        '.join(test_groupnames) + '\n')
-                
+
         # test group members
         for name in groupnames:
             # get expected members of group name.
@@ -194,10 +189,10 @@ class test_wpswitch(unittest.TestCase):
                              msg="group members did not match the expected members:\n" +
                                  '    expected:\n        ' + ('\n        ' + name + ': ').join(expected_members) + '\n' +
                                  '      actual:\n        ' + ('\n        ' + name + ': ').join(actual_members) + '\n')
-        
+
     def testCanGetGroupNameByList(self):
         """ ....retrieves a group name from a list of switches """
-        
+
         #switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
                              msg="testCanGetGroupNameByList: switches is None, read_lines() failed.")
@@ -212,17 +207,17 @@ class test_wpswitch(unittest.TestCase):
         self.assertNotEqual(groupmembers, [],
                             msg="testCanGetGroupNameFromList: get_group_members(" + testgroupname + ')' +
                             " returned []")
-        
+
         # test that get_group_bylist() works correctly.
         getgroupname = wpswitch.get_group_bylist(groupmembers)
         self.assertEqual(testgroupname, getgroupname,
                          msg='testCanGetGroupNameFromList: get_group_bylist() failed!\n    ' +
                              '    expecting: ' + testgroupname + '\n' +
                              '       actual: ' + getgroupname + '\n')
-        
+
     def testBadSwitchDataCaught(self):
         """ ....bad switch data returns None, empty desc is not bad data. """
-        
+
         # incomplete
         baddata = "filename|name|"
         badswitch = wpswitch.parse_switchdata(baddata)

@@ -971,7 +971,6 @@ def load_html_file(sfile, request=None, context=None, template=None):
         with: template=load.get_template(templatename)
     """
 
-    # TODO: Test template loading for projects and blog.
     if template is None:
         try:
             template = loader.get_template(sfile)

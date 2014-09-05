@@ -1,9 +1,5 @@
 # File/Path
 import os.path
-# Mark generated html as safe to view.
-from django.utils.safestring import mark_safe
-from django.utils.html import escape
-
 # Standard Errors
 from django.http import Http404
 
@@ -13,27 +9,19 @@ from django.conf import settings
 # Django decorators
 from django.views.decorators.csrf import csrf_protect
 
+# Local tools
+from wp_main.utilities import utilities, responses
 # Filetracker info
 from downloads import dltools
-
+# For retrieving project information (source viewing)
+from projects import tools as ptools
 # Misc object info
 from misc import tools as misctools
 
-# Local tools
-from wp_main.utilities import utilities
-from wp_main.utilities import responses
-# For source highlighting
-from wp_main.utilities.highlighter import (
-    WpHighlighter,
-    get_lexer_name_fromfile,
-    get_lexer_name_fromcontent)
 
 # Logging
 from wp_main.utilities.wp_logging import logger
 _log = logger('viewer').log
-
-# For retrieving project information (source viewing)
-from projects import tools as ptools
 
 
 def logdebug(s):
@@ -265,31 +253,3 @@ def get_file_info(file_path):
                 'absolute_path': absolute_path,
                 'file_content': file_content, }
     return fileinfo
-
-
-def highlight_file(static_path, file_content):
-    """ highlight file content for viewing
-        TODO: Remove this. It is no longer needed now that Ace editor is used.
-    """
-    # TODO: Remove this function, or move it somewhere else.
-    #      Ace Editor is used now, so no highlighting is done server-side.
-    # Get pygments lexer
-    lexername = get_lexer_name_fromfile(static_path)
-    if not lexername:
-        # Try getting lexer from first line in file.
-        lexername = get_lexer_name_fromcontent(file_content)
-
-    # Highlight the file (if needed)
-    if lexername:
-        try:
-            highlighter = WpHighlighter(lexername, 'default', line_nums=False)
-            highlighter.code = file_content
-            file_content = highlighter.highlight()
-        except Exception as ex:
-            _log.error('Error highlighting file: {}\n'.format(static_path) +
-                       '{}'.format(str(ex)))
-    else:
-        # No lexer, so no highlighting, still need to format it a bit.
-        file_content = escape(file_content).replace('\n', '<br>')
-
-    return mark_safe(file_content)

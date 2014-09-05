@@ -88,7 +88,6 @@ def get_post_body(post):
         if loading fails, or it is not set, we will use post.body.
     """
 
-    # TODO: Test templates for blog posts.
     if post is None:
         _log.error('post is None!')
         return ''

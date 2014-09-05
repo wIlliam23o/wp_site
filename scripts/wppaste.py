@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """ wppaste.py
-    Submit stdin or single lines to welbornprod.com/paste
+    Submit stdin, file content, or single lines to welbornprod.com/paste
     -Christopher Welborn 05-19-2014
 """
 
