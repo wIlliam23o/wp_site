@@ -14,9 +14,19 @@ register = template.Library()
 
 
 @register.tag
-def article_ad(parser, token):
-    """ Renders an ArticleAd node in place. """
-    return ArticleAd()
+def ad_article(parser, token):
+    """ Renders an ArticleAd node in place.
+        Replaces soon-to-be-deprecated article_ad
+    """
+    return AdArticle()
+
+
+@register.tag
+def ad_bottom(parser, token):
+    """ Renders the AdBottom node in place.
+        A google ad for the bottom of every page.
+    """
+    return AdBottom()
 
 
 @register.tag
@@ -24,12 +34,25 @@ def highlight(parser, token):
     """ Highlight code syntax, given a lexer name for pygments and a string.
     """
     try:
-        tag_name, lang, code = token.split_contents()
+        # Try using the full highlight signature.
+        tag_name, lang, embedded, code = token.split_contents()
     except ValueError:
-        tag_name = token.contents.split()[0]
-        errmsg = '{} expects 2 arguments. A lexer name and a string.'
-        raise template.TemplateSyntaxError(errmsg.format(tag_name))
-    return Highlighter(lexer_name=lang, code=code)
+        # Try two arguments, embedded = False.
+        try:
+            tag_name, lang, code = token.split_contents()
+            embedded = None
+        except ValueError:
+            tag_name = token.contents.split()[0]
+            errmsg = '{} expects 2 arguments. A lexer name and a string.'
+            raise template.TemplateSyntaxError(errmsg.format(tag_name))
+
+    return Highlighter(lexer_name=lang, embedded=embedded, code=code)
+
+
+@register.tag
+def hl(parser, token):
+    """ Alias for highlight(). """
+    return highlight(parser, token)
 
 
 @register.tag
@@ -60,25 +83,37 @@ def var_quotes(s, varname=None):
     return s
 
 
-class ArticleAd(template.Node):
+class AdArticle(template.Node):
 
     """ Renders an article ad in place. """
 
     def render(self, context):
         """ Render this article ad node. """
-        article_ad = htmltools.render_clean(
-            'home/articlead.html',
+        adarticle = htmltools.render_clean(
+            'home/ad_article.html',
             context_dict=context)
-        return article_ad
+        return adarticle
+
+
+class AdBottom(template.Node):
+
+    """ Renders a google ad for the bottom of the page. """
+
+    def render(self, context):
+        adbottom = htmltools.render_clean(
+            'home/ad_bottom.html',
+            context_dict=context)
+        return adbottom
 
 
 class Highlighter(template.Node):
 
     """ Renders syntax highlighted code using pygments. """
 
-    def __init__(self, lexer_name=None, code=None):
+    def __init__(self, lexer_name=None, embedded=False, code=None):
         self.lexer_name = lexer_name
         self.code = code
+        self.embedded = embedded
 
     def render(self, context):
         """ Render the highlighted code according to the user's lexer name. """
@@ -91,11 +126,29 @@ class Highlighter(template.Node):
             code = template.Variable(self.code).resolve(context)
         except template.VariableDoesNotExist:
             code = self.code
-        code = var_quotes(code, varname='Highlighter.code')
+
+        if self.embedded:
+            try:
+                embedded = template.Variable(self.embedded).resolve(context)
+            except template.VariableDoesNotExist:
+                _log.debug('Bad variable for \'embedded\': {}'.format(
+                    self.embedded))
+                embedded = False
+        else:
+            embedded = False
+
+        #code = var_quotes(code, varname='Highlighter.code')
         lexername = var_quotes(lexer_name, varname='Highlighter.lexer_name')
 
-        hl = highlighter.WpHighlighter(lexer_name=lexer_name, code=code)
-        return hl.highlight()
+        hl = highlighter.WpHighlighter(
+            lexer_name=lexer_name,
+            code=code,
+            classes=['highlighted-embedded'] if embedded else None)
+        content = hl.highlight()
+        _log.debug('\n{d}\nHighlighter:\n\n{c}\n{d}\n'.format(
+            c=content,
+            d='-' * 80))
+        return content
 
 
 class ImageViewer(template.Node):

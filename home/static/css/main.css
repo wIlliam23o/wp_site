@@ -435,12 +435,6 @@ a.jumpto-nav {
   font-style: italic;
   color: #919191; }
 
-/* In-Article Ads */
-.article-ad {
-  text-align: center;
-  margin-bottom: 10px;
-  margin-top: 10px; }
-
 /* Navigation */
 .topbar {
   margin-top: 0px; }
@@ -604,9 +598,11 @@ a.jumpto-nav {
   color: #919191; }
 
 /* Google Ads */
-.google-ads {
+.ad-google, .ad-article, .ad-bottom {
   display: block;
-  text-align: center; }
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 10px; }
 
 /* Donations */
 .donations {

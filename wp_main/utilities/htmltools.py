@@ -17,9 +17,19 @@ from sys import version as sysversion
 import re
 import base64
 
+# Fixing html fragments (from shortening blog posts and other stuff)
+from tidylib import tidy_fragment
+# These errors from tidylib will not be logged ever.
+TIDYLIB_IGNORE = (
+    'inserting implicit <body>',
+    'inserting missing \'title\' element',
+    'missing <!DOCTYPE> declaration',
+    'plain text isn\'t allowed in <head> elements'
+)
 # Django template loaders
 from django.template import RequestContext, Context, loader
 from django.template.base import TemplateDoesNotExist
+from django.conf import settings
 
 # Basic utilities
 from wp_main.utilities import utilities
@@ -620,6 +630,24 @@ def fatal_error_page(message=None):
     return '\n'.join(s).format(message)
 
 
+def filter_tidylib_errors(errortext):
+    """ Filters lines in tidylib output based on TIDYLIB_IGNORE.
+        Errors are only logged when DEBUG=True, but this will Help
+        filter errors we don't care about. Like 'implicit <body>' in
+        a small html fragment.
+    """
+    filtered = []
+    for line in errortext.split('\n'):
+        keepline = True
+        for ignored in TIDYLIB_IGNORE:
+            if ignored in line:
+                break
+        else:
+            # This line made it through.
+            filtered.append(line)
+    return '\n'.join(filtered).strip()
+
+
 def find_email_addresses(source_string):
     """ finds all instances of email@addresses.com inside a wp-address
         classed tag.
@@ -668,6 +696,18 @@ def find_mailtos(source_string):
 
 
 def fix_open_tags(source):
+    """ Fixes missing tags in html fragments. """
+    if not source:
+        return source
+
+    fixedhtml, errors = tidy_fragment(source)
+    if settings.DEBUG and errors:
+        errors = filter_tidylib_errors(errors)
+        _log.debug('Tidylib errors:\n{}'.format(errors))
+    return fixedhtml
+
+
+def fix_open_tags_OLD(source):
     """ scans string, or list of strings for
         open <tags> without their </closing> tag.
         adds the closing tags to the end (in order)
@@ -677,8 +717,9 @@ def fix_open_tags(source):
         if you put a string in, you get a string back.
 
     """
+    # TODO: Remove this function when tidylib has been tested.
     try:
-        if hasattr(source, 'encode'):
+        if isinstance(source, str):
             if '\n' in source:
                 source = source.split('\n')
                 joiner = '\n'
@@ -761,12 +802,11 @@ def fix_open_tags(source):
         for i in range(len(opening_tags), 0, -1):
             left_over = opening_tags[i - 1]
             if not left_over in ignore_tags:
-                fixed_lines.append(left_over.replace('<', '</') + '>')
+                closetag = '{}>'.format(left_over.replace('<', '</'))
+                _log.debug('Appended missing tag: {}'.format(closetag))
+                fixed_lines.append(closetag)
 
-    if joiner is None:
-        return fixed_lines
-    else:
-        return joiner.join(fixed_lines)
+    return fixed_lines if joiner is None else joiner.join(fixed_lines)
 
 
 def fix_p_spaces(source_string):

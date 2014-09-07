@@ -12,6 +12,8 @@ from django.utils.html import escape
 import pygments
 from pygments import formatters
 from pygments import lexers
+from pygments.util import ClassNotFound
+
 from wp_main.utilities.wp_logging import logger
 
 # for embedded highlighting
@@ -66,8 +68,11 @@ class WpHighlighter(object):
     """ Class for highlighting code and returning html markup. """
 
     def __init__(
-        self, lexer_name=None, style_name=None, line_nums=False, code=None):
+        self,
+        lexer_name=None, style_name=None, line_nums=False, code=None,
+        classes=None):
             self.code = code or ''
+            self.classes = classes or []
             self.lexer_name = lexer_name if lexer_name else 'python'
             self.lexer = get_lexer_byname(self.lexer_name)
             self.style_name = style_name if style_name else 'default'
@@ -79,26 +84,33 @@ class WpHighlighter(object):
     def set_lexer(self, lexer_name):
         """ another way to set the lexer """
         trylexer = get_lexer_byname(lexer_name)
-        if trylexer:
-            self.lexer = trylexer
-            self.lexer_name = lexer_name
-        else:
-            _log.error('Bad lexer name passed: {}'.format(lexer_name))
+        self.lexer = trylexer
+        self.lexer_name = lexer_name
 
-    def highlight(self, code=None):
+    def highlight(self, code=None, classes=None):
         """ returns highlighted code in html format
             styles are not included, you must have a
             css file on hand and reference it.
         """
         if not code:
             code = self.code
+        if not classes:
+            classes = self.classes
+        # Default class for all highlighted code (for the div wrapper)
+        classlist = ['highlighted']
+        if classes:
+            # User defined classes, may override the default class.
+            classlist.extend(classes)
+
+        classtxt = ' '.join(classlist)
 
         try:
             codeh = pygments.highlight(code, self.lexer, self.formatter)
             highlighted = '\n'.join([
-                '<div class=\'highlighted\'>',
+                '<div class=\'{}\'>'.format(classtxt),
                 codeh,
                 '</div>\n'])
+
         except Exception as ex:
             _log.error('WpHighlighter.highlight() error:\n{}'.format(ex))
             highlighted = ''
@@ -158,7 +170,12 @@ def get_lexer_byname(sname):
         and can be set in one place.
     """
 
-    return lexers.get_lexer_by_name(sname, stripall=True,)
+    try:
+        lexer = lexers.get_lexer_by_name(sname, stripall=True,)
+    except ClassNotFound:
+        _log.debug('Bad lexer name: {}'.format(sname))
+        return lexers.get_lexer_by_name('text', stripall=True)
+    return lexer
 
 
 def get_lexer_fromfile(sfilename):

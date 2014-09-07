@@ -222,6 +222,7 @@ a .header:hover, a .header.featured-name:hover {
     }
 
 .wp-block {
+    // A generic div with a border radius and margin-top.
     position: relative;
     margin: 15px 0;
     @include border-radius(5px);
@@ -409,12 +410,7 @@ a.jumpto-nav {
     color: $greymain;
 }
 
-/* In-Article Ads */
-.article-ad {
-    text-align: center;
-    margin-bottom: 10px;
-    margin-top: 10px;
-}
+
 
 
 /* Navigation */
@@ -591,12 +587,22 @@ a.jumpto-nav {
     text-align: left;
     color: $greymain;
     }
-
 /* Google Ads */
-.google-ads {
+.ad-google {
     display: block;
     text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
+
+.ad-article {
+    @extend .ad-google;
+}
+
+.ad-bottom {
+    @extend .ad-google;
+}
+
 /* Donations */
 .donations {
     position: relative;

@@ -13,6 +13,9 @@ from django.conf import settings
 from django.template import loader, Template
 from django.template.base import TemplateDoesNotExist
 
+# For trimming posts.
+import lxml.html
+
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
@@ -57,12 +60,6 @@ def fix_post_list(blog_posts, **kwargs):
     max_posts = kwargs.get('max_posts', DEFAULT_MAXPOSTS)
     max_text_length = kwargs.get('max_text_length', DEFAULT_MAXLENGTH)
     max_text_lines = kwargs.get('max_text_lines', DEFAULT_MAXLINES)
-
-    # TODO: This needs to be done in the template, or somewhere else.
-    for post in blog_posts:
-        new_body = get_post_body_short(post, max_text_length, max_text_lines)
-        # set new body.
-        post.body = new_body
 
     # trim posts length
     if ((max_posts > 0) and
@@ -133,11 +130,17 @@ def get_post_body_short(post, max_text_length=None, max_text_lines=None):
         trimmed = True
 
     # trim by maximum lines
-    if ((max_text_lines > 0) and (new_body.count('\n') > max_text_lines)):
-        # needs trimming.
-        lines_ = new_body.split('\n')[:max_text_lines + 1]
-        new_body = '\n'.join(lines_)
-        trimmed = True
+    if max_text_lines > 0:
+        # Testing actual text content lines using lxml.
+        text_content = lxml.html.fromstring(new_body).text_content()
+        while '\n\n' in text_content:
+            text_content = text_content.replace('\n\n', '\n')
+        text_content = text_content.strip()
+        if text_content.count('\n') > max_text_lines:
+            # needs trimming.
+            lines_ = new_body.split('\n')[:max_text_lines + 1]
+            new_body = '\n'.join(lines_)
+            trimmed = True
 
     # trim by <br>'s
     if ((max_text_lines > 0) and (new_body.count('<br') > max_text_lines)):
