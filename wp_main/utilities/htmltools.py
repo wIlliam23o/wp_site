@@ -19,8 +19,10 @@ import base64
 
 # Fixing html fragments (from shortening blog posts and other stuff)
 from tidylib import tidy_fragment
-# These errors from tidylib will not be logged ever.
 TIDYLIB_IGNORE = (
+    # These errors from tidylib will not be logged ever.
+    # They apply mostly to whole html docs, not fragments.
+    '<head> previously mentioned',
     'inserting implicit <body>',
     'inserting missing \'title\' element',
     'missing <!DOCTYPE> declaration',
