@@ -67,6 +67,12 @@ def image_viewer(parser, token):
     return ImageViewer(images_dir)
 
 
+@register.tag
+def tracking_google(parser, token):
+    """ Renders the google tracking code. """
+    return TrackingGoogle()
+
+
 def var_quotes(s, varname=None):
     """ Make sure a string's quotes match.
         Remove quotes from string.
@@ -223,3 +229,14 @@ class ImageViewer(template.Node):
         return htmltools.render_clean(
             'home/imageviewer.html',
             context_dict=c)
+
+
+class TrackingGoogle(template.Node):
+
+    """ Renders the google tracking code from the template:
+        home/tracking_google.html
+    """
+
+    def render(self, context):
+        trackingscript = htmltools.render_clean('home/tracking_google.html')
+        return trackingscript
