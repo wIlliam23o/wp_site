@@ -130,6 +130,23 @@ p {
 ul {list-style-image: none;}
 ul.menu {padding-left: 0;}
 
+kbd {
+    // Keyboard key element
+    display: inline-block;
+    @include box-shadow((0 1px 0 rgba(0,0,0,0.2), 0 0 0 2px #fff inset));
+    @include border-radius(3px);
+    border: 1px solid #ccc;
+    text-shadow: 0 1px 0 #fff;
+    font-family: $fontsmono;
+    font-size: $fontsmall;
+    background-color: #f7f7f7;
+    color: #333;
+    line-height: 1em;
+    padding: .3em .6em;
+    margin: .1em .2em;
+    white-space: nowrap;
+}
+
 /* Cj's Text Styles */
 .header {
     text-shadow: $shadowtext;

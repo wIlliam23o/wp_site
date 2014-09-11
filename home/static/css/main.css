@@ -120,6 +120,29 @@ ul {
 ul.menu {
   padding-left: 0; }
 
+kbd {
+  display: inline-block;
+  -webkit-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px white inset;
+  -moz-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px white inset;
+  -ms-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px white inset;
+  -o-box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px white inset;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px white inset;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  -o-border-radius: 3px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
+  text-shadow: 0 1px 0 #fff;
+  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+  font-size: 0.8em;
+  background-color: #f7f7f7;
+  color: #333;
+  line-height: 1em;
+  padding: .3em .6em;
+  margin: .1em .2em;
+  white-space: nowrap; }
+
 /* Cj's Text Styles */
 .header {
   text-shadow: 2px 2px 4px black;

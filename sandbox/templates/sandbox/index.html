@@ -3,6 +3,19 @@
 
 {% block extrastyle %}
     <link type='text/css' rel='stylesheet' href='/static/css/sandbox.min.css'/>
+    <style type='text/css'>
+        #keyboard-test {
+            display: inline-block;
+            position: relative;
+            background: white;
+            margin-top: 10px;
+            border-radius: 5px;
+            border-width: 1px;
+            border-color: lightgrey;
+            border-style: solid;
+            padding: 5px;
+        }
+    </style>
 {% endblock %}
 
 {% block javascript %}
@@ -13,6 +26,17 @@
 {% block content %}
     <div id='sandbox'>
         No data loaded yet.
+    </div>
+    <div id='keyboard-test'>
+        <div>
+            Press <kbd><kbd>Ctrl</kbd>+<kbd>Enter</kbd></kbd>
+        </div>
+        <div>
+            ...and then <kbd><kbd>Meta</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd></kbd>
+        </div>
+        <div>
+            and now you can do <kbd>Alt</kbd> + <kbd>F4</kbd>
+        </div>
     </div>
 {% endblock %}
 
