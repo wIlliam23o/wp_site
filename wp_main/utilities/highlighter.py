@@ -411,7 +411,7 @@ def highlight_inline(scode, tag='pre'):
                     # the tag. like: <pre class='test' style='breaker'>
                     # Code will not be highlighted.
                     _log.error('Unable to parse class attribute from '
-                               '{}'.format(strim))
+                               '{}'.format(sline))
                 else:
                     # check for name fixing
                     # names can start with '_' like '_c' in case they share
