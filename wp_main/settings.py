@@ -278,9 +278,6 @@ INSTALLED_APPS = (
     # singleton configuration for home app.
     'solo',
 
-    # database migrations.
-    'south',
-
     # for making get_user_agent(request) available.
     'wp_user_agents',
     # local apps
