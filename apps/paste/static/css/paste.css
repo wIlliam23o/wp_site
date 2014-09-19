@@ -382,6 +382,18 @@ a .paste-api-section-paragraph {
   a .paste-api-section-paragraph:hover {
     color: #2358a6; }
 
+.paste-api-section-text {
+  font-size: 1em;
+  color: #4d4d4d;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  margin-left: 15px; }
+
+.paste-api-section-text-note {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-size: 0.8em; }
+
 .paste-api-section-codelabel {
   font-size: 0.75em;
   margin-top: 10px;

@@ -118,6 +118,10 @@ p {
     margin-bottom: 10px;
 }
 
+.clearfix {
+    display: block;
+}
+
 .paragraph {
     // Putting a div inside a p breaks some of the highlight-code formatting.
     // The fix is using a div, so the formatted div will flow correctly.

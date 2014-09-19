@@ -483,6 +483,20 @@ a .paste-api-section-paragraph {
     }
 }
 
+.paste-api-section-text {
+    font-size: $fontnormal;
+    color: $greydark;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    margin-left: 15px;
+}
+
+.paste-api-section-text-note {
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-size: $fontsmall;
+}
+
 .paste-api-section-codelabel {
     font-size: $fontsmaller;
     margin-top: 10px;

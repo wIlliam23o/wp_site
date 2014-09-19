@@ -22,6 +22,13 @@ from tidylib import tidy_fragment
 TIDYLIB_IGNORE = (
     # These errors from tidylib will not be logged ever.
     # They apply mostly to whole html docs, not fragments.
+    # Others are expected after splitting html content up into small chunks.
+
+    # Caused by splitting. '<div class="test">' -> '"test">'
+    '<div> unexpected or duplicate quote mark',
+    # Caused by splitting. '<div> attribute lacks value'
+    'lacks value',
+    # These don't apply to html fragments.
     '<head> previously mentioned',
     'inserting implicit <body>',
     'inserting missing \'title\' element',
