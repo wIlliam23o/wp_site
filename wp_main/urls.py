@@ -9,8 +9,9 @@ from home import views as homeviews
 from wp_main.sitemaps import sitemaps
 # get robots.txt
 from wp_main.robots import robots
-# enable the admin:
+# Used for django.contrib.admin.site.urls
 from django.contrib import admin
+# Django 1.7 doesn't need this.
 admin.autodiscover()
 
 # Main Site (home)
@@ -123,16 +124,11 @@ urlpatterns += patterns(
 # Admin/Other
 urlpatterns += patterns(
     '',
-    # Examples:
-    # url(r'^$', 'wp_main.home.views.index', name='home'),
-    # url(r'^wp_main/', include('wp_main.foo.urls')),
-
-    # Uncomment the admin/doc line below
-    # to enable admin documentation:
+    # Admin docs.
     url(r'^admin/doc/?',
         include('django.contrib.admindocs.urls')),
 
-    # Uncomment the next line to enable the admin:
+    # Default admin site.
     url(r'^admin/?',
         include(admin.site.urls)),
 )
