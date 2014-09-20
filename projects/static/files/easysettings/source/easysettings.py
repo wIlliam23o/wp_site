@@ -24,7 +24,7 @@ Created on Jan 16, 2013
 @author: Christopher Welborn
 '''
 # easy settings version
-__version__ = '1.9.3-2'
+__version__ = '1.9.3-5'
 
 # file related imports
 import sys
@@ -441,6 +441,82 @@ class EasySettings(object):
         if default is NoValue:
             default = ''
         return self.settings.get(soption, default)
+
+    def get_bool(self, option, default=False, strict=False):
+        """ Parses a setting as a boolean, mostly for string values.
+            This is not really needed, because if you set('opt', False),
+            you will get('opt') == False.
+            EasySettings already saves actual boolean values.
+
+            This is for when you want a user friendly string setting, and
+            solves the bool('False') != False problem.
+            It also works with non string values, calling bool(val) instead.
+
+            Arguments:
+                option   : Setting option name to retrieve.
+                default  : Default value to return when the setting hasn't been
+                           set yet. Can be anything.
+                strict   : Strict mode, True string values must be in the
+                           the allowed values ('true', 'yes', 'on', '1').
+                           Values are not case-sensitive.
+                           When turned on, invalid values return the default.
+                           When turned off, anything that is not a False
+                           string value is accepted as True.
+                           Default: False
+            Example:
+                settings.set('opt', 'false')
+                assert settings.get_bool('opt') == False
+
+                settings.set('opt', '0')
+                assert settings.get_bool('opt') == False
+
+                settings.set('opt', 'foo')
+                assert settings.get_bool('opt') == True
+                assert settings.get_bool('opt', strict=True) == None
+
+            Map of True/False values for strings (case-insensitive):
+                False:
+                    'false', 'no', 'off', '0', ''
+                when 'strict' is True:
+                    True:
+                        'true', 'yes', 'on', '1'
+                when 'strict' is False (default):
+                    True:
+                        ..anything else. ('true', 'yes', 'on', '1' included.)
+
+            If the value isn't a string (like: settings.set('opt', 123)),
+            bool(value) is returned.
+
+            Returns True, False, or possibly None when strict mode is used.
+        """
+        optval = self.get(option, NoValue)
+        if optval is NoValue:
+            return default
+
+        truevalues = ('true', 'yes', 'on', '1')
+        falsevalues = ('false', 'no', 'off', '0')
+
+        if hasattr(optval, 'lower'):
+            optval = optval.lower()
+
+            # String values. Empty string is False.
+            if not optval:
+                return False
+
+            if strict:
+                # Strict mode
+                if optval in truevalues:
+                    return True
+                elif optval in falsevalues:
+                    return False
+                # Not an acceptable string value.
+                return default
+
+            # Non-strict mode.
+            return optval not in falsevalues
+
+        # Not a string value.
+        return bool(optval)
 
     def remove(self, option):
         """ Remove an option from the current settings

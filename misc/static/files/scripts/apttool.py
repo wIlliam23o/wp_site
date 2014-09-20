@@ -35,7 +35,7 @@ except ImportError as exdoc:
           'try: pip install docopt.\n\n{}'.format(exdoc))
     sys.exit(1)
 
-_VERSION = '0.2.3'
+_VERSION = '0.2.3-1'
 _NAME = 'AptTool'
 
 # Get short script name.
@@ -839,7 +839,9 @@ def print_installed_files(pkgname, execs_only=False):
     files = sorted(package.installed_files)
     if execs_only:
         # Show executables only (/bin directory files.)
-        files = [s for s in files if '/bin' in s]
+        # Returns true for a path if it looks like an executable.
+        is_exec = lambda s: ('/bin' in s) and (not s.endswith('/bin'))
+        files = [s for s in files if is_exec(s)]
         label = 'executables'
     else:
         # Show installed files.
