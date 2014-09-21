@@ -21,12 +21,12 @@ USAGE = """wrun.py
     Usage:
         wrun.py -l
         wrun.py scriptname [scriptargs]
-    
+
     Options:
         scriptname  : Name of script to run, or part of the name.
                       * Matches first script starting with 'scriptname'
         scriptargs  : One, or many, arguments to pass to the script.
-        
+
         -h,--help   : Show this message.
         -l,--list   : Lists all scripts found in script directory.
 """
@@ -465,9 +465,9 @@ def print_proc_output(proc):
     """ Prints output from a subprocess.Popen() proc.
     """
     if not proc:
+        print('print_proc_output({}): No process!'.format(proc))
         return 1
 
-    # .decode is needed for py3 compatibility (for the future.)
     # Print any stdout.
     for line in iter(proc.stdout.readline, ''):
         if line:
@@ -475,16 +475,14 @@ def print_proc_output(proc):
         else:
             break
     # Print any stderr.
-    haderr = False
     for eline in iter(proc.stderr.readline, ''):
         if eline:
-            haderr = True
             print(eline.decode('utf-8').strip('\n'))
         else:
             break
 
-    if haderr:
-        return 1
+    if proc.returncode is not None:
+        return proc.returncode
     return 0
 
 
