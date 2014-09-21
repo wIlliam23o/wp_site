@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!python3_nowarnings.sh
 # -*- coding: utf-8 -*-
 
 """wrun.py
@@ -52,10 +52,11 @@ else:
 
 # Executables and acceptable file extensions
 EXECS = {
-    '.py': 'python3',
-    '.sh': 'bash',
-    '.pl': 'perl',
-    '.js': 'node',  # experimental
+    # TODO: Remove -W ignore when Django 1.7+ gets it's stuff under control.
+    '.py': ('python3', '-W', 'ignore'),
+    '.sh': ('bash',),
+    '.pl': ('perl',),
+    '.js': ('node',),  # experimental
 }
 
 
@@ -238,7 +239,8 @@ def get_scripts():
                 if fname.startswith('__init__'):
                     continue
                 # Add files with acceptable extensions.
-                if fname[-3:] in execexts:
+                fext = os.path.splitext(fname)[-1]
+                if fext in execexts:
                     scripts.append(os.path.join(scriptdir, fname))
 
         except (IOError, OSError) as exio:
@@ -325,13 +327,17 @@ def shell_script(scriptfile, args=None):
     """
     # retrieve executable for this script.
     try:
-        cmd = EXECS[scriptfile[-3:]]
+        cmdargs = EXECS[scriptfile[-3:]]
     except Exception as ex:
         print_fail('Cannot locate executable for this script: '
                    '{}'.format(scriptfile),
                    exc=ex)
     # build command list for subprocess
-    cmdlst = [cmd, scriptfile] + args if args else [cmd, scriptfile]
+    cmdlst = list(cmdargs)
+    cmdlst.append(scriptfile)
+    if args:
+        cmdlst.extend(args)
+
     # run/create process
     print('\nRunning: {}\n'.format(' '.join(cmdlst)))
     # Shell the process, returns the subprocess.Popen() proc object.

@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!python3_nowarnings.sh
+
 import os
 import sys
 
