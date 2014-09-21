@@ -92,6 +92,10 @@ def initialize_django():
     if not scripts_dir in sys.path:
         sys.path.insert(0, scripts_dir)
 
+    # Required since 1.7
+    import django
+    django.setup()
+
     # Success
     initialized = True
     return True
