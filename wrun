@@ -1,4 +1,4 @@
-#!python3_nowarnings.sh
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """wrun.py
@@ -50,10 +50,9 @@ else:
     print('\nUnable to locate scripts dir!: {}'.format(SCRIPTSDIR))
     sys.exit(1)
 
-# Executables and acceptable file extensions
+# Executable cmd with args and acceptable file extensions
 EXECS = {
-    # TODO: Remove -W ignore when Django 1.7+ gets it's stuff under control.
-    '.py': ('python3', '-W', 'ignore'),
+    '.py': ('python3',),
     '.sh': ('bash',),
     '.pl': ('perl',),
     '.js': ('node',),  # experimental
