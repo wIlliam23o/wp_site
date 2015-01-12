@@ -208,9 +208,10 @@ def get_object_byname(partialname):
     objectinfo = {}
     # Build objects, search key, full key match.
     for model_, searchkeys, orderby in models:
-        objectinfo[model_.__name__] = {'objects': get_objects_safe(model_, orderby=orderby),
-                                       'getargs': searchkeys,
-                                       }
+        objectinfo[model_.__name__] = {
+            'objects': get_objects_safe(model_, orderby=orderby),
+            'getargs': searchkeys,
+        }
     # Try full match using .get()
     for modelname in objectinfo.keys():
         for searchkey in objectinfo[modelname]['getargs']:
