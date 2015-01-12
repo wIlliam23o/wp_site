@@ -295,12 +295,11 @@ def highlight_python(scontent):
 @register.filter
 def insert_video(videourl, posterimg=None, id_=None):
     """ Return a Video.js video player with a url to a video.
-        video.css and video.js must be included in <head>!
-        ****************************************************************
-        ** This has not been tested, and won't be until
-        ** the project, blog, etc. pages use template-rendering to load.
-        ** see: htmltools.load_html_file()
-        ****************************************************************
+
+        video.css and video.js must be included in < head >!
+        This has not been tested, and won't be until
+        the project, blog, etc. pages use template-rendering to load.
+        see: htmltools.load_html_file()
     """
     if not videourl:
         return ''
@@ -448,8 +447,8 @@ def is_test_site(request_object):
         returns True/False.
     """
     if (request_object is None or
-       request_object.META is None or
-       (not request_object)):
+            request_object.META is None or
+            (not request_object)):
         # happens on errors,
         # Should always do what the live site does in case of error.
         return False
