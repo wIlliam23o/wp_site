@@ -40,10 +40,9 @@ from django.template import RequestContext, Context, loader
 from django.template.base import TemplateDoesNotExist
 from django.conf import settings
 
-# Basic utilities
-from wp_main.utilities import utilities
-# Code highlighting
-from wp_main.utilities import highlighter
+# Basic utilities and highlighting
+from wp_main.utilities import (highlighter, utilities)
+
 # Log
 from wp_main.utilities.wp_logging import logger
 _log = logger("utilities.htmltools").log
@@ -647,7 +646,6 @@ def filter_tidylib_errors(errortext):
     """
     filtered = []
     for line in errortext.split('\n'):
-        keepline = True
         for ignored in TIDYLIB_IGNORE:
             if ignored in line:
                 break
@@ -859,8 +857,8 @@ def fix_p_spaces(source_string):
                     sline += '&nbsp;'
         # start of p tag? (the <p> line itself will not be processed.)
         if (strim.startswith('<p>') or
-           strim.startswith("<pid") or
-           strim.startswith("<pclass")):
+                strim.startswith("<pid") or
+                strim.startswith("<pclass")):
             inside_p = True
 
         # append line to list, modified or not.
@@ -956,8 +954,8 @@ def get_screenshots(images_dir, noscript_image=None):
     screenshots = render_clean(
         'home/imageviewer.html',
         context_dict={
-        'images': good_pics,
-        'noscript_image': noscript_image,
+            'images': good_pics,
+            'noscript_image': noscript_image,
         })
     return screenshots
 
@@ -1127,7 +1125,7 @@ def remove_newlines(source_string):
             sline_lower = sline.lower()
             # start of pre tag
             if (("<pre" in sline_lower) or
-               ("<script" in sline_lower)):
+                    ("<script" in sline_lower)):
                 in_skipped = True
             # process line.
             if in_skipped:
@@ -1138,7 +1136,7 @@ def remove_newlines(source_string):
                 final_output.append(sline.replace('\n', ''))
             # end of tag
             if (("</pre>" in sline_lower) or
-               ("</script>" in sline_lower)):
+                    ("</script>" in sline_lower)):
                 in_skipped = False
     else:
         final_output = [source_string]
