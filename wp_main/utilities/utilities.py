@@ -193,8 +193,6 @@ def get_objects_enabled(objects_):
 
 def get_object_safe(objects_, **kwargs):
     """ does a mymodel.objects.get(kwargs),
-        Other Keyword Arguments:
-
         returns None on error.
     """
     if hasattr(objects_, 'objects'):
@@ -489,7 +487,7 @@ def slice_list(list_, starting_index=0, max_items=-1):
 
     sliced_ = list_[starting_index:]
     if ((max_items > 0) and
-       (len(sliced_) > max_items)):
+            (len(sliced_) > max_items)):
         return sliced_[:max_items]
     else:
         return sliced_
