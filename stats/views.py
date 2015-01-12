@@ -7,8 +7,10 @@ from django.contrib.auth.decorators import login_required
 
 from wp_main.utilities import (
     responses,
-    utilities
+    utilities,
+    wp_logging
 )
+_log = wp_logging.logger('stats').log
 
 
 @login_required(login_url='/login')

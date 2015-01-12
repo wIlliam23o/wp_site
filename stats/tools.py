@@ -3,6 +3,32 @@
     (downloads, views, etc.)
 """
 
+from wp_main.utilities import wp_logging
+_log = wp_logging.logger('stats.tools').log
+
+
+def validate_orderby(modelobj, orderby):
+    """ Make sure this orderby is valid for this modelobj.
+        It knows about the  '-orderby' style.
+        Returns True if the orderby is good, else False.
+    """
+
+    try:
+        tempobj = modelobj.objects.create()
+    except Exception as ex:
+        if hasattr(modelobj, '__name__'):
+            mname = modelobj.__name__
+        else:
+            mname = 'unknown model'
+        errmsg = '\nUnable to create temp object for: {}\n{}'
+        _log.error(errmsg.format(mname, ex))
+        return None
+    if orderby.startswith('-'):
+        orderby = orderby.strip('-')
+    goodorderby = hasattr(tempobj, orderby)
+    tempobj.delete()
+    return goodorderby
+
 
 class StatsGroup(object):
 
