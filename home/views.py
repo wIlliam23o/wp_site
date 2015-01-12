@@ -14,7 +14,6 @@ from wp_main.utilities import (
     htmltools,
     tweets
 )
-from scripts import wpstats
 
 # logging
 from wp_main.utilities.wp_logging import logger
@@ -61,21 +60,6 @@ def index(request):
         'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('home/index.html', context)
-
-
-def makestats(name, getfunc, orderby=None):
-    """ Create a StatsInfo() object from a name, get_info_func, and orderby
-        Arguments:
-            name     : Name to display for these stats.
-            getfunc  : Function that returns a print_block() with the stats.
-            orderby  : Sort order for the objects gathered.
-                       Defaults to: -download_count
-    """
-
-    if not orderby:
-        orderby = '-download_count'
-    oinfo = getfunc(orderby=orderby)
-    return wpstats.StatsInfo(name, convert_pblock(oinfo))
 
 
 def view_403(request):
@@ -245,43 +229,6 @@ def view_scriptkids(request):
     }
     # return formatted template.
     return responses.clean_response('home/scriptkids.html', context)
-
-
-@login_required(login_url='/login')
-def view_stats(request):
-    """ return stats info for projects, blog posts, and file trackers.
-        should require admin permissions.
-    """
-
-    if request.user.is_authenticated():
-        # gather print_block stats from wpstats and convert to lists of str.
-        # for projects, misc objects, blog posts, and file trackers...
-        projectinfo = makestats('Project', wpstats.get_projects_info)
-        miscinfo = makestats('Misc', wpstats.get_misc_info)
-        postinfo = makestats('Posts', wpstats.get_blogs_info, '-view_count')
-        fileinfo = makestats('File Trackers', wpstats.get_files_info)
-
-        # Add them to a collection.
-        stats = wpstats.StatsCollection(projectinfo,
-                                        miscinfo,
-                                        postinfo,
-                                        fileinfo)
-        # Build template variables...
-        context = {
-            'request': request,
-            'extra_style_link_list': [
-                utilities.get_browser_style(request),
-                '/static/css/stats.min.css'],
-            'stats': stats,
-        }
-        return responses.clean_response('home/stats.html', context)
-
-    # Not authenticated, return the bad login page. No stats for you!
-    context = {
-        'request': request,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
-    }
-    return responses.clean_response('home/badlogin.html', context)
 
 
 def view_raiseerror(request):
