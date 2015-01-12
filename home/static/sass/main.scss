@@ -1043,18 +1043,6 @@ code, samp {
     display: block;
 }
 
-/* Stats page */
-.stats-block {
-    display: block;
-
-}
-
-.stats-lines {
-    @include border-radius(5px);
-    background: $whitedull;
-    font-family: $fontsmono;
-    padding: 20px;
-}
 
 /* Test-site only stuff */
 #test-site-box {
