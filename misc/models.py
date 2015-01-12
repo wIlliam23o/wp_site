@@ -15,7 +15,8 @@ class wp_misc(models.Model):
         max_length=250,
         help_text=('Name for this misc object (must be unique)'))
 
-    # Alias for this object (usually name.lower().replace(' ', ''), used for building urls)
+    # Alias for this object (usually name.lower().replace(' ', ''),
+    # used for building urls)
     # Prepopulated using Django admin in the fashion described above.
     alias = models.CharField(
         blank=False,
@@ -80,7 +81,8 @@ class wp_misc(models.Model):
         choices=MiscTypes.fieldchoices,
         help_text=('Type of misc object (snippet, code, archive, text, etc.)'))
 
-    # language type for this misc object (can be None, Python, Python2, Python3, Bash, C, etc.)
+    # language type for this misc object
+    # (can be None, Python, Python2, Python3, Bash, C, etc.)
     language = models.CharField(
         blank=False,
         default='None',
@@ -113,7 +115,6 @@ class wp_misc(models.Model):
 
     # admin stuff
     date_hierarchy = 'publish_date'
-    get_latest_by = 'publish_date'
 
     def __unicode__(self):
         """ returns string/unicode representation of project """
@@ -132,6 +133,7 @@ class wp_misc(models.Model):
 
     # Meta info for the admin site
     class Meta:
+        get_latest_by = 'publish_date'
         ordering = ['name']
         verbose_name = "Misc. Object"
         verbose_name_plural = "Misc. Objects"
