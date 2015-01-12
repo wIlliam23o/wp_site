@@ -1322,20 +1322,6 @@ code, samp {
 #login-user, #login-pw {
   display: block; }
 
-/* Stats page */
-.stats-block {
-  display: block; }
-
-.stats-lines {
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  -ms-border-radius: 5px;
-  -o-border-radius: 5px;
-  border-radius: 5px;
-  background: #fafafa;
-  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
-  padding: 20px; }
-
 /* Test-site only stuff */
 #test-site-box {
   -webkit-border-radius: 15px;

@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block extrastyle %}
-    {% block.super %}
+    {{ block.super }}
     <link type='text/css' rel='stylesheet' href='/static/css/stats.min.css'/>
 {% endblock %}
 
@@ -32,20 +32,20 @@
                             {{ statitem.name }}
                         </div>
                         <div class='stats-item-attrs'>
-                            {% if statitem.download_count %}
+                            {% if statitem.download_count or statitem.download_count == 0%}
                                 <div class='stats-item-attr'>
                                     <div class='stats-item-attr-label'>
-                                       download count:
+                                       downloads:
                                     </div>
                                     <div class='stats-item-attr-value'>
                                         {{ statitem.download_count }}
                                     </div>
                                 </div>
                             {% endif %}
-                            {% if statitem.view_count %}
+                            {% if statitem.view_count or statitem.view_count == 0 %}
                                 <div class='stats-item-attr'>
                                     <div class='stats-item-attr-label'>
-                                        view count:
+                                        views:
                                     </div>
                                     <div class='stats-item-attr-value'>
                                         {{ statitem.view_count }}
