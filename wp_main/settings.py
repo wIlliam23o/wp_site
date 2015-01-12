@@ -293,6 +293,7 @@ INSTALLED_APPS = (
     'apps',  # handles urls for all sub-apps.
     'apps.phonewords',
     'apps.paste',
+    'stats'  # provides stats for all models.
 
 )
 
