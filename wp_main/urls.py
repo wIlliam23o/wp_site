@@ -5,6 +5,7 @@ from django.conf.urls import patterns, include, url
 from django.conf import settings
 # main views
 from home import views as homeviews
+
 # get sitemaps
 from wp_main.sitemaps import sitemaps
 # get robots.txt
@@ -39,9 +40,6 @@ urlpatterns = patterns(
     # ip html
     url(r'^ip\.html?$',
         homeviews.view_ip),
-    # stats info
-    url(r'^stats\.html$',
-        homeviews.view_stats),
     # login processor
     url(settings.LOGIN_URL_REGEX,
         'django.contrib.auth.views.login'),
@@ -121,6 +119,13 @@ urlpatterns += patterns(
         include('sandbox.urls'))
 )
 
+# Stats views.
+urlpatterns += patterns(
+    '',
+    # stats info
+    url(r'^[Ss]tats',
+        include('stats.urls'))
+)
 # Admin/Other
 urlpatterns += patterns(
     '',

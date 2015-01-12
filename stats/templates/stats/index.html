@@ -7,7 +7,61 @@
     <meta name="description" content="Stats for welborn productions projects, apps, files, etc.">
 {% endblock %}
 
+{% block extrastyle %}
+    {% block.super %}
+    <link type='text/css' rel='stylesheet' href='/static/css/stats.min.css'/>
+{% endblock %}
+
 <!-- Build Stats Overview -->
 {% block content %}
-    <span>No Stats Yet.</span>
+    {% if stats %}
+        <div class='stats-header'>
+            <h3 class='header'>
+                Stats {% if label %}for {{ label }}{% endif %}
+            </h3>
+        </div>
+        {% for statgroup in stats %}
+            <div class='stats-group'>
+                <div class='stats-group-name'>
+                    {{ statgroup.name }}
+                </div>
+
+                {% for statitem in statgroup.items %}
+                    <div class='stats-item'>
+                        <div class='stats-item-name'>
+                            {{ statitem.name }}
+                        </div>
+                        <div class='stats-item-attrs'>
+                            {% if statitem.download_count %}
+                                <div class='stats-item-attr'>
+                                    <div class='stats-item-attr-label'>
+                                       download count:
+                                    </div>
+                                    <div class='stats-item-attr-value'>
+                                        {{ statitem.download_count }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if statitem.view_count %}
+                                <div class='stats-item-attr'>
+                                    <div class='stats-item-attr-label'>
+                                        view count:
+                                    </div>
+                                    <div class='stats-item-attr-value'>
+                                        {{ statitem.view_count }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+        {% endfor %}
+
+    {% else %}
+        <h3 class='header'>
+            No stats available.
+        </h3>
+    {% endif %}
 {% endblock %}

@@ -1,0 +1,41 @@
+@import 'welbornprod';
+
+.stats-group {
+    display: block;
+    background: $whitedull;
+    @include border-radius(5px);
+    border-width: 1px;
+    border-color: $bordermain;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.stats-group-name {
+    display: block;
+    color: $bluemain;
+}
+
+.stats-item {
+    display: block;
+
+}
+
+.stats-item-name {
+    display: block;
+}
+
+.stats-item-attrs {
+    display: block;
+}
+
+.stats-item-attr {
+    display: block;
+}
+
+.stats-item-attr-label {
+    display: inline-block;
+}
+
+.stats-item-attr-value {
+    display: inline-block;
+}
