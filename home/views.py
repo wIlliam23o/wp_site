@@ -1,5 +1,4 @@
 # Version info
-from sys import version as sysversion
 from django.utils.version import get_version as get_django_version
 from django.conf import settings
 
@@ -9,10 +8,12 @@ from django.utils.safestring import mark_safe, mark_for_escaping
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 # various welbornprod tools
-from wp_main.utilities import utilities
-from wp_main.utilities import responses
-from wp_main.utilities import htmltools
-from wp_main.utilities import tweets
+from wp_main.utilities import (
+    utilities,
+    responses,
+    htmltools,
+    tweets
+)
 from scripts import wpstats
 
 # logging
@@ -128,8 +129,8 @@ def view_debug(request):
         'siteversion': getattr(settings, 'SITE_VERSION', ''),
         'siteversionnum': getattr(settings, 'WPVERSION', ''),
         'extra_style_link_list': [
-        utilities.get_browser_style(request),
-        '/static/css/highlighter.min.css'],
+            utilities.get_browser_style(request),
+            '/static/css/highlighter.min.css'],
     }
     return responses.clean_response('home/debug.html', context)
 
@@ -211,7 +212,7 @@ def view_login(request):
 
 def view_scriptkids(request):
     """ return my script kiddie view
-        (for people trying to access wordpress-login pages and stuff like that.)
+        for people trying to access wordpress-login pages and stuff like that.
     """
 
     # get ip if possible.
@@ -253,7 +254,7 @@ def view_stats(request):
     """
 
     if request.user.is_authenticated():
-        # gather print_block stats from wpstats and convert to lists of strings.
+        # gather print_block stats from wpstats and convert to lists of str.
         # for projects, misc objects, blog posts, and file trackers...
         projectinfo = makestats('Project', wpstats.get_projects_info)
         miscinfo = makestats('Misc', wpstats.get_misc_info)
