@@ -1,3 +1,4 @@
-from django.test import TestCase
-
-# Create your tests here.
+""" Welborn Productions - Stats - Tests
+    todo: Add some tests for the stats app.
+"""
+#from django.test import TestCase
