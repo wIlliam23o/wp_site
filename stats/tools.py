@@ -26,13 +26,15 @@ def get_models_info(modelinfo):
     for model, modelopts in modelinfo.items():
         modelgrp = get_model_info(
             model,
-            orderby=modelopts.get('orderby', None))
+            orderby=modelopts.get('orderby', None),
+            displayattr=modelopts.get('displayattr', None),
+            displayattrsep=modelopts.get('displayattrsep', None))
         if modelgrp:
             allstats.append(modelgrp)
     return sorted(allstats, key=lambda sgrp: str(sgrp.name))
 
 
-def get_model_info(model, orderby=None):
+def get_model_info(model, orderby=None, displayattr=None, displayattrsep=None):
     """ Retrieves info about a model's objects.
         Returns a StatsGroup on success, or None on failure.
     """
@@ -54,7 +56,10 @@ def get_model_info(model, orderby=None):
 
     try:
         for obj in get_objects():
-            statitem = get_object_info(obj)
+            statitem = get_object_info(
+                obj,
+                displayattr=displayattr,
+                displayattrsep=displayattrsep)
             if statitem:
                 stats.items.append(statitem)
     except Exception as ex:
@@ -63,7 +68,7 @@ def get_model_info(model, orderby=None):
     return stats if stats else None
 
 
-def get_object_info(obj):
+def get_object_info(obj, displayattr=None, displayattrsep=None):
     """ Retrieves a single objects info.
         Returns a StatsItem (with name, download_count, view_count).
     """
@@ -71,11 +76,23 @@ def get_object_info(obj):
     dlcount = getattr(obj, 'download_count', None)
     viewcount = getattr(obj, 'view_count', None)
     name = None
-    # The order of these attributes matters. (we want shortname before name)
-    for obj_id_attr in ('shortname', 'slug', 'name'):
-        name = getattr(obj, obj_id_attr, None)
-        if name:
-            break
+    if displayattr:
+        if isinstance(displayattr, (list, tuple)):
+            name = ''
+            sep = ' ' if displayattrsep is None else str(displayattrsep)
+            for attr in displayattr:
+                if name:
+                    name = sep.join((name, getattr(obj, attr, '')))
+                else:
+                    name = getattr(obj, attr, '')
+        else:
+            name = getattr(obj, displayattr, None)
+    if not name:
+        # The order of these attributes matters. (shortname before name)
+        for obj_id_attr in ('shortname', 'slug', 'name', 'title'):
+            name = getattr(obj, obj_id_attr, None)
+            if name:
+                break
     else:
         _log.error('Object without a name!: {}'.format(obj))
     return StatsItem(name=name, download_count=dlcount, view_count=viewcount)
@@ -115,6 +132,11 @@ class _NoValue(object):
         """ NoValue is like None, bool(NoValue) is always False. """
         return False
 
+    def __repr__(self):
+        return 'NoValue'
+
+    def __str__(self):
+        return self.__repr__()
 NoValue = _NoValue()
 
 

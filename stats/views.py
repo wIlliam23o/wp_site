@@ -6,6 +6,7 @@
 from django.contrib.auth.decorators import login_required
 
 from apps.models import wp_app
+from apps.paste.models import wp_paste
 from blogger.models import wp_blog
 from downloads.models import file_tracker
 from misc.models import wp_misc
@@ -39,6 +40,10 @@ def view_index(request):
         wp_app: {'orderby': '-view_count'},
         wp_blog: {'orderby': '-view_count'},
         wp_misc: {'orderby': '-download_count'},
+        wp_paste: {
+            'orderby': '-view_count',
+            'displayattr': ('paste_id', 'title'),
+            'displayattrsep': ' - '},
         wp_project: {'orderby': '-download_count'}
     }
     context = {
