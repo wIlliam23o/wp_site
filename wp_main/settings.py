@@ -31,6 +31,7 @@ SECRET_BAN_FILE = os.path.join(BASE_DIR, 'wp_banned.lst')
 # Load secretive settings.
 SECRETS = settings_local.SecretSettings(BASE_DIR)
 # Server/Site info.
+ALLOWED_HOSTS = SECRETS.settings['allowed_hosts']
 SECRET_KEY = SECRETS.settings['secret_key']
 SITE_URL = SECRETS.site_url
 SITE_VERSION = SECRETS.site_info['site_version']
