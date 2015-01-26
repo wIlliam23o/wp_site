@@ -441,14 +441,12 @@ def is_staff(request):
 
 
 @register.filter
-def is_test_site(request_object):
+def is_test_site(request):
     """ determines whether or not the site is a test-server.
         looks for 'test.welbornprod' domains.
         returns True/False.
     """
-    if (request_object is None or
-            request_object.META is None or
-            (not request_object)):
+    if (not request) or (not getattr(request, 'META', None)):
         # happens on errors,
         # Should always do what the live site does in case of error.
         return False
@@ -456,10 +454,11 @@ def is_test_site(request_object):
     # Get current server name for this instance.
     # Could be the live server, test server, or local server
     # the local server_name changes depending on where it's accessed from.
-    server_name = request_object.META['SERVER_NAME']
+    server_name = request.META.get('SERVER_NAME', '')
 
-    return (server_name.startswith('test.') or      # remote test site
-            (server_name in settings.INTERNAL_IPS))  # local dev
+    return (
+        server_name.startswith('test.') or       # remote test site
+        (server_name in settings.INTERNAL_IPS))  # local dev
 
 
 @register.filter
