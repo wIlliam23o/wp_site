@@ -13,7 +13,10 @@ import os
 import os.path
 import unittest
 import unittest.main
-from scripts import wpswitch
+try:
+    from scripts import wpswitch
+except ImportError:
+    import wpswitch
 # Make the wpswitch module quiet.
 wpswitch.printerror = lambda s: None
 
@@ -36,7 +39,8 @@ test_switches_target.txt|testnogroupswitch|True,False|testnogroupswitch =|a swit
 [/testgroup2]
 
 """
-# Line from test_data_local (just here so split() doesn't have to be used more than once on test data)
+# Line from test_data_local (just here so split() doesn't have to be used
+# more than once on test data)
 test_lines_local = test_data_local.split('\n')
 
 
@@ -60,7 +64,8 @@ try:
         ftestconf.write("okay")
         USE_TEST_CONF = True
 except Exception as exio:
-    print("Cannot create temporary test conf!: " + TEST_CONF + '\n' + str(exio))
+    print("Cannot create temporary test conf!: " +
+          TEST_CONF + '\n' + str(exio))
     USE_TEST_CONF = False
 
 # create a valid switch manually
@@ -87,10 +92,12 @@ class test_wpswitch(unittest.TestCase):
                     self.created_test_conf = True
                     # print "setUp: created test conf: " + TEST_CONF
             except (Exception, OSError, IOError) as exio:
-                print("setUp: cannot create test conf!: " + TEST_CONF + '\n' + str(exio))
+                print(
+                    "setUp: cannot create test conf!: " + TEST_CONF + '\n' + str(exio))
                 self.created_test_conf = False
 
-        # Load switches for these tests to use (also tests whether they can be loaded)
+        # Load switches for these tests to use (also tests whether they can be
+        # loaded)
         self.switches = wpswitch.read_lines(test_lines_local)
         self.assertIsNotNone(self.switches,
                              msg="testCanLoadList: read_lines() returned None")
@@ -106,9 +113,11 @@ class test_wpswitch(unittest.TestCase):
                 os.remove(TEST_CONF)
                 #print("tearDown: removed test conf: " + TEST_CONF)
             except (Exception, OSError, IOError) as exio:
-                print("tearDown: cannot remove temporary switches.conf!: " + TEST_CONF + '\n' + str(exio))
+                print("tearDown: cannot remove temporary switches.conf!: " +
+                      TEST_CONF + '\n' + str(exio))
         else:
-            print("tearDown: self.created_test_conf = False, no file will be removed.")
+            print(
+                "tearDown: self.created_test_conf = False, no file will be removed.")
 
     def testParseDataEqualsSwitchStr(self):
         """ ....parse_switchdata() should create a valid switch from a get_switch_str() """
@@ -150,7 +159,8 @@ class test_wpswitch(unittest.TestCase):
                              msg="testFindSwitchIsRegEx: switches is None, could not read_lines()")
         self.assertNotEqual(self.switches, [],
                             msg="testFindSwitchIsRegEx: switches is empty, read_lines() failed")
-        regexswitch = wpswitch.get_switch_byname('testswitchregex', self.switches)
+        regexswitch = wpswitch.get_switch_byname(
+            'testswitchregex', self.switches)
         self.assertIsNotNone(regexswitch,
                              msg="get_switch_byname(testswitchregex, switches) returned None")
         self.assertEqual(regexswitch.is_regex(), True,
@@ -182,9 +192,12 @@ class test_wpswitch(unittest.TestCase):
             # incase someone messed up the expected members, None should be [].
             if expected_members is None:
                 expected_members = []
-            # get names of actual members (get_group_members() actually returns switch() objects.
-            actual_members = [s.name for s in wpswitch.get_group_members(name, self.switches)]
-            # test equality of expected/actual members, print results on failure.
+            # get names of actual members (get_group_members() actually returns
+            # switch() objects.
+            actual_members = [
+                s.name for s in wpswitch.get_group_members(name, self.switches)]
+            # test equality of expected/actual members, print results on
+            # failure.
             self.assertEqual(expected_members, actual_members,
                              msg="group members did not match the expected members:\n" +
                                  '    expected:\n        ' + ('\n        ' + name + ': ').join(expected_members) + '\n' +
@@ -198,7 +211,8 @@ class test_wpswitch(unittest.TestCase):
                              msg="testCanGetGroupNameByList: switches is None, read_lines() failed.")
         self.assertNotEqual(self.switches, [],
                             msg="testCanGetGroupNameByList: switches is [], read_lines() failed.")
-        # select the last group in expected group data (the first is None, which might not help)
+        # select the last group in expected group data (the first is None,
+        # which might not help)
         testgroupname = list(GROUP_MEMBERS.keys())[-1]
         groupmembers = wpswitch.get_group_members(testgroupname, self.switches)
         self.assertIsNotNone(groupmembers,
