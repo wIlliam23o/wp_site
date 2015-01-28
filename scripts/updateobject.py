@@ -44,6 +44,8 @@ Created on Nov 1, 2013
 @author: Christopher Welborn (cj@welbornprod.com)
 '''
 
+# TODO: Model this like the 'search' app. Any apps that are updateable
+#       will contain an 'update.py' module, with the required funcs/info.
 # Standard modules
 import os
 import sys
@@ -88,21 +90,25 @@ except ImportError as eximp:
     sys.exit(1)
 
 # Helpers for filtering/gathering alias names for updateobject.py
-is_updatealias = lambda f: f.startswith('update') and (not 'updateobject' in f)
+is_updatealias = lambda s: s.startswith('update') and ('updateobj' not in s)
 # Helper for trimming .py from a filename (for aliases, and _SCRIPT)
-trim_pyext = lambda f: f[:-3] if f.endswith('.py') else f
+trim_ext = lambda s: os.path.splitext(s)[0]
 # Directory where the alias scripts for updateobject.py can be found.
 SCRIPTSDIR = django_init.scripts_dir
 
 try:
     # Grab all updateobject aliases (but not updateobject).
     raw_scripts = os.listdir(SCRIPTSDIR)
-    available_aliases = [trim_pyext(f) for f in raw_scripts if is_updatealias(f)]
+    available_aliases = [
+        trim_ext(f) for f in raw_scripts if is_updatealias(f)
+    ]
 except Exception as ex:
-    print('\nUnable to list available aliases, this may or may not work!\n{}'.format(ex))
+    print('\n'.join((
+        '\nUnable to list available aliases, this may or may not work!',
+        '{}'.format(ex))))
     available_aliases = None
 
-# Info used to decide which model we're working on based on what the script name is.
+# Info used to decide which model we're working on, based on the script name.
 modelinfo = {
     'project': {
         'name': 'Project',
@@ -138,7 +144,7 @@ modelinfo['tracker'] = modelinfo['file']
 
 # Get the name that this script was called by
 # (used in determining which model we're going to be working with.)
-_SCRIPT = trim_pyext(os.path.split(sys.argv[0])[1])
+_SCRIPT = trim_ext(os.path.split(sys.argv[0])[1])
 
 # Determine which model we are working with.
 modelname = None
@@ -151,13 +157,16 @@ if not modelname:
           'It is meant to be called by one of its aliases:')
     if available_aliases:
         print('{}'.format(', '.join(available_aliases)))
-        print('\nFor example, you could type: {} --help\n'.format(available_aliases[0]))
+        print(
+            '\nFor example, you could type: {} --help\n'.format(
+                available_aliases[0]))
     else:
         print('Unable to locate aliases for updateobject.py!')
     sys.exit(1)
 
 modelused = modelinfo[modelname]
-# Script info changes a little depending on how its called (busybox-style I guess)
+# Script info changes a little depending on how its called (busybox-style
+# I guess)
 _NAME = 'Update{}'.format(modelused['name'])
 _VERSION = '1.1.0'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
