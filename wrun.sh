@@ -109,4 +109,4 @@ fi
 
 # Run it
 printf "running script: %s\n" "${scriptcmd}"
-python ${scriptcmd}
+python3 ${scriptcmd}
