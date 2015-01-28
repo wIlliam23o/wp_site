@@ -1,114 +1,196 @@
 #!/bin/bash
 
-# hopefully this saves some typing, instead of writing:
-# python scripts/wprefresh.py arg1 arg2
-# I can write: ./wrun wprefresh arg1 arg2
-#     or just: ./wrun wpstats
+# Saves a little typing on the command line when running welbornprod tools.
+# Searches ./scripts/ directories for pattern matches, and runs the file.
+# Example:
+#            Instead of: ./scripts/wprefresh.py [args]...
+#             ..do this: ./wrun refresh [args]...
+# as of right now, even: ./wrun re [args]...
 #
+# The main reason for this:
+#     ./apps/paste/scripts/pastetool.py == ./wrun pastetool
+# -Christopher Welborn (rewrite: 1-27-15)
 
+appname="WRun"
+appversion="0.1.0"
+# script directories to use (relative to cwd)
+scriptdirs=("scripts" "apps/paste/scripts")
 
-# script directory to use
-scriptdir="scripts/"
-pythoncmd="python3"
-function print_usage () {
-    printf "\nusage: %s <scriptname> [arguments]..." "${0}"
-    printf "\n runs: $pythoncmd ${scriptdir}scriptname.py [arguments]...\n"
-    exit 0
-    }
+function indent_text () {
+    # Indent some text by a predetermined amount.
+    # Arguments:
+    #     $1  : (number) the amount of spaces.
+    #     $2  : (string) the text to indent.
+    local let length=$1
+    local i
+    local spaces=""
+    for ((i=0; i<$length; i++))
+    do
+        spaces=" $spaces"
+    done
+    printf "$spaces$2"
+}
 
-function print_fail () {
-	# prints a message and fails with exit code 1
-	printf "$*"
-	exit 1
-	}
+function find_script () {
+    # Locate a script by regex pattern in the script directories.
+    # Arguments:
+    #    $1  : The regex pattern to use.
+
+    # Skip tests unless explicitly called.
+    local skiptest=1
+    [[ $1 =~ "test" ]] && skiptest=""
+
+    for scriptdir in "${scriptdirs[@]}"
+    do
+        for scriptpath in ${scriptdir}/*
+        do
+            scriptname="${scriptpath##*/}"
+            if [[ ! -x $scriptpath ]] || [[ ! -f $scriptpath ]]; then
+                # Non-executable scripts are skipped.
+                continue
+            elif [[ $skiptest ]] && [[ $scriptname =~ test_ ]]; then
+                # So are tests unless explicitly called.
+                continue
+            elif [[ ${scriptname%.*} =~ $1 ]]; then
+                # Found a match.
+                printf "$scriptpath"
+                return 0
+            fi
+        done
+    done
+    return 1
+}
 
 function list_script_type () {
-	# list a certain file extension in the scripts dir.
-	# ex: list_script_type ".py"
-	for scriptname in ${scriptdir}*$1
-	do
-		if [[ "${scriptname%__init__*}" != "${scriptdir}" ]]; then
-			scriptname="${scriptname#$scriptdir*}"
-			printf "    %s\n" "$scriptname"
-		fi
-	done
+    # list a certain file extension in the scripts dir.
+    # ex: list_script_type ".py"
+    # With no arguments, all types are listed.
+    local lastdir=""
+    local scripts=""
+    local let indent=0
+
+    for scriptdir in "${scriptdirs[@]}"
+    do
+        scripts=(${scriptdir}/*$1)
+        for scriptname in "${scripts[@]}"
+        do
+            if [[ ! -x $scriptname ]] || [[ ! -f $scriptname ]]; then
+                # Non-executable scripts are skipped.
+                continue
+            fi
+            if [[ $scriptdir == $lastdir ]]; then
+                # print without directory.
+                scriptname="${scriptname#$scriptdir*/}"
+                fmtname="$(indent_text $indent "$scriptname")"
+                printf "    %s\n" "$fmtname"
+            else
+                # print with directory.
+                scriptname="$scriptname"
+                lastdir="$scriptdir"
+                indent=$((${#scriptdir} + 1))
+                printf "\n    %s\n" "$scriptname"
+            fi
+        done
+    done
 }
 
-function list_python_scripts () {
-	printf "\ncurrent python scripts:\n"
-	list_script_type ".py"
-}
-
-function list_bash_scripts () {
-	printf "\ncurrent bash scripts:\n    (..incompatible with $0)\n"
-	list_script_type ".sh"
-}
 
 function list_scripts () {
-	# list command. shows python and bash scripts in scripts dir.
-	list_python_scripts
-	echo
-	list_bash_scripts
-	echo
-	exit 0
+    # list command. shows python and bash scripts in scripts dir.
+    printf "\nCurrent Scripts:\n"
+    list_script_type ""
+    printf "\n"
+}
+
+function parse_args () {
+    if  [[ -z $1 ]]; then
+        # No args.
+        print_usage
+        exit 1
+    elif [[ $1 =~ ^-[-]?h(elp)? ]]; then
+        # -h,--help , or no arguments.
+        print_full_usage
+        exit 0
+    elif [[ $1 =~ ^-[-]?l(ist)? ]]; then
+        # -l,--list
+        list_scripts
+        exit 0
+    elif [[ $1 =~ ^-[-]?v(ersion)? ]]; then
+        # -v,--version
+        printf "\n%s v. %s\n\n" "$appname" "$appversion"
+        exit 0
+    fi
+}
+
+function print_fail () {
+    # prints a message and fails with exit code 1
+    print_status "$@"
+    exit 1
 }
 
 
-# test scriptdir
-if [[ ! -d $scriptdir ]]; then
-    print_fail "\nscript dir not found!: $scriptdir\n"
-fi
-
-# save original scriptname passed for later
-scriptarg="${1}"
-if  [[ -z $scriptarg ]] || [[ $scriptarg =~ ^-[-]?h(elp)? ]]; then
-	# -h,--help , or no arguments.
-    print_usage
-fi
-
-# test for list command
-if [[ $scriptarg =~ ^[-]?[-]?l(ist)? ]]; then
-	# l,list,-l,--list
-	list_scripts
-fi
-
-scriptname=$scriptarg
-# fix scriptname extension if needed.
-if [[ "${scriptname#*.}" != "py" ]]; then
-    # add extension
-    scriptname="${scriptname}.py"
-fi
-# fix script dir if needed
-if [[ "${scriptname%$scriptdir*}" != "" ]]; then
-    # add script dir
-    scriptname="${scriptdir}${scriptname}"
-fi
-
-# TEST filename
-if [[ ! -f "${scriptname}" ]]; then
-    print_fail "\ncan't find the script: ${scriptname}\n"
-fi
-
-# Build argument string (remove previous scriptname)
-args=""
-for argument
-do
-    if [[ "$argument" != "$scriptarg" ]] && [[ "$argument" != "$0" ]]; then
-        if [[ -z $args ]]; then
-            args="$argument"
-        else
-            args="$args $argument"
-        fi
+function print_status () {
+    # Print status that clearly shows the msg coming from wrun.
+    if [[ -n $2 ]]; then
+        # Use custom format.
+        printf "[wrun] $1" "$2"
+    else
+        printf "[wrun] %s\n" "$1"
     fi
-done
+}
 
-# run with or without args (dont add extra space with no args)
-if [[ -n $args ]]; then
-    scriptcmd="$scriptname $args"
-else
-    scriptcmd="$scriptname"
+
+function print_full_usage () {
+    printf "
+$appname v. $appversion
+
+    Runs executable scripts without typing their full name or path.
+    Instead of doing './scripts/mything.py', './wrun my' works.
+"
+    print_usage
+    exit 0
+}
+
+
+function print_usage () {
+    printf "
+    Usage: $0 <scriptname> [arguments]...
+
+    Options:
+        <scriptname>  : Name or regex pattern for script.
+        -h,--help     : Show this message.
+        -l,--list     : List known scripts.
+        -v,--version  : Show $appname version and exit.
+    "
+}
+
+
+function valid_scriptdirs () {
+    # test scriptdirs
+    for scriptdir in "${scriptdirs[@]}"
+    do
+        if [[ ! -d $scriptdir ]]; then
+            print_fail "\nscript dir not found!: $scriptdir\n"
+        fi
+    done
+}
+
+# Make sure all script directories are valid.
+valid_scriptdirs
+
+# Test for wrun args.
+parse_args $@
+
+# Locate the script by pattern/name.
+scriptname="$1"
+scriptpath="$(find_script $scriptname)"
+if [[ -z $scriptpath ]]; then
+    print_fail "Script not found: $scriptname"
 fi
 
-# Run it
-printf "running script: %s %s\n" "$pythoncmd" "$scriptcmd"
-$pythoncmd $scriptcmd
+# Grab arguments for the script.
+scriptargs=("${@:2}")
+scriptcmd="$scriptpath ${scriptargs[@]}"
+# Run it.
+print_status "%s\n\n" "Running: ./$scriptcmd"
+./$scriptcmd
