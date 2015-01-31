@@ -2,6 +2,7 @@
 
 # Saves a little typing on the command line when running welbornprod tools.
 # Searches ./scripts/ directories for pattern matches, and runs the file.
+# I made this instead of creating symlinks or aliases for all of the scripts.
 # Example:
 #            Instead of: ./scripts/wprefresh.py [args]...
 #             ..do this: ./wrun refresh [args]...
