@@ -41,7 +41,7 @@ SERVER_LOCATION = SECRETS.site_info['location']
 STATIC_PARENT, STATIC_ROOT = SECRETS.static_parent, SECRETS.static_root
 STATIC_URL = SECRETS.static_url
 MEDIA_URL = SECRETS.site_info['media_url']
-MEDIA_ROOT = os.path.join(STATIC_PARENT, "media")
+MEDIA_ROOT = os.path.join(STATIC_ROOT, "media")
 
 # Email info.
 EMAIL_HOST = SECRETS.settings['email']['host']
