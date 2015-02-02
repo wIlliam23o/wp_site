@@ -17,6 +17,7 @@ class wp_image(models.Model):  # noqa
     image = models.FileField(
         'image',
         blank=False,
+        upload_to='/img',
         help_text='The file for the image.')
 
     # Human-readable image id (generated on save).
