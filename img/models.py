@@ -97,6 +97,20 @@ class wp_image(models.Model):  # noqa
         verbose_name = 'Image'
         verbose_name_plural = 'Images'
 
+    def __str__(self):
+        """ Default string format for an image object.
+            This is a simple format.
+        """
+        if hasattr(self, 'id'):
+            _id = self.id
+            basestr = '{}: ({})'.format(_id, self.image_id)
+        else:
+            basestr = '({})'.format(self.image_id)
+        finalstr = '{} {} - {}'.format(basestr, self.image.name, self.title)
+        if len(finalstr) > 80:
+            return finalstr[:80]
+        return finalstr
+
     def save(self, *args, **kwargs):
         """ Generate image_id before saving. """
         super(wp_image, self).save(*args, **kwargs)
