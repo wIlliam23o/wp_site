@@ -4,15 +4,19 @@
 '''
       project: Welborn Productions - Downloads - Tools
      @summary: Various tools for the downloads app, such as file tracking.
-    
+
       @author: Christopher Welborn <cj@welbornprod.com>
 @organization: welborn productions <welbornprod.com>
- 
+
    start date: May 25, 2013
 '''
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from downloads.models import file_tracker
+from projects import tools as ptools
+from projects.models import wp_project
+from misc import tools as misctools
+
 from wp_main.utilities.wp_logging import logger
 _log = logger("downloads.tools").log
 
@@ -46,15 +50,41 @@ def get_file_tracker(absolute_path, createtracker=True, dosave=False):
     return filetracker
 
 
+def increment_dl_count(file_path, absolute_path):
+    """ Reverse lookup of a model instance by it's related file name.
+        Arguments:
+            file_path      : Relative file path.
+            absolute_path  : Absolute file path.
+        Returns an instance on success, or None on failure.
+    """
+    trackables = {
+        n: o for n, o in (
+            ('project', ptools.get_project_from_path(absolute_path)),
+            ('filetracker', get_file_tracker(absolute_path)),
+            ('misc', misctools.get_by_filename(file_path))
+        ) if o
+    }
+
+    if trackables.get('project', None) and trackables.get('filetracker', None):
+        #
+        update_tracker_projects(
+            trackables['filetracker'],
+            trackables['project'])
+
+    for obj in trackables.values():
+        obj.download_count += 1
+        obj.save()
+
+
 def update_tracker_views(absolute_path, createtracker=True, dosave=True):
     """ update a file tracker's view_count,
         will create the file_tracker if wanted.
     """
-     
+
     filetracker = get_file_tracker(absolute_path, createtracker)
     if filetracker is None:
         return None
-    
+
     filetracker.view_count += 1
     if dosave:
         filetracker.save()
@@ -62,33 +92,25 @@ def update_tracker_views(absolute_path, createtracker=True, dosave=True):
     return filetracker
 
 
-def update_tracker_downloads(absolute_path, createtracker=True, dosave=True):
-    """ updates a file trackers download_count,
-        will create the file_tracker if wanted.
-    """
-    
-    filetracker = get_file_tracker(absolute_path, createtracker)
-    if filetracker is None:
+def update_tracker_projects(tracker, project, dosave=True):
+    """ Adds a project to this tracker's project field safely. """
+
+    if not isinstance(project, wp_project):
         return None
-    
-    filetracker.download_count += 1
-    if dosave:
-        filetracker.save()
-    
-    return filetracker
 
+    trackerid = getattr(tracker, 'id', None)
+    if trackerid is None:
+        return None
 
-def update_tracker_projects(tracker_, project_object, dosave=True):
-    """ adds a project to this tracker's project field safely. """
-    
-    if hasattr(tracker_, 'id'):
-        trackerid = tracker_.id
-    else:
-        trackerid = None
     # Tracker must be saved at least once before adding a project relation.
-    if trackerid is not None:
-        if trackerid < 0:
-            tracker_.save()
-        tracker_.project.add(project_object)
-        if dosave:
-            tracker_.save()
+    if trackerid < 0:
+        tracker.save()
+
+    projectid = getattr(project, 'id', None)
+    if tracker.project.objects.get(id=projectid):
+        # Project already added to this tracker.
+        return None
+
+    tracker.project.add(project)
+    if dosave:
+        tracker.save()
