@@ -1,7 +1,5 @@
-# authentication
-from django.contrib import auth
 # Local tools
-from wp_main.utilities import utilities
+# from wp_main.utilities import utilities
 from wp_main.utilities import responses
 
 # logging
