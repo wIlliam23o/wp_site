@@ -17,7 +17,7 @@ class wp_image(models.Model):  # noqa
     image = models.FileField(
         'image',
         blank=False,
-        help_text='The actual image file.')
+        help_text='The file for the image.')
 
     # Human-readable image id (generated on save).
     image_id = models.CharField(
@@ -32,21 +32,21 @@ class wp_image(models.Model):  # noqa
         'publish date',
         blank=False,
         default=datetime.now,
-        help_text='When this image was uploaded.')
+        help_text='When the image was uploaded.')
 
     # Image Width (in pixels)
     height = models.IntegerField(
         'height',
         blank=True,
         default=0,
-        help_text='The images height.')
+        help_text='The height for the image.')
 
     # Image Width (in pixels)
     width = models.IntegerField(
         'width',
         blank=True,
         default=0,
-        help_text='The images width.')
+        help_text='The width for the image.')
 
     # Image album (for folder-like behavior)
     album = models.CharField(
@@ -70,11 +70,23 @@ class wp_image(models.Model):  # noqa
         blank=False,
         help_text='Description for this image.')
 
-    # private image? (won't show in public listings.)
+    # Disabled image? (won't show in listings.)
+    disabled = models.BooleanField(
+        'disabled',
+        default=False,
+        help_text='Whether or not this image is listable.')
+
+    # Private image? (won't show in public listings.)
     private = models.BooleanField(
         'private',
         default=False,
         help_text='Whether or not this image is private (not listable).')
+
+    # View count for the image.
+    view_count = models.IntegerField(
+        'view count',
+        default=0,
+        help_text='How many times this image has been viewed.')
 
     date_hierarchy = 'publish_date'
 
@@ -87,11 +99,11 @@ class wp_image(models.Model):  # noqa
 
     def save(self, *args, **kwargs):
         """ Generate image_id before saving. """
-
         super(wp_image, self).save(*args, **kwargs)
         # Generate a image_id for this image if it doesnt have one already.
         if not self.image_id:
             self.generate_id()
+        # TODO: Generate self.width and self.height.
 
     def generate_id(self):
         """ Get current image_id, or generate a new one and saves it. """
@@ -110,7 +122,7 @@ class wp_image(models.Model):  # noqa
 
     def get_url(self):
         """ Return absolute url.
-            reverse url lookup really needs to be used here.
+            *Reverse url lookup really needs to be used here.
         """
         return '/media/?id={}'.format(self.image_id)
 
