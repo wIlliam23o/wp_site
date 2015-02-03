@@ -6,6 +6,8 @@
 from datetime import datetime
 
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch.dispatcher import receiver
 
 from wp_main.utilities import id_tools
 
@@ -152,3 +154,11 @@ class wp_image(models.Model):  # noqa
             return id_tools.decode_id(self.image_id)
         # Decode imageid given..
         return id_tools.decode_id(imageid)
+
+
+@receiver(pre_delete, sender=wp_image)
+def wp_image_delete(sender, instance, **kwargs):
+    """ Delete the file along with the instance. """
+    if instance.image:
+        # Don't try to save a dying model.
+        instance.image.delete(save=False)
