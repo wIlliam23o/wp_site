@@ -28,6 +28,7 @@ from wp_main.utilities.highlighter import WpHighlighter, highlight_codes
 from wp_main.utilities.wp_logging import logger
 # for admin site filtering
 from blogger.models import wp_blog
+from img.models import wp_image
 from projects.models import wp_project
 from misc.models import wp_misc
 from apps.models import wp_app
@@ -98,6 +99,7 @@ def colorize_admin_css(item):
         'wp_misc': wp_misc.objects,
         'wp_paste': wp_paste.objects,
         'pw_result': pw_result.objects,
+        'wp_image': wp_image.objects,
     }
     obj = None
     for objname, objects in objectsets.items():
@@ -364,10 +366,7 @@ def is_disabled(model_obj):
     """ if object has .disabled attribute, returns it,
         if not, returns False.
     """
-
-    if hasattr(model_obj, 'disabled'):
-        return model_obj.disabled
-    return False
+    return getattr(model_obj, 'disabled', False)
 
 
 @register.filter
@@ -414,10 +413,7 @@ def is_onhold(model_obj):
     """ if object has .disabled attribute, returns it,
         if not, returns False.
     """
-
-    if hasattr(model_obj, 'onhold'):
-        return model_obj.onhold
-    return False
+    return getattr(model_obj, 'onhold', False)
 
 
 @register.filter
@@ -425,9 +421,7 @@ def is_private(obj):
     """ If object has a .private attribute, returns it.
         if not, returns False.
     """
-    if hasattr(obj, 'private'):
-        return obj.private
-    return False
+    return getattr(obj, 'private', False)
 
 
 @register.filter

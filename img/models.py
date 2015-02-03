@@ -107,7 +107,8 @@ class wp_image(models.Model):  # noqa
             basestr = '{}: ({})'.format(_id, self.image_id)
         else:
             basestr = '({})'.format(self.image_id)
-        finalstr = '{} {} - {}'.format(basestr, self.image.name, self.title)
+        title = self.title or 'Untitled'
+        finalstr = '{} {} - {}'.format(basestr, self.image.name, title)
         if len(finalstr) > 80:
             return finalstr[:80]
         return finalstr
