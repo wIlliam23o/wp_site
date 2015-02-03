@@ -267,6 +267,15 @@ def get_remote_ip(request):
 
 
 @register.filter
+def get_time_since(date):
+    """ Shortcut to utilities.get_time_since(date, limit=True). """
+    if not date:
+        return date
+    since = utilities.get_time_since(date, limit=True)
+    return since if ':' in since else '{} ago'.format(since)
+
+
+@register.filter
 def hcodes(content):
     """ Highlight using short codes found with highlighter.highlight_codes.
         Example:
@@ -549,7 +558,6 @@ registered_filters = (
     utilities.get_date,
     utilities.get_datetime,
     utilities.get_time,
-    utilities.get_time_since,
 )
 
 # register all filters in the registered tuple.

@@ -31,6 +31,7 @@
 
 .img-image-item {
     // Wraps a single image item, with title, desc, pic, etc.
+    position: relative;
     @include border-radius-thin-color(5px, $bordermain);
     padding: 5px;
     margin-bottom: 5px;
@@ -38,25 +39,66 @@
 
 .img-image-title {
     // Title for a single image.
+    position: absolute;
+    top: 2em;
     font-size: $fontbigger;
     color: $bluemain;
 }
 
-.img-image-date {
+.img-image-attribute {
     display: block;
-    font-size: $fontsmaller;
-    color: $greymain;
+    margin-left: 75%;
 }
 
-.img-image-date-str {
+.img-image-label {
+    display: inline-block;
+    color: $greymain;
+    font-size: $fontsmaller;
+    width: 4em;
+    text-align: right;
+
+}
+
+.img-image-value {
+    display: inline;
     color: $bluemain;
-    font-size: $fontnormal;
+    font-size: $fontsmall;
+}
+
+.img-image-id {
+    @extend .img-image-attribute;
+}
+
+.img-image-id-label {
+    @extend .img-image-label;
+}
+
+.img-image-id-value {
+    @extend .img-image-value;
+}
+
+.img-image-date {
+    @extend .img-image-attribute;
+}
+
+.img-image-date-label {
+    @extend .img-image-label;
+}
+
+.img-image-date-value {
+    @extend .img-image-value;
 }
 
 .img-image-album {
-    display: block;
-    font-size: $fontsmaller;
-    color: $greymain;
+    @extend .img-image-attribute;
+}
+
+.img-image-album-label {
+    @extend .img-image-label;
+}
+
+.img-image-album-value {
+    @extend .img-image-value;
 }
 
 .img-image-desc {
@@ -77,6 +119,7 @@
 .img-image-src {
     // The actual img tag.
     max-height: 200px;
+    max-width: 1000px;
 }
 
 .img-no-images {

@@ -102,7 +102,7 @@
                             </span>
                         </div>
                         <div class='paste-item-date'>
-                            {{ paste.publish_date|paste_time }}
+                            {{ paste.publish_date|get_time_since }}
                         </div>
                         <div class='paste-item-views'>
                             {{ paste.view_count }}
@@ -144,7 +144,7 @@
                                             </div>
                                         {% endif %}
                                         <div class='paste-item-reply-date'>
-                                            {{ reply.publish_date|paste_time }}
+                                            {{ reply.publish_date|get_time_since }}
                                         </div>
                                     </div>
                                 {% endfor %}

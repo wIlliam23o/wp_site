@@ -134,21 +134,6 @@ def get_browser_style(request):
         return False
 
 
-def get_datetime(date=None, shortdate=False):
-    """ Return date/time string.
-        Arguments:
-            date       : Existing datetime object to format.
-                         Default: datetime.now()
-            shortdate  : Return date part in short format (m-d-yyyy)
-                         Default: False
-    """
-    if date is None:
-        date = datetime.now()
-    if shortdate:
-        return date.strftime('%m-%d-%Y %I:%M:%S %p')
-    return date.strftime('%A %b. %d, %Y %I:%M:%S %p')
-
-
 def get_date(date=None, shortdate=False):
     """ Return date string.
         Arguments:
@@ -162,6 +147,21 @@ def get_date(date=None, shortdate=False):
     if shortdate:
         return date.strftime('%m-%d-%Y')
     return date.strftime('%A %b. %d, %Y')
+
+
+def get_datetime(date=None, shortdate=False):
+    """ Return date/time string.
+        Arguments:
+            date       : Existing datetime object to format.
+                         Default: datetime.now()
+            shortdate  : Return date part in short format (m-d-yyyy)
+                         Default: False
+    """
+    if date is None:
+        date = datetime.now()
+    if shortdate:
+        return date.strftime('%m-%d-%Y %I:%M:%S %p')
+    return date.strftime('%A %b. %d, %Y %I:%M:%S %p')
 
 
 def get_filename(file_path):
@@ -191,19 +191,19 @@ def get_objects_enabled(objects_):
     return allobjs
 
 
-def get_object_safe(objects_, **kwargs):
+def get_object_safe(objects, **kwargs):
     """ does a mymodel.objects.get(kwargs),
         returns None on error.
     """
-    if hasattr(objects_, 'objects'):
+    if hasattr(objects, 'objects'):
         # Main Model passed instead of Model.objects.
-        objects_ = getattr(objects_, 'objects')
+        objects = getattr(objects, 'objects')
 
     try:
-        obj = objects_.get(**kwargs)
+        obj = objects.get(**kwargs)
     except Exception:
         # No Error is raised, just return None
-        obj = None
+        return None
     return obj
 
 # Alias for function.
@@ -280,7 +280,7 @@ def get_server(request):
     return None
 
 
-def get_time(time=None, shorttime=False):
+def get_time(time=None, shorttime=False,):
     """ Return time string.
         Arguments:
             time       : Existing datetime object to format.
@@ -295,9 +295,14 @@ def get_time(time=None, shorttime=False):
     return time.strftime('%I:%M:%S %p')
 
 
-def get_time_since(date, humanform=True):
+def get_time_since(date, humanform=True, limit=False):
     """ Parse a datetime object,
         return human-readable time-elapsed.
+        Arguments:
+            date       : datetime object to work with.
+            humanform  : Use minutes, seconds, etc. instead of m, s, etc.
+            limit      : If True, uses get_datetime() when it's been over one
+                         week.
     """
 
     secs = (datetime.now() - date).total_seconds()
@@ -350,6 +355,9 @@ def get_time_since(date, humanform=True):
 
     days = int(hours / 24)
     hours = int(hours % 24)
+    if limit and (days > 7):
+        return get_datetime(date)
+
     # Days, hours
     daystr = 'day' if days == 1 else 'days'
     hourstr = 'hour' if hours == 1 else 'hours'

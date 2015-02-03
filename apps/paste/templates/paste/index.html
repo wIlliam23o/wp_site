@@ -70,7 +70,7 @@
                                 {{ reply.title|trim_reply_title }}
                             </div>
                             <div class='vertical-menu-reply-date'>
-                                {{ reply.publish_date|paste_time:"true" }}
+                                {{ reply.publish_date|get_time_since }}
                             </div>
                         </li>
                     </a>
@@ -135,7 +135,7 @@
                             {% if paste.publish_date %}
                                 <div class='paste-date-box' title='Publish date for this paste.'>
                                     <span class='paste-date'>
-                                        {{ paste.publish_date|paste_time }}
+                                        {{ paste.publish_date|get_time_since }}
                                     </span>
                                 </div>
                             {% endif %}
@@ -218,7 +218,7 @@
                             </a>
                             <div class='paste-date-box'>
                                 <span class='paste-date'>
-                                    {{ replyto.publish_date|paste_time }}
+                                    {{ replyto.publish_date|get_time_since }}
                                 </span>
                             </div>
                         </div>

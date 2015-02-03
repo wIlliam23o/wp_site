@@ -61,13 +61,16 @@
 
         {% endif %}
         <div class='img-images-list'>
-            {% if album %}
-                <div class='img-header'>
-                    <h2 class='header'>
+            <div class='img-header'>
+                <h2 class='header'>
+                    {% if album %}
                         {{ album }}
-                    </h2>
-                </div>
-            {% endif %}
+                    {% else %}
+                        all images
+                    {% endif %}
+                </h2>
+            </div>
+
 
             {% if images %}
                 {% for image in images %}
@@ -79,22 +82,37 @@
                                 Untitled
                             {% endif %}
                         </div>
-                        {# Human-friendly date #}
-                        <div class='img-image-date'>
-                            posted:
-                            <span class='img-image-date-str'>
-                                {{ image.publish_date|get_time_since }}
-                            </span>
-                        </div>
-                        {# Include a link to the album #}
-                        {% if image.album %}
-                            <div class='img-image-album'>
-                                album:
-                                <a href='/img?album={{ image.album }}' title='{{ image.album }}'>
-                                    {{ image.album }}
+                        {# User-facing image id. #}
+                        <div class='img-image-id'>
+                            <div class='img-image-id-label'>
+                                id:
+                            </div>
+                            <div class='img-image-id-value'>
+                                <a href='/img?id={{ image.image_id }}' title='{% if image.title %}{{ image.title }}{% else %}Untitled{% endif %}'>
+                                    {{ image.image_id }}
                                 </a>
                             </div>
-                        {% endif %}
+                        </div>
+                        {# Human-friendly date #}
+                        <div class='img-image-date'>
+                            <div class='img-image-date-label'>
+                                posted:
+                            </div>
+                            <div class='img-image-date-value'>
+                                {{ image.publish_date|get_time_since }}
+                            </div>
+                        </div>
+                        {# Include a link to the album #}
+                        <div class='img-image-album'>
+                            <div class='img-image-album-label'>
+                                album:
+                            </div>
+                            <div class='img-image-album-value'>
+                                <a href='/img?album={% if image.album %}{{ image.album }}{% else %}none{% endif %}' title='{% if image.album %}{{ image.album }}{% else %}none{% endif %}'>
+                                    {% if image.album %}{{ image.album }}{% else %}none{% endif %}
+                                </a>
+                            </div>
+                        </div>
                         <div class='img-image-preview'>
                             <a href='{{ image.image.url }}' title='{{ image.title }}'>
                                 <img src='{{ image.image.url }}' class='img-image-src' alt='{{ image.title }}'>
