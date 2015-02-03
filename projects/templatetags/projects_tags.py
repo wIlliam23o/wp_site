@@ -55,7 +55,8 @@ def has_project_html(project):
 def process_project_html(project, request=None):
     """ runs the project through some html processing
         for screenshots, article ads, download code, sourceview code, etc.
-        works on project.get_html_content() through projects.tools.process_injections()
+        works on project.get_html_content() through
+        projects.tools.process_injections()
     """
     if project is None:
         _log.debug('received None project!')
@@ -155,7 +156,7 @@ class DownloadLink(template.Node):
 
         return htmltools.render_clean(
             'projects/download.html',
-            context_dict=context)
+            context=context)
 
 
 class SourceView(template.Node):
@@ -215,7 +216,7 @@ class SourceView(template.Node):
 
         return htmltools.render_clean(
             'projects/sourceview.html',
-            context_dict={
+            context={
                 'project': self.project,
                 'file_path': relativepath,
                 'link_text': link_text,

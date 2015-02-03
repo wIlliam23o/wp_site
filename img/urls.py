@@ -1,8 +1,8 @@
-from django.conf.urls import pattern, url
+from django.conf.urls import patterns, url
 
 from img import views
-urlpatterns = pattern(
+urlpatterns = patterns(
     '',
     # Basic index viewer.
-    url(r'^$', views.views_index, name='img_index'),
+    url(r'^$', views.view_index, name='img_index'),
 )

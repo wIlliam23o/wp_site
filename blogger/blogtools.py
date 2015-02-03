@@ -21,8 +21,7 @@ from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
 from wp_main.utilities.wp_logging import logger
 _log = logger("blog.tools").log
-# Viewer/Highlighter
-from wp_main.utilities import highlighter
+
 # Blog Info
 from blogger.models import wp_blog
 
@@ -58,12 +57,12 @@ def fix_post_list(blog_posts, **kwargs):
     if blog_posts is None:
         return []
     max_posts = kwargs.get('max_posts', DEFAULT_MAXPOSTS)
-    max_text_length = kwargs.get('max_text_length', DEFAULT_MAXLENGTH)
-    max_text_lines = kwargs.get('max_text_lines', DEFAULT_MAXLINES)
+    # max_text_length = kwargs.get('max_text_length', DEFAULT_MAXLENGTH)
+    # max_text_lines = kwargs.get('max_text_lines', DEFAULT_MAXLINES)
 
     # trim posts length
     if ((max_posts > 0) and
-       (len(blog_posts) > max_posts)):
+            (len(blog_posts) > max_posts)):
         blog_posts = blog_posts[:max_posts]
     return blog_posts
 
@@ -125,7 +124,7 @@ def get_post_body_short(post, max_text_length=None, max_text_lines=None):
 
     # trim by maximum text length
     if ((max_text_length > 0) and
-       (len(new_body) > max_text_length)):
+            (len(new_body) > max_text_length)):
         new_body = new_body[:max_text_length]
         trimmed = True
 
@@ -158,8 +157,9 @@ def get_post_body_short(post, max_text_length=None, max_text_lines=None):
             'href': '/blog/view/{}'.format(post.slug),
             'nobreak': False,
         }
-        readmoretxt = htmltools.render_clean('blogger/readmore.html',
-                                             context_dict=readmorecontext)
+        readmoretxt = htmltools.render_clean(
+            'blogger/readmore.html',
+            context=readmorecontext)
         new_body = '\n'.join((
             new_body,
             '<span class=\'continued\'> ...(continued)</span>',
@@ -230,7 +230,7 @@ def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, order_by=None):
         # find tag queries: whole word, case sensative match.
         for tag_name in tag_queries:
             if tag_name in post_tag_list:
-                if not post_ in found:
+                if post_ not in found:
                     found.append(post_)
 
     # trim for optional pagination.
@@ -276,8 +276,9 @@ def get_tag_links(post):
         'post': post,
         'tagnames': sorted(tag_list) if tag_list else [],
     }
-    return htmltools.render_clean('blogger/taglinks.html',
-                                  context_dict=context)
+    return htmltools.render_clean(
+        'blogger/taglinks.html',
+        context=context)
 
 
 def get_tag_list(post_object_or_tag_string):
@@ -374,7 +375,7 @@ def prepare_content(body_content):
     # do auto source highlighting
     # if "<pre class=" in body_content:
     #    body_content = highlighter.highlight_inline(body_content)
-    #body_content = highlighter.highlight_codes(body_content)
+    # body_content = highlighter.highlight_codes(body_content)
     return body_content
 
 

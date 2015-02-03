@@ -111,8 +111,8 @@ def view_loader(request):
                     '/static/css/projects.min.css'],
                    }
 
-        return responses.clean_response_req("viewer/loader.html",
-                                            context_dict=context,
+        return responses.clean_response_req('viewer/loader.html',
+                                            context=context,
                                             request=request)
     else:
         raise Http404("No file passed to request.")

@@ -12,9 +12,109 @@
 {% endblock %}
 
 {% block javascript %}
-    <script type='text/javascript' src='/static/js/img.js'></script>
+    <script type='text/javascript' src='/static/js/img.min.js'></script>
 {% endblock %}
 
 {% block content %}
-    <span>No Content Yet.</span>
+    <div class='img-main'>
+        {% if request.user.is_staff %}
+            <div class='img-upload-form'>
+                <form id='upload-form' enctype='multipart/form-data' method='post' action='/img'>
+                    {% csrf_token %}
+                    <div class='img-upload-form-image'>
+                        <label for='upload-image' class='input-label img-input-label'>
+                            Image to upload:
+                        </label>
+                        <input id='upload-image' name='image' type='file' class='input-text' required=True>
+                    </div>
+                    <div class='img-upload-form-title'>
+                        <label for='upload-title' class='input-label img-input-label'>
+                            Title:
+                        </label>
+                        <input id='upload-title' name='title' type='text' class='input-text'>
+                    </div>
+                    <div class='img-upload-form-desc'>
+                        <label for='upload-desc' class='input-label img-input-label'>
+                            Description:
+                        </label>
+                        <textarea id='upload-desc' name='description' cols='30' rows='6' class='input-text'></textarea>
+                    </div>
+                    <div class='img-upload-form-album'>
+                        <label for='upload-album' class='input-label img-input-label'>
+                            Album:
+                        </label>
+                        <input id='upload-album' name='album' type='text' class='input-text'>
+                    </div>
+                    <div class='img-upload-form-private'>
+                        <label for='upload-private' class='input-label img-checkbox-label'>
+                            Private:
+                        </label>
+                        <input id='private' name='private' type='checkbox' class='input-text'>
+                    </div>
+                </form>
+                <a href='javascript: void(0);' onclick='javascript: imgtools.do_upload();'>
+                    <div class='submit-button'>
+                        <span>upload</span>
+                    </div>
+                </a>
+            </div>
+
+        {% endif %}
+        <div class='img-images-list'>
+            {% if album %}
+                <div class='img-header'>
+                    <h2 class='header'>
+                        {{ album }}
+                    </h2>
+                </div>
+            {% endif %}
+
+            {% if images %}
+                {% for image in images %}
+                    <div class='img-image-item'>
+                        <div class='img-image-title'>
+                            {% if image.title %}
+                                {{ image.title }}
+                            {% else %}
+                                Untitled
+                            {% endif %}
+                        </div>
+                        {# Human-friendly date #}
+                        <div class='img-image-date'>
+                            posted:
+                            <span class='img-image-date-str'>
+                                {{ image.publish_date|get_time_since }}
+                            </span>
+                        </div>
+                        {# Include a link to the album #}
+                        {% if image.album %}
+                            <div class='img-image-album'>
+                                album:
+                                <a href='/img?album={{ image.album }}' title='{{ image.album }}'>
+                                    {{ image.album }}
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div class='img-image-preview'>
+                            <a href='{{ image.image.url }}' title='{{ image.title }}'>
+                                <img src='{{ image.image.url }}' class='img-image-src' alt='{{ image.title }}'>
+                            </a>
+                        </div>
+                        {% if image.description %}
+                            <div class='img-image-desc'>
+                                {{ image.description }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <span class='img-no-images'>
+                    No images have been uploaded.
+                    {% if album %}
+                        The album '{{ album }}' is empty.
+                    {% endif %}
+                </span>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}

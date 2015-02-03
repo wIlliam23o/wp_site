@@ -97,7 +97,7 @@ class AdArticle(template.Node):
         """ Render this article ad node. """
         adarticle = htmltools.render_clean(
             'home/ad_article.html',
-            context_dict=context)
+            context=context)
         return adarticle
 
 
@@ -108,7 +108,7 @@ class AdBottom(template.Node):
     def render(self, context):
         adbottom = htmltools.render_clean(
             'home/ad_bottom.html',
-            context_dict=context)
+            context=context)
         return adbottom
 
 
@@ -143,8 +143,8 @@ class Highlighter(template.Node):
         else:
             embedded = False
 
-        #code = var_quotes(code, varname='Highlighter.code')
-        lexername = var_quotes(lexer_name, varname='Highlighter.lexer_name')
+        # code = var_quotes(code, varname='Highlighter.code')
+        # lexername = var_quotes(lexer_name, varname='Highlighter.lexer_name')
 
         hl = highlighter.WpHighlighter(
             lexer_name=lexer_name,
@@ -175,7 +175,7 @@ class ImageViewer(template.Node):
                 self.images_dir,
                 varname='ImageViewer.images_dir')
 
-        #_log.debug('ImageViewer.path: {}'.format(imgdir))
+        # _log.debug('ImageViewer.path: {}'.format(imgdir))
         self.images_dir = imgdir
         content = self.get_images()
         return content if content else ''
@@ -187,8 +187,8 @@ class ImageViewer(template.Node):
             Arguments:
                 images_dir          : Relative dir containing all the images.
         """
-        # accceptable image formats (last 4 chars)
-        formats = ('.png', '.jpg', '.gif', '.bmp', 'jpeg')
+        # accceptable image formats
+        formats = ('.png', '.jpg', '.gif', '.bmp', '.jpeg')
 
         # Make sure we are using the right dir.
         # get absolute path for images dir,
@@ -209,7 +209,8 @@ class ImageViewer(template.Node):
 
         # Helper functions for building screenshots.
         relative_img = lambda filename: os.path.join(relative_dir, filename)
-        good_format = lambda filename: (filename[-4:] in formats)
+        good_format = (lambda filename: (
+            os.path.splitext(filename)[-1] in formats))
 
         # Build acceptable pics list
         good_pics = [relative_img(f) for f in all_files if good_format(f)]
@@ -228,7 +229,7 @@ class ImageViewer(template.Node):
         }
         return htmltools.render_clean(
             'home/imageviewer.html',
-            context_dict=c)
+            context=c)
 
 
 class TrackingGoogle(template.Node):

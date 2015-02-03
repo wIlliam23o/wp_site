@@ -369,6 +369,8 @@
 				$(alertbox).click(function () {
 					$('#alert-box').slideUp();
 				});
+				setTimeout(function () { $(alertbox).slideUp(); }, 5000);
+
 			{% elif request|is_test_site and not request.user.is_staff %}
 				var alertbox = $('#alert-box');
 				$(alertbox).slideDown();

@@ -70,6 +70,13 @@ urlpatterns += patterns(
         include('apps.paste.urls')),
 )
 
+# Image share
+urlpatterns += patterns(
+    '',
+    url(r'^[Ii][Mm][Gg]',
+        include('img.urls'))
+)
+
 # Projects view (projects)
 urlpatterns += patterns(
     '',

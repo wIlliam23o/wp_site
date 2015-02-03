@@ -1,0 +1,115 @@
+@import 'welbornprod';
+
+.img-main {
+    // Main wrapper for both the index and the upload form.
+    position: relative;
+    display:block;
+}
+
+.img-header {
+    margin-bottom: 5px;
+}
+
+.img-images-list {
+    // Wraps the entire image listing
+    display: block;
+    background: $whitedull;
+    @include border-radius-thin-color(5px, $bordermain);
+    padding: 5px;
+}
+
+.img-upload-form {
+    // Wraps the upload form.
+    display: inline-block;
+    //right: 15%;
+    @include border-radius-thin-color(5px, $bordermain);
+}
+
+#upload-form {
+    display:none;
+}
+
+.img-image-item {
+    // Wraps a single image item, with title, desc, pic, etc.
+    @include border-radius-thin-color(5px, $bordermain);
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.img-image-title {
+    // Title for a single image.
+    font-size: $fontbigger;
+    color: $bluemain;
+}
+
+.img-image-date {
+    display: block;
+    font-size: $fontsmaller;
+    color: $greymain;
+}
+
+.img-image-date-str {
+    color: $bluemain;
+    font-size: $fontnormal;
+}
+
+.img-image-album {
+    display: block;
+    font-size: $fontsmaller;
+    color: $greymain;
+}
+
+.img-image-desc {
+    // Description for a single image.
+    margin-top: 5px;
+    text-indent: 10px;
+}
+
+.img-image-preview {
+    // Wraps the actual image that is being previewed
+    width: 100%;
+    text-align: center;
+    @include border-radius-none(5px);
+    @include box-shadow-big();
+    margin-top: 5px;
+}
+
+.img-image-src {
+    // The actual img tag.
+    max-height: 200px;
+}
+
+.img-no-images {
+    // Text displayed when there are no images to preview.
+    color: $redmain;
+    font-size: $fontbigger;
+    text-shadow: $shadowtextmedium;
+}
+
+.img-upload-form-image {
+    // File input for the upload form
+}
+
+.img-upload-form-title {
+    // Title input for the upload form.
+}
+
+.img-upload-form-desc {
+    // Description input for the upload form.
+}
+
+.img-upload-form-album {
+    // Album input for the upload form.
+}
+
+.img-upload-form-private {
+    // Private checkbox for the upload form.
+}
+
+.img-input-label {
+    display: block;
+}
+
+.img-checkbox-label {
+    display: inline;
+}

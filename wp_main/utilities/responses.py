@@ -26,7 +26,6 @@ _log = logger("utilities.responses").log
 from django.contrib import messages
 from django.http import (
     HttpResponse,
-    HttpResponseForbidden,
     HttpResponseServerError,
     Http404)
 from django.template import RequestContext, Context, loader  # noqa
@@ -84,29 +83,29 @@ def basic_response(scontent='', *args, **kwargs):
     return HttpResponse(scontent, *args, **kwargs)
 
 
-def clean_response(template_name, context_dict, **kwargs):
+def clean_response(template_name, context, **kwargs):
     """ same as render_response, except does code cleanup (no comments, etc.)
         returns cleaned HttpResponse.
 
         Keyword Args:
             see htmltools.render_clean()...
     """
-    if context_dict is None:
-        context_dict = {}
+    if context is None:
+        context = {}
     # Check kwargs for a request obj, then check the context if it's not there.
-    request = kwargs.get('request', context_dict.get('request', None))
+    request = kwargs.get('request', context.get('request', None))
 
     # Add request to context if available.
     if request:
-        context_dict.update({'request': request})
+        context.update({'request': request})
         # Add server name, remote ip to context if not added already.
-        if not context_dict.get('server_name', False):
-            context_dict['server_name'] = get_server(request)
-        if not context_dict.get('remote_ip', False):
-            context_dict['remote_ip'] = get_remote_ip(request)
+        if not context.get('server_name', False):
+            context['server_name'] = get_server(request)
+        if not context.get('remote_ip', False):
+            context['remote_ip'] = get_remote_ip(request)
 
     # Add new context dict to kwargs for render_clean().
-    kwargs['context_dict'] = context_dict
+    kwargs['context'] = context
 
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
@@ -133,29 +132,29 @@ def clean_response(template_name, context_dict, **kwargs):
         return HttpResponse(rendered)
 
 
-def clean_response_req(template_name, context_dict, **kwargs):
+def clean_response_req(template_name, context, **kwargs):
     """ handles responses with RequestContext instead of Context,
         otherwise it's the same as clean_response
     """
 
-    if not context_dict:
-        context_dict = {}
+    if not context:
+        context = {}
     # Check kwargs for a request obj, then check the context if it's not there.
-    request = kwargs.get('request', context_dict.get('request', None))
+    request = kwargs.get('request', context.get('request', None))
     if request:
         # Add server name, remote ip to context if not added already.
-        if not context_dict.get('server_name', False):
-            context_dict['server_name'] = get_server(request)
-        if not context_dict.get('remote_ip', False):
-            context_dict['remote_ip'] = get_remote_ip(request)
+        if not context.get('server_name', False):
+            context['server_name'] = get_server(request)
+        if not context.get('remote_ip', False):
+            context['remote_ip'] = get_remote_ip(request)
         # Turn this into a request context.
-        context_dict = RequestContext(request, context_dict)
+        context = RequestContext(request, context)
     else:
         _log.error('No request passed to clean_response_req!\n'
                    'template: {}\n'.format(template_name) +
-                   'context: {}\n'.format(repr(context_dict)))
+                   'context: {}\n'.format(repr(context)))
 
-    kwargs['context_dict'] = context_dict
+    kwargs['context'] = context
 
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
@@ -240,7 +239,7 @@ def error_response(request, errnum, msgs=None, user_error=None):
     templatefile = 'home/{}.html'.format(errnum)
     try:
         rendered = htmltools.render_clean(templatefile,
-                                          context_dict=context,
+                                          context=context,
                                           request=request)
     except Exception as ex:
         logmsg = 'Unable to render template: {}\n{}'.format(templatefile, ex)
@@ -606,21 +605,21 @@ def redirect_response(redirect_to, status_code=302):
     return response
 
 
-def render_response(template_name, context_dict):
+def render_response(template_name, context):
     """ same as render_to_response,
         loads template, renders with context,
         returns HttpResponse.
     """
-    request = context_dict.get('request', None) if context_dict else None
+    request = context.get('request', None) if context else None
     try:
-        rendered = htmltools.render_clean(template_name, context_dict)
+        rendered = htmltools.render_clean(template_name, context)
         return HttpResponse(rendered)
     except:
         return alert_message(request,
                              'Sorry, there was an error loading this page.')
 
 
-class staff_required(object):
+class staff_required(object):  # noqa
 
     """ Decorator for views. Redirects straight to 403 if the user isn't staff.
         Allows you to pass in messages for the messages-framework.
@@ -679,16 +678,16 @@ def wsgi_error(request, smessage):
     request.META['wsgi_errors'] = smessage
 
 
-def xml_response(template_name, context_dict=None):
-    """ loads sitemap.xml template, renders with context_dict,
+def xml_response(template_name, context=None):
+    """ loads sitemap.xml template, renders with context,
         returns HttpResponse with content_type='application/xml'.
     """
-    contextdict = context_dict or {}
+    contextdict = context or {}
     try:
         tmplate = loader.get_template(template_name)
-        context = Context(contextdict)
+        contextobj = Context(contextdict)
         clean_render = htmltools.remove_whitespace(
-            htmltools.remove_comments(tmplate.render(context)))
+            htmltools.remove_comments(tmplate.render(contextobj)))
         response = HttpResponse(clean_render, content_type='application/xml')
     except Exception as ex:
         errmsg = 'Error: {}'.format(ex)

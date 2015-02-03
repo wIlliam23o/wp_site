@@ -1039,7 +1039,7 @@ ul.bullet li {
   display: inline-block;
   font-weight: bold; }
 
-.approved, .attention, .alert, .notice {
+.approved, .attention, .alert, .notice, .error {
   padding: 10px 10px 10px 45px;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -1050,10 +1050,10 @@ ul.bullet li {
   background-position: 10px 50%;
   background-repeat: no-repeat; }
 
-.approved a, .attention a, .alert a, .notice a {
+.approved a, .attention a, .alert a, .notice a, .error a {
   color: #000 !important; }
 
-.approved a:hover, .attention a:hover, .alert a:hover, .notice a:hover {
+.approved a:hover, .attention a:hover, .alert a:hover, .notice a:hover, .error a:hover {
   color: #6F2D2D !important;
   text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3); }
 
@@ -1071,7 +1071,7 @@ ul.bullet li {
   text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);
   border-top: 1px solid rgba(255, 255, 255, 0.3); }
 
-.alert, #alert-title dd.error ul {
+.alert, .error, #alert-title dd.error ul {
   background-color: #BD5151;
   background-image: url(/static/images/typography/dark/alert.png);
   color: #4C1818;

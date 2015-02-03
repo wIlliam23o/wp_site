@@ -11,7 +11,7 @@
 import os.path
 from sys import version as sysversion
 # Global settings
-#from django.conf import settings
+# from django.conf import settings
 
 # Regex for email hiding
 import re
@@ -63,7 +63,7 @@ re_opening_incomplete = re.compile(r'[\074][\w "\'=\-]+')
 re_start_tag = re.compile(r'[\074]\w+')
 
 
-class html_content(object):
+class html_content(object):  # noqa
 
     """ class to hold html content, and perform various operations on it.
         set self.content on initialization, set(), set_if(content, True),
@@ -714,108 +714,6 @@ def fix_open_tags(source):
     return fixedhtml
 
 
-def fix_open_tags_OLD(source):
-    """ scans string, or list of strings for
-        open <tags> without their </closing> tag.
-        adds the closing tags to the end (in order)
-        (ignores certain tags like <br> and <img>)
-
-        if you put a list in, you get a list back.
-        if you put a string in, you get a string back.
-
-    """
-    # TODO: Remove this function when tidylib has been tested.
-    try:
-        if isinstance(source, str):
-            if '\n' in source:
-                source = source.split('\n')
-                joiner = '\n'
-            elif '<br>' in source:
-                source = source.split('<br>')
-                joiner = '<br>'
-            else:
-                # single line of text to scan.
-                source = [source]
-                joiner = ''
-
-        elif isinstance(source, (list, tuple)):
-            joiner = None
-        else:
-            raise ValueError('Unknown type passed: {}'.format(type(source)))
-    except Exception as ex:
-        # error splitting text?
-        _log.error('Error splitting text:\n{}'.format(ex))
-        return source
-
-    # keeps track of tags opened so far,
-    opening_tags = []
-    #incomplete_tags = []
-    # list to hold good and 'fixed' lines.
-    fixed_lines = []
-
-    def find_opening(closing):
-        if '/' in closing:
-            closing = closing.replace('/', '')
-        if closing.endswith('>'):
-            closing = closing[:-1]
-
-        for starts in opening_tags:
-            if closing in starts:
-                return starts
-        return False
-
-    for line in source:
-        opening = re_opening_complete.search(line)
-        incomplete = re_opening_incomplete.search(line)
-        closing = re_closing_complete.search(line)
-        closing_inc = re_closing_incomplete.search(line)
-
-        # Incomplete start tag (no '>')
-        if incomplete and not opening:
-            # try fixing the opening tag.
-            line = line.replace(incomplete.group(),
-                                '{}>'.format(incomplete.group()))
-            opening_tags.append(incomplete.group())
-        # Good tag
-        elif incomplete and opening:
-            # add to the list of known good tags.
-            opening_tagmatch = re_start_tag.search(opening.group())
-            if opening_tagmatch:
-                opening_tag = opening_tagmatch.group()
-                opening_tags.append(opening_tag)
-
-        # Incomplete closing tag (no '>')
-        if closing_inc and not closing:
-            # find it's start tag, and use it to build a 'fixed' end tag.
-            closestart = opening_tags[len(opening_tags) - 1].replace('<', '</')
-            expecting = '{}>'.format(closestart)
-            line = line.replace(closing_inc.group(), expecting)
-            tag_opening = find_opening(expecting)
-            if tag_opening:
-                opening_tags.remove(tag_opening)
-        # Good closing tag...
-        elif closing_inc and closing:
-            # remove it's start tag from the list.
-            has_start = find_opening(closing.group())
-            if has_start:
-                opening_tags.remove(has_start)
-
-        fixed_lines.append(line)
-
-    # Add left over tags (last open tag gets first closing tag.)...
-    ignore_tags = ('<img', '<br')
-
-    if len(opening_tags) > 0:
-        for i in range(len(opening_tags), 0, -1):
-            left_over = opening_tags[i - 1]
-            if not left_over in ignore_tags:
-                closetag = '{}>'.format(left_over.replace('<', '</'))
-                _log.debug('Appended missing tag: {}'.format(closetag))
-                fixed_lines.append(closetag)
-
-    return fixed_lines if joiner is None else joiner.join(fixed_lines)
-
-
 def fix_p_spaces(source_string):
     """ adds a &nbsp; to the end of lines inside all <p> tags.
         removing newlines breaks the <p> functionality of adding
@@ -953,7 +851,7 @@ def get_screenshots(images_dir, noscript_image=None):
     # Render from template.
     screenshots = render_clean(
         'home/imageviewer.html',
-        context_dict={
+        context={
             'images': good_pics,
             'noscript_image': noscript_image,
         })
@@ -1180,7 +1078,7 @@ def render_clean(template_name, **kwargs):
         renders template by name and context dict,
         RequestContext is used if 'request' kwarg is present.
         Keyword Arguments (same as render_html()):
-              context_dict : dict to be used by Context() or RequestContext()
+              context      : dict to be used by Context() or RequestContext()
                    request : HttpRequest() object passed on to RequestContext()
                  link_list : link_list to be used with htmltools.auto_link()
                              Default: False
@@ -1198,7 +1096,7 @@ def render_html(template_name, **kwargs):
     """ renders template by name and context dict,
         returns the resulting html.
         Keyword arguments are:
-            context_dict : Context or RequestContext dict to be used
+            context      : Context or RequestContext dict to be used
                            RequestContext is used if a request is passed in
                            with 'request' kwarg.
                            Default: {}
@@ -1217,23 +1115,23 @@ def render_html(template_name, **kwargs):
                                                        })
                            Default: {}
     """
-    context_dict = kwargs.get('context', kwargs.get('context_dict', {}))
+    context = kwargs.get('context', kwargs.get('context_dict', {}))
     request = kwargs.get('request', False)
     link_list = kwargs.get('link_list', False)
     auto_link_args = kwargs.get('auto_link_args', {})
 
     try:
         tmplate = loader.get_template(template_name)
-        if isinstance(context_dict, dict):
+        if isinstance(context, dict):
             if request:
-                context_ = RequestContext(request, context_dict)
+                contextobj = RequestContext(request, context)
             else:
-                context_ = Context(context_dict)
+                contextobj = Context(context)
         else:
             # whole Context was passed
-            context_ = context_dict
+            contextobj = context
 
-        rendered = tmplate.render(context_)
+        rendered = tmplate.render(contextobj)
         if link_list:
             rendered = auto_link(rendered, link_list, **auto_link_args)
         return rendered

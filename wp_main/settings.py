@@ -206,19 +206,19 @@ INSTALLED_APPS = (
     'wp_user_agents',
     # local apps
     'wp_main',  # contains global template tags (wp_tags)
-    'home',
-    'projects',
-    'viewer',
-    'downloads',
-    'blogger',
-    'searcher',
-    'misc',
-    'sandbox',  # private sandbox for testing code or features.
     'apps',  # handles urls for all sub-apps.
     'apps.phonewords',
     'apps.paste',
-    'stats'  # provides stats for all models.
-
+    'blogger',
+    'downloads',
+    'home',
+    'img',
+    'misc',
+    'projects',
+    'sandbox',  # private sandbox for testing code or features.
+    'searcher',
+    'stats',  # provides stats for all models.
+    'viewer',
 )
 
 # A sample logging configuration. The only tangible logging
