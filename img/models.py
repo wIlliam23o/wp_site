@@ -10,6 +10,8 @@ from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 
 from wp_main.utilities import id_tools
+from wp_main.utilities.wp_logging import logger
+log = logger('img.models').log
 
 
 class wp_image(models.Model):  # noqa
@@ -161,4 +163,10 @@ def wp_image_delete(sender, instance, **kwargs):
     """ Delete the file along with the instance. """
     if instance.image:
         # Don't try to save a dying model.
-        instance.image.delete(save=False)
+        try:
+            instance.image.delete(save=False)
+        except EnvironmentError as ex:
+            imgname = getattr(instance.image, 'name', '')
+            if not imgname:
+                imgname = repr(instance.image)
+            log.error('Unable to delete image: {}'.format(imgname))
