@@ -238,7 +238,7 @@ LOGGING = {
 
 
 # Only turn error emails on with the remote server
-# They are driving me nuts when I'm expirimenting locally and DEBUG == False.
+# They are driving me nuts when I'm experimenting locally and DEBUG == False.
 if SERVER_LOCATION == 'remote':
     LOGGING['handlers'] = {
         'mail_admins': {
@@ -269,3 +269,5 @@ LOGIN_URL_REGEX = "^login/?.+"
 
 # default page to visit after login (if 'next url' is not specified)
 LOGIN_REDIRECT_URL = "/"
+
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'

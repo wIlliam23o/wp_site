@@ -58,16 +58,17 @@
                     </div>
                 </a>
             </div>
-
         {% endif %}
         <div class='img-images-list'>
             <div class='img-header'>
                 <h2 class='header'>
-                    {% if album %}
-                        {{ album }}
-                    {% else %}
-                        all images
-                    {% endif %}
+                    {% block img_header %}
+                        {% if album %}
+                            {{ album }}
+                        {% else %}
+                            all images
+                        {% endif %}
+                    {% endblock %}
                 </h2>
             </div>
 
@@ -75,13 +76,15 @@
             {% if images %}
                 {% for image in images %}
                     <div class='img-image-item'>
-                        <div class='img-image-title'>
-                            {% if image.title %}
-                                {{ image.title }}
-                            {% else %}
-                                Untitled
-                            {% endif %}
-                        </div>
+                        {% block img_image_title %}
+                            <div class='img-image-title'>
+                                {% if image.title %}
+                                    {{ image.title }}
+                                {% else %}
+                                    Untitled
+                                {% endif %}
+                            </div>
+                        {% endblock %}
                         {# User-facing image id. #}
                         <div class='img-image-id'>
                             <div class='img-image-id-label'>

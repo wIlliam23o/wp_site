@@ -1,10 +1,7 @@
+""" Welborn Productions - Misc - Tests
+    Tests the wp_misc model and misctools.
+    -Christopher Welborn 2-4-15
 """
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
-Replace this with more appropriate tests for your application.
-"""
-
 from django.test import TestCase
 from misc.types import MiscTypes, Lang
 from misc.models import wp_misc
@@ -12,7 +9,7 @@ from misc.models import wp_misc
 
 class MiscTestCase(TestCase):
 
-    def setUp(self):
+    def setUp(self):  # noqa
         """ Setup tests, create a basic misc object. """
 
         wp_misc.objects.create(type=MiscTypes.script,
@@ -25,5 +22,6 @@ class MiscTestCase(TestCase):
         """ Test that a misc object can be loaded """
 
         mo = wp_misc.objects.get(name='testmiscscript')
-        self.assertIsNotNone(mo,
-                             msg='Basic wp_misc.objects.get() returned None!')
+        self.assertIsNotNone(
+            mo,
+            msg='Basic wp_misc.objects.get() returned None!')

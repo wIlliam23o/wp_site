@@ -112,9 +112,11 @@ def view_image_id(request, imageid):
     else:
         alert_msg, alert_class = None, None
 
-    # Reusing index view template.
+    # Reusing part of the index view template.
+    # Needs to be more refined, in it's own template.
     context = {
         'request': request,
+        'image': image,
         'images': (image,),
         'album': None,
         'extra_style_link_list': [utilities.get_browser_style(request)],
@@ -122,6 +124,6 @@ def view_image_id(request, imageid):
         'alert_class': alert_class
     }
     return responses.clean_response_req(
-        template_name='img/index.html',
+        template_name='img/image.html',
         context=context,
         request=request)

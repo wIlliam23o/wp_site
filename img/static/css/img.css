@@ -89,7 +89,8 @@
   margin-top: 5px; }
 
 .img-image-src {
-  max-height: 200px; }
+  max-height: 200px;
+  max-width: 1000px; }
 
 .img-no-images {
   color: #b90000;
