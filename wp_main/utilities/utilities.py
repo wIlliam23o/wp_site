@@ -21,22 +21,21 @@ from wp_user_agents.utils import get_user_agent  # @UnresolvedImport
 
 # use log wrapper for debug and file logging.
 from wp_main.utilities.wp_logging import logger
-_log = logger("utilities").log
+log = logger("utilities").log
 
 
-def append_path(appendto_path, append_this):
+def append_path(*args):
     """ os.path.join fails if append_this starts with '/'.
         so I made my own. it's not as dynamic as os.path.join, but
-        it will work.
+        it will work. It doesn't short-circuit to a root dir when using
+        args like 'home', '/wp'.
         ex:
-            mypath = append_path("/view" , project.source_dir)
+            mypath = append_path('/view' , project.source_dir)
     """
-
-    if append_this.startswith('/'):
-        spath = (appendto_path + append_this)
-    else:
-        spath = (appendto_path + '/' + append_this)
-    return spath.replace("//", '/')
+    spath = '/'.join(args)
+    while '//' in spath:
+        spath = spath.replace('//', '/')
+    return spath
 
 
 def debug_allowed(request):
@@ -66,7 +65,7 @@ def debug_allowed(request):
         ipwarnmsg = '\n'.join((
             'Debug not allowed for ip: {}'.format(str(remote_addr)),
             '             ...DEBUG is: {}'.format(str(settings.DEBUG))))
-        _log.warn(ipwarnmsg)
+        log.warn(ipwarnmsg)
     return (ip_in_settings and bool(settings.DEBUG))
 
 
@@ -168,7 +167,7 @@ def get_filename(file_path):
     try:
         sfilename = os.path.split(file_path)[1]
     except Exception:
-        _log.error('error in os.path.split({})'.format(file_path))
+        log.error('error in os.path.split({})'.format(file_path))
         sfilename = file_path
     return sfilename
 
@@ -185,7 +184,7 @@ def get_objects_enabled(objects_):
     try:
         allobjs = objects_.filter(disabled=False)
     except Exception as ex:
-        _log.error('No objects to get!: {}\n{}'.format(objects_.__name__, ex))
+        log.error('No objects to get!: {}\n{}'.format(objects_.__name__, ex))
         allobjs = None
 
     return allobjs
@@ -261,8 +260,8 @@ def get_server(request):
     try:
         meta = request.META
     except AttributeError as exatt:
-        _log.error('Unable to retrieve META from request:\n'
-                   '{}'.format(exatt))
+        log.error('Unable to retrieve META from request:\n'
+                  '{}'.format(exatt))
         return None
 
     tryattrs = (
@@ -444,64 +443,50 @@ def parse_bool(s):
     return False
 
 
-def prepend_path(prepend_this, prependto_path):
-    """ os.path.join fails if prependto_path starts with '/'.
-        so I made my own. it's not as dynamic as os.path.join, but
-        it will work.
-        ex:
-            mypath = prepend_path("/view" , project.source_dir)
-    """
-
-    if prependto_path.startswith('/'):
-        spath = (prepend_this + prependto_path)
-    else:
-        spath = (prepend_this + '/' + prependto_path)
-    return spath.replace("//", '/')
-
-
-def remove_list_dupes(list_, max_allowed=1):
+def remove_list_dupes(lst, max_allowed=1):
     """ removes duplicates from a list object.
         default allowed duplicates is 1, you can allow more if needed.
         minimum allowed is 1. this is not a list deleter.
     """
+    if max_allowed <= 1:
+        try:
+            new = lst.__class__(set(lst))
+        except Exception as ex:
+            log.error(
+                'Incompatible type passed: {}\n{}'.format(lst.__class__, ex)
+            )
+        else:
+            return new
 
-    for item_ in [item_copy for item_copy in list_]:
-        while list_.count(item_) > max_allowed:
-            list_.remove(item_)
+    # Modify a copy, the original should remain untouched (even lists)
+    # Tuples have to be copied anyway.
+    copy = list(lst)
+    for item in lst:
+        while copy.count(item) > max_allowed:
+            copy.remove(item)
 
-    return list_
-
-
-def safe_arg(_url):
-    """ basically just trims the / from the POST args right now """
-
-    s = _url
-    if s.endswith('/'):
-        s = s[:-1]
-    if s.startswith('/'):
-        s = s[1:]
-    return s
+    return copy
 
 
-def slice_list(list_, starting_index=0, max_items=-1):
+def safe_arg(url):
+    """ basically just trims one / from the POST args right now """
+    s = url[:-1] if url.endswith('/') else url
+    return s[1:] if s.startswith('/') else s
+
+
+def slice_list(lst, start=0, max_items=-1):
     """ slice a list starting at: starting index.
         if max_items > 0 then only that length of items is returned.
         otherwise, all items are returned.
     """
-    if list_ is None:
+    if not lst:
         return []
-    if len(list_) == 0:
-        return []
-
-    sliced_ = list_[starting_index:]
-    if ((max_items > 0) and
-            (len(sliced_) > max_items)):
-        return sliced_[:max_items]
-    else:
-        return sliced_
+    if max_items > 0:
+        return lst[start: start + max_items]
+    return lst[start:]
 
 
-def trim_special(source_string):
+def trim_special(source):
     """ removes all html, and other code related special chars.
         so <tag> becomes tag, and javascript.code("write");
         becomes javascriptcodewrite.
@@ -511,10 +496,7 @@ def trim_special(source_string):
                 document.write("d");
             </script>
     """
-
-    special_chars = "<>/.'" + '"' + "#!;:&"
-    working_copy = source_string
-    for char_ in source_string:
-        if char_ in special_chars:
-            working_copy = working_copy.replace(char_, '')
-    return working_copy
+    if not source:
+        return source
+    special = '<>/.\'"#!;:\\&='
+    return ''.join((c for c in source if c not in special))
