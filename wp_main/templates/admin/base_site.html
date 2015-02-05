@@ -1,10 +1,9 @@
 {% extends "admin/base.html" %}
-{% load i18n %}
 
-{% block title %}Welborn Productions - Site Admin{% endblock %}
+{% block title %}{{ title }} | Welborn Productions Admin{% endblock %}
 
 {% block branding %}
-<h1 id="site-name">Welborn Productions - Admin</h1>
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Welborn Productions</a></h1>
 {% endblock %}
 
 {% block nav-global %}{% endblock %}

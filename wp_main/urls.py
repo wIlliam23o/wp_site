@@ -10,6 +10,8 @@ from home import views as homeviews
 from wp_main.sitemaps import sitemaps
 # get robots.txt
 from wp_main.robots import robots
+# get custom admin
+# from wp_main.admin import admin_site
 # Used for django.contrib.admin.site.urls
 from django.contrib import admin
 # Django 1.7 doesn't need this.

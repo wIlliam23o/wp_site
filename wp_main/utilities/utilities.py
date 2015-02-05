@@ -164,10 +164,12 @@ def get_datetime(date=None, shortdate=False):
 
 
 def get_filename(file_path):
+    if not file_path:
+        return file_path
     try:
         sfilename = os.path.split(file_path)[1]
     except Exception:
-        log.error('error in os.path.split({})'.format(file_path))
+        log.error('Error in os.path.split({})'.format(file_path))
         sfilename = file_path
     return sfilename
 

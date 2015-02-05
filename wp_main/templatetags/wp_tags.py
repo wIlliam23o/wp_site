@@ -35,7 +35,7 @@ from apps.models import wp_app
 from apps.phonewords.models import pw_result
 from apps.paste.models import wp_paste
 
-_log = logger("wp_main.tags").log
+log = logger('wp_main.tags').log
 
 register = template.Library()
 
@@ -64,12 +64,15 @@ def colorize_admin_css(item):
         if the object has .disabled attribute and it is set to True.
         This is used in change_list_results.html template for admin.
     """
-
+    log.debug('Checking: {}'.format(item))
+    log.debug(' Against: {}'.format(disabled_pat.pattern))
     obj_match = disabled_pat.search(item)
     if obj_match is None:
+        log.debug('No Match!')
         # This is not an object link.
         return item
     else:
+        log.debug('Matched!')
         # grab object.
         if len(obj_match.groups()) == 4:
             # beginning of a tag (<a href) (Not used right now)
@@ -80,15 +83,15 @@ def colorize_admin_css(item):
             try:
                 objid = int(idstr)
             except Exception as ex:
-                _log.error('Failed to parsed disable-item id: '
-                           '{}\n{}'.format(idstr, ex))
+                log.error('Failed to parsed disable-item id: '
+                          '{}\n{}'.format(idstr, ex))
                 return item
 
             # name/title of object (My Blog Post)
             name = obj_match.groups()[3]
         else:
             # failed to match our pattern exactly.
-            _log.debug("Incorrect number of items in match: " + str(item))
+            log.debug("Incorrect number of items in match: " + str(item))
             return item
 
     # convert to object
@@ -106,10 +109,10 @@ def colorize_admin_css(item):
         if objname == otype:
             obj = utilities.get_object_safe(objects, id=objid)
             break
-
+    log.debug('Found: {}'.format(obj))
     # no object found for this type.
     if obj is None:
-        _log.debug(''.join((
+        log.debug(''.join((
             'Colorize-Admin: Can\'t find: '
             '{} [{}]')).format(name, otype))
         return item
@@ -298,7 +301,7 @@ def highlight_python(scontent):
         highlighter.code = scontent
         results = highlighter.highlight()
     except Exception as ex:
-        _log.error('Error in highlight_python:\n{}'.format(ex))
+        log.error('Error in highlight_python:\n{}'.format(ex))
         results = scontent
     return results
 
@@ -349,7 +352,7 @@ def is_authenticated(req_or_user):
     """ Shortcut to request.user.is_authenticated() """
     if not req_or_user:
         errmsgfmt = 'Falsey object passed to is_authenticated(): {!r}'
-        _log.error(errmsgfmt.format(req_or_user))
+        log.error(errmsgfmt.format(req_or_user))
         return False
 
     if hasattr(req_or_user, 'user'):
@@ -363,10 +366,10 @@ def is_authenticated(req_or_user):
             return isauthed
         except Exception as exauthcall:
             errmsgfmt = 'Can\'t call is_authenticated() on: {}\n{}'
-            _log.error(errmsgfmt.format(user, exauthcall))
+            log.error(errmsgfmt.format(user, exauthcall))
             return False
     # Request or User was not passed!
-    _log.error('is_authenticated(): No \'user\' or \'is_authenticated\' attr!')
+    log.error('is_authenticated(): No \'user\' or \'is_authenticated\' attr!')
     return False
 
 
@@ -483,7 +486,7 @@ def log_debug(data):
         s = '\n'.join(data)
     else:
         s = str(data)
-    _log.debug(s)
+    log.debug(s)
     return data
 
 
