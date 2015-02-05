@@ -37,12 +37,25 @@
     margin-bottom: 5px;
 }
 
+.img-edit-btn {
+    position: absolute;
+    display: block;
+    top: 0px;
+    right: 5px;
+}
+
 .img-image-title {
     // Title for a single image.
     position: absolute;
     top: 2em;
     font-size: $fontbigger;
     color: $bluemain;
+}
+
+.img-image-title-private {
+    // Title for private images.
+    @extend .img-image-title;
+    color: $redmain;
 }
 
 .img-image-attribute {

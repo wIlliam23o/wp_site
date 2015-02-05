@@ -45,11 +45,20 @@
   padding: 5px;
   margin-bottom: 5px; }
 
-.img-image-title {
+.img-edit-btn {
+  position: absolute;
+  display: block;
+  top: 5px;
+  left: 5px; }
+
+.img-image-title, .img-image-title-private {
   position: absolute;
   top: 2em;
   font-size: 1.2em;
   color: #26a1f4; }
+
+.img-image-title-private {
+  color: #b90000; }
 
 .img-image-attribute, .img-image-id, .img-image-date, .img-image-album {
   display: block;

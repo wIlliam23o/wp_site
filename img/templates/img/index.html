@@ -76,8 +76,16 @@
             {% if images %}
                 {% for image in images %}
                     <div class='img-image-item'>
+                        {% if request.user.is_staff %}
+                            <a href='/adminimg/wp_image/{{ image.id }}' title='edit this image'>
+                                <div class='wpbutton img-edit-btn'>
+                                    edit image
+                                </div>
+                            </a>
+                        {% endif %}
+
                         {% block img_image_title %}
-                            <div class='img-image-title'>
+                            <div class={% if image.private %}'img-image-title-private'{% else %}'img-image-title'{% endif %}>
                                 {% if image.title %}
                                     {{ image.title }}
                                 {% else %}
