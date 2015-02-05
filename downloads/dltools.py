@@ -18,7 +18,7 @@ from projects.models import wp_project
 from misc import tools as misctools
 
 from wp_main.utilities.wp_logging import logger
-_log = logger("downloads.tools").log
+log = logger("downloads.tools").log
 
 
 def get_file_tracker(absolute_path, createtracker=True, dosave=False):
@@ -26,8 +26,8 @@ def get_file_tracker(absolute_path, createtracker=True, dosave=False):
     try:
         filetracker = file_tracker.objects.get(filename=absolute_path)
     except MultipleObjectsReturned:
-        _log.error('File tracker has multiple objects!: '
-                   '{}'.format(absolute_path))
+        log.error('File tracker has multiple objects!: '
+                  '{}'.format(absolute_path))
         return None
     except ObjectDoesNotExist:
         if createtracker:
@@ -36,13 +36,13 @@ def get_file_tracker(absolute_path, createtracker=True, dosave=False):
                 filetracker = file_tracker()
                 filetracker.set_filename(absolute_path, dosave=False)
             except Exception as ex:
-                _log.error('Unable to create new file tracker for: '
-                           '{}\n{}'.format(absolute_path, ex))
+                log.error('Unable to create new file tracker for: '
+                          '{}\n{}'.format(absolute_path, ex))
                 filetracker = None
         else:
             filetracker = None
     except Exception as ex:
-        _log.error('Error retrieving file tracker: {}'.format(absolute_path))
+        log.error('Error retrieving file tracker: {}'.format(absolute_path))
         return None
 
     if (filetracker is not None) and (dosave):
@@ -57,14 +57,17 @@ def increment_dl_count(file_path, absolute_path):
             absolute_path  : Absolute file path.
         Returns an instance on success, or None on failure.
     """
-    trackables = {
-        n: o for n, o in (
-            ('project', ptools.get_project_from_path(absolute_path)),
-            ('filetracker', get_file_tracker(absolute_path)),
-            ('misc', misctools.get_by_filename(file_path))
-        ) if o
-    }
-
+    try:
+        trackables = {
+            n: o for n, o in (
+                ('project', ptools.get_project_from_path(absolute_path)),
+                ('filetracker', get_file_tracker(absolute_path)),
+                ('misc', misctools.get_by_filename(file_path))
+            ) if o
+        }
+    except Exception as ex:
+        log.error('Trackables failed!: {}'.format(ex))
+        return None
     if trackables.get('project', None) and trackables.get('filetracker', None):
         #
         update_tracker_projects(
@@ -86,6 +89,9 @@ def update_tracker_views(absolute_path, createtracker=True, dosave=True):
         return None
 
     filetracker.view_count += 1
+    log.debug('Updated file_tracker.view_count: {} = {}'.format(
+        filetracker,
+        filetracker.view_count))
     if dosave:
         filetracker.save()
 
@@ -96,10 +102,12 @@ def update_tracker_projects(tracker, project, dosave=True):
     """ Adds a project to this tracker's project field safely. """
 
     if not isinstance(project, wp_project):
+        log.debug('Not a project: {}'.format(wp_project))
         return None
 
     trackerid = getattr(tracker, 'id', None)
     if trackerid is None:
+        log.debug('No tracker.id: {}'.format(tracker))
         return None
 
     # Tracker must be saved at least once before adding a project relation.
@@ -107,10 +115,16 @@ def update_tracker_projects(tracker, project, dosave=True):
         tracker.save()
 
     projectid = getattr(project, 'id', None)
-    if tracker.project.objects.get(id=projectid):
+    if tracker.project.get(id=projectid):
         # Project already added to this tracker.
+        log.debug('Tracker already added: {}, Project: {}'.format(
+            tracker,
+            project))
         return None
 
     tracker.project.add(project)
+    log.debug('Added new tracker to project: {} -> {}'.format(
+        tracker,
+        project))
     if dosave:
         tracker.save()

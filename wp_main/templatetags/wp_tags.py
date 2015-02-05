@@ -64,15 +64,12 @@ def colorize_admin_css(item):
         if the object has .disabled attribute and it is set to True.
         This is used in change_list_results.html template for admin.
     """
-    log.debug('Checking: {}'.format(item))
-    log.debug(' Against: {}'.format(disabled_pat.pattern))
     obj_match = disabled_pat.search(item)
     if obj_match is None:
-        log.debug('No Match!')
+        log.debug('Not an object link: {}'.format(item))
         # This is not an object link.
         return item
     else:
-        log.debug('Matched!')
         # grab object.
         if len(obj_match.groups()) == 4:
             # beginning of a tag (<a href) (Not used right now)
