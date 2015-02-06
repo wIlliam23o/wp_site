@@ -2,15 +2,11 @@
     Tools for gathering info about other models and their counts.
     (downloads, views, etc.)
 """
-
+import logging
 from functools import partial
 
-from wp_main.utilities import (
-    utilities,
-    wp_logging
-)
 
-_log = wp_logging.logger('stats.tools').log
+log = logging.getLogger('wp.stats.tools')
 
 
 def get_models_info(modelinfo):
@@ -39,7 +35,7 @@ def get_model_info(model, orderby=None, displayattr=None, displayattrsep=None):
         Returns a StatsGroup on success, or None on failure.
     """
     if not hasattr(model, 'objects'):
-        _log.error('Model with no objects attribute!: {}'.format(model))
+        log.error('Model with no objects attribute!: {}'.format(model))
         return None
 
     # Try getting Model._meta.verbose_name_plural. Use None on failure.
@@ -48,7 +44,7 @@ def get_model_info(model, orderby=None, displayattr=None, displayattrsep=None):
     stats = StatsGroup(name=name)
     if orderby:
         if not validate_orderby(model, orderby):
-            _log.error('Invalid orderby for {}: {}'.format(name, orderby))
+            log.error('Invalid orderby for {}: {}'.format(name, orderby))
             return None
         get_objects = partial(model.objects.order_by, orderby)
     else:
@@ -63,7 +59,7 @@ def get_model_info(model, orderby=None, displayattr=None, displayattrsep=None):
             if statitem:
                 stats.items.append(statitem)
     except Exception as ex:
-        _log.error('Error getting objects from: {}\n{}'.format(name, ex))
+        log.error('Error getting objects from: {}\n{}'.format(name, ex))
 
     return stats if stats else None
 
@@ -94,7 +90,7 @@ def get_object_info(obj, displayattr=None, displayattrsep=None):
             if name:
                 break
     else:
-        _log.error('Object without a name!: {}'.format(obj))
+        log.error('Object without a name!: {}'.format(obj))
     return StatsItem(name=name, download_count=dlcount, view_count=viewcount)
 
 
@@ -112,7 +108,7 @@ def validate_orderby(modelobj, orderby):
         else:
             mname = 'unknown model'
         errmsg = '\nUnable to create temp object for: {}\n{}'
-        _log.error(errmsg.format(mname, ex))
+        log.error(errmsg.format(mname, ex))
         return None
     if orderby.startswith('-'):
         orderby = orderby.strip('-')

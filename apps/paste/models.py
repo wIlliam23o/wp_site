@@ -1,10 +1,11 @@
-from django.db import models
+import logging
 from datetime import datetime
 
-from wp_main.utilities.wp_logging import logger
+from django.db import models
+
 from wp_main.utilities import id_tools
 
-_log = logger('apps.paste.models').log
+log = logging.getLogger('wp.apps.paste.models')
 
 
 def repr_header():
@@ -193,7 +194,7 @@ class wp_paste(models.Model):  # noqa
         try:
             elapsed = datetime.today() - self.publish_date
         except Exception as ex:
-            _log.error('Error getting elapsed time:\n{}'.format(ex))
+            log.error('Error getting elapsed time:\n{}'.format(ex))
             return False
         return (elapsed.days > 0)
 

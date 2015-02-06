@@ -2,7 +2,7 @@
     Holds various models for uploading/viewing images shared with the img app.
     -Christopher Welborn 2-2-15
 """
-
+import logging
 from datetime import datetime
 
 from django.db import models
@@ -10,8 +10,7 @@ from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 
 from wp_main.utilities import id_tools
-from wp_main.utilities.wp_logging import logger
-log = logger('img.models').log
+log = logging.getLogger('wp.img.models')
 
 
 class wp_image(models.Model):  # noqa
@@ -31,6 +30,15 @@ class wp_image(models.Model):  # noqa
         db_index=True,
         blank=True,
         help_text='Image ID for building urls.')
+
+    # File name, saved as a convenience for searching.
+    filename = models.CharField(
+        'file name',
+        max_length=1024,
+        db_index=True,
+        blank=True,
+        default='',
+        help_text='File name for this image, read only.')
 
     # Publish date.
     publish_date = models.DateTimeField(
@@ -87,6 +95,12 @@ class wp_image(models.Model):  # noqa
         default=False,
         help_text='Whether or not this image is private (not listable).')
 
+    # Download count for the image.
+    download_count = models.IntegerField(
+        'download count',
+        default=0,
+        help_text='How many times this image has been downloaded.')
+
     # View count for the image.
     view_count = models.IntegerField(
         'view count',
@@ -119,10 +133,16 @@ class wp_image(models.Model):  # noqa
 
     def save(self, *args, **kwargs):
         """ Generate image_id before saving. """
+        if (not self.filename) and self.image:
+            self.filename = self.image.name
+            log.debug('Saved with filename: {}'.format(self.filename))
         super(wp_image, self).save(*args, **kwargs)
         # Generate a image_id for this image if it doesnt have one already.
         if not self.image_id:
             self.generate_id()
+        # Save the filename for this image.
+        if not self.filename:
+            self.update_filename()
         # TODO: Generate self.width and self.height.
 
     def generate_id(self):
@@ -157,6 +177,18 @@ class wp_image(models.Model):  # noqa
         # Decode imageid given..
         return id_tools.decode_id(imageid)
 
+    def update_filename(self):
+        """ Updates the .filename attribute based on image.name. """
+        if not self.image:
+            return None
+        if self.filename == self.image.name:
+            return None
+
+        self.filename = self.image.name
+        # This will call update_filename() again, but do nothing.
+        self.save()
+        log.debug('Updated filename: {}'.format(self.filename))
+
 
 @receiver(pre_delete, sender=wp_image)
 def wp_image_delete(sender, instance, **kwargs):
@@ -169,4 +201,4 @@ def wp_image_delete(sender, instance, **kwargs):
             imgname = getattr(instance.image, 'name', '')
             if not imgname:
                 imgname = repr(instance.image)
-            log.error('Unable to delete image: {}'.format(imgname))
+            log.error('Unable to delete image: {}\n{}'.format(imgname, ex))

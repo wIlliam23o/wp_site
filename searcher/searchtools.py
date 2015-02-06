@@ -6,16 +6,15 @@
 
     -Christopher Welborn Mar 28, 2013
 '''
-
+import logging
 # Global settings
 from django.conf import settings
 # For getting searchable apps.
 from django.utils.module_loading import import_module
 # Safe to view generated html
 from django.utils.safestring import mark_safe
-# Logging
-from wp_main.utilities.wp_logging import logger
-_log = logger("search.tools").log
+
+log = logging.getLogger('wp.search.tools')
 
 # Apps must have a search.py module that implements these functions:
 must_implement = (
@@ -139,7 +138,7 @@ def get_apps():
                 app = import_module(appname)
                 apps.append(app)
             except ImportError as ex:
-                _log.error('Error importing app: {}\n{}'.format(appname, ex))
+                log.error('Error importing app: {}\n{}'.format(appname, ex))
     return apps
 
 
@@ -168,7 +167,7 @@ def has_illegal_chars(querystr):
 
     illegalchars = (':', '<', '>', ';', 'javascript:', '{', '}', '[', ']')
     for char in illegalchars:
-        #_log.debug("checking " + char_ + " in " + query_.replace(' ', ''))
+        # log.debug("checking " + char_ + " in " + query_.replace(' ', ''))
         if char in querystr.replace(' ', ''):
             return True
 
@@ -213,11 +212,11 @@ def highlight_queries(querystr, scontent):
             if len(query.replace(' ', '')) > 1:
                 # contains query
                 if ((query in word_lower) and
-                   # not words that are already bold
-                   (not "<strong>" in word_) and
-                   (not "</strong>" in word_) and
-                   # not words that may be html tags
-                   (not (word_.count('=') and word_.count('>')))):
+                        # not words that are already bold
+                        ('<strong>' not in word_) and
+                        ('</strong>' not in word_) and
+                        # not words that may be html tags
+                        (not (word_.count('=') and word_.count('>')))):
 
                     # stops highlighting 'a' and 'apple' in 'applebaum'
                     # when queries are: 'a', 'apple', 'applebaum'
@@ -225,7 +224,7 @@ def highlight_queries(querystr, scontent):
                     possible_fix = word_.replace(word_trim, boldword)
                     if len(possible_fix) > len(fixed_word):
                         fixed_word = possible_fix
-                        #_log.debug("set possible: " + fixed_word)
+                        # log.debug("set possible: " + fixed_word)
 
         fixed_words.append(fixed_word)
     return ' '.join(fixed_words)
@@ -259,7 +258,7 @@ def is_searchable(searchmod):
             'Module {} is missing search functions:'.format(name),
             '    {}'.format('\n    '.join(missing))
         ]
-        _log.error('\n'.join(loglines))
+        log.error('\n'.join(loglines))
         return False
     # Module implements all must-have functions.
     return True
@@ -312,7 +311,7 @@ def search_app(searchmod, queries, request=None):
     except Exception as ex:
         logfmt = 'Error searching app: {}\n{}'
         modname = getattr(searchmod, '__name__', '<unknown>')
-        _log.error(logfmt.format(modname, ex))
+        log.error(logfmt.format(modname, ex))
     return results
 
 
@@ -348,7 +347,7 @@ def valid_query(querystr):
     # Gotcha checkers: 3 character minimum, too many spaces, etc.
     if len(querystr.replace(' ', '')) < 3:
         # check a single term.
-        search_warning = "3 character minimum, try again."
+        search_warning = '3 character minimum, try again.'
     elif ' ' in querystr:
         # check all terms when seperated by a space.
         queries = querystr.split(' ')
@@ -357,12 +356,12 @@ def valid_query(querystr):
                 search_warning = 'Too many spaces, try again.'
                 break
             elif query_len < 3:
-                search_warning = ('3 character minimum for all terms, '
-                                  'try again.')
+                search_warning = (
+                    '3 character minimum for all terms, try again.')
                 break
     # final illegal char check
     if has_illegal_chars(querystr):
-        _log.debug("illegal chars in query: " + querystr)
+        log.debug('illegal chars in query: {}'.format(querystr))
         search_warning = 'Illegal characters in search term, try again.'
 
     return search_warning

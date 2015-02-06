@@ -12,7 +12,6 @@ SYSVERSION = sys.version
 import settings_local
 TEMPLATE_DEBUG, DEBUG = settings_local.TEMPLATE_DEBUG, settings_local.DEBUG
 
-
 # Django messages framework, message-levels
 # from django.contrib.messages import constants as message_constants
 # MESSAGE_LEVEL = message_constants.ERROR
@@ -221,9 +220,6 @@ INSTALLED_APPS = (
     'viewer',
 )
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
 LOGGING = {
@@ -233,6 +229,34 @@ LOGGING = {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
         }
+    },
+    'formatters': {
+        'verbose': {
+            'format': '\n'.join((
+                '%(asctime)s - [%(levelname)s] %(name)s.%(funcName)s',
+                '  %(filename)s:(%(lineno)d):',
+                '      %(message)s\n'))
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': ('DEBUG' if DEBUG else 'ERROR'),
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'verbose',
+            'filename': os.path.join(BASE_DIR, 'welbornprod.log'),
+            'maxBytes': 2097152,
+            'backupCount': 0
+        }
+    },
+    'loggers': {
+        'wp': {
+            'handlers': ['file'],
+            'level': ('DEBUG' if DEBUG else 'ERROR'),
+            'propogate': True
+        }
     }
 }
 
@@ -240,19 +264,16 @@ LOGGING = {
 # Only turn error emails on with the remote server
 # They are driving me nuts when I'm experimenting locally and DEBUG == False.
 if SERVER_LOCATION == 'remote':
-    LOGGING['handlers'] = {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
+    LOGGING['handlers']['mail_admins'] = {
+        'level': 'ERROR',
+        'filters': ['require_debug_false'],
+        'class': 'django.utils.log.AdminEmailHandler'
     }
-    LOGGING['loggers'] = {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        }
+    LOGGING['loggers']['django.request'] = {
+        'handlers': ['mail_admins'],
+        'level': 'ERROR',
+        'propagate': True,
+
     }
 
 # Disable redirect panel (per new debug_toolbar method.)

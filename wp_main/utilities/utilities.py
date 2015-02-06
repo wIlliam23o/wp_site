@@ -8,7 +8,7 @@
           @author: Christopher Welborn <cj@welbornprod.com>
     @organization: welborn productions <welbornprod.com>
 """
-
+import logging
 import os
 import sys
 import traceback
@@ -19,9 +19,7 @@ from django.conf import settings
 # User-Agent helper...
 from wp_user_agents.utils import get_user_agent  # @UnresolvedImport
 
-# use log wrapper for debug and file logging.
-from wp_main.utilities.wp_logging import logger
-log = logger("utilities").log
+log = logging.getLogger('wp.utilities')
 
 
 def append_path(*args):

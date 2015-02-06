@@ -2,12 +2,12 @@
     Provides renderable nodes for templates.
     -Christopher Welborn 09-03-14
 """
-
+import logging
 import os
 from django import template
 from wp_main.utilities import utilities, htmltools, highlighter
-from wp_main.utilities.wp_logging import logger
-_log = logger('templatenodes').log
+
+log = logging.getLogger('wp.templatenodes')
 
 
 register = template.Library()
@@ -81,7 +81,7 @@ def var_quotes(s, varname=None):
     if s.startswith(('"', "'")):
         if not (s[0] == s[-1]):
             errmsg = 'Mismatched quotes for \'{}\'!'.format(varname)
-            _log.error(errmsg)
+            log.error(errmsg)
             raise template.TemplateSyntaxError(errmsg)
         else:
             return s[1:-1]
@@ -137,7 +137,7 @@ class Highlighter(template.Node):
             try:
                 embedded = template.Variable(self.embedded).resolve(context)
             except template.VariableDoesNotExist:
-                _log.debug('Bad variable for \'embedded\': {}'.format(
+                log.debug('Bad variable for \'embedded\': {}'.format(
                     self.embedded))
                 embedded = False
         else:
@@ -151,9 +151,9 @@ class Highlighter(template.Node):
             code=code,
             classes=['highlighted-embedded'] if embedded else None)
         content = hl.highlight()
-        _log.debug('\n{d}\nHighlighter:\n\n{c}\n{d}\n'.format(
-            c=content,
-            d='-' * 80))
+        # log.debug('\n{d}\nHighlighter:\n\n{c}\n{d}\n'.format(
+        #     c=content,
+        #     d='-' * 80))
         return content
 
 
@@ -175,7 +175,7 @@ class ImageViewer(template.Node):
                 self.images_dir,
                 varname='ImageViewer.images_dir')
 
-        # _log.debug('ImageViewer.path: {}'.format(imgdir))
+        # log.debug('ImageViewer.path: {}'.format(imgdir))
         self.images_dir = imgdir
         content = self.get_images()
         return content if content else ''
@@ -204,7 +204,7 @@ class ImageViewer(template.Node):
         try:
             all_files = os.listdir(images_dir)
         except Exception as ex:
-            _log.debug('Can\'t list dir: {}\n{}'.format(images_dir, ex))
+            log.debug('Can\'t list dir: {}\n{}'.format(images_dir, ex))
             return None
 
         # Helper functions for building screenshots.

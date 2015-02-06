@@ -1,10 +1,11 @@
+import logging
+import os.path
+
 # Mark generated Html as safe to view.
 from django.utils.safestring import mark_safe
 # Gloval settings
 from django.conf import settings
 
-# File tools
-import os.path
 
 # Download tools
 from downloads import dltools
@@ -12,8 +13,7 @@ from downloads import dltools
 # Local Tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
-from wp_main.utilities.wp_logging import logger
-_log = logger('downloads').log
+log = logging.getLogger('wp.downloads')
 
 
 def index(request):
@@ -54,8 +54,8 @@ def download(request, file_path):
 
     if not absolute_path:
         # File doesn't exist. Return an error.
-        _log.debug("file doesn't exist: " + file_path)
-        alert_message = "Sorry, that file doesn't exist."
+        log.debug('file doesn\'t exist: {}'.format(file_path))
+        alert_message = 'Sorry, that file doesn\'t exist.'
         main_content = '\n'.join((
             '<div class=\'wp-block\'>',
             '<a href=\'/\'><span>Click here to go home.</span></a>',
@@ -71,7 +71,7 @@ def download(request, file_path):
         response = responses.clean_response('home/main.html', context)
     else:
         # redirect to actual file.
-        # _log.debug("redirecting to: " + static_path)
+        # log.debug("redirecting to: " + static_path)
         response = responses.redirect_response(static_path)
         # File to track? (not a directory)
         if os.path.isfile(absolute_path):

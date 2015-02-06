@@ -1,3 +1,4 @@
+import logging
 # Version info
 from django.utils.version import get_version as get_django_version
 from django.conf import settings
@@ -16,8 +17,7 @@ from wp_main.utilities import (
 )
 
 # logging
-from wp_main.utilities.wp_logging import logger
-_log = logger("home").log
+log = logging.getLogger('wp.home')
 # @todo: make log_context() so context keys/values can be passed to logging!
 # Home tools
 from home import hometools
@@ -129,7 +129,7 @@ def view_error(request, error_number):
     serror = str(error_number)
     # if its not one of these I don't have a template for it,
     # so it really would be a file-not-found error.
-    if not serror in ['403', '404', '500']:
+    if serror not in ('403', '404', '500'):
         serror = '404'
     context = {
         'request': request,
@@ -166,14 +166,14 @@ def view_login(request):
     username = request.REQUEST.get('user', None)
     pw = request.REQUEST.get('pw', None)
 
-    #_log.debug("username: " + str(username) + ", pw: " + str(pw))
+    # log.debug("username: " + str(username) + ", pw: " + str(pw))
 
     response = responses.redirect_response("/badlogin.html")
     if (username is not None) and (pw is not None):
 
         user = auth.authenticate(user=username, password=pw)
 
-        #_log.debug("USER=" + str(user))
+        # log.debug("USER=" + str(user))
 
         if user is not None:
             if user.is_active():
@@ -181,7 +181,7 @@ def view_login(request):
                 referer_view = responses.get_referer_view(request,
                                                           default=None)
 
-                #_log.debug("referer_view: " + str(referer_view))
+                # log.debug("referer_view: " + str(referer_view))
 
                 # Change response based on whether or not prev. view was given.
                 if referer_view is None:
@@ -200,7 +200,7 @@ def view_scriptkids(request):
     """
 
     # get ip if possible.
-    #ip_address = request.META.get("HTTP_X_FORWARDED_FOR", None)
+    # ip_address = request.META.get("HTTP_X_FORWARDED_FOR", None)
     # if ip_address is None:
     #    ip_address = request.META.get("REMOTE_ADDR", None)
     ip_address = utilities.get_remote_ip(request)
@@ -209,7 +209,7 @@ def view_scriptkids(request):
         path = request.path
     except AttributeError:
         path = '<error getting path>'
-    _log.error('ScriptKid Access from: {} -> {}'.format(ip_address, path))
+    log.error('ScriptKid Access from: {} -> {}'.format(ip_address, path))
 
     # get insulting image to display
     scriptkid_img = hometools.get_scriptkid_image()

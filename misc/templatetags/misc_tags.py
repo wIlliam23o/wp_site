@@ -6,10 +6,10 @@
 
 @author: Christopher Welborn
 '''
+import logging
 
 from django import template
 from django.utils.safestring import mark_safe
-from wp_main.utilities.wp_logging import logger
 from wp_main.utilities import htmltools
 
 from misc import tools as misctools
@@ -18,7 +18,7 @@ from misc.types import misctype_byname
 
 register = template.Library()
 
-_log = logger('misc_tags').log
+log = logging.getLogger('wp.misc_tags')
 
 
 @register.filter

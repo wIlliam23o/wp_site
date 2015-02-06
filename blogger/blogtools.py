@@ -7,6 +7,7 @@
     -Christopher Welborn <cj@welbornprod.com> - Mar 20, 2013
 '''
 
+import logging
 
 # Global settings
 from django.conf import settings
@@ -19,9 +20,7 @@ import lxml.html
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
-from wp_main.utilities.wp_logging import logger
-_log = logger("blog.tools").log
-
+log = logging.getLogger('wp.blog.tools')
 # Blog Info
 from blogger.models import wp_blog
 
@@ -85,7 +84,7 @@ def get_post_body(post):
     """
 
     if post is None:
-        _log.error('post is None!')
+        log.error('post is None!')
         return ''
 
     template = None
@@ -259,7 +258,7 @@ def get_tag_links(post):
     try:
         ptags = post.tags.replace(',', ' ')
     except Exception as ex:
-        _log.error('Error getting post tags for: {}\n{}'.format(post, ex))
+        log.error('Error getting post tags for: {}\n{}'.format(post, ex))
         tag_list = []
     else:
         ptags = ptags.replace(',', ' ')
@@ -298,7 +297,7 @@ def get_tag_list(post_object_or_tag_string):
         except:
             # no valid object passed.
             errfmt = 'Error getting tags from: {}'
-            _log.error(errfmt.format(post_object_or_tag_string))
+            log.error(errfmt.format(post_object_or_tag_string))
             return []
     # fix commas
     ptags = ptags.replace(',', ' ')

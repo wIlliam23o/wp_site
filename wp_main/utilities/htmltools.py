@@ -6,16 +6,11 @@
    -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
 '''
 
-
-# Files/Paths
+import logging
 import os.path
-from sys import version as sysversion
-# Global settings
-# from django.conf import settings
-
-# Regex for email hiding
-import re
 import base64
+import re
+from sys import version as sysversion
 
 # Fixing html fragments (from shortening blog posts and other stuff)
 from tidylib import tidy_fragment
@@ -43,9 +38,7 @@ from django.conf import settings
 # Basic utilities and highlighting
 from wp_main.utilities import (highlighter, utilities)
 
-# Log
-from wp_main.utilities.wp_logging import logger
-_log = logger("utilities.htmltools").log
+log = logging.getLogger('wp.utilities.htmltools')
 
 # Fix for python 3 in strip_()
 if sysversion[0] == '3':
@@ -526,8 +519,8 @@ def auto_link_line(str_, link_list, **kwargs):
         if len(link_list[0]) < 2:
             return str_
     except Exception:
-        _log.error('Invalid input to auto_link()!, '
-                   'expecting a list/tuple of 2-tuple/lists')
+        log.error('Invalid input to auto_link()!, '
+                  'expecting a list/tuple of 2-tuple/lists')
         return str_
     # build attributes
 
@@ -567,8 +560,8 @@ def auto_link_line(str_, link_list, **kwargs):
                                     ])
                 str_ = str_.replace(link_text, new_link)
         except Exception as ex:
-            _log.error('Error in auto_link_line(): {}\n{}'.format(link_pat,
-                                                                  ex))
+            log.error('Error in auto_link_line(): {}\n{}'.format(link_pat,
+                                                                 ex))
             return str_
     return str_
 
@@ -607,7 +600,7 @@ def clean_html(source_string):
     # these things have to be done in a certain order to work correctly.
     # hide_email, highlight, remove_comments, remove_whitespace
     if source_string is None:
-        _log.debug('Final HTML for page was None!')
+        log.debug('Final HTML for page was None!')
         return ''
 
     return remove_whitespace(
@@ -710,7 +703,7 @@ def fix_open_tags(source):
     fixedhtml, errors = tidy_fragment(source)
     if settings.DEBUG and errors:
         errors = filter_tidylib_errors(errors)
-        _log.debug('Tidylib errors:\n{}'.format(errors))
+        log.debug('Tidylib errors:\n{}'.format(errors))
     return fixedhtml
 
 
@@ -776,12 +769,12 @@ def get_html_file(wpobj):
     elif hasattr(wpobj, 'contentfile'):
         htmlattr = 'contentfile'
     else:
-        _log.error('Object doesn\'t have a html file attribute!: '
-                   '{}'.format(wpobj.__name__))
+        log.error('Object doesn\'t have a html file attribute!: '
+                  '{}'.format(wpobj.__name__))
         return ''
     if not hasattr(wpobj, 'alias'):
-        _log.error('Object doesn\'t have an \'alias\' attribute!: '
-                   '{}'.format(wpobj.__name__))
+        log.error('Object doesn\'t have an \'alias\' attribute!: '
+                  '{}'.format(wpobj.__name__))
         return ''
     # Get objects html_url/contentfile
     obj_file = getattr(wpobj, htmlattr)
@@ -831,7 +824,7 @@ def get_screenshots(images_dir, noscript_image=None):
     try:
         all_files = os.listdir(images_dir)
     except Exception as ex:
-        _log.debug('Can\'t list dir: {}\n{}'.format(images_dir, ex))
+        log.debug('Can\'t list dir: {}\n{}'.format(images_dir, ex))
         return None
 
     # Help functions for building screenshots.
@@ -921,7 +914,7 @@ def load_html_file(sfile, request=None, context=None, template=None):
             template = loader.get_template(sfile)
         except TemplateDoesNotExist:
             # It wasn't a template name.
-            _log.debug('Not a template: {}'.format(sfile))
+            log.debug('Not a template: {}'.format(sfile))
 
     if template:
         # Found template for this file, use it.
@@ -931,7 +924,7 @@ def load_html_file(sfile, request=None, context=None, template=None):
                 try:
                     contextobj = RequestContext(request, context)
                 except Exception as ex:
-                    _log.error((
+                    log.error((
                         'Error creating request context from: {}\n{}'
                     ).format(request, ex))
                     return ''
@@ -948,7 +941,7 @@ def load_html_file(sfile, request=None, context=None, template=None):
             # Good content, return it.
             return content
         except Exception as ex:
-            _log.error(''.join([
+            log.error(''.join([
                 'Error rendering template: {} '.format(sfile),
                 'Context: {}'.format(context),
                 '\n{}'.format(ex),
@@ -956,7 +949,7 @@ def load_html_file(sfile, request=None, context=None, template=None):
             return ''
 
     # no template, probably a filename. check it:
-    _log.debug('No template, falling back to HTML: {}'.format(sfile))
+    log.debug('No template, falling back to HTML: {}'.format(sfile))
     if not os.path.isfile(sfile):
         # try getting absolute path
         spath = utilities.get_absolute_path(sfile)
@@ -964,7 +957,7 @@ def load_html_file(sfile, request=None, context=None, template=None):
             sfile = spath
         else:
             # no file found.
-            _log.debug('No file found at: {}'.format(sfile))
+            log.debug('No file found at: {}'.format(sfile))
             return ''
 
     try:
@@ -973,17 +966,17 @@ def load_html_file(sfile, request=None, context=None, template=None):
             return fhtml.read()
 
     except IOError as exIO:
-        _log.error('Cannot open file: {}\n{}'.format(sfile, exIO))
+        log.error('Cannot open file: {}\n{}'.format(sfile, exIO))
         return ''
 
     except OSError as exOS:
-        _log.error((
+        log.error((
             'Possible bad permissions opening file: {}\n{}'
         ).format(sfile, exOS))
         return ''
 
     except Exception as ex:
-        _log.error('General error opening file: {}\n{}'.format(sfile, ex))
+        log.error('General error opening file: {}\n{}'.format(sfile, ex))
         return ''
 
 
@@ -1140,7 +1133,7 @@ def render_html(template_name, **kwargs):
         if request:
             errstr = '{} with request context'.format(errstr)
         message = '{}: {}'.format(errstr, template_name)
-        utilities.logtraceback(_log.error, message=message)
+        utilities.logtraceback(log.error, message=message)
 
         return None
 

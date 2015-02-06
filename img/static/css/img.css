@@ -48,8 +48,8 @@
 .img-edit-btn {
   position: absolute;
   display: block;
-  top: 5px;
-  left: 5px; }
+  top: 0px;
+  right: 5px; }
 
 .img-image-title, .img-image-title-private {
   position: absolute;
@@ -60,18 +60,18 @@
 .img-image-title-private {
   color: #b90000; }
 
-.img-image-attribute, .img-image-id, .img-image-date, .img-image-album {
+.img-image-attribute {
   display: block;
   margin-left: 75%; }
 
-.img-image-label, .img-image-id-label, .img-image-date-label, .img-image-album-label {
+.img-image-label {
   display: inline-block;
   color: #919191;
   font-size: 0.75em;
   width: 4em;
   text-align: right; }
 
-.img-image-value, .img-image-id-value, .img-image-date-value, .img-image-album-value {
+.img-image-value {
   display: inline;
   color: #26a1f4;
   font-size: 0.8em; }

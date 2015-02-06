@@ -10,15 +10,14 @@
 
    start date: May 31, 2013
 '''
-
+import logging
 from django import template
 from django.utils.safestring import mark_safe  # , mark_for_escaping
 from projects import tools as ptools
 from wp_main.utilities import utilities, htmltools
-from wp_main.utilities.wp_logging import logger
 import os.path
 
-_log = logger("projects.tags").log
+log = logging.getLogger('wp.projects.tags')
 
 register = template.Library()
 
@@ -59,7 +58,7 @@ def process_project_html(project, request=None):
         projects.tools.process_injections()
     """
     if project is None:
-        _log.debug('received None project!')
+        log.debug('received None project!')
         return ""
 
     try:
@@ -71,7 +70,7 @@ def process_project_html(project, request=None):
                 'project': project
             })
     except Exception as ex:
-        _log.debug("Error processing injections:\n" + str(ex))
+        log.debug("Error processing injections:\n" + str(ex))
         return ""
     else:
         return mark_safe(proj_html)
@@ -103,7 +102,7 @@ class DownloadLink(template.Node):
         try:
             self.project = template.Variable(self.project).resolve(context)
         except template.VariableDoesNotExist:
-            _log.error('Bad variable passed: {}'.format(self.project))
+            log.error('Bad variable passed: {}'.format(self.project))
             return ''
         if self.desc is not None:
             try:
@@ -175,12 +174,12 @@ class SourceView(template.Node):
         try:
             self.project = template.Variable(self.project).resolve(context)
         except template.VariableDoesNotExist:
-            _log.error('Bad project variable passed: {}'.format(self.project))
+            log.error('Bad project variable passed: {}'.format(self.project))
             return ''
         try:
             self.request = template.Variable(self.request).resolve(context)
         except template.VariableDoesNotExist:
-            _log.error('Bad request variable passed: {}'.format(self.request))
+            log.error('Bad request variable passed: {}'.format(self.request))
             return ''
 
         content = self.get_sourceview()
@@ -203,7 +202,7 @@ class SourceView(template.Node):
         # has good link?
         if not relativepath:
             logfmt = 'Missing source file/dir for: {}'
-            _log.debug(logfmt.format(self.project.name))
+            log.debug(logfmt.format(self.project.name))
 
         # get default filename to display in link.
         if self.project.source_file:

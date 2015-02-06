@@ -1,4 +1,4 @@
-# File/Path
+import logging
 import os.path
 # Standard Errors
 from django.http import Http404
@@ -19,15 +19,13 @@ from projects import tools as ptools
 from misc import tools as misctools
 
 
-# Logging
-from wp_main.utilities.wp_logging import logger
-_log = logger('viewer').log
+log = logging.getLogger('wp.viewer')
 
 
 def logdebug(s):
     """ Write log message only if settings.DEBUG. """
     if settings.DEBUG:
-        _log.debug(s)
+        log.debug(s)
 
 
 @csrf_protect
@@ -50,7 +48,7 @@ def ajax_contents(request):
 
         if not file_info:
             badfile = get_data.get('file', '<No Filename>')
-            _log.error('ajax_contents(): File not found: {}'.format(badfile))
+            log.error('ajax_contents(): File not found: {}'.format(badfile))
             exc = Http404('File not found, sorry.')
             return responses.json_response_err(exc)
 
@@ -90,7 +88,7 @@ def ajax_contents(request):
         # send json encoded data.
         return responses.json_response(file_info)
     else:
-        _log.error('ajax_contents(): No file name provided.')
+        log.error('ajax_contents(): No file name provided.')
         return responses.json_response_err(Http404("No file name provided!"))
 
 
@@ -159,7 +157,7 @@ def get_using_paths(dir_path, absolute_path=None, proj=None):
         files = os.listdir(absolute_path)
     except Exception as ex:
         files = []
-        _log.debug("unable to listdir: " + absolute_path + '\n' + str(ex))
+        log.debug("unable to listdir: " + absolute_path + '\n' + str(ex))
 
     # no files in this directory, or bad dir.
     if len(files) == 0:
@@ -176,7 +174,7 @@ def get_using_paths(dir_path, absolute_path=None, proj=None):
         if proj.source_file:
             static_path = proj.source_file
             absolute_path = utilities.get_absolute_path(static_path)
-            #_log.debug("dir passed: using source_file: " + absolute_path)
+            # log.debug("dir passed: using source_file: " + absolute_path)
         else:
             # just use first file found.
             static_path = utilities.append_path(dir_path, files[0])
@@ -191,8 +189,8 @@ def get_file_info(file_path):
     static_path = utilities.get_relative_path(file_path)
     # no file to load.
     if not absolute_path:
-        _log.error('Invalid file path for viewer.get_file_content(): '
-                   '{}'.format(file_path))
+        log.error('Invalid file path for viewer.get_file_content(): '
+                  '{}'.format(file_path))
         raise Http404("Sorry, that file doesn't exist.")
 
     project = ptools.get_project_from_path(absolute_path)
@@ -224,8 +222,8 @@ def get_file_info(file_path):
             miscobj.view_count += 1
             miscobj.save()
         else:
-            _log.debug('get_file_content: not a project or misc object: '
-                       '{}'.format(file_path))
+            log.debug('get_file_content: not a project or misc object: '
+                      '{}'.format(file_path))
 
     # Update file tracker
     if os.path.isfile(absolute_path):
@@ -244,12 +242,14 @@ def get_file_info(file_path):
         with open(absolute_path) as fread:
             file_content = fread.read()
     except Exception as ex:
-        _log.error("Error loading file: " + absolute_path + '\n' + str(ex))
-        raise Http404("Sorry, I can't load that file right now.")
+        log.error('Error loading file: {}\n{}'.format(absolute_path, ex))
+        raise Http404('Sorry, I can\'t load that file right now.')
 
-    fileinfo = {'project': project,
-                'miscobj': miscobj,
-                'static_path': static_path,
-                'absolute_path': absolute_path,
-                'file_content': file_content, }
+    fileinfo = {
+        'project': project,
+        'miscobj': miscobj,
+        'static_path': static_path,
+        'absolute_path': absolute_path,
+        'file_content': file_content,
+    }
     return fileinfo

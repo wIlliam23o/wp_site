@@ -1,3 +1,4 @@
+import logging
 import os.path
 
 # Django decorators
@@ -7,18 +8,17 @@ from django.conf import settings
 
 # Local stuff
 from wp_main.utilities import responses, utilities
-from wp_main.utilities.wp_logging import logger
 from apps.phonewords import phone_words, pwtools
 
 from apps.models import wp_app
-_log = logger('apps.phonewords.views').log
+log = logging.getLogger('wp.apps.phonewords.views')
 
 try:
     phonewordsapp = wp_app.objects.get(alias='phonewords')
     app_version = phonewordsapp.version
 except Exception as ex:
-    _log.error('Phonewords has no database entry!\n'
-               'Version will be incorrect:\n{}'.format(ex))
+    log.error('Phonewords has no database entry!\n'
+              'Version will be incorrect:\n{}'.format(ex))
     app_version = '1.0.0'
 
 
@@ -63,7 +63,7 @@ def view_results(request, args=None):
         cachedresult = pwtools.lookup_results(query)
         if cachedresult:
             cache_used = True
-            _log.debug('Using cached result: {}'.format(cachedresult))
+            log.debug('Using cached result: {}'.format(cachedresult))
             total = cachedresult.attempts
             results = pwtools.get_results(cachedresult)
             if results:
@@ -71,7 +71,7 @@ def view_results(request, args=None):
                 lookupfunc = None
 
         else:
-            _log.debug('No cached found for: {}'.format(query))
+            log.debug('No cached found for: {}'.format(query))
 
     if lookupfunc:
         # Get wp words file.
@@ -84,38 +84,39 @@ def view_results(request, args=None):
             except ValueError as exval:
                 errors = exval
             except Exception as ex:
-                _log.error('Error looking up number: {}\n{}'.format(query, ex))
+                log.error('Error looking up number: {}\n{}'.format(query, ex))
                 errors = ex
             else:
                 # Good results, fix them.
                 try:
                     results, total = fix_results(rawresults)
                 except Exception as ex:
-                    _log.error('Error fixing results:\n{}'.format(ex))
+                    log.error('Error fixing results:\n{}'.format(ex))
                     errors = Exception('Sorry, there was an error parsing '
                                        'the results.<br>{}'.format(ex))
                 # Cache these results for later if its a number.
                 if method == 'number' and (not cache_used):
                     pwtools.save_results(query, results, total)
         else:
-            _log.error('missing word file: {}'.format(wordfile))
+            log.error('missing word file: {}'.format(wordfile))
             errors = Exception('Can\'t find word file!')
 
     # Return response.
-    context = {'request': request,
-               'version': app_version,
-               'hasargs': True,
-               'extra_style_link_list':
-               [utilities.get_browser_style(request)],
-               'query': args['query'],
-               'results': results,
-               'errors': errors,
-               'total': total,
-               }
+    context = {
+        'request': request,
+        'version': app_version,
+        'hasargs': True,
+        'extra_style_link_list': [utilities.get_browser_style(request)],
+        'query': args['query'],
+        'results': results,
+        'errors': errors,
+        'total': total,
+    }
 
-    return responses.clean_response_req('phonewords/index.html',
-                                        context,
-                                        request=request)
+    return responses.clean_response_req(
+        'phonewords/index.html',
+        context,
+        request=request)
 
 
 def fix_results(results):

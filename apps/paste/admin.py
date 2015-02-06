@@ -3,10 +3,10 @@
     -Christopher Welborn 2014
 """
 
+import logging
 from django.contrib import admin, messages
 from apps.paste.models import wp_paste
-from wp_main.utilities.wp_logging import logger
-_log = logger('apps.paste.admin').log
+log = logging.getLogger('wp.apps.paste.admin')
 
 
 def delete_expired(pastes):
@@ -131,7 +131,7 @@ def unprivatize_sel(modeladmin, request, queryset):
 unprivatize_sel.short_description = 'Unprivatize selected pastes'
 
 
-class wp_pasteAdmin(admin.ModelAdmin):
+class wp_pasteAdmin(admin.ModelAdmin):  # noqa
     # enable actions above
     actions = [
         delete_sel_expired,
@@ -144,5 +144,5 @@ class wp_pasteAdmin(admin.ModelAdmin):
         unprivatize_sel,
     ]
 
-    
+
 admin.site.register(wp_paste, wp_pasteAdmin)

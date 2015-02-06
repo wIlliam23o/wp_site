@@ -1,6 +1,6 @@
 {% extends "home/main.html" %}
 {% load wp_tags %}
-
+{% load img_tags %}
 {% block title %}- Images{% endblock %}
 
 {% block metainfo %}
@@ -94,38 +94,50 @@
                             </div>
                         {% endblock %}
                         {# User-facing image id. #}
-                        <div class='img-image-id'>
-                            <div class='img-image-id-label'>
+                        <div class='img-image-attribute'>
+                            <div class='img-image-label'>
                                 id:
                             </div>
-                            <div class='img-image-id-value'>
+                            <div class='img-image-value'>
                                 <a href='/img?id={{ image.image_id }}' title='{% if image.title %}{{ image.title }}{% else %}Untitled{% endif %}'>
                                     {{ image.image_id }}
                                 </a>
                             </div>
                         </div>
                         {# Human-friendly date #}
-                        <div class='img-image-date'>
-                            <div class='img-image-date-label'>
+                        <div class='img-image-attribute'>
+                            <div class='img-image-label'>
                                 posted:
                             </div>
-                            <div class='img-image-date-value'>
+                            <div class='img-image-value'>
                                 {{ image.publish_date|get_time_since }}
                             </div>
                         </div>
                         {# Include a link to the album #}
-                        <div class='img-image-album'>
-                            <div class='img-image-album-label'>
+                        <div class='img-image-attribute'>
+                            <div class='img-image-label'>
                                 album:
                             </div>
-                            <div class='img-image-album-value'>
+                            <div class='img-image-value'>
                                 <a href='/img?album={% if image.album %}{{ image.album }}{% else %}none{% endif %}' title='{% if image.album %}{{ image.album }}{% else %}none{% endif %}'>
                                     {% if image.album %}{{ image.album }}{% else %}none{% endif %}
                                 </a>
                             </div>
                         </div>
+                        {# Include the view count. #}
+                        <div class='img-image-attribute'>
+                            <div class='img-image-label'>
+                                views:
+                            </div>
+                            <div class='img-image-value'>
+                                {{ image.view_count }}
+                            </div>
+                        </div>
+                        {# TODO: Possibly include the download count #}
+
+                        {# The actual image view. #}
                         <div class='img-image-preview'>
-                            <a href='{{ image.image.url }}' title='{{ image.title }}'>
+                            <a href='{{ image|download_url }}' title='{{ image.title }}'>
                                 <img src='{{ image.image.url }}' class='img-image-src' alt='{{ image.title }}'>
                             </a>
                         </div>

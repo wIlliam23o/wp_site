@@ -3,11 +3,10 @@
         -Christopher Welborn 2014
 """
 
+import logging
 from django import template
-from wp_main.utilities.wp_logging import logger
-from wp_main.utilities.utilities import get_time_since
 
-_log = logger('apps.paste.paste_tags').log
+log = logging.getLogger('wp.apps.paste.paste_tags')
 
 register = template.Library()
 

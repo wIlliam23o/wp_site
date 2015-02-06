@@ -10,7 +10,7 @@
 
    start date: Mar 14, 2013
 '''
-# File/Path stuff
+import logging
 import os
 
 # Project info
@@ -20,8 +20,7 @@ from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
 
 # Logging
-from wp_main.utilities.wp_logging import logger
-_log = logger('projects.tools').log
+log = logging.getLogger('wp.projects.tools')
 
 
 def sorted_projects(sort_method="-publish_date"):
@@ -86,7 +85,7 @@ def get_html_content(project, request):
         })
 
     if not shtml:
-        _log.debug('Missing html for {}: {}'.format(project.name, sfile))
+        log.debug('Missing html for {}: {}'.format(project.name, sfile))
 
     return shtml
 

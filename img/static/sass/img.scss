@@ -78,42 +78,6 @@
     font-size: $fontsmall;
 }
 
-.img-image-id {
-    @extend .img-image-attribute;
-}
-
-.img-image-id-label {
-    @extend .img-image-label;
-}
-
-.img-image-id-value {
-    @extend .img-image-value;
-}
-
-.img-image-date {
-    @extend .img-image-attribute;
-}
-
-.img-image-date-label {
-    @extend .img-image-label;
-}
-
-.img-image-date-value {
-    @extend .img-image-value;
-}
-
-.img-image-album {
-    @extend .img-image-attribute;
-}
-
-.img-image-album-label {
-    @extend .img-image-label;
-}
-
-.img-image-album-value {
-    @extend .img-image-value;
-}
-
 .img-image-desc {
     // Description for a single image.
     margin-top: 5px;

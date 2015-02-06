@@ -10,15 +10,17 @@
 
    start date: May 25, 2013
 '''
+import logging
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from downloads.models import file_tracker
+
+from img import tools as imgtools
+from misc import tools as misctools
 from projects import tools as ptools
 from projects.models import wp_project
-from misc import tools as misctools
 
-from wp_main.utilities.wp_logging import logger
-log = logger("downloads.tools").log
+log = logging.getLogger('wp.downloads.tools')
 
 
 def get_file_tracker(absolute_path, createtracker=True, dosave=False):
@@ -39,6 +41,9 @@ def get_file_tracker(absolute_path, createtracker=True, dosave=False):
                 log.error('Unable to create new file tracker for: '
                           '{}\n{}'.format(absolute_path, ex))
                 filetracker = None
+            else:
+                log.debug('Created a new file tracker: {}'.format(
+                    absolute_path))
         else:
             filetracker = None
     except Exception as ex:
@@ -62,21 +67,31 @@ def increment_dl_count(file_path, absolute_path):
             n: o for n, o in (
                 ('project', ptools.get_project_from_path(absolute_path)),
                 ('filetracker', get_file_tracker(absolute_path)),
-                ('misc', misctools.get_by_filename(file_path))
+                ('misc', misctools.get_by_filename(file_path)),
+                ('image', imgtools.get_by_filename(absolute_path))
             ) if o
         }
     except Exception as ex:
         log.error('Trackables failed!: {}'.format(ex))
         return None
+
+    log.debug('Found {} trackables.'.format(len(trackables)))
+
     if trackables.get('project', None) and trackables.get('filetracker', None):
-        #
         update_tracker_projects(
             trackables['filetracker'],
             trackables['project'])
 
-    for obj in trackables.values():
-        obj.download_count += 1
-        obj.save()
+    for objtype, obj in trackables.items():
+        if hasattr(obj, 'download_count'):
+            obj.download_count += 1
+            obj.save()
+            log.debug('Incremented {} download_count to {}: {}'.format(
+                objtype,
+                obj.download_count,
+                obj))
+        else:
+            log.error('Trackable object has no download_count: {}'.format(obj))
 
 
 def update_tracker_views(absolute_path, createtracker=True, dosave=True):

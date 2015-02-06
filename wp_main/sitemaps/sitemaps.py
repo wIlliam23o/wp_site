@@ -4,17 +4,17 @@
 '''
       project: welborn productions - sitemaps - main
      @summary: provides main sitemap for sitemaps framework
-    
+
       @author: Christopher Welborn <cj@welbornproductions.net>
 @organization: welborn productions <welbornproductions.net>
- 
+
    start date: Apr 3, 2013
 '''
+import logging
 # django cache stuff
 from django.views.decorators.cache import never_cache
-# local logging.
-from wp_main.utilities.wp_logging import logger
-_log = logger("sitemaps").log
+
+log = logging.getLogger('wp.sitemaps')
 # xml_response.
 from wp_main.utilities import responses
 # Blog/Project info
@@ -30,7 +30,7 @@ from datetime import date
 @never_cache
 def view_sitemap(request):
     """ delivers sitemap for current domain using sitemap.xml template """
-    
+
     # return xml sitemap response
     return responses.xml_response("sitemaps/sitemap.xml",
                                   {"url_list": get_urls(request),
@@ -42,7 +42,7 @@ def view_blank_sitemap(request):
     """ delivers a blank sitemap
         (for servers that don't need a sitemap like the test-server).
     """
-    
+
     return responses.text_response("", content_type='application/xml')
 
 
@@ -51,34 +51,34 @@ def view_byserver(request):
     """ decides which sitemap to deliver according to server.
         sends blank sitemap to server with names starting with 'test.'
     """
-    
+
     server_name = request.META['SERVER_NAME']
     if server_name.startswith('test.'):
         return view_blank_sitemap(request)
     else:
         # normal sitemap.
         return view_sitemap(request)
-    
-  
+
+
 def get_urls(request):
     """ builds a list of sitemap_url() containing:
         Full URL, Change Frequency, Last Modified Date
         for main site, projects, and blog sections/items.
-        
+
         request is a WSGIRequest or HttpRequest object that was
         passed to the view. It is used to determine the protocol (http/https),
         and the domain name.
         (for building location urls like: http://mysite.com/projects/myproject)
-        
+
         returns list of sitemap_url()
     """
-    
+
     try:
         # get protocol
         protocol = 'https' if request.is_secure() else 'http'
     except Exception as ex:
-        _log.error('get_urls: unable to determine request.is_secure():\n'
-                   '{}'.format(ex))
+        log.error('get_urls: unable to determine request.is_secure():\n'
+                  '{}'.format(ex))
         return []
 
     # Find server name (.com or .info)
@@ -95,9 +95,9 @@ def get_urls(request):
 
     # Unable to retrieve server name from request.
     if not domain:
-        _log.error('get_urls: unable to retrieve domain name!')
+        log.error('get_urls: unable to retrieve domain name!')
         return []
-    
+
     # url list, consists of sitemap_url() items containing:
     # (URL, Change Frequency, Last Modified Date)
     urls = []
@@ -122,7 +122,7 @@ def get_urls(request):
                           lastmod=today,
                           priority='0.8')
         urls.append(url)
-    
+
     # build projects urls
     for proj in wp_project.objects.filter(disabled=False).order_by('name'):
         url = sitemap_url(rel_location='/projects/{}'.format(proj.alias),
@@ -165,12 +165,12 @@ def get_urls(request):
 
     # return complete list.
     return urls
-    
- 
-class sitemap_url(object):
+
+
+class sitemap_url(object):  # noqa
 
     """ provides info for individual sitemap urls """
-     
+
     def __init__(self, location='', rel_location='',
                  changefreq='', lastmod='',
                  protocol='http', domain='',
@@ -196,20 +196,20 @@ class sitemap_url(object):
             returns value of attribute on success.
             returns empty string on failure.
         """
-        
+
         try:
             if hasattr(self, attribute_name):
                 return getattr(self, attribute_name)
             else:
                 return ''
         except:
-            _log.error('sitemap_url: get_by_name: error getting attribute: '
-                       '{}'.format(attribute_name))
+            log.error('sitemap_url: get_by_name: error getting attribute: '
+                      '{}'.format(attribute_name))
             return ''
-        
+
     def get_info_dict(self):
         """ retrieves url info as a dict. """
-        
+
         info_dict = {}
         for attr_name in dir(self):
             # filter builtins and private attributes
@@ -218,9 +218,9 @@ class sitemap_url(object):
                 # filter functions, we only want info not functions.
                 if not callable(attr_):
                     info_dict[attr_name] = attr_
-                    
+
         return info_dict
-    
+
     def get_info_list(self):
         """ retrieves url info as a list of [attribute, value].
             list item[0][0] = attribute 1, item[0][1] = value 1.
@@ -241,7 +241,7 @@ class sitemap_url(object):
                 # will return:
                 #     http://mysite.com/projects
         """
-        
+
         if (not self.domain) or (not self.protocol):
             surl = self.rel_location
         else:

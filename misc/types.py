@@ -6,8 +6,9 @@
 
 @author: Christopher Welborn
 '''
-from wp_main.utilities.wp_logging import logger
-_log = logger('misc.types').log
+import logging
+
+log = logging.getLogger('wp.misc.types')
 
 
 class MiscType(object):
@@ -136,7 +137,7 @@ def misctype_byname(s):
         misctype = types_info[s]
     except (KeyError, ValueError):
         # This type doesn't exist.
-        _log.error('Can\'t find that misctype: {}'.format(s))
+        log.error('Can\'t find that misctype: {}'.format(s))
         return None
     return misctype
 

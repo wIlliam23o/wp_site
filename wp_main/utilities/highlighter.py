@@ -5,21 +5,18 @@
 
     -Christopher Welborn Mar 14, 2013
 '''
-
-from django.utils.safestring import mark_safe
-from django.utils.html import escape
-
+import logging
+import re
 import pygments
 from pygments import formatters
 from pygments import lexers
 from pygments.util import ClassNotFound
 
-from wp_main.utilities.wp_logging import logger
+from django.utils.safestring import mark_safe
+from django.utils.html import escape
 
-# for embedded highlighting
-import re
 
-_log = logger('utilities.highlighter').log
+log = logging.getLogger('wp.utilities.highlighter')
 # Regex pattern for wp highlight codes.
 # [language]insert code here[/language]
 # Use .findall() with it.
@@ -68,18 +65,18 @@ class WpHighlighter(object):
     """ Class for highlighting code and returning html markup. """
 
     def __init__(
-        self,
-        lexer_name=None, style_name=None, line_nums=False, code=None,
-        classes=None):
-            self.code = code or ''
-            self.classes = classes or []
-            self.lexer_name = lexer_name if lexer_name else 'python'
-            self.lexer = get_lexer_byname(self.lexer_name)
-            self.style_name = style_name if style_name else 'default'
-            self.line_nums = line_nums
-            self.formatter = formatters.html.HtmlFormatter(
-                linenos=self.line_nums,
-                style=self.style_name)
+            self,
+            lexer_name=None, style_name=None, line_nums=False, code=None,
+            classes=None):
+        self.code = code or ''
+        self.classes = classes or []
+        self.lexer_name = lexer_name if lexer_name else 'python'
+        self.lexer = get_lexer_byname(self.lexer_name)
+        self.style_name = style_name if style_name else 'default'
+        self.line_nums = line_nums
+        self.formatter = formatters.html.HtmlFormatter(
+            linenos=self.line_nums,
+            style=self.style_name)
 
     def set_lexer(self, lexer_name):
         """ another way to set the lexer """
@@ -112,7 +109,7 @@ class WpHighlighter(object):
                 '</div>\n'])
 
         except Exception as ex:
-            _log.error('WpHighlighter.highlight() error:\n{}'.format(ex))
+            log.error('WpHighlighter.highlight() error:\n{}'.format(ex))
             highlighted = ''
         return highlighted
 
@@ -173,7 +170,7 @@ def get_lexer_byname(sname):
     try:
         lexer = lexers.get_lexer_by_name(sname, stripall=True,)
     except ClassNotFound:
-        _log.debug('Bad lexer name: {}'.format(sname))
+        log.debug('Bad lexer name: {}'.format(sname))
         return lexers.get_lexer_by_name('text', stripall=True)
     return lexer
 
@@ -317,8 +314,8 @@ def highlight_file(static_path, file_content):
             highlighter.code = file_content
             file_content = highlighter.highlight()
         except Exception as ex:
-            _log.error('Error highlighting file: {}\n'.format(static_path) +
-                       '{}'.format(str(ex)))
+            log.error('Error highlighting file: {}\n'.format(static_path) +
+                      '{}'.format(str(ex)))
     else:
         # No lexer, so no highlighting, still need to format it a bit.
         file_content = escape(file_content).replace('\n', '<br>')
@@ -335,7 +332,7 @@ def highlight_inline(scode, tag='pre'):
     """
 
     if not '<{} class='.format(tag) in scode:
-        #_log.debug('highlight_inline: Will not be highlighted.')
+        # log.debug('highlight_inline: Will not be highlighted.')
         return scode
 
     slines = scode.split('\n')
@@ -385,7 +382,7 @@ def highlight_inline(scode, tag='pre'):
                                                          lexer,
                                                          formatter)
                     except Exception as ex:
-                        _log.error('highlight_inline(): Error:\n{}'.format(ex))
+                        log.error('highlight_inline(): Error:\n{}'.format(ex))
                         highlighted = soldblock
 
                     newblock = [
@@ -410,8 +407,8 @@ def highlight_inline(scode, tag='pre'):
                     # Error while parsing class name probably extra info in
                     # the tag. like: <pre class='test' style='breaker'>
                     # Code will not be highlighted.
-                    _log.error('Unable to parse class attribute from '
-                               '{}'.format(sline))
+                    log.error('Unable to parse class attribute from '
+                              '{}'.format(sline))
                 else:
                     # check for name fixing
                     # names can start with '_' like '_c' in case they share
@@ -429,16 +426,16 @@ def highlight_inline(scode, tag='pre'):
                         try:
                             lexer = get_lexer_byname(sclass)
                         except:
-                            _log.error('highlight_inline: unable to create '
-                                       'lexer/formatter with: '
-                                       '{}'.format(sclass))
+                            log.error('highlight_inline: unable to create '
+                                      'lexer/formatter with: '
+                                      '{}'.format(sclass))
                             sclass = ''
                             lexer = None
                         # Set the flag to start collecting lines.
                         inblock = True
                     else:
                         # No class
-                        _log.error((
+                        log.error((
                             'encountered empty highlight class:  {}'
                         ).format(sline))
                         return scode
@@ -460,16 +457,16 @@ def try_highlight(code, langname, formatter=None):
     try:
         lexer = lexers.get_lexer_by_name(langname)
         if not lexer:
-            _log.debug('try_highlight: No lexer found for '
-                       '{}'.format(langname))
+            log.debug('try_highlight: No lexer found for '
+                      '{}'.format(langname))
             return code
 
         highlighted = pygments.highlight(code, lexer, formatter)
-        #_log.debug('highlight: {}, {}'.format(langname, highlighted))
+        # log.debug('highlight: {}, {}'.format(langname, highlighted))
         return ''.join([
             '<div class="highlighted-embedded">',
             highlighted,
             '</div>'])
     except Exception as ex:
-        _log.debug('try_highlight: Error highlighting.\n{}'.format(ex))
+        log.debug('try_highlight: Error highlighting.\n{}'.format(ex))
         return code

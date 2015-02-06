@@ -1,3 +1,4 @@
+import logging
 # Blog Info/Tools
 from blogger.models import wp_blog
 from blogger import blogtools
@@ -8,8 +9,7 @@ from blogger import blogtools
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
-from wp_main.utilities.wp_logging import logger
-_log = logger("blog").log
+log = logging.getLogger('wp.blog')
 
 
 def index(request):
@@ -21,7 +21,7 @@ def index(request):
         post_count = len(raw_posts)
         blog_posts = blogtools.fix_post_list(raw_posts)
     except Exception as ex:
-        _log.error("Error getting blog posts!:\n" + str(ex))
+        log.error("Error getting blog posts!:\n" + str(ex))
         blog_posts = False
         post_count = 0
 
@@ -60,7 +60,7 @@ def index_page(request):
         # fix posts for listing.
         blog_posts = blogtools.fix_post_list(post_slice)
     except Exception as ex:
-        _log.debug('Error getting blog posts slice:\n{}'.format(ex))
+        log.debug('Error getting blog posts slice:\n{}'.format(ex))
         blog_posts = post_slice = end_id = False
 
     # get last index, 'has next page', and 'has prev page'
@@ -95,7 +95,7 @@ def view_post(request, identifier):
     post = blogtools.get_post_byany(identifier)
 
     if post is None:
-        _log.error('Post not found: {}'.format(identifier))
+        log.error('Post not found: {}'.format(identifier))
         errmsg = 'Sorry, I can\'t find that post.'
         errlink = '\n'.join([
             '<a href=\'/blog\'><span>',
@@ -126,8 +126,8 @@ def view_post(request, identifier):
         post.view_count += 1
         post.save()
     except Exception as exsave:
-        _log.error('Unable to increment view_count for: '
-                   '{}\n{}'.format(post, exsave))
+        log.error('Unable to increment view_count for: '
+                  '{}\n{}'.format(post, exsave))
 
     # Build clean HttpResponse with post template...
     context = {

@@ -8,6 +8,7 @@
            will ultimately return None if these things are not satisfied.
 """
 import json
+import logging
 import os
 import sys
 
@@ -18,8 +19,7 @@ available = True
 # Initialize django environment.
 try:
     from django.conf import settings
-    from wp_main.utilities.wp_logging import logger
-    log = logger('utilities.tweets').log
+    log = logging.getLogger('wp.utilities.tweets')
 except ImportError:
     class Log(object):
 

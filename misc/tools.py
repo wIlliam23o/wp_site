@@ -6,7 +6,7 @@ Created on Oct 20, 2013
 
 @author: Christopher Welborn
 '''
-
+import logging
 import os
 
 from django.template import loader, Template
@@ -16,9 +16,8 @@ from misc.models import wp_misc
 from misc.types import misctype_byname
 
 from wp_main.utilities import htmltools, utilities
-from wp_main.utilities.wp_logging import logger
 
-_log = logger('misc.tools').log
+log = logging.getLogger('wp.misc.tools')
 
 
 def get_long_desc(miscobj):
@@ -41,7 +40,7 @@ def get_long_desc(miscobj):
             'misc': miscobj
         })
     if not content:
-        _log.error('Misc object has no content!: {}'.format(miscobj.name))
+        log.error('Misc object has no content!: {}'.format(miscobj.name))
 
     return content
 
@@ -64,7 +63,7 @@ def get_screenshots_dir(miscobj):
     possibledir = os.path.join('static/images', miscobj.alias)
     imagedir = utilities.get_absolute_path(possibledir)
     if not os.path.isdir(imagedir):
-        #_log.debug('No screenshots dir: {}'.format(possibledir))
+        # log.debug('No screenshots dir: {}'.format(possibledir))
         return None
     return imagedir
 

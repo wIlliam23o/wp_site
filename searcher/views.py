@@ -1,12 +1,11 @@
-# Global settings
-#from django.conf import settings
+import logging
+
 from django.utils.safestring import mark_for_escaping
 
 # Local tools
 from wp_main.utilities import responses
 from wp_main.utilities import utilities
-from wp_main.utilities.wp_logging import logger
-_log = logger("search").log
+log = logging.getLogger('wp.search')
 
 # Search tools
 from searcher import searchtools
@@ -48,7 +47,7 @@ def view_results(request, query):
         results_list = searchtools.search_all(query)
         results_slice = utilities.slice_list(
             results_list,
-            starting_index=0,
+            start=0,
             max_items=25)
     context = {
         'request': request,
@@ -96,7 +95,7 @@ def view_paged(request):
         if results_count > 0:
             results_slice = utilities.slice_list(
                 results_list,
-                starting_index=page_args['start_id'],
+                start=page_args['start_id'],
                 max_items=page_args['max_items'])
         else:
             results_slice = []

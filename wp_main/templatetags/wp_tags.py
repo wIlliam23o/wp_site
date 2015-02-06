@@ -13,8 +13,8 @@
 # For insert_video, building a mimetype from file extension.
 import os
 
-# For base64 encoding/decoding
 import base64
+import logging
 
 # Django stuff
 from django import template
@@ -25,7 +25,7 @@ from django.utils.safestring import mark_safe
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities.highlighter import WpHighlighter, highlight_codes
-from wp_main.utilities.wp_logging import logger
+
 # for admin site filtering
 from blogger.models import wp_blog
 from img.models import wp_image
@@ -35,7 +35,7 @@ from apps.models import wp_app
 from apps.phonewords.models import pw_result
 from apps.paste.models import wp_paste
 
-log = logger('wp_main.tags').log
+log = logging.getLogger('wp.wp_main.tags')
 
 register = template.Library()
 

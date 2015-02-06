@@ -1,10 +1,9 @@
-# Local tools
-# from wp_main.utilities import utilities
+import logging
+
 from wp_main.utilities import responses
 
 # logging
-from wp_main.utilities.wp_logging import logger
-_log = logger('sandbox').log
+log = logging.getLogger('wp.sandbox')
 
 sandboxmsg = [
     'The sandbox is for private use.',

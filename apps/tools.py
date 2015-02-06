@@ -3,10 +3,8 @@
     -Christopher Welborn 2013
 """
 
-#from django.conf import settings
-
-from wp_main.utilities.wp_logging import logger
-_log = logger('apps.tools').log
+import logging
+log = logging.getLogger('wp.apps.tools')
 
 from apps.models import wp_app
 
@@ -28,7 +26,7 @@ def get_apps(printdebug=False):
     try:
         apps = wp_app.objects.filter(disabled=False)
     except Exception as ex:
-        _log.error('Unable to get apps:\n{}'.format(ex))
+        log.error('Unable to get apps:\n{}'.format(ex))
         return None
     return apps.order_by('name')
 

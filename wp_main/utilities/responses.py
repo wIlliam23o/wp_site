@@ -6,6 +6,7 @@
 
     -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
 '''
+import logging
 
 # Default dict for request args.
 from collections import defaultdict
@@ -19,9 +20,7 @@ from wp_main.utilities.utilities import (
     logtraceback
 )
 
-# Log
-from wp_main.utilities.wp_logging import logger
-_log = logger("utilities.responses").log
+log = logging.getLogger('wp.utilities.responses')
 # Template loading, and Contexts
 from django.contrib import messages
 from django.http import (
@@ -110,7 +109,7 @@ def clean_response(template_name, context, **kwargs):
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception:
-        logtraceback(_log.error, message='Unable to render.')
+        logtraceback(log.error, message='Unable to render.')
         if request:
             # 500 page.
             return error500(request, msgs=('Error while building that page.',))
@@ -150,16 +149,16 @@ def clean_response_req(template_name, context, **kwargs):
         # Turn this into a request context.
         context = RequestContext(request, context)
     else:
-        _log.error('No request passed to clean_response_req!\n'
-                   'template: {}\n'.format(template_name) +
-                   'context: {}\n'.format(repr(context)))
+        log.error('No request passed to clean_response_req!\n'
+                  'template: {}\n'.format(template_name) +
+                  'context: {}\n'.format(repr(context)))
 
     kwargs['context'] = context
 
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception:
-        logtraceback(_log.error, message='Unable to render.')
+        logtraceback(log.error, message='Unable to render.')
         if request:
             # 500 page.
             return error500(request, msgs=('Error while building that page.',))
@@ -243,7 +242,7 @@ def error_response(request, errnum, msgs=None, user_error=None):
                                           request=request)
     except Exception as ex:
         logmsg = 'Unable to render template: {}\n{}'.format(templatefile, ex)
-        _log.error(logmsg)
+        log.error(logmsg)
         # Send message manually.
         errmsgfmt = '<html><body>\n{}</body></html>'
         # Style each message.
@@ -464,7 +463,7 @@ def get_request_arg(request, arg_names, **kwargs):
                 # If an error isn't trigured, we converted successfully.
                 val = desiredval
         except Exception as ex:
-            _log.error('Unable to determine type from: {}\n{}'.format(val, ex))
+            log.error('Unable to determine type from: {}\n{}'.format(val, ex))
 
     # final return after processing,
     # will goto default value if val is empty.
@@ -508,8 +507,8 @@ def get_request_args(request, requesttype=None, default=None):
         try:
             reqargs = getattr(request, requesttype.upper())
         except Exception as ex:
-            _log.error('Invalid request arg type!: {}\n{}'.format(requesttype,
-                                                                  ex))
+            log.error('Invalid request arg type!: {}\n{}'.format(requesttype,
+                                                                 ex))
             return defaultargs
     else:
         # Default request type is REQUEST (both GET and POST)
@@ -534,7 +533,7 @@ def json_get(data, suppress_errors=False):
     try:
         datadict = json.loads(data)
     except TypeError as extype:
-        _log.debug('Wrong type passed in: {}\n{}'.format(originaltype, extype))
+        log.debug('Wrong type passed in: {}\n{}'.format(originaltype, extype))
     except ValueError as exval:
         # This happens when url-encoded data is sent in, but we try to get json
         # data first. Logging a 65 line file that has been urlencoded sucks.
@@ -544,7 +543,7 @@ def json_get(data, suppress_errors=False):
         # suppress_errors=True, if you know beforehand that this might happen.
         if not suppress_errors:
             sampledata = data[:64]
-            _log.debug((
+            log.debug((
                 'Bad data passed in:  (first {} chars) == {}\n{}'
             ).format(len(sampledata), sampledata, exval))
 
@@ -574,7 +573,7 @@ def json_response(data):
 def json_response_err(ex, log=False):
     """ Respond with contents of error message using JSON. """
     if log:
-        _log.error('Sent JSON error:\n{}'.format(ex))
+        log.error('Sent JSON error:\n{}'.format(ex))
 
     if hasattr(ex, '__class__'):
         extyp = str(ex.__class__)

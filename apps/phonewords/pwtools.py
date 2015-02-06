@@ -3,11 +3,14 @@
     -Christopher Welborn
 """
 
+import logging
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from apps.phonewords.models import pw_result, InvalidJsonData, InvalidJsonObject  # noqa
+from apps.phonewords.models import (
+    pw_result,
+    InvalidJsonData,
+    InvalidJsonObject)  # noqa
 
-from wp_main.utilities.wp_logging import logger
-_log = logger('apps.phonewords.tools').log
+log = logging.getLogger('wp.apps.phonewords.tools')
 
 
 def lookup_results(query):
@@ -24,11 +27,11 @@ def lookup_results(query):
         return None
     except MultipleObjectsReturned as exmulti:
         # Should not have duplicate entries
-        _log.error('Multiple objects found for: {}\n{}'.format(query, exmulti))
+        log.error('Multiple objects found for: {}\n{}'.format(query, exmulti))
         return None
     except Exception as ex:
         # Unexpected error
-        _log.error('Error looking up cached result: {}\n{}'.format(query, ex))
+        log.error('Error looking up cached result: {}\n{}'.format(query, ex))
         return None
     # okay.
     return cachedresult
@@ -48,10 +51,10 @@ def get_results(cachedresult):
     try:
         results = cachedresult.get_results()
     except InvalidJsonData as exjson:
-        _log.error('Cached result had bad json: {}\n{}'.format(query, exjson))
+        log.error('Cached result had bad json: {}\n{}'.format(query, exjson))
         return None
     except Exception as ex:
-        _log.error('Error getting results from: {}\n{}'.format(query, ex))
+        log.error('Error getting results from: {}\n{}'.format(query, ex))
         return None
 
     return results
@@ -65,17 +68,17 @@ def save_results(query, results, attempts):
                              result_length=len(results),
                              attempts=attempts)
     except Exception as ex:
-        _log.error('Can\'t create new result: {}\n{}'.format(query, ex))
+        log.error('Can\'t create new result: {}\n{}'.format(query, ex))
         return False
 
     try:
         pwresult.set_results(results)
     except InvalidJsonObject as exjson:
-        _log.error('Can\'t set bad json for result: {}\n{}'.format(query,
-                                                                   exjson))
+        log.error('Can\'t set bad json for result: {}\n{}'.format(query,
+                                                                  exjson))
         return False
     except Exception as ex:
-        _log.error('Error saving results for: {}\n{}'.format(query, ex))
+        log.error('Error saving results for: {}\n{}'.format(query, ex))
         return False
 
     return True

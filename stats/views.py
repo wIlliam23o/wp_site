@@ -2,6 +2,7 @@
     Gathers stats about projects, posts, etc. and displays them.
     Stats tools can also be imported for use with the wpstats command.
 """
+import logging
 
 from django.contrib.auth.decorators import login_required
 
@@ -15,10 +16,9 @@ from projects.models import wp_project
 from stats import tools
 from wp_main.utilities import (
     responses,
-    utilities,
-    wp_logging
+    utilities
 )
-_log = wp_logging.logger('stats').log
+log = logging.getLogger('wp.stats')
 
 
 @login_required(login_url='/login')

@@ -3,10 +3,10 @@
 """
 
 import base64
+import logging
 import re
 
-from wp_main.utilities.wp_logging import logger
-_log = logger('middleware.responses').log
+log = logging.getLogger('wp.middleware.responses')
 
 # RegEx for finding an email address
 # (not compiled, because it gets compiled with additional
@@ -24,7 +24,7 @@ class WpCleanResponseMiddleware (object):
         self.rawbytes = None
         self.text = None
         self.lines = None
-        self.log = logger('middleware.responses.wpcleanresponse')
+        self.log = logging.getLogger('wp.middleware.responses.wpcleanresponse')
 
     def apply_changes(self, response):
         """ Apply modified WpResponseMiddleware.content to a response. """

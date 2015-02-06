@@ -3,12 +3,11 @@
     -Christopher Welborn 2-2-15
 """
 
-from wp_main.utilities import responses, utilities, wp_logging
+import logging
+log = logging.getLogger('wp.img')
+
+from wp_main.utilities import responses, utilities
 from img.models import wp_image
-
-log = wp_logging.logger('img').log
-
-# TODO: Implement a single image view by id. (to include the title and desc.)
 
 
 def handle_files(request):
@@ -111,7 +110,11 @@ def view_image_id(request, imageid):
         alert_class = 'error'
     else:
         alert_msg, alert_class = None, None
-
+        image.view_count += 1
+        image.save()
+        log.debug('Image view_count incremented to {}: {}'.format(
+            image.view_count,
+            image.filename))
     # Reusing part of the index view template.
     # Needs to be more refined, in it's own template.
     context = {
