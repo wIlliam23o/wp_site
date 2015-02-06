@@ -63,13 +63,20 @@ DEFAULT_FILTERS = [
 DEFAULT_EXTENSIONS = ['.css', '.js', '.scss']
 
 # Strings for skip reasons..
-SKIP_REASON_TABLE = {'filtered': '(filtered)        ',
-                     'defaultfiltered': '(default filtered)',
-                     'modifiedtime': '(modified-time)   ',
-                     'forced': '(forced)          ',
-                     'notincluded': '(not included)    ',
-                     'passed': '(passed)          ',
-                     }
+SKIP_REASON_TABLE = {
+    'filtered': '(filtered)',
+    'defaultfiltered': '(default filtered)',
+    'modifiedtime': '(modified-time)',
+    'forced': '(forced)',
+    'notincluded': '(not included)',
+    'passed': '(passed)',
+}
+# Left-justify all skip-reason messages to align with the longest msg.
+skipreason_sortkey = lambda k: len(SKIP_REASON_TABLE[k])
+SKIP_REASON_WIDTH = len(max(SKIP_REASON_TABLE, key=skipreason_sortkey))
+for k, v in SKIP_REASON_TABLE.items():
+    SKIP_REASON_TABLE[k] = v.ljust(SKIP_REASON_WIDTH)
+
 
 # Flag for when the master SASS file has changed (_welbornprod.scss)
 MASTER_SASS_MODIFIED = False
@@ -194,7 +201,7 @@ def build_css_file(filename):
 
     relpath = filename.split('static/')[1].replace('.css', '.min.css')
     outfile = os.path.join(settings.STATIC_ROOT, relpath)
-    #outfile = filename.replace('.css', '.min.css')
+    # outfile = filename.replace('.css', '.min.css')
     cmdargs = ['java', '-jar', yui, filename, '-o', outfile]
     if settings.SITE_VERSION.lower().startswith('local'):
         cmdargs.insert(0, 'sudo')
@@ -205,8 +212,8 @@ def build_css_file(filename):
 def build_css_files(**kwargs):
     """ Builds all css files. see walk_files_byext() for keyword arguments """
 
-    #@TODO: This is the same as build_js_files except closure is used!
-    #@TODO: Combine them!
+    # TODO: This is the same as build_js_files except closure is used!
+    # TODO: Combine them!
 
     print('\nBuilding CSS...')
     # Get walker (Generator) for these files/filters
@@ -366,7 +373,7 @@ def build_js_file(filename):
     # Build command args:
     relpath = filename.split('static/')[1].replace('.js', '.min.js')
     outfile = os.path.join(settings.STATIC_ROOT, relpath)
-    #outfile = filename.replace('.js', '.min.js')
+    # outfile = filename.replace('.js', '.min.js')
 
     cmdargs = [
         'java',
@@ -679,8 +686,8 @@ def is_modified(filename):
 
     # Check sass files against master sass file..
     if (filename.endswith('.scss') and
-       MASTER_SASS_CHECKED and
-       (MASTER_SASS_MODTIME > -1)):
+            MASTER_SASS_CHECKED and
+            (MASTER_SASS_MODTIME > -1)):
         if MASTER_SASS_MODTIME > targetmod:
             MASTER_SASS_MODIFIED = True
             print('\n* Master SASS file was modified,'
@@ -738,7 +745,7 @@ def is_skip_file(filename, **kwargs):
     if included:
         # Check to see if this file should be included.
         for includestr in included:
-            if not includestr in filenameshort:
+            if includestr not in filenameshort:
                 reason = SKIP_REASON_TABLE['notincluded']
                 skipfile = True
                 break
@@ -912,7 +919,7 @@ def walk_files_byext(exts, **kwargs):
     for root, dirs, files in os.walk(settings.BASE_DIR):  # @UnusedVariable
 
         # Only look in static dirs.
-        if not '/static' in root:
+        if '/static' not in root:
             continue
 
         for filename in files:
@@ -925,7 +932,7 @@ def walk_files_byext(exts, **kwargs):
                                                     forced=forced,
                                                     matchpath=matchpath)
                 if skipfile:
-            # This file will be skipped.
+                    # This file will be skipped.
                     if DEBUG:
                         _print('    Skip file {} : {}'.format(skipreason,
                                                               filename))
