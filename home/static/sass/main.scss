@@ -334,12 +334,17 @@ a .header:hover, a .header.featured-name:hover {
     text-align: center;
     color: $greydark;
     background: white;
-    z-index: 5;
+    z-index: 30;
 }
 
 #floater-msg {
     font-family: $fontssmall;
     font-weight: normal;
+    &.floater-msg-error {
+        color: $redmain;
+        font-size: $fontbigger;
+        text-shadow: $shadowtextmedium;
+    }
 }
 
 #floater-smalltext {
@@ -689,6 +694,11 @@ a.jumpto-nav {
     padding-left: 5px;
 }
 
+.input-checkbox {
+    @extend .input-text;
+    width: auto;
+}
+
 /* Inset Styles */
 span.inset-left {float: left;margin-right: 20px;}
 span.inset-right {float: right;margin-left: 20px;}
@@ -765,6 +775,7 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
     // Main box containing alert/notice/attention/approved.
     display: none;
     opacity: 0.85;
+    z-index: 21;
 }
 
 #alert-title dd ul {

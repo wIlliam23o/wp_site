@@ -359,10 +359,10 @@
 	<script type='text/javascript'>
 		$(document).ready( function () {
 			wptools.wpreveal('.wp-address');
-			<!-- fix iFisheyes weird dock positioning. -->
+			{# fix iFisheyes weird dock positioning. #}
 			var dockbox = $('#dock-box');
 			if (dockbox.length) {
-				// Some error pages don't have the dock-box.
+				{#  Some error pages don't have the dock-box. #}
 				$('#dock-box').css({'left':'0px'});
 			}
 
@@ -382,6 +382,12 @@
 					$('#alert-box').slideUp();
 				});
 			{% endif %}
+
+			{# Make all floaters destroyable #}
+			var floater = $('#floater');
+			if (floater.length) {
+				$(floater).click(function () { $(floater).fadeOut(); });
+			}
 		});
 	</script>
 

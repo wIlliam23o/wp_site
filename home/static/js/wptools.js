@@ -1,4 +1,3 @@
-/* jslint browser: true */
 /* Welborn Productions
     spam protection for email addresses.
         uses base64 to decode what content is in the href tag and possibly
@@ -8,16 +7,9 @@
         ex:
             where mailto:cj@test.com = bWFpbHRvOmNqQHRlc3QuY29tCg==
 
-            <a class='wp-address' href='bWFpbHRvOmNqQHRlc3QuY29tCg=='>Mail Me</a>
-        or:
-
-            where mailto:cj@welbornprod.com = bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQo=
-            and cj@welbornprod.com = Y2pAd2VsYm9ybnByb2QuY29tCg==
-
-            <a class='wp-address' href='bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQo='>
-                Y2pAd2VsYm9ybnByb2QuY29tCg==
+            <a class='wp-address' href='bWFpbHRvOmNqQHRlc3QuY29tCg=='>
+                Mail Me
             </a>
-
         ** can be any tag with the wp-address class.
 
     Debug button/box toggle added.
@@ -26,18 +18,46 @@
 */
 
 var wptools = {
-    center: function (selector, usevertical) {
+    alert : function (msg, smallmsg) {
+        /*  Show an alert message using #floater if available,
+            otherwise use window.alert().
+        */
+        var floater = $('#floater');
+        if (floater.length) {
+            $('#floater-msg').html(msg);
+            if (smallmsg) {
+                $('#floater-smalltext').html(smallmsg);
+            }
+            $(floater).fadeIn();
+            wptools.center(floater, true);
+            setTimeout(function () { $(floater).fadeOut(); }, 5000);
+
+        } else {
+            // Fall-back to alert.
+            if (smallmsg) {
+                msg = msg + '\n\n' + smallmsg;
+            }
+            // Strip html-tags.
+            window.alert($('<div>' + msg + '</div>').text());
+        }
+    },
+    center: function (selector, usevertical, useouter) {
         /*  Centers an element on screen.
             Arguments:
-                selector     : selector for elem.
-                usevertical  : (true/false) center on vertical also.
+                selector     : jquery selector for elem.
+                usevertical  : (bool)
+                               center on vertical also.
+                useouter     : (bool)
+                               use window's outerHeight for vertical position.
         */
         'use strict';
         var screen_width = $(document).width(),
             elem = $(selector),
             elempos = $(elem).css('position'),
+            elemy = -1,
             newx = -1,
-            newy = -1;
+            newy = -1,
+            winheight = -1;
 
         if (!((elempos === 'fixed') || (elempos === 'absolute'))) {
             // Force the element to allow centering. If you have to do this
@@ -47,10 +67,14 @@ var wptools = {
         }
 
         if (elem && elempos) {
-            newx = (screen_width - elem.width()) / 2;
+            // Horizontally
+            newx = (screen_width - elem.outerWidth()) / 2;
             elem.css({'right': newx + 'px'});
             if (usevertical) {
-                newy = (window.innerHeight / 2) - elem.height();
+                // Vertically
+                elemy = elem.outerHeight();
+                winheight = useouter ? window.outerHeight : window.innerHeight;
+                newy = (winheight - elemy) / 2;
                 elem.css({'top': newy + 'px'});
             }
         }

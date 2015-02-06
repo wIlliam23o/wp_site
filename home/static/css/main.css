@@ -365,11 +365,15 @@ a .header:hover, a .header.featured-name:hover {
   text-align: center;
   color: #4d4d4d;
   background: white;
-  z-index: 5; }
+  z-index: 30; }
 
 #floater-msg {
   font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
   font-weight: normal; }
+  #floater-msg.floater-msg-error {
+    color: #b90000;
+    font-size: 1.2em;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
 
 #floater-smalltext {
   font-size: 0.8em;
@@ -683,7 +687,7 @@ a.jumpto-nav {
   font-size: .8em;
   padding-left: 5px; }
 
-.input-text, .input-textbox {
+.input-text, .input-checkbox, .input-textbox {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   -ms-border-radius: 5px;
@@ -697,6 +701,9 @@ a.jumpto-nav {
   font-family: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
   width: 200px;
   padding-left: 5px; }
+
+.input-checkbox {
+  width: auto; }
 
 /* Inset Styles */
 span.inset-left {
@@ -1024,7 +1031,8 @@ ul.bullet li {
 
 #alert-box {
   display: none;
-  opacity: 0.85; }
+  opacity: 0.85;
+  z-index: 21; }
 
 #alert-title dd ul {
   -webkit-border-radius: 6px;

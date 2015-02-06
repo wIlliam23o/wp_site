@@ -18,17 +18,6 @@
     padding: 5px;
 }
 
-.img-upload-form {
-    // Wraps the upload form.
-    display: inline-block;
-    //right: 15%;
-    @include border-radius-thin-color(5px, $bordermain);
-}
-
-#upload-form {
-    display:none;
-}
-
 .img-image-item {
     // Wraps a single image item, with title, desc, pic, etc.
     position: relative;
@@ -84,6 +73,11 @@
     text-indent: 10px;
 }
 
+#upload-desc {
+    // Stop the desc box from growing too large.
+    max-width: 680px;
+}
+
 .img-image-preview {
     // Wraps the actual image that is being previewed
     width: 100%;
@@ -106,24 +100,80 @@
     text-shadow: $shadowtextmedium;
 }
 
-.img-upload-form-image {
-    // File input for the upload form
+#upload-form {
+    display: block;
 }
 
-.img-upload-form-title {
-    // Title input for the upload form.
+#img-upload-form-floater {
+    // This is almost the same as #floater. Sass did not like @extend #floater
+    // because it's in another file.
+    position: fixed;
+    display: none;
+    @include border-radius-thick(10px);
+    @include box-shadow-floater();
+    // max-width stops the upload-desc box from growing too large.
+    max-width: 700px;
+    width: auto;
+    height: auto;
+    font-size: $fontnormal;
+    text-align: center;
+    color: $greydark;
+    background: white;
+    z-index: 5;
 }
 
-.img-upload-form-desc {
-    // Description input for the upload form.
+.img-upload-form {
+    // Wraps the upload form.
+    display: block;
+    position: relative;
+    padding: 5px;
+    @include border-radius-thin-color(5px, $bordermain);
 }
 
-.img-upload-form-album {
-    // Album input for the upload form.
+.img-upload-form-attribute {
+    display: block;
+    text-align: left;
 }
 
 .img-upload-form-private {
-    // Private checkbox for the upload form.
+    @extend .img-upload-form-attribute;
+    margin-top: 10px;
+}
+
+.img-upload-form-buttons {
+    display: block;
+    position: relative;
+    padding: 25px;
+}
+
+.img-upload-form-button {
+    position: absolute;
+    top: 5px;
+    padding: 5px;
+}
+
+.img-upload-form-upload-btn {
+    @extend .img-upload-form-button;
+    left: 10px;
+}
+
+.img-upload-form-cancel-btn {
+    @extend .img-upload-form-button;
+    right: 10px;
+}
+
+.img-upload-form-reveal-btn {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 5px;
+    @include border-radius(5px);
+    background: $whitedull;
+    padding: 2px;
+    //position: fixed;
+    //left: 10px;
+    //top: 50px;
+    //z-index: 1;
+    //@include box-shadow-floater;
 }
 
 .img-input-label {
@@ -132,4 +182,5 @@
 
 .img-checkbox-label {
     display: inline;
+    vertical-align: text-top;
 }

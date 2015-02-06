@@ -18,20 +18,6 @@
   border-color: rgba(202, 217, 224, 0.5);
   padding: 5px; }
 
-.img-upload-form {
-  display: inline-block;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  -ms-border-radius: 5px;
-  -o-border-radius: 5px;
-  border-radius: 5px;
-  border-style: solid;
-  border-width: 1px;
-  border-color: rgba(202, 217, 224, 0.5); }
-
-#upload-form {
-  display: none; }
-
 .img-image-item {
   position: relative;
   -webkit-border-radius: 5px;
@@ -80,6 +66,9 @@
   margin-top: 5px;
   text-indent: 10px; }
 
+#upload-desc {
+  max-width: 680px; }
+
 .img-image-preview {
   width: 100%;
   text-align: center;
@@ -106,8 +95,85 @@
   font-size: 1.2em;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
 
+#upload-form {
+  display: block; }
+
+#img-upload-form-floater {
+  position: fixed;
+  display: none;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -o-border-radius: 10px;
+  border-radius: 10px;
+  border-style: solid;
+  border-width: 2px;
+  border-color: rgba(202, 217, 224, 0.5);
+  -webkit-box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+  -moz-box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+  -ms-box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+  -o-box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+  box-shadow: 6px 6px 7px rgba(0, 0, 0, 0.52);
+  max-width: 700px;
+  width: auto;
+  height: auto;
+  font-size: 1em;
+  text-align: center;
+  color: #4d4d4d;
+  background: white;
+  z-index: 5; }
+
+.img-upload-form {
+  display: block;
+  position: relative;
+  padding: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(202, 217, 224, 0.5); }
+
+.img-upload-form-attribute, .img-upload-form-private {
+  display: block;
+  text-align: left; }
+
+.img-upload-form-private {
+  margin-top: 10px; }
+
+.img-upload-form-buttons {
+  display: block;
+  position: relative;
+  padding: 25px; }
+
+.img-upload-form-button, .img-upload-form-upload-btn, .img-upload-form-cancel-btn {
+  position: absolute;
+  top: 5px;
+  padding: 5px; }
+
+.img-upload-form-upload-btn {
+  left: 10px; }
+
+.img-upload-form-cancel-btn {
+  right: 10px; }
+
+.img-upload-form-reveal-btn {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  background: #fafafa;
+  padding: 2px; }
+
 .img-input-label {
   display: block; }
 
 .img-checkbox-label {
-  display: inline; }
+  display: inline;
+  vertical-align: text-top; }

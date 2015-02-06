@@ -16,30 +16,39 @@
 {% endblock %}
 
 {% block content %}
-    <div class='img-main'>
-        {% if request.user.is_staff %}
+   {% if request.user.is_staff %}
+        {# A message/alert floater #}
+        <div id='floater'>
+            <div id='floater-msg' class='floater-msg-error'>
+                You must select an image first.
+            </div>
+            <div id='floater-smalltext'>
+            </div>
+        </div>
+        {# The upload form floater #}
+        <div id='img-upload-form-floater'>
             <div class='img-upload-form'>
                 <form id='upload-form' enctype='multipart/form-data' method='post' action='/img'>
                     {% csrf_token %}
-                    <div class='img-upload-form-image'>
+                    <div class='img-upload-form-attribute'>
                         <label for='upload-image' class='input-label img-input-label'>
                             Image to upload:
                         </label>
                         <input id='upload-image' name='image' type='file' class='input-text' required=True>
                     </div>
-                    <div class='img-upload-form-title'>
+                    <div class='img-upload-form-attribute'>
                         <label for='upload-title' class='input-label img-input-label'>
                             Title:
                         </label>
                         <input id='upload-title' name='title' type='text' class='input-text'>
                     </div>
-                    <div class='img-upload-form-desc'>
+                    <div class='img-upload-form-attribute'>
                         <label for='upload-desc' class='input-label img-input-label'>
                             Description:
                         </label>
                         <textarea id='upload-desc' name='description' cols='30' rows='6' class='input-text'></textarea>
                     </div>
-                    <div class='img-upload-form-album'>
+                    <div class='img-upload-form-attribute'>
                         <label for='upload-album' class='input-label img-input-label'>
                             Album:
                         </label>
@@ -49,17 +58,37 @@
                         <label for='upload-private' class='input-label img-checkbox-label'>
                             Private:
                         </label>
-                        <input id='private' name='private' type='checkbox' class='input-text'>
+                        <input id='private' name='private' type='checkbox' class='input-checkbox'>
                     </div>
                 </form>
-                <a href='javascript: void(0);' onclick='javascript: imgtools.do_upload();'>
+                <div class='img-upload-form-buttons'>
+                    <a href='javascript: void(0);' onclick='javascript: imgtools.do_upload();'>
+                        <div class='wpbutton img-upload-form-upload-btn'>
+                            <span>upload</span>
+                        </div>
+                    </a>
+                    {# Cancel button #}
+                    <a href='javascript: void(0);' onclick='javascript: $("#img-upload-form-floater").fadeToggle();'>
+                        <div class='wpbutton img-upload-form-cancel-btn'>
+                            <span>cancel</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class='img-main'>
+        {% if request.user.is_staff %}
+            <div class='img-upload-form-reveal-btn'>
+                <a href='javascript: void(0);' onclick='javascript: imgtools.toggle_upload_form();'>
                     <div class='submit-button'>
-                        <span>upload</span>
+                        <span>upload form</span>
                     </div>
                 </a>
             </div>
         {% endif %}
-        <div class='img-images-list'>
+         <div class='img-images-list'>
             <div class='img-header'>
                 <h2 class='header'>
                     {% block img_header %}
@@ -158,4 +187,12 @@
             {% endif %}
         </div>
     </div>
+{% endblock %}
+
+{% block bodyend %}
+    {% if request.user.is_staff %}
+        <script type='text/javascript'>
+            imgtools.init_upload_floater();
+        </script>
+    {% endif %}
 {% endblock %}
