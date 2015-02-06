@@ -5,7 +5,7 @@ from datetime import date
 # Module level functions...
 
 
-class wp_misc(models.Model):
+class wp_misc(models.Model):  # noqa
 
     """ Model for a misc object,
         small snippets of code, small scripts, text, etc. """
@@ -108,7 +108,7 @@ class wp_misc(models.Model):
     # publish date (for sort-order mainly)
     publish_date = models.DateField(
         blank=False,
-        default=date.today(),
+        default=date.today,
         help_text=(
             'Date the misc object was published. '
             '(Automatically set to today.)'))
