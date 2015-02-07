@@ -35,7 +35,7 @@ except ImportError as exdoc:
           'try: pip install docopt.\n\n{}'.format(exdoc))
     sys.exit(1)
 
-_VERSION = '0.2.3-1'
+_VERSION = '0.2.3-4'
 _NAME = 'AptTool'
 
 # Get short script name.
@@ -53,18 +53,24 @@ usage_str = """{propername} v. {version}
         {name} -e package | -f package
         {name} -H [QUERY] [COUNT]
         {name} -h | -v
+        {name} (-l | -L) PACKAGES...
         {name} -u
         {name} -V package [-a]
-        {name} <pkgname> [-I | -N] [-n] [-r] [-s] [-x]
+        {name} <pkgname> [-I | -N] [-D | -n] [-r] [-s] [-x]
 
     Options:
         COUNT                        : Number of history lines to return.
+        PACKAGES                     : One or many package names to locate.
+                                       If a file name is given, the names
+                                       are read from the file. If '-' is given,
+                                       names are read from stdin.
         QUERY                        : Query to filter history with. The
                                        default is 'installed'.
         -a,--all                     : When viewing package version, list all
                                        available versions.
         -c file,--containsfile file  : Search all installed packages for an
                                        installed file using regex or text.
+        -D,--dev                     : Search for development packages.
         -d pkg,--delete pkg          : Uninstall/delete/remove a package.
         -e pkg,--executables pkg     : Show installed executables for a
                                        package.
@@ -77,6 +83,13 @@ usage_str = """{propername} v. {version}
         -i pkg,--install pkg         : Install a package.
         -I,--INSTALLED               : When searching for a package, only
                                        include installed packages.
+        -l,--locate                  : Determine whether or not a package
+                                       exists. You can pass a file name to
+                                       read from, or use - for stdin. Otherwise
+                                       a full package name is needed. Multiple
+                                       names can be passed.
+        -L,--LOCATE                  : Same as --locate, but only shows
+                                       existing packages that are found.
         -n,--names                   : When searching for packages, only search
                                        names, not descriptions.
                                        When searching with -c, don't use the
@@ -109,7 +122,7 @@ usage_str = """{propername} v. {version}
 # CLASSES -----------------------------------------------
 
 
-class oProgress(apt.progress.text.OpProgress):
+class oProgress(apt.progress.text.OpProgress):  # noqa
 
     """ Handles progress updates for Operations """
 
@@ -128,7 +141,7 @@ class oProgress(apt.progress.text.OpProgress):
         self.msg = s
 
 
-class fProgress(apt.progress.text.TextProgress):
+class fProgress(apt.progress.text.TextProgress):  # noqa
 
     """ Handles progress updates for Fetches """
 
@@ -153,7 +166,7 @@ class fProgress(apt.progress.text.TextProgress):
         self.msg = s
 
 
-class iProgress(apt.progress.base.InstallProgress):
+class iProgress(apt.progress.base.InstallProgress):  # noqa
 
     """ Handles progress updates for Installs """
 
@@ -177,7 +190,7 @@ class iProgress(apt.progress.base.InstallProgress):
             print('\nFinished {}: {}'.format(self.msg.lower(), self.pkgname))
 
 
-class iterCache(apt.Cache):
+class iterCache(apt.Cache):  # noqa
 
     """ Allows searching the package cache while loading. """
 
@@ -370,7 +383,8 @@ class HistoryLine(object):
         try:
             statustime = datetime.strptime(timestr, timefmt)
         except ValueError as extime:
-            print('\nError parsing history time: {}\n{}'.format(timestr, extime))
+            errmsg = '\nError parsing history time: {}\n{}'
+            print(errmsg.format(timestr, extime))
             return None
 
         try:
@@ -393,7 +407,7 @@ class HistoryLine(object):
                 pkgver = parts[5]
             else:
                 # For debugging: These are usually 'startup' lines.
-                #print('Invalid history line: {}'.format(line))
+                # print('Invalid history line: {}'.format(line))
                 return None
         except IndexError as exindex:
             print('\nError parsing history line: {}\n{}'.format(line, exindex))
@@ -462,7 +476,8 @@ def main(argd):
                                  print_no_desc=argd['--short'],
                                  installed_only=argd['--INSTALLED'],
                                  uninstalled_only=argd['--NOTINSTALLED'],
-                                 case_insensitive=argd['--nocase'])
+                                 case_insensitive=argd['--nocase'],
+                                 dev_only=argd['--dev'])
         except KeyboardInterrupt:
             print('\nUser Cancelled, goodbye.')
             ret = 1
@@ -517,6 +532,9 @@ def main(argd):
         pkgname = argd['--delete'] if argd['--delete'] else argd['--purge']
         print('\nLooking for \'{}\'...'.format(pkgname))
         ret = remove_package(pkgname, purge=bool(argd['--purge']))
+    elif argd['--locate'] or argd['--LOCATE']:
+        print('\nLocating packages...')
+        ret = locate_packages(argd['PACKAGES'], only_existing=argd['--LOCATE'])
     elif argd['--VERSION']:
         # Show package version.
         pkgname = argd['--VERSION']
@@ -613,13 +631,23 @@ def cmdline_search(query, **kwargs):
     print_no_desc = kwargs.get('print_no_desc', False)
     installed_only = kwargs.get('installed_only', False)
     uninstalled_only = kwargs.get('uninstalled_only', False)
+    dev_only = kwargs.get('dev_only', False)
 
     if installed_only and uninstalled_only:
         print('\nMismatched args! -N and -I can\'t be used together!')
         return 1
 
-    # try:
-        # Initialize cache without doing an .open() (do iter_open() instead)
+    if dev_only:
+        # This little feature would be wrecked by adding '$' to the pattern.
+        if query.endswith('$'):
+            query = query[:-1]
+            queryend = '$'
+        else:
+            queryend = ''
+        # Adding 'dev' to the query to search for development packages.
+        query = '{}(.+)dev{}'.format(query, queryend)
+
+    # Initialize cache without doing an .open() (do iter_open() instead)
     print('Initializing Cache...')
     cache = iterCache(do_open=False)
     cache._pre_iter_open()
@@ -632,9 +660,13 @@ def cmdline_search(query, **kwargs):
     })
 
     result_cnt = 0
-    for result in search_itercache(query, **kwargs):
-        print('\n{}'.format(format_result(result, no_desc=print_no_desc)))
-        result_cnt += 1
+    try:
+        for result in search_itercache(query, **kwargs):
+            print('\n{}'.format(format_result(result, no_desc=print_no_desc)))
+            result_cnt += 1
+    except BadSearchQuery as expat:
+        print('\nInvalid query: {}\n    {}'.format(query, expat))
+        return 1
 
     # except Exception as ex:
     #    print('Error while searching:\n' + str(ex))
@@ -796,6 +828,29 @@ def get_pkg_description(pkg):
     return desc
 
 
+def iter_file(filename, skip_comments=True):
+    """ Iterate over lines in a file, skipping blank lines.
+        If 'skip_comments' is truthy then lines starting with #
+        are also skipped.
+        If filename is None, then stdin is used.
+    """
+    if skip_comments:
+        is_skipped = lambda l: l.startswith('#') or (not l)
+    else:
+        is_skipped = lambda l: (not l)
+    if filename is None:
+        for line in sys.stdin.readlines():
+            if is_skipped(line.strip()):
+                continue
+            yield line.rstrip('\n')
+    else:
+        with open(filename, 'r') as f:
+            for line in f:
+                if is_skipped(line.strip()):
+                    continue
+                yield line.rstrip('\n')
+
+
 def iter_history():
     """ Read dpkg.log and parse it's contents to yield HistoryLine()s
         with package names, install states, etc.
@@ -815,10 +870,57 @@ def iter_history():
         raise EnvironmentError(errfmt.format(logname, exenv))
 
 
+def locate_packages(lst, only_existing=False):
+    """ Locate one or more packages.
+        Arguments:
+            lst            : A list of package names, or file names to read
+                             from. If '-' is encountered in the list then stdin
+                             is used. (stdin) can only be used once.
+            only_existing  : Only show existing packages.
+    """
+    existing = 0
+    checked = 0
+    cache_keys = cache_main.keys()
+
+    def package_exists(pname):
+        nonlocal existing, checked, cache_keys
+        if pname.lower().strip() in cache_keys:
+            print('{}: exists'.format(pname.rjust(20)))
+            existing += 1
+        else:
+            if not only_existing:
+                print('{}: missing'.format(pname.rjust(20)))
+        checked += 1
+
+    def locate_list(packagenames):
+        for pname in packagenames:
+            package_exists(pname)
+
+    did_stdin = False
+    for pname in lst:
+        if pname.strip() == '-':
+            if did_stdin:
+                print('Already read from stdin.')
+            else:
+                print('\nLocating packages from stdin...')
+                did_stdin = True
+                locate_list(iter_file(None))
+        elif os.path.isfile(pname):
+            print('\nLocating packages in: {}'.format(pname))
+            try:
+                locate_list(iter_file(pname))
+            except EnvironmentError as ex:
+                print('\n  Unable to read from: {}\n    {}'.format(pname, ex))
+        else:
+            package_exists(pname)
+    plural = 'package' if existing == 1 else 'packages'
+    print('\nFound {} of {} {}.'.format(existing, checked, plural))
+    return 0 if existing == checked else 1
+
+
 def print_installed_files(pkgname, execs_only=False):
     """ Print a list of installed files for a package. """
-
-    if not pkgname in cache_main.keys():
+    if pkgname not in cache_main.keys():
         print('\nCan\'t find a package with that name: {}'.format(pkgname))
         return 1
     package = cache_main[pkgname]
@@ -860,7 +962,7 @@ def print_installed_files(pkgname, execs_only=False):
 def print_package_version(pkgname, allversions=False):
     """ Retrieve the current version for a package. """
 
-    if not pkgname in cache_main.keys():
+    if pkgname not in cache_main.keys():
         print('\nCan\'t find a package with that name: {}'.format(pkgname))
         return 1
 
@@ -1084,7 +1186,7 @@ def search_itercache(regex, **kwargs):
             re_pat = re.compile(regex, re.IGNORECASE)
         else:
             re_pat = re.compile(regex)
-    except Exception as ex:
+    except re.error as ex:
         raise BadSearchQuery(str(ex))
 
     # iterate the pkgs as they are loaded.
@@ -1160,7 +1262,7 @@ def is_pkg_match(re_pat, pkg, **kwargs):
     if desc_search:
         # Old apt API of getting description...
         if hasattr(pkg, 'description'):
-         # description sometimes returns None.
+            # description sometimes returns None.
             if pkg.description is None:
                 return False
             pkgdesc = pkg.description
