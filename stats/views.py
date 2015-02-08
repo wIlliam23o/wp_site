@@ -10,6 +10,7 @@ from apps.models import wp_app
 from apps.paste.models import wp_paste
 from blogger.models import wp_blog
 from downloads.models import file_tracker
+from img.models import wp_image
 from misc.models import wp_misc
 from projects.models import wp_project
 
@@ -39,11 +40,17 @@ def view_index(request):
         file_tracker: {'orderby': '-download_count'},
         wp_app: {'orderby': '-view_count'},
         wp_blog: {'orderby': '-view_count'},
+        wp_image: {
+            'orderby': '-view_count',
+            'displayattr': ('image_id', 'title', 'image.name'),
+            'displayattrsep': ' - '
+        },
         wp_misc: {'orderby': '-download_count'},
         wp_paste: {
             'orderby': '-view_count',
             'displayattr': ('paste_id', 'title'),
-            'displayattrsep': ' - '},
+            'displayattrsep': ' - '
+        },
         wp_project: {'orderby': '-download_count'}
     }
     context = {

@@ -22,6 +22,19 @@ from wp_user_agents.utils import get_user_agent  # @UnresolvedImport
 log = logging.getLogger('wp.utilities')
 
 
+class _NoValue(object):
+
+    """ Something other than 'None' to represent no value, or missing attr. """
+
+    def __bool__(self):
+        """ NoValue is falsey. """
+        return False
+
+    def __str__(self):
+        return 'NoValue'
+NoValue = _NoValue()
+
+
 def append_path(*args):
     """ os.path.join fails if append_this starts with '/'.
         so I made my own. it's not as dynamic as os.path.join, but
@@ -106,6 +119,54 @@ def get_absolute_path(relative_file_path):
         return ''
 
     return sabsolutepath
+
+
+def get_attrs(o, attrs, default=NoValue):
+    """ Like getattr(), but accepts dotted names to retrieve attributes of
+        another attribute. Like: o.image.name
+        It will first try o.image, and on success try o.image.name.
+        None is an acceptable default, and will return None on failure.
+        To raise AttributeError, simply don't provide any default argument.
+
+        Example: val = get_attrs(obj, 'image.name', default=None)
+
+        Returns default on failure if set, otherwise raises AttributeError.
+    """
+    if not attrs:
+        raise AttributeError('You must provide attributes to retrieve.')
+
+    def attr_return(obj, val, attr):
+        """ Determine whether AttributeError should be raised,
+            or the default should be returned.
+        """
+        if val is NoValue:
+            if default is NoValue:
+                errmsg = '{} has no attribute: {} from ({})'.format(
+                    obj.__class__.__name__,
+                    attr,
+                    attrs)
+                raise AttributeError(errmsg)
+            return default
+        return val
+
+    def try_attr(obj, attr):
+        """ Try getting an attribute, raise AttributeError if no default is
+            provided, otherwise return the default.
+        """
+        val = getattr(obj, attr, NoValue)
+        return attr_return(obj, val, attr)
+
+    attrlst = tuple((a for a in attrs.split('.') if a))
+    root = try_attr(o, attrlst[0])
+    lastroot = o
+    subattr = NoValue
+    for subattr in attrlst[1:]:
+        lastroot = root
+        root = try_attr(lastroot, subattr)
+
+    if subattr is NoValue:
+        return attr_return(lastroot, root, attrlst[0])
+    return attr_return(lastroot, root, subattr)
 
 
 def get_browser_name(request):

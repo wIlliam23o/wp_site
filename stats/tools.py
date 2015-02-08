@@ -5,6 +5,7 @@
 import logging
 from functools import partial
 
+from wp_main.utilities.utilities import get_attrs
 
 log = logging.getLogger('wp.stats.tools')
 
@@ -78,15 +79,16 @@ def get_object_info(obj, displayattr=None, displayattrsep=None):
             sep = ' ' if displayattrsep is None else str(displayattrsep)
             for attr in displayattr:
                 if name:
-                    name = sep.join((name, getattr(obj, attr, '')))
+                    name = sep.join((name, get_attrs(obj, attr, '')))
                 else:
-                    name = getattr(obj, attr, '')
+                    name = get_attrs(obj, attr, '')
         else:
-            name = getattr(obj, displayattr, None)
+            name = get_attrs(obj, displayattr, None)
     if not name:
         # The order of these attributes matters. (shortname before name)
-        for obj_id_attr in ('shortname', 'slug', 'name', 'title'):
-            name = getattr(obj, obj_id_attr, None)
+        trynames = ('image.name', 'shortname', 'slug', 'name', 'title')
+        for obj_id_attr in trynames:
+            name = get_attrs(obj, obj_id_attr, None)
             if name:
                 break
     else:
