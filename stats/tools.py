@@ -76,6 +76,7 @@ def get_object_info(obj, displayattr=None, displayattrsep=None):
     if displayattr:
         if isinstance(displayattr, (list, tuple)):
             name = ''
+            # TODO: Allow a format string instead of a seperator.
             sep = ' ' if displayattrsep is None else str(displayattrsep)
             for attr in displayattr:
                 if name:
