@@ -80,7 +80,8 @@ class wp_image(models.Model):  # noqa
     # Description text for this image.
     description = models.TextField(
         'description',
-        blank=False,
+        blank=True,
+        default='',
         help_text='Description for this image.')
 
     # Disabled image? (won't show in listings.)
