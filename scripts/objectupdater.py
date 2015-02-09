@@ -224,8 +224,9 @@ def do_object_delete(ident, model, attrs):
 def do_object_info(ident, model, attrs):
     """ Print info about an object.
         Arguments:
-            ident  : name, title, or part of a name used to retrieve the object.
-            model  : model containing the objects to retrieve from (wp_project, wp_blog, etc.)
+            ident  : name, title, or part of a name used to retrieve the object
+            model  : model containing the objects to retrieve from
+                     (wp_project, wp_blog, etc.)
         Keyword Arguments:
             attrs  : attributes to use when retrieving the object.
     """
@@ -243,7 +244,10 @@ def do_object_info(ident, model, attrs):
                 avalwork = avalwork[len(wrapped):]
             chunks.append(chunkstr.strip())
         chunkspacing = (' ' * chnkspacelen)
-        return '{}\n{}'.format(chunks[0], chunkspacing) + ('\n{}'.format(chunkspacing).join(chunks[1:]))
+        return '{}\n{}{}'.format(
+            chunks[0],
+            chunkspacing,
+            chunkspacing.join(chunks[1:]))
 
     obj = get_object(ident, model, attrs=attrs)
     if not obj:
@@ -435,6 +439,10 @@ def get_headerstr(obj):
             'format': '{} ({}) v. {}',
             'attrs': ('name', 'alias', 'version'),
         },
+        'wp_image': {
+            'format': '{} - {} ({})',
+            'attrs': ('image_id', 'title', 'filename')
+        },
         'wp_misc': {
             'format': '{} ({}) v. {}',
             'attrs': ('name', 'alias', 'version'),
@@ -460,7 +468,7 @@ def get_headerstr(obj):
         print('\nError retrieving model name!:\n{}'.format(ex))
         return headerstr
 
-    if not mname in headerstrings.keys():
+    if mname not in headerstrings.keys():
         print('\nget_headerstr(): No info for this model!: {}'.format(mname))
         return headerstr
 
@@ -517,7 +525,7 @@ def get_model_fields(model, includefunctions=False, exclude=None):
             try:
                 attr = getattr(tmpobject, aname)
             except:
-                #print('skipping: {}'.format(aname))
+                # print('skipping: {}'.format(aname))
                 continue
 
             if not hasattr(attr, '__call__'):
@@ -798,7 +806,7 @@ def parse_date(s):
         Does not return a date() because it may need to be used
         in creating a datetime.
     """
-    if not '-' in s:
+    if '-' not in s:
         return 1900, 0, 0
 
     year, month, day = (int(p) for p in s.split('-'))
@@ -812,7 +820,7 @@ def parse_datetime(s):
         elsewhere.
     """
 
-    if not ' ' in s:
+    if ' ' not in s:
         return 1900, 0, 0, 0, 0, 0, 0
 
     datepart, timepart = s.split(' ')
@@ -826,7 +834,7 @@ def parse_time(s):
         Does not return time() because it may need to be used
         in creating a datetime.
     """
-    if not ':' in s:
+    if ':' not in s:
         return 0, 0, 0, 0
 
     hourpart, minutepart, secondpart = s.split(':')

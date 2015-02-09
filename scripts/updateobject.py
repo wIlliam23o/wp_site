@@ -74,6 +74,7 @@ except ImportError as eximp:
 try:
     from projects.models import wp_project
     from blogger.models import wp_blog
+    from img.models import wp_image
     from misc.models import wp_misc
     from downloads.models import file_tracker
     from apps.paste.models import wp_paste, repr_header as paste_repr_header
@@ -120,6 +121,11 @@ modelinfo = {
         'model': wp_blog,
         'attrs': ('title', 'slug'),
     },
+    'image': {
+        'name': 'Image',
+        'model': wp_image,
+        'attrs': ('image_id', 'id', 'title', 'filename')
+    },
     'misc': {
         'name': 'Misc',
         'model': wp_misc,
@@ -141,6 +147,7 @@ modelinfo = {
 modelinfo['proj'] = modelinfo['project']
 modelinfo['post'] = modelinfo['blog']
 modelinfo['tracker'] = modelinfo['file']
+modelinfo['img'] = modelinfo['image']
 
 # Get the name that this script was called by
 # (used in determining which model we're going to be working with.)
@@ -168,7 +175,7 @@ modelused = modelinfo[modelname]
 # Script info changes a little depending on how its called (busybox-style
 # I guess)
 _NAME = 'Update{}'.format(modelused['name'])
-_VERSION = '1.1.0'
+_VERSION = '1.1.1'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 
 # Usage string to use with docopt.
@@ -284,6 +291,22 @@ def do_list_filetrackers():
     return 0
 
 
+def do_list_images():
+    """ List all images. """
+    try:
+        images = wp_image.objects.order_by('image_id')
+    except Exception as ex:
+        print('\nUnable to list images!\n{}'.format(ex))
+        return 1
+    print('Found {} images:'.format(len(images)))
+    for i in images:
+        print('    {} - {}\n      {}'.format(
+            str(i.image_id).ljust(5),
+            i.title,
+            i.filename))
+    return 0
+
+
 def do_list_misc():
     """ List all misc name, aliases """
     return do_list_projects(model=wp_misc)
@@ -383,12 +406,14 @@ def print_pasteresult(iresult):
     print('{}{!r}'.format(indention, iresult.paste))
 
 # Set list handler for this model.
-listfuncs = {'Project': do_list_projects,
-             'Misc': do_list_misc,
-             'Blog': do_list_blogs,
-             'FileTracker': do_list_filetrackers,
-             'Paste': do_list_pastes,
-             }
+listfuncs = {
+    'Project': do_list_projects,
+    'Image': do_list_images,
+    'Misc': do_list_misc,
+    'Blog': do_list_blogs,
+    'FileTracker': do_list_filetrackers,
+    'Paste': do_list_pastes,
+}
 do_list = listfuncs[modelused['name']]
 
 # MAIN
