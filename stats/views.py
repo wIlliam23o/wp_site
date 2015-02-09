@@ -37,21 +37,36 @@ def view_index(request):
 
     # Build the stats page for all known models.
     modelinf = {
-        file_tracker: {'orderby': '-download_count'},
-        wp_app: {'orderby': '-view_count'},
-        wp_blog: {'orderby': '-view_count'},
+        file_tracker: {
+            'orderby': '-download_count',
+            'displayattr': 'shortname'
+        },
+        wp_app: {
+            'orderby': '-view_count',
+            'displayattr': 'name'
+        },
+        wp_blog: {
+            'orderby': '-view_count',
+            'displayattr': 'slug'
+        },
         wp_image: {
             'orderby': '-view_count',
             'displayattr': ('image_id', 'title', 'image.name'),
-            'displayattrsep': ' - '
+            'displayformat': '{image_id} - {title} ({image-name})'
         },
-        wp_misc: {'orderby': '-download_count'},
+        wp_misc: {
+            'orderby': '-download_count',
+            'displayattr': 'name'
+        },
         wp_paste: {
             'orderby': '-view_count',
             'displayattr': ('paste_id', 'title'),
-            'displayattrsep': ' - '
+            'displayformat': '{paste_id} - {title}'
         },
-        wp_project: {'orderby': '-download_count'}
+        wp_project: {
+            'orderby': '-download_count',
+            'displayattr': 'name'
+        }
     }
     context = {
         'request': request,

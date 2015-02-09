@@ -25,13 +25,13 @@ def get_models_info(modelinfo):
             model,
             orderby=modelopts.get('orderby', None),
             displayattr=modelopts.get('displayattr', None),
-            displayattrsep=modelopts.get('displayattrsep', None))
+            displayformat=modelopts.get('displayformat', None))
         if modelgrp:
             allstats.append(modelgrp)
     return sorted(allstats, key=lambda sgrp: str(sgrp.name))
 
 
-def get_model_info(model, orderby=None, displayattr=None, displayattrsep=None):
+def get_model_info(model, orderby=None, displayattr=None, displayformat=None):
     """ Retrieves info about a model's objects.
         Returns a StatsGroup on success, or None on failure.
     """
@@ -56,7 +56,7 @@ def get_model_info(model, orderby=None, displayattr=None, displayattrsep=None):
             statitem = get_object_info(
                 obj,
                 displayattr=displayattr,
-                displayattrsep=displayattrsep)
+                displayformat=displayformat)
             if statitem:
                 stats.items.append(statitem)
     except Exception as ex:
@@ -65,35 +65,54 @@ def get_model_info(model, orderby=None, displayattr=None, displayattrsep=None):
     return stats if stats else None
 
 
-def get_object_info(obj, displayattr=None, displayattrsep=None):
+def get_object_info(obj, displayattr=None, displayformat=None):
     """ Retrieves a single objects info.
         Returns a StatsItem (with name, download_count, view_count).
     """
 
     dlcount = getattr(obj, 'download_count', None)
     viewcount = getattr(obj, 'view_count', None)
-    name = None
+    name = ''
     if displayattr:
-        if isinstance(displayattr, (list, tuple)):
+        if not isinstance(displayattr, (list, tuple)):
+            displayattr = (displayattr,)
+        if not displayformat:
+            # Default format is using spaces as a separator.
+            displayformat = ' '.join(('{{{}}}'.format(a) for a in displayattr))
+
+        formatargs = {
+            a.replace('.', '-'): get_attrs(obj, a, '') for a in displayattr
+        }
+        try:
+            name = displayformat.format(**formatargs)
+        except KeyError as ex:
+            # KeyError might be hard to debug for this, especially in prod.
+            # So, just add a more helpful error msg.
+            errmsg = '\n'.join((
+                'Error formatting stats object: {obj}',
+                '  Error message: {msg}',
+                '    displayattr: {attrs}',
+                '     format str: {fmtstr}',
+                '    format args: {fmtargs}',
+            )).format(
+                obj=obj,
+                msg=ex,
+                attrs=displayattr,
+                fmtstr=displayformat,
+                fmtargs=formatargs)
+            log.error(errmsg)
             name = ''
-            # TODO: Allow a format string instead of a seperator.
-            sep = ' ' if displayattrsep is None else str(displayattrsep)
-            for attr in displayattr:
-                if name:
-                    name = sep.join((name, get_attrs(obj, attr, '')))
-                else:
-                    name = get_attrs(obj, attr, '')
-        else:
-            name = get_attrs(obj, displayattr, None)
+
     if not name:
+        # Fall back to a known attribute if display formatting is missing
         # The order of these attributes matters. (shortname before name)
         trynames = ('image.name', 'shortname', 'slug', 'name', 'title')
         for obj_id_attr in trynames:
             name = get_attrs(obj, obj_id_attr, None)
             if name:
                 break
-    else:
-        log.error('Object without a name!: {}'.format(obj))
+        else:
+            log.error('Object without a name!: {}'.format(obj))
     return StatsItem(name=name, download_count=dlcount, view_count=viewcount)
 
 

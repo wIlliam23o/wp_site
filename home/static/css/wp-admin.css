@@ -54,3 +54,6 @@ a.item-onhold, .item-onhold {
 a.item-private, .item-private {
   /* Private items are italic. */
   font-style: italic; }
+
+.vLargeTextField, .vXMLLargeTextField {
+  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace; }
