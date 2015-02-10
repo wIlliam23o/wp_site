@@ -14,6 +14,8 @@ from django.utils.module_loading import import_module
 # Safe to view generated html
 from django.utils.safestring import mark_safe
 
+from wp_main.utilities import utilities
+
 log = logging.getLogger('wp.search.tools')
 
 # Apps must have a search.py module that implements these functions:
@@ -142,21 +144,11 @@ def get_apps():
     return apps
 
 
-def get_searchable(apps=None):
+def get_searchable():
     """ Returns only apps that are searchable by the searcher app. """
-    searchable = []
-    for appname in settings.INSTALLED_APPS:
-        if appname.startswith('django'):
-            continue
-        searchmod = '{}.search'.format(appname)
-        try:
-            appsearch = import_module(searchmod)
-            if is_searchable(appsearch):
-                searchable.append(appsearch)
-        except ImportError:
-            # This app doesn't implement the 'search' module.
-            pass
-
+    searchable = utilities.get_apps(
+        include=is_searchable,
+        child='search')
     return searchable
 
 

@@ -14,8 +14,10 @@ import sys
 import traceback
 from datetime import datetime
 
-# global settings
 from django.conf import settings
+# Import modules within this project.
+from django.utils.module_loading import import_module
+
 # User-Agent helper...
 from wp_user_agents.utils import get_user_agent  # @UnresolvedImport
 
@@ -119,6 +121,58 @@ def get_absolute_path(relative_file_path):
         return ''
 
     return sabsolutepath
+
+
+def get_apps(
+        exclude=None, include=None, name_filter=None,
+        child=None, no_django=True):
+    """ Returns a list of modules (apps) from INSTALLED_APPS.
+        Arguments:
+            exclude     : A function to exclude modules from being added.
+                          It should return True to exclude, False to not.
+                          It's signature is:
+                          exclude(module) -> bool
+                          Default: None
+            include     : A function to include modules to be added.
+                          It should return True to include, False to not.
+                          It's signature is:
+                          include(module) -> bool
+                          Default: None
+            name_filter : A function to include modules by name.
+                          It should return True to include, False to not.
+                          It's signature is:
+                          name_filter(appname) -> bool
+            child       : A str containing child modules to load instead of
+                          the parent apps.
+                          Example: (grab all apps with a 'search' module)
+                              # Import all <app_name>.search
+                              apps = search_apps(child='search')
+                          Default: None
+            no_django   : True/False. Whether or not to include modules
+                          starting with 'django'.
+                          Default: True
+    """
+    apps = []
+    for appname in settings.INSTALLED_APPS:
+        if no_django and appname.startswith('django'):
+            continue
+        elif name_filter and not name_filter(appname):
+            continue
+        if child:
+            childname = '{}.{}'.format(appname, child.strip('.'))
+        else:
+            childname = appname
+        try:
+            app = import_module(childname)
+            if exclude and exclude(app):
+                continue
+            elif include and include(app):
+                apps.append(app)
+        except ImportError as ex:
+            log.debug('Module wasn\'t imported: {}\n  {}'.format(
+                childname, ex))
+
+    return apps
 
 
 def get_attrs(o, attrs, default=NoValue):
