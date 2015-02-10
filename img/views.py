@@ -104,17 +104,20 @@ def view_index(request):
 def view_image_id(request, imageid):
     """ View a single image by id. """
 
-    image = utilities.get_object(wp_image.objects, image_id=imageid)
-    if image is None:
-        alert_msg = 'No image with that id.'
-        alert_class = 'error'
-    else:
-        alert_msg, alert_class = None, None
-        image.view_count += 1
-        image.save()
-        log.debug('Image view_count incremented to {}: {}'.format(
-            image.view_count,
-            image.filename))
+    images = wp_image.objects.filter(disabled=False, image_id=imageid)
+    if not images:
+        return responses.error404(
+            request,
+            ['I can\'t find an image with that id.']
+        )
+
+    image = images[0]
+    alert_msg, alert_class = None, None
+    image.view_count += 1
+    image.save()
+    log.debug('Image view_count incremented to {}: {}'.format(
+        image.view_count,
+        image.filename))
     # Reusing part of the index view template.
     # Needs to be more refined, in it's own template.
     context = {
