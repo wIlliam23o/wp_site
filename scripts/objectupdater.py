@@ -468,7 +468,7 @@ def get_headerstr(obj):
         print('\nError retrieving model name!:\n{}'.format(ex))
         return headerstr
 
-    if mname not in headerstrings.keys():
+    if mname not in headerstrings:
         print('\nget_headerstr(): No info for this model!: {}'.format(mname))
         return headerstr
 

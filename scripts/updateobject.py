@@ -192,6 +192,8 @@ def main(argd):
     """ main entry point, expects arg dict from docopt. """
     ret = 0
     # Args for simple object operations.
+    # TODO: Pass a single object with all the info needed, grabbed from
+    #       the app itself (maybe in an updater.py module)
     id_args = [argd['<identifier>'], modelused['model'], modelused['attrs']]
 
     # Function map for simple object operations.
