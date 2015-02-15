@@ -167,6 +167,8 @@ class StatsGroup(object):
     def __init__(self, name=None, items=None):
         self.name = name or 'Unknown'
         self.items = items or []
+        self.id = None
+        self.update_id()
 
     def __bool__(self):
         """ Returns True if any(self.items). """
@@ -174,14 +176,24 @@ class StatsGroup(object):
 
     def __repr__(self):
         """ A short and simple str representation for this group. """
+        self.update_id()
         return '{}: ({} items)'.format(self.name, len(self.items))
 
     def __str__(self):
         """ A formatted str for this stats group. """
+        self.update_id()
         return '{}:\n    {}'.format(
             self.name,
             '\n    '.join(
                 (str(i).replace('\n', '\n    ') for i in self.items)))
+
+    def update_id(self):
+        """ Update the id for this stats group. """
+        if self.id:
+            return None
+        if self.name is NoValue:
+            return None
+        self.id = self.name.lower().replace(' ', '-').replace('.', '')
 
 
 class StatsItem(object):

@@ -21,6 +21,12 @@
   color: #26a1f4;
   font-size: 1.2em;
   text-shadow: #999999 1px 1px 3px; }
+  .stats-group-name:hover {
+    color: #007dd1; }
+
+.stats-group-items {
+  display: none;
+  position: relative; }
 
 .stats-item {
   display: block;

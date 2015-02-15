@@ -22,6 +22,16 @@
     color: $bluemain;
     font-size: $fontbigger;
     text-shadow: $shadowtextsmall;
+
+    &:hover {
+        color: $bluehover;
+    }
+}
+
+.stats-group-items {
+    // All items are hidden until toggled.
+    display: none;
+    position: relative;
 }
 
 .stats-item {
