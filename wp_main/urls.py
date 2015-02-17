@@ -158,6 +158,8 @@ handler500 = 'home.views.view_500'
 urlpatterns += patterns(
     '',
     # wordpress login
+    url(r'^wp-admin',
+        homeviews.view_scriptkids),
     url(r'^wordpress/wp-admin/?$',
         homeviews.view_scriptkids),
     url(r'^wp\-login\.php$',
