@@ -276,6 +276,7 @@ a .header:hover, a .header.featured-name:hover {
     background-color: $greysurround;
     padding: 10px;
     overflow: hidden;
+    margin-top: 15px;
     margin-bottom: 20px;
     min-height: 240px; // helps with short pages that have a vertical menu
     }

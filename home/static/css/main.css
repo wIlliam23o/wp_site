@@ -291,6 +291,7 @@ a .header:hover, a .header.featured-name:hover {
   background-color: #e7e7e7;
   padding: 10px;
   overflow: hidden;
+  margin-top: 15px;
   margin-bottom: 20px;
   min-height: 240px; }
 

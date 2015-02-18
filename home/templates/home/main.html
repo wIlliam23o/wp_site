@@ -64,25 +64,23 @@
 	{% if request|is_mobile %}
 		<style type='text/css'>
 			<!-- Fixes mobile view of menus -->
-			#dock { top: -32px; }
+			#dock { margin-top: 0px; }
 			a.dock-item { position: relative; float: left; margin-right: 30px; }
 			a.dock-item:hover { color: #9c9c9c; }
 			a.dock-item:active { color: #9c9c9c; }
 			.dock-item span { display: block; }
 
 			.vertical-menu { top: 200px; }
-			.menubar { margin-top: 0px; }
 
 		</style>
 	{% else %}
 		<noscript>
 			<style type='text/css'>
-				#dock { top: -32px; }
+				#dock { margin-top: 0px; }
 				a.dock-item { position: relative; float: left; margin-right: 30px; }
 				a.dock-item:hover { color: #9c9c9c; }
 				a.dock-item:active { color: #9c9c9c; }
 				.dock-item span { display: block; }
-
 			</style>
 		</noscript>
 	{% endif %}
@@ -198,7 +196,7 @@
 		{#{% if false %} {# <-- TESTING PURPOSES #}
 		{% if request|is_test_site and not request.user.is_staff %}
 		    <!-- Show no access msg for non-admins on test site. -->
-			<div id='page-surround' class='wp-block'>
+			<div id='page-surround'>
 				<div class='error-noaccess-message'>
 					Sorry, you do not have access to the test site.
 				</div>
@@ -225,54 +223,50 @@
 
 
 		        <!-- Navigation -->
-		        <div class='wp-block navigation'>
-		        	<div class='menubar'>
-						<div id='dock'>
-							<div class='dock-container' id='dock-box' style='left: 0px;'>
-									<a class='dock-item' id='dock-home' href='/'>
-										<span>Home</span>
-										<img src='/static/images/dock/wp-home.png' alt='home'/>
-									</a>
-									<a class='dock-item' id='dock-projects' href='/projects'>
-										<span>Projects</span>
-										<img src='/static/images/dock/wp-projects.png' alt='projects'/>
-									</a>
-									<a class='dock-item' id='dock-apps' href='/apps'>
-										<span>Apps</span>
-										<img src='/static/images/dock/wp-apps.png' alt='apps'/>
-									</a>
-									<a class='dock-item' id='dock-misc' href='/misc'>
-									    <span>Misc.</span>
-									    <img src='/static/images/dock/wp-misc.png' alt='misc'/>
-									</a>
-									<a class='dock-item' id='dock-paste' href='/paste'>
-										<span>Paste</span>
-										<img src='/static/images/dock/wp-paste.png' alt='paste'/>
-									</a>
-									<a class='dock-item' id='dock-img' href='/img'>
-										<span>Images</span>
-										<img src='/static/images/dock/wp-img.png' alt='images'/>
-									</a>
-									<a class='dock-item' id='dock-blog' href='/blog'>
-										<span>Blog</span>
-										<img src='/static/images/dock/wp-blog.png' alt='blog'/>
-									</a>
-									<a class='dock-item' id='dock-about' href='/about'>
-										<span>About</span>
-										<img src='/static/images/dock/wp-about.png' alt='about'/>
-									</a>
-									<a class='dock-item' id='dock-search' href='/search'>
-										<span>Search</span>
-										<img src='/static/images/dock/wp-search.png' alt='search'/>
-									</a>
+		        <div id='dock'>
+					<div class='dock-container' id='dock-box'>
+						<a class='dock-item' id='dock-home' href='/'>
+							<span>Home</span>
+							<img src='/static/images/dock/wp-home.png' alt='home'/>
+						</a>
+						<a class='dock-item' id='dock-projects' href='/projects'>
+							<span>Projects</span>
+							<img src='/static/images/dock/wp-projects.png' alt='projects'/>
+						</a>
+						<a class='dock-item' id='dock-apps' href='/apps'>
+							<span>Apps</span>
+							<img src='/static/images/dock/wp-apps.png' alt='apps'/>
+						</a>
+						<a class='dock-item' id='dock-misc' href='/misc'>
+						    <span>Misc.</span>
+						    <img src='/static/images/dock/wp-misc.png' alt='misc'/>
+						</a>
+						<a class='dock-item' id='dock-paste' href='/paste'>
+							<span>Paste</span>
+							<img src='/static/images/dock/wp-paste.png' alt='paste'/>
+						</a>
+						<a class='dock-item' id='dock-img' href='/img'>
+							<span>Images</span>
+							<img src='/static/images/dock/wp-img.png' alt='images'/>
+						</a>
+						<a class='dock-item' id='dock-blog' href='/blog'>
+							<span>Blog</span>
+							<img src='/static/images/dock/wp-blog.png' alt='blog'/>
+						</a>
+						<a class='dock-item' id='dock-about' href='/about'>
+							<span>About</span>
+							<img src='/static/images/dock/wp-about.png' alt='about'/>
+						</a>
+						<a class='dock-item' id='dock-search' href='/search'>
+							<span>Search</span>
+							<img src='/static/images/dock/wp-search.png' alt='search'/>
+						</a>
+					</div>
+				</div>
 
-							</div>
-						</div>
-		        	</div>
-		        </div>
 
-				<!-- Page Surround -->
-		        <div id='page-surround' class='wp-block'>
+				<!-- Child page content -->
+		        <div id='page-surround'>
 					<!-- Above Page Content -->
 					{% block contentabove %}
 					{% endblock %}
@@ -359,12 +353,6 @@
 	<script type='text/javascript'>
 		$(document).ready( function () {
 			wptools.wpreveal('.wp-address');
-			{# fix iFisheyes weird dock positioning. #}
-			var dockbox = $('#dock-box');
-			if (dockbox.length) {
-				{#  Some error pages don't have the dock-box. #}
-				$('#dock-box').css({'left':'0px'});
-			}
 
 			{# Make alert messages clickable. #}
 			{% if alert_message or alert_content %}
