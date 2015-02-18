@@ -12,6 +12,7 @@ a.dock-item {
 
 .dock-item span {
   display: none;
+  text-transform: lowercase;
   padding-left: 20px; }
 
 .dock-item img {
