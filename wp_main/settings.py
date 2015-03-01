@@ -76,13 +76,7 @@ MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
 TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
 
 # IP's debug_toolbar should be shown to.
-_internal_ips = SECRETS.settings['internal_ips']
-# Add local dev ips to safe list.
-_internal_ips.extend(['192.168.0.{}'.format(n) for n in range(2, 21)])
-_internal_ips.extend(['192.168.1.{}'.format(n) for n in range(2, 21)])
-# set global allowed ips
-INTERNAL_IPS = tuple(_internal_ips)
-
+INTERNAL_IPS = tuple(SECRETS.settings.get('internal_ips', []))
 
 # Admin info
 ADMINS = (('Christopher Welborn', 'cj@welbornprod.com'), )
