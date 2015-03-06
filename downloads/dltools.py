@@ -130,12 +130,15 @@ def update_tracker_projects(tracker, project, dosave=True):
         tracker.save()
 
     projectid = getattr(project, 'id', None)
-    if tracker.project.get(id=projectid):
-        # Project already added to this tracker.
-        log.debug('Tracker already added: {}, Project: {}'.format(
-            tracker,
-            project))
-        return None
+    try:
+        if tracker.project.get(id=projectid):
+            # Project already added to this tracker.
+            log.debug('Tracker already added: {}, Project: {}'.format(
+                tracker,
+                project))
+            return None
+    except ObjectDoesNotExist:
+        pass
 
     tracker.project.add(project)
     log.debug('Added new tracker to project: {} -> {}'.format(
