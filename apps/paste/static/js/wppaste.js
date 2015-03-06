@@ -112,13 +112,10 @@ var wppaste = {
 
     get_selected_onhold : function () {
         /* Get 'on hold' option selection. */
-        var chk = $('#paste-onhold-opt');
+        var chk = document.getElementById('paste-onhold-opt');
         // This option is not always created. (only authenticated users see it)
-        if (chk.length) {
-            return $(chk).prop('checked');
-        } else {
-            return false;
-        }
+        return chk === null ? false : $(chk).prop('checked');
+
     },
 
     get_selected_private : function () {
@@ -265,9 +262,9 @@ var wppaste = {
             Arguments:
                 checked : true/false, whether onhold opt is checked.
         */
-        var chk = $('#paste-onhold-opt');
+        var chk = document.getElementById('paste-onhold-opt');
         // This option is not always created. (only authenticated users see it)
-        if (chk.length) {
+        if (chk) {
             var boolval = checked || false;
             $(chk).attr({'checked': boolval});
         }
@@ -279,7 +276,7 @@ var wppaste = {
                 checked  : true/false, whether the private opt. is checked.
         */
 
-        var chk = $('#paste-private-opt');
+        var chk = document.getElementById('paste-private-opt');
         var boolval = checked || false;
         $(chk).attr({'checked': boolval});
 
@@ -306,8 +303,7 @@ var wppaste = {
     setup_ace: function (doreadonly) {
         /* Initial setup for ace editor.*/
         wp_content = ace.edit('paste-content');
-        // highlight style (set in load_paste_settings)
-        //wp_content.setTheme('ace/theme/solarized_dark');
+
         // various settings for ace
         wp_content.setHighlightActiveLine(true);
         wp_content.setAnimatedScroll(true);
@@ -331,7 +327,6 @@ var wppaste = {
         wptools.center('#floater');
         var floater = $('#floater');
         var scrollpos = $(this).scrollTop();
-        //floater.css({'top': scrollpos + 'px'});
 
         $('#floater').fadeIn();
         setTimeout(function () { wppaste.kill_message(); }, 3000);
@@ -358,8 +353,6 @@ var wppaste = {
         var replyto = $('#replyto-id').attr('value');
         pastedata['replyto'] = replyto
 
-        // TODO: include 'onhold' on frontend.
-
         // Parse some of the user input.
         if (wptools.is_emptystr(pastedata.content)) {
             wppaste.show_error_msg('<span class="warning-msg">Paste must have some content.</span>');
@@ -380,16 +373,20 @@ var wppaste = {
             url: '/apps/paste/submit',
             data: JSON.stringify(pastedata),
             dataType: 'json',
-            failure: function (xhr, status, errorthrown) {
-                console.log('failure: ' + status);
-            },
-            complete: function (xhr, status) {
-
+            status: {
+                404: function () { console.log('Page not found.'); },
+                500: function () { console.log('A major error occurred.'); }
+            }
+        })
+            .fail(function (xhr, status, err) {
+                var msg = err.message ? err.message : 'The error was unknown.';
+                console.log('failure: ' + status + '\n    msg:' + msg);
+                msg = 'An error occurred while submitting. ' + msg;
+                wppaste.show_error_msg('<span class="warning-msg"> ' + msg + '</span>');
+            })
+            .done(function (data, status, xhr) {
                 // handle errors...
                 if (status == 'error') {
-                    // TODO: Handle server errors.
-                    // TODO: App errors are handled, but what if the app doesn't
-                    // TODO: ..even get to talk to the client? :)
                     console.log('wp-error response: ' + xhr.responseText);
                     if (xhr.responseText) {
                         // This will probably be an ugly message.
@@ -413,12 +410,7 @@ var wppaste = {
 
                 }
 
-            },
-            status: {
-                404: function () { console.log('PAGE NOT FOUND!'); },
-                500: function () { console.log('A major error occurred.'); }
-            }
-        });
+            });
     },
 
     submit_success : function (jsondata) {
@@ -430,10 +422,6 @@ var wppaste = {
             // Move to newly created paste.
             wptools.navigateto(jsondata.url);
         }
-    },
-
-    toggle_editor_size: function () {
-        /* TODO: Implement this size toggler. */
     },
 
     updatejson : function (jsondata, newdata) {
@@ -530,17 +518,3 @@ var wppaste = {
 
 
 };
-
-/* I don't think there's a real reason for these to not be part of
-    wppaste.
-*/
-
-// setup initial ace editor
-
-
-// update floater message and size/position
-
-
-
-
-
