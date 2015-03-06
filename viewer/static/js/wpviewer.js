@@ -3,6 +3,8 @@
    - Christopher Welborn 2013 -desc added in 2014 :)
 */
 
+/*global ace, wptools, wp_content, wp_modelist */
+
 // Store current relative filename here. The template sends it on the first
 // page load, and then it is set with JS when doing ajax calls.
 var wpviewer = {
@@ -34,33 +36,29 @@ var wpviewer = {
                 $(linkelem).removeClass('vertical-menu-item-disabled');
                 $(linkitem).removeClass('vertical-menu-item-disabled');
                 return true;
-            } else {
-                // already enabled.
-                return true;
             }
-
-        } else {
-            // ensure this link is 'disabled' (true means disabled)
-            if (menutarget.indexOf('true') < 0) {
-                $(linkelem).attr('onclick', menutarget.replace('false', 'true'));
-                $(linkelem).addClass('vertical-menu-item-disabled');
-                $(linkitem).addClass('vertical-menu-item-disabled');
-                return true;
-            } else {
-                // already disabled.
-                return true;
-            }
+            // already enabled.
+            return true;
         }
+
+        // ensure this link is 'disabled' (true means disabled)
+        if (menutarget.indexOf('true') < 0) {
+            $(linkelem).attr('onclick', menutarget.replace('false', 'true'));
+            $(linkelem).addClass('vertical-menu-item-disabled');
+            $(linkitem).addClass('vertical-menu-item-disabled');
+            return true;
+        }
+        // already disabled.
+        return true;
     },
 
     load_file_data: function (xhrdata) {
         var file_info = JSON.parse(xhrdata.responseText);
 
         // Server-side error.
-        if (file_info.status == 'error') {
-            var errmessage = file_info.message;
-            if (errmessage) {
-                $('#file-content-box').html('<span>' + errmessage + '</span>');
+        if (file_info.status === 'error') {
+            if (file_info.message) {
+                $('#file-content-box').html('<span>' + file_info.message + '</span>');
             } else {
                 $('#file-content-box').html('<span>Sorry, an unknown error occurred.</span>');
             }
@@ -76,8 +74,7 @@ var wpviewer = {
             wp_content.getSession().setMode(ace_mode.mode);
             $('#file-content').fadeIn();
 
-        }
-        else {
+        } else {
             $('#file-content-box').html('<span>Sorry, no content in this file...</span>');
             return;
         }
@@ -85,18 +82,18 @@ var wpviewer = {
         /* Header for projects ...pythons None equates to null in JS. */
         if (file_info.project_alias !== null && file_info.project_name !== null) {
             $('#project-title-name').html(file_info.project_name);
-            $('#project-link').click( function () { wptools.navigateto('/projects/' + file_info.project_alias); });
+            $('#project-link').click(function () { wptools.navigateto('/projects/' + file_info.project_alias); });
             if (file_info.project_alias) { $('#project-info').fadeIn(); }
         // Header for miscobj.
         } else if (file_info.misc_alias !== null && file_info.misc_name !== null) {
             $('#project-title-name').html(file_info.misc_name);
-            $('#project-link').click( function () { wptools.navigateto('/misc/' + file_info.misc_alias); });
+            $('#project-link').click(function () { wptools.navigateto('/misc/' + file_info.misc_alias); });
             if (file_info.misc_alias) { $('#project-info').fadeIn(); }
         }
         // File info
         if (file_info.file_short && file_info.static_path) {
             $('#viewer-filename').html(file_info.file_short);
-            $('#file-link').click( function () { wptools.navigateto('/dl/' + file_info.static_path ); });
+            $('#file-link').click(function () { wptools.navigateto('/dl/' + file_info.static_path); });
             if (file_info.file_short) { $('#file-info').fadeIn(); }
             // set current working filename.
             wpviewer.set_current_file(file_info.static_path);
@@ -111,7 +108,7 @@ var wpviewer = {
             var menufilename;
             var menuname;
             // Build the menu from scratch if this is the first load.
-            if (existing_length === 0 && menu_length > 0 ) {
+            if (existing_length === 0 && menu_length > 0) {
                 var menufrag = document.createDocumentFragment();
                 var menuitem;
                 $.each(menu_items, function () {
@@ -119,7 +116,7 @@ var wpviewer = {
                     menuname = this[1];
                     var disabledval = 'false';
                     // Disable current file in menu.
-                    if (menufilename == wpviewer.current_file) {
+                    if (menufilename === wpviewer.current_file) {
                         // this item is disabled.
                         disabledval = 'true';
                     }
@@ -134,7 +131,7 @@ var wpviewer = {
                 $.each($(".vertical-menu-link"), function () {
                     // get name from this link.
                     menuname = $(this).children().text();
-                    if (menuname == wpviewer.current_name) {
+                    if (menuname === wpviewer.current_name) {
                         // fix onclick for view_file().
                         wpviewer.enable_link(this, false);
                     } else {
@@ -163,7 +160,7 @@ var wpviewer = {
         // add child list element/name
         var menuitem = document.createElement('li');
         $(menuitem).addClass('vertical-menu-item');
-        if (disabledval == 'true') {
+        if (disabledval === 'true') {
             $(menuitem).addClass('vertical-menu-item-disabled');
         }
         // add child span element/name
@@ -178,7 +175,7 @@ var wpviewer = {
             'javascript: wpviewer.view_file(\'' + menufilename + '\', ' + disabledval + ');');
 
         // needs disabled class?
-        if (disabledval == 'true') {
+        if (disabledval === 'true') {
             $(menulink).addClass('vertical-menu-item-disabled');
         }
         // return menu link item
@@ -187,14 +184,14 @@ var wpviewer = {
 
     set_current_file : function (filename) {
         if (filename) {
-            if (filename[0] == '/') {
+            if (filename[0] === '/') {
                 wpviewer.current_file = filename;
             } else {
                 wpviewer.current_file = '/' + filename;
             }
             // set shortname for file.
             var nameparts = wpviewer.current_file.split('/');
-            wpviewer.current_name = nameparts[nameparts.length -1];
+            wpviewer.current_name = nameparts[nameparts.length - 1];
 
         }
     },
@@ -232,11 +229,7 @@ var wpviewer = {
     },
 
     view_file: function (filename, cancel) {
-        if (!filename) {
-            return false;
-        }
-
-        if (cancel) {
+        if (cancel || !filename) {
             return false;
         }
 
@@ -244,7 +237,8 @@ var wpviewer = {
         var filedata = { file: filename };
 
         // change the loading message for proper file name.
-        wpviewer.update_loading_msg('<span>Loading file: ' + wpviewer.current_file + '...</span>');
+        var displayname = wpviewer.current_file || filename;
+        wpviewer.update_loading_msg('<span>Loading file: ' + displayname + '...</span>');
 
         //$('#project-info').fadeOut();
         $('#file-info').fadeOut();
@@ -255,29 +249,29 @@ var wpviewer = {
             url: '/view/file/',
             data: JSON.stringify(filedata),
             dataType: 'json',
-            failure: function (xhr, status, errorthrown) {
-                console.log('failure: ' + status);
-            },
-            complete: function (xhr, status) {
+            status: {
+                404: function () { console.log('PAGE NOT FOUND!'); },
+                500: function () { console.log('A major error occurred.'); }
+            }
+        })
+            .fail(function (xhr, status, error) {
+                var msg = error.message || 'The error was unknown.';
+                console.log('failure: ' + status + '\n    ' + msg);
+                $('#file-content-box').html('<span class=\'B\'>Sorry, an unhandled error occurred. ' + msg + '</span>');
+            })
+            .done(function (data, status, xhr) {
 
                 // handle errors...
-                if (status == 'error') {
+                if (status === 'error') {
                     $('#file-content-box').html('<span class=\'B\'>Sorry, either that file doesn\'t exist, or there was an error processing it.</span>');
                     console.log('wp-error response: ' + xhr.responseText);
-                }
-                else {
+                } else {
                     // Data okay to use, send it to the file loader.
                     wpviewer.load_file_data(xhr);
                 }
                 // done loading success or error
                 $('#floater').fadeOut();
-            },
-            status: {
-                404: function () { console.log('PAGE NOT FOUND!'); },
-                500: function () { console.log('A major error occurred.'); }
-            }
-        });
-
+            });
     }
 };
 
