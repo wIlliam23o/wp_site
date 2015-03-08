@@ -13,7 +13,7 @@
 # -Christopher Welborn (rewrite: 1-27-15)
 
 appname="WRun"
-appversion="0.1.0"
+appversion="0.2.0"
 # script directories to use (relative to cwd)
 scriptdirs=("scripts" "apps/paste/scripts")
 
@@ -194,4 +194,4 @@ scriptargs=("${@:2}")
 scriptcmd="$scriptpath ${scriptargs[@]}"
 # Run it.
 print_status "%s\n\n" "Running: ./$scriptcmd"
-./$scriptcmd
+./$scriptpath "${scriptargs[@]}"
