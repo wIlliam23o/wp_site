@@ -44,7 +44,7 @@ USAGESTR = """{versionstr}
 """.format(script=SCRIPT, versionstr=VERSIONSTR)
 
 IGNORECOLLECTED = [
-    #'admin',
+    # 'admin',
     'debug_toolbar',
     'django_extensions',
 ]
@@ -55,7 +55,7 @@ IGNOREDPAT = re.compile('/?(({}))'.format(')|('.join(IGNORECOLLECTED)))
 def main(argd):
     """ Main entry point, expects doctopt arg dict as argd """
     if argd['--clean']:
-        raise NotImplementedError('No --clean yet.')
+        raise NotImplementedError('No --clean yet. It could be harmful.')
     else:
         # Analyze the dirs.
         print('Gathering collected files...')
@@ -69,7 +69,7 @@ def main(argd):
 
         if colnodev:
             print('\nCollected files not in development:')
-            print('    {}'.format('\n    '.join(colnodev)))
+            print('    {}'.format('\n    '.join(sorted(colnodev))))
             colnodevlen = len(colnodev)
             fileplural = 'file' if colnodevlen == 1 else 'files'
             print('\nFound {} {} not in development.'.format(
@@ -80,7 +80,7 @@ def main(argd):
 
         if devnocol:
             print('\nDevelopment files not in collected:')
-            print('    {}'.format('\n    '.join(devnocol)))
+            print('    {}'.format('\n    '.join(sorted(devnocol))))
             devnocollen = len(devnocol)
             fileplural = 'file' if devnocollen == 1 else 'files'
             print('\nFound {} {} not in collected.'.format(
@@ -110,7 +110,7 @@ def get_development():
     """ Gather files from the development static dirs. """
     development = set()
     for root, dirs, files in os.walk(settings.BASE_DIR):
-        if not 'static' in root:
+        if 'static' not in root:
             continue
         for f in files:
             fullpath = os.path.join(root, f)
