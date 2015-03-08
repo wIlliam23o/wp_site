@@ -18,6 +18,13 @@ def get_models_info(modelinfo):
                          dict of options.
                          Example:
                             get_models_info({wp_blog: {'orderby': '-posted'}})
+
+                options for modelinfo:
+                    orderby       : Attribute name to use with .orderby().
+                    displayattr   : Attribute/s to display (title, name, id)
+                    displayformat : Format string for display.
+                                    Like: '{displayattr1} {displayattr2}'
+        Returns a list of StatsGroups, or empty list on failure.
     """
     allstats = []
     for model, modelopts in modelinfo.items():
