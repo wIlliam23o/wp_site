@@ -15,7 +15,7 @@ scriptsdir = os.path.abspath(os.path.join(sys.path[0], '../../../scripts'))
 sys.path.insert(1, scriptsdir)
 
 NAME = 'pastetool.py'
-VERSION = '1.0.0'
+VERSION = '1.1.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[-1]
 
@@ -27,14 +27,17 @@ USAGESTR = """{versionstr}
     found in /wp_site/scripts.
 
     Usage:
-        {script} -h | -v
-        {script} -d | -D | -e | -E
+        {script} [-h | -v]
+        {script} -a | -d | -D | -e | -E
 
     Options:
+        -a,--all             : Show all pastes.
         -d,--disableexpired  : Disable expired pastes.
-        -D,--deleteexpired   : Delete expired pastes.
+        -D,--deleteexpired   : Delete expired pastes. Will not delete onholds.
         -e,--expired         : Show expired pastes.
         -E,--enableexpired   : Enable expired pastes.
+                               This is dangerous. It will enable all disabled,
+                               expired pastes.
         -h,--help            : Show this help message.
         -v,--version         : Show version.
 """.format(script=SCRIPT, versionstr=VERSIONSTR)
@@ -61,18 +64,24 @@ from apps.paste.models import wp_paste
 
 def main(argd):
     """ Main entry point, expects doctopt arg dict as argd """
-    if argd['--enableexpired']:
+    if argd['--all']:
+        # Show all pastes.
+        return print_all()
+    elif argd['--enableexpired']:
         # Enable expired pastes.
         return do_modify_expired(disabled=False)
     elif argd['--expired']:
         # Show expired pastes.
-        return do_expired()
+        return print_expired()
     elif argd['--deleteexpired']:
         # Delete expired pastes.
         return do_modify_expired(delete=True)
     elif argd['--disableexpired']:
         # Disable expired pastes.
         return do_modify_expired(disabled=True)
+    else:
+        # Default action, show expired pastes.
+        return print_expired()
     return 0
 
 
@@ -100,12 +109,15 @@ def do_modify_expired(**kwargs):
     for paste in iter_expired():
         # Deleteing the pastes?
         if delete:
-            paste.delete()
-            print('    deleted: {}'.format(paste.paste_id))
+            if paste.onhold:
+                print('    on hold: {}'.format(paste.paste_id))
+            else:
+                paste.delete()
+                print('    deleted: {}'.format(paste.paste_id))
         else:
             # Setting attributes.
             attrset = []
-            for attr in kwargs.keys():
+            for attr in kwargs:
                 attrval = kwargs[attr]
                 setattr(paste, attr, attrval)
                 attrset.append('{} = {}'.format(attr, attrval))
@@ -120,33 +132,6 @@ def do_modify_expired(**kwargs):
     return 0
 
 
-def do_expired():
-    """ Show expired pastes. """
-    try:
-        pastes = wp_paste.objects.order_by('publish_date')
-    except Exception as ex:
-        print('\nUnable to retrieve pastes!\n{}'.format(ex))
-        return 0
-
-    expiredcnt = 0
-    pastecnt = len(pastes)
-    for paste in pastes:
-        if paste.is_expired():
-            print('expired: {!r}'.format(paste))
-            expiredcnt += 1
-        else:
-            unexpiredcnt = pastecnt - expiredcnt
-            pastestr = 'paste is' if unexpiredcnt == 1 else 'pastes are'
-            print('\nThe remaining {} {} not expired.'.format(unexpiredcnt,
-                                                              pastestr))
-            break
-    expastestr = 'paste' if expiredcnt == 1 else 'pastes'
-    print('\nFound {} expired {} out of {}.'.format(expiredcnt,
-                                                    expastestr,
-                                                    pastecnt))
-    return 0
-
-
 def iter_expired():
     """ Yields expired pastes. """
     try:
@@ -156,11 +141,57 @@ def iter_expired():
         sys.exit(1)
 
     for paste in pastes:
-        if paste.is_expired():
+        if paste.is_expired(never_onhold=False):
             yield paste
         else:
             # Reached the end of expired pastes.
             raise StopIteration('End of expired pastes.')
+
+
+def print_all():
+    """ Print all pastes. Interrupt with Ctrl + C. """
+    try:
+        pastes = wp_paste.objects.order_by('publish_date')
+    except Exception as ex:
+        print('\nUnable to retrieve pastes!\n{}'.format(ex))
+        return 1
+
+    pastecnt = len(pastes)
+    for paste in pastes:
+        print('{!r}'.format(paste))
+
+    plural = 'paste' if pastecnt == 1 else 'pastes'
+    print('\nFound {} {}.'.format(pastecnt, plural))
+    return 0 if pastecnt > 0 else 1
+
+
+def print_expired():
+    """ Show expired pastes. """
+    try:
+        pastes = wp_paste.objects.order_by('publish_date')
+    except Exception as ex:
+        print('\nUnable to retrieve pastes!\n{}'.format(ex))
+        return 1
+
+    expiredcnt = 0
+    pastecnt = len(pastes)
+    for paste in pastes:
+        if paste.is_expired(never_onhold=False):
+            print('expired: {!r}'.format(paste))
+            expiredcnt += 1
+        else:
+            unexpiredcnt = pastecnt - expiredcnt
+            pastestr = 'paste is' if unexpiredcnt == 1 else 'pastes are'
+            print('\nThe remaining {} {} not expired.'.format(
+                unexpiredcnt,
+                pastestr))
+            break
+    expastestr = 'paste' if expiredcnt == 1 else 'pastes'
+    print('\nFound {} expired {} out of {}.'.format(
+        expiredcnt,
+        expastestr,
+        pastecnt))
+    return 0
 
 
 if __name__ == '__main__':
