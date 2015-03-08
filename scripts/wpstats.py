@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
-      project: Welborn Productions - Statistics
-     @summary: Gathers info about blog/project views/downloads and any other
-               info I can grab.
+''' Welborn Productions - Statistics
+    Gathers info about blog/project views/downloads and any other info I can
+    grab.
 
-      @author: Christopher Welborn <cj@welbornprod.com>
-@organization: welborn productions <welbornprod.com>
-
-   start date: May 25, 2013
+    -Christopher Welborn  May 25, 2013
 '''
 
 import inspect
@@ -76,6 +72,7 @@ except ImportError as eximp:
           "are you in the right directory?\n\n" + str(eximp))
     sys.exit(1)
 
+# Display options, per model.
 modelopts = {
     file_tracker: {
         'orderby': '-download_count',
@@ -109,6 +106,7 @@ modelopts = {
     }
 }
 
+# Models mapped to user args.
 argmap = {
     '--app': wp_app,
     '--blog': wp_blog,
