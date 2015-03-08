@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from getpass import getpass, GetPassWarning
 import os.path
 import smtplib
 import sys
@@ -18,7 +19,7 @@ except SyntaxError:
 
 
 NAME = 'WpSendmail'
-VERSION = '1.0.0'
+VERSION = '1.2.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[1]
 
@@ -34,19 +35,17 @@ USAGESTR = """{verstr}
 
     Usage:
         {script} -h | -v
-        {script} <to> <msg> [options]
-        {script} <to> <msg> [-f from_address] [-s subject] [-u user -p pw]
+        {script} TO MSG [-d] [-D] [-f from_address] [-s subject] [-u user]
 
     Options:
-        <msg>                   : Message text, or file to read text from.
-        <to>                    : One or many 'to' addresses.
+        MSG                     : Message text, or file to read text from.
+        TO                      : One or many 'to' addresses.
                                   Separated by a comma.
         -d,--dryrun             : Just show what would've been sent.
         -D,--debug              : Debug mode, prints more information.
         -f addr,--from addr     : From address to use.
                                   Defaults to: {defaultfrom}
         -h,--help               : Show this message.
-        -p pw,--password pw     : Password for login.
         -s text,--subject text  : Subject to use in the mail.
                                   Defaults to: {defaultsubject}
         -u user,--user user     : Username for login.
@@ -67,14 +66,14 @@ def main(argd):
         # Format to 'Display Name <address>'
         from_addr = '{} <{}>'.format(DEFAULTFROM[0], DEFAULTFROM[1])
 
-    to_addrs = argd['<to>'].split(',')
+    to_addrs = argd['TO'].split(',')
 
     if not to_addrs:
         print('\nYou must provide a To address.')
         return 1
 
     # Parse message
-    msgarg = argd['<msg>']
+    msgarg = argd['MSG']
     if os.path.exists(msgarg):
         # Get msg from file.
         try:
@@ -111,10 +110,7 @@ def main(argd):
             return 1
 
         # Pass
-        if argd['--password']:
-            passwd = argd['--password']
-        else:
-            passwd = get_input('Password')
+        passwd = get_pass()
         if not passwd:
             return 1
 
@@ -124,7 +120,7 @@ def main(argd):
                       'username': user,
                       'passwd': passwd,
                       }
-                      
+
         # Try sending the mail.
         try:
             if send_mail_with_header(from_addr, to_addrs, msg, **sendkwargs):
@@ -152,6 +148,19 @@ def get_input(query):
     return answer
 
 
+def get_pass():
+    """ Get the login password in a safer manner than input(). """
+    try:
+        pw = getpass('\nPassword: ')
+    except GetPassWarning:
+        print('\nError turning echo off. Password would\'ve been displayed.')
+        return None
+    if not pw:
+        print('\nNo password entered, cancelling.')
+        return None
+    return pw
+
+
 def send_mail_with_header(sender, receivers, message, **kwargs):
     """ automatically builds the headers needed.
         Arguments:
@@ -165,19 +174,19 @@ def send_mail_with_header(sender, receivers, message, **kwargs):
             username    : user name for login.
             subject     : optional subject to be used.
     """
-    
+
     # Parse kwargs.
     username = kwargs.get('username', None)
     passwd = kwargs.get('passwd', None)
     subject = kwargs.get('subject', '(no subject given)')
     debug = kwargs.get('debug', False)
-    
+
     build_header = not (("To:" in message) and ("From:" in message))
     if not isinstance(receivers, (list, tuple)):
         receivers = [receivers]
     if subject is None:
         subject = "(no subject given)"
-        
+
     if build_header:
         if not sender.strip('\n').endswith('>'):
             sender = '<{}>'.format(sender)
@@ -211,7 +220,7 @@ def send_mail(sender, to, message, username=None, passwd=None, debug=False):
 
     # login and send mail.
     try:
-    
+
         smtp_ = smtplib.SMTP(SERVER, port=PORT)
         smtp_.set_debuglevel(debug_level)
         smtp_.login(user=username, password=passwd)
