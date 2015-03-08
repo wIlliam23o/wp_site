@@ -132,8 +132,12 @@ class wp_paste(models.Model):  # noqa
         viewstr = '({})'.format(self.view_count).ljust(6)
         idstr = self.paste_id or 'new'
         idstr = idstr.ljust(8)
-        statusstr = '[d]' if self.disabled else '[e]'
-        statusstr = statusstr.ljust(8)
+        statuschars = ''.join([
+            'd' if self.disabled else 'e',
+            '-' if self.onhold else '~',
+            '!' if self.is_expired(never_onhold=False) else '.'
+        ])
+        statusstr = '[{}]'.format(statuschars).ljust(8)
         authorstr = self.author or '<none>'
         authorstr = authorstr.ljust(10)
 
@@ -185,12 +189,14 @@ class wp_paste(models.Model):  # noqa
         """
         return '/paste/?id={}'.format(self.paste_id)
 
-    def is_expired(self):
+    def is_expired(self, never_onhold=True):
         """ Determine if this paste is expired.
             Pastes that are on hold will never expire.
         """
-        if self.onhold:
+        if self.onhold and never_onhold:
+            # On-hold pastes are never expired.
             return False
+
         try:
             elapsed = datetime.today() - self.publish_date
         except Exception as ex:
