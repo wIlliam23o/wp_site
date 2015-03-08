@@ -31,14 +31,17 @@ SCRIPTDIR = os.path.abspath(sys.path[0])
 
 USAGESTR = """{versionstr}
     Usage:
-        {script} [-h | -v]
-        {script} -a | -c
+        {script} -h | -v
+        {script} [-i pat]
+        {script} (-a | -c) [-i pat]
 
     Options:
-        -a,--analyze  : Analyze static files dirs but don't change anything.
-        -c,--clean    : Analyze and clean the static files dir.
-        -h,--help     : Show this help message.
-        -v,--version  : Show version.
+        -a,--analyze          : Analyze static files dirs, don't do anything.
+                                This is the default action with no arguments.
+        -c,--clean            : Analyze and clean the static files dir.
+        -h,--help             : Show this help message.
+        -i pat, --ignore pat  : Ignore directories matching this pattern.
+        -v,--version          : Show version.
 
     * With no arguments the default action is --analyze.
 """.format(script=SCRIPT, versionstr=VERSIONSTR)
@@ -49,15 +52,23 @@ IGNORECOLLECTED = [
     'django_extensions',
 ]
 
-IGNOREDPAT = re.compile('/?(({}))'.format(')|('.join(IGNORECOLLECTED)))
+build_re = lambda: re.compile('/?(({}))'.format(')|('.join(IGNORECOLLECTED)))
+IGNOREDPAT = None
 
 
 def main(argd):
     """ Main entry point, expects doctopt arg dict as argd """
+    global IGNORECOLLECTED, IGNOREDPAT
+
     if argd['--clean']:
         raise NotImplementedError('No --clean yet. It could be harmful.')
     else:
-        # Analyze the dirs.
+        ignorepat = try_re(argd['--ignore'])
+        if ignorepat is not None:
+            IGNORECOLLECTED.append(argd['--ignore'])
+
+        IGNOREDPAT = build_re()
+        # Analyze the dirs (default action).
         print('Gathering collected files...')
         collected = get_collected()
 
@@ -115,8 +126,26 @@ def get_development():
         for f in files:
             fullpath = os.path.join(root, f)
             relativeparts = fullpath.split('static')[1:]
-            development.add('static'.join(relativeparts))
+            relativepath = 'static'.join(relativeparts)
+            if IGNOREDPAT.match(relativepath):
+                continue
+            development.add(relativepath)
     return development
+
+
+def try_re(s):
+    """ Try compiling a regex pattern. Exit with a message on failure.
+        If None is passed, no error is given and None is returned.
+    """
+    if s is None:
+        return None
+
+    try:
+        pat = re.compile(s)
+    except re.error as ex:
+        print('\nInvalid pattern: {}\n  {}'.format(s, ex))
+        sys.exit(1)
+    return pat
 
 
 if __name__ == '__main__':
