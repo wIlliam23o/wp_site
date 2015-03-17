@@ -17,10 +17,10 @@ import os.path
 import re  # for regex 'finders'
 
 NAME = 'WpSwitch'
-VERSION = '1.0.2'
+VERSION = '1.0.2-1'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
-CHECK_DIRS = [sys.path[0]]
+CHECK_DIRS = [os.path.abspath(sys.path[0])]
 # Fix path.
 try:
     import django_init
@@ -391,14 +391,14 @@ class Switch(object):
         # make sure the switch still exists.
         if self.is_regex():
             # regular expressions, find actual text to use for switch
-            match_ = re.search(finder, contents)
-            if match_ is None:
+            match = re.search(finder, contents)
+            if match is None:
                 print_fail(
                     'Switch {}\'s regular expression not found in: {}'.format(
                         self.get_name(),
                         self.filename))
             # get actual text from regex expression
-            actualtext = match_.group()
+            actualtext = match.group()
         else:
             # regular text will be used.
             if finder not in contents:
@@ -534,11 +534,7 @@ class Switch(object):
             print_fail('Invalid value for this switch!')
 
         # Cycle through lines of text.
-        if '\n' in contents:
-            textlines = contents.split('\n')
-        else:
-            textlines = [contents]
-
+        textlines = contents.split('\n')
         modified_lines = []
         for sline in textlines:
             # grab switch line.
@@ -551,7 +547,6 @@ class Switch(object):
         filename = self.relative_filename()
         if dryrun:
             # just print the results to console.
-
             dividerlen = (80 - len(filename)) if len(filename) < 80 else 0
             print('\n' + self.relative_filename() + ':' +
                   ('-' * dividerlen) + '\n')
@@ -572,16 +567,25 @@ class Switch(object):
 
     def relative_filename(self):
         """ Retrieves relative filename if we only have a short name. """
-
         if os.path.isfile(self.filename):
             return self.filename
-        else:
-            shortname = os.path.split(self.filename)[-1]
-            for checkpath in CHECK_DIRS:
-                filename = os.path.join(checkpath, shortname)
-                if os.path.isfile(filename):
-                    self.filename = filename
-                    return filename
+
+        if '~' in self.filename:
+            userpath = os.path.abspath(os.path.expanduser(self.filename))
+            if os.path.isfile(userpath):
+                return userpath
+
+        if '..' in self.filename:
+            abspath = os.path.abspath(self.filename)
+            if os.path.isfile(abspath):
+                return abspath
+
+        shortname = os.path.split(self.filename)[-1]
+        for checkpath in CHECK_DIRS:
+            filename = os.path.join(checkpath, shortname)
+            if os.path.isfile(filename):
+                self.filename = filename
+                return filename
         return None
 
 
@@ -659,7 +663,7 @@ def main(args):
         do_command(name.lower(), val, dryrun=bdryrun)
 
     # Perform switch operations -----------------------
-    if name.lower() in [sw.name.lower() for sw in switches]:
+    if name.lower() in get_all_names():
         # Check switch value (on, off, or actual)
         if val in '!?':
             val = check_value(name, actual=(val == '!'))
@@ -701,6 +705,10 @@ def main(args):
                 if bdryrun:
                     results += ' (not really)'
                 print(results)
+            else:
+                print('\nUnable to set value [{}] for {}'.format(newval, name))
+    else:
+        print('\nNot a valid switch name: {}'.format(name.lower()))
 
     # Finished.
     sys.exit(0)
@@ -1059,6 +1067,21 @@ def find_unique_item(items):
             return items[i]
 
 
+def get_all_names(switch_list=None):
+    """ Return a set of all switch names and aliases. """
+    switch_list = switch_list or switches
+    if switch_list is None:
+        return []
+
+    names = set()
+    for sw in switch_list:
+        if sw.aliases:
+            names.update(sw.aliases)
+        elif sw.name:
+            names.add(sw.name)
+    return names
+
+
 def get_file_members(switch_list=None):
     """ returns all switches that use this filename as their target """
 
@@ -1151,23 +1174,21 @@ def get_groups(switch_list=None):
 def get_switch_byname(name, switch_list=None):
     """ retrieves switch by name """
 
-    if name is None:
+    if not name:
         return None
-    if switch_list is None:
+    if not switch_list:
         switch_list = switches
 
+    name = name.lower()
+
     for sw in switch_list:
-        if sw.aliases is None:
-            # Check against single name
-            swname = sw.get_name()
-            if swname is not None:
-                if swname.lower() == name.lower():
-                    return sw
-        else:
-            # Check all aliases
-            for alias in [a.lower() for a in sw.aliases]:
-                if alias == name.lower():
-                    return sw
+        swname = sw.get_name()
+        if swname and swname.lower() == name:
+            return sw
+        elif sw.aliases:
+            if name in (a.lower() for a in sw.aliases):
+                return sw
+
     return None
 
 
