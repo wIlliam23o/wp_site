@@ -1116,23 +1116,22 @@ def render_html(template_name, **kwargs):
 
 
 def strip_all(s, strip_chars):
-    """ runs s.strip() for every char in strip_chars.
-        if strip_chars is a list/tuple, then it strips
-        every character of every item in the list.
+    """ Strips all occurrences of strip_chars (str or list/tuple) from the
+        beginning and end of a string.
+        # Removes all x, y, and z characters from both ends.
+        strip_all('xzythisyxz', 'zyx') == 'this'
+
+        # The f and d are blocking the middle o's from being removed.
+        strip_all('omnfoodnmo', 'mno') == 'food'
     """
-
-    if s is None:
+    if not s:
         return s
-    if isinstance(strip_chars, (list, tuple)):
-        strip_chars = ''.join(strip_chars)
 
-    if isinstance(s, str):
-        strip_ = str.strip
-    elif isinstance(s, unicode):
-        strip_ = unicode.strip
-
-    for c in strip_chars:
-        s = strip_(s, c)
+    chars = tuple(strip_chars)
+    while s.startswith(chars):
+        s = s[1:]
+    while s.endswith(chars):
+        s = s[:-1]
     return s
 
 
