@@ -703,7 +703,8 @@ def fix_open_tags(source):
     fixedhtml, errors = tidy_fragment(source)
     if settings.DEBUG and errors:
         errors = filter_tidylib_errors(errors)
-        log.debug('Tidylib errors:\n{}'.format(errors))
+        if errors:
+            log.debug('Tidylib errors:\n{}'.format(errors))
     return fixedhtml
 
 
@@ -858,11 +859,7 @@ def hide_email(source_string):
         (providing the email-harvest-bot doesn't decode Base64)
     """
 
-    if '\n' in source_string:
-        slines = source_string.split('\n')
-    else:
-        # single line
-        slines = [source_string]
+    slines = source_string.split('\n')
 
     # Fix py3 with base64.encodebytes(), encode/decode also added.
     # (until I remove py2 completely)
@@ -964,20 +961,15 @@ def load_html_file(sfile, request=None, context=None, template=None):
         with open(sfile) as fhtml:
             # Successful file open, return the contents.
             return fhtml.read()
-
     except IOError as exIO:
         log.error('Cannot open file: {}\n{}'.format(sfile, exIO))
-        return ''
-
     except OSError as exOS:
         log.error((
             'Possible bad permissions opening file: {}\n{}'
         ).format(sfile, exOS))
-        return ''
-
     except Exception as ex:
         log.error('General error opening file: {}\n{}'.format(sfile, ex))
-        return ''
+    return ''
 
 
 def remove_comments(source_string):
@@ -1002,68 +994,53 @@ def remove_comments(source_string):
         return source_string
 
 
-def remove_newlines(source_string):
-    """ remove all newlines from a string
-        skips some tags, leaving them alone. like 'pre', so
-        formatting doesn't get messed up.
+def remove_newlines(source):
+    """ Remove all newlines from an html string.
+        Skips <pre> and <script> blocks.
+        DEPRECATED
     """
+    is_skipstart = lambda s: ('<pre' in s) or ('<script' in s)
+    is_skipend = lambda s: ('</pre>' in s) or ('</script>' in s)
+    newline = '{}\n'.format
+    noline = lambda s: s.replace('\n', '')
+    in_skip = False
+    output = []
+    for sline in source.split('\n'):
+        sline_lower = sline.lower()
+        # start of skipped tag
+        if is_skipstart(sline_lower):
+            in_skip = True
+        # Add with newline if its a skipped tag, otherwise no newlines.
+        output.append(newline(sline) if in_skip else noline(sline))
+        # end of skipped tag
+        if is_skipend(sline_lower):
+            in_skip = False
 
-    # removes newlines, except for in pre blocks.
-    if '\n' in source_string:
-        in_skipped = False
-        final_output = []
-        for sline in source_string.split('\n'):
-            sline_lower = sline.lower()
-            # start of pre tag
-            if (("<pre" in sline_lower) or
-                    ("<script" in sline_lower)):
-                in_skipped = True
-            # process line.
-            if in_skipped:
-                # add original line.
-                final_output.append(sline + '\n')
-            else:
-                # add trimmed line.
-                final_output.append(sline.replace('\n', ''))
-            # end of tag
-            if (("</pre>" in sline_lower) or
-                    ("</script>" in sline_lower)):
-                in_skipped = False
-    else:
-        final_output = [source_string]
-    return "".join(final_output)
+    return ''.join(output)
 
 
-def remove_whitespace(source_string):
-    """ removes leading and trailing whitespace from lines,
+def remove_whitespace(source):
+    """ Removes leading and trailing whitespace from lines,
         and removes blank lines.
         This ignores <pre> blocks, to keep <pre> formatting.
     """
-
-    slines = source_string.split('\n')
-
-    # start processing
-    in_skipped = False
-    final_output = []
-    for sline in slines:
-        sline_lower = sline.lower()
+    is_skipstart = lambda s: '<pre' in s
+    is_skipend = lambda s: '</pre>' in s
+    in_skip = False
+    output = []
+    for line in source.split('\n'):
+        line_lower = line.lower()
         # start of skipped tag
-        if "<pre" in sline_lower:
-            in_skipped = True
-        # process line.
-        if in_skipped:
-            # add original line.
-            final_output.append(sline)
-        else:
-            trimmed = sline.strip()
-            # no blanks.
-            if trimmed != '\n' and trimmed != '':
-                final_output.append(trimmed)
+        if is_skipstart(line_lower):
+            in_skip = True
+        trimmed = line if in_skip else line.strip()
+        if trimmed:
+            output.append(trimmed)
         # end of tag
-        if "</pre>" in sline_lower:
-            in_skipped = False
+        if is_skipend(line_lower):
+            in_skip = False
 
-    return '\n'.join(final_output)
+    return '\n'.join(output)
 
 
 def render_clean(template_name, **kwargs):

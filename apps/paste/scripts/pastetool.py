@@ -107,7 +107,7 @@ def do_modify_expired(**kwargs):
 
     modcnt = 0
     for paste in iter_expired():
-        # Deleteing the pastes?
+        # Deleting the pastes?
         if delete:
             if paste.onhold:
                 print('    on hold: {}'.format(paste.paste_id))
@@ -138,13 +138,13 @@ def iter_expired():
         pastes = wp_paste.objects.order_by('publish_date')
     except Exception as ex:
         print('\nUnable to retrieve pastes!\n{}'.format(ex))
-        sys.exit(1)
+        raise StopIteration('Unable to retrieve pastes.')
 
     for paste in pastes:
         if paste.is_expired(never_onhold=False):
             yield paste
         else:
-            # Reached the end of expired pastes.
+            # This paste is not expired, and all other pastes are newer.
             raise StopIteration('End of expired pastes.')
 
 
