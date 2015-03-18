@@ -1,5 +1,6 @@
 /* ------------------------- about.css ------------------------- */
-.about-box {
+.about-box, .about-box-extras {
+  display: block;
   -webkit-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
   -moz-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
   -ms-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
@@ -11,9 +12,14 @@
   -o-border-radius: 5px;
   border-radius: 5px;
   background: #fafafa;
-  padding: 5px; }
+  padding: 5px;
+  overflow: auto;
+  zoom: 1; }
 
-.about-pic-box {
+.about-box-extras {
+  overflow: visible; }
+
+#about-pic-box {
   background: white;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -36,19 +42,22 @@
   padding: 5px;
   text-align: center; }
 
-.about-img {
+#about-img {
   border: none;
   height: auto;
   width: auto; }
 
-.about-bio {
+#about-bio {
   padding-left: 10px;
   padding-right: 10px; }
 
-.about-contact {
+#about-specialties {
+  overflow: visible; }
+
+#about-contact {
   text-align: left; }
 
-.about-contact-box {
+#about-contact-box {
   /* container for all contact buttons */
   border-style: none;
   width: auto;
@@ -69,7 +78,7 @@
   padding-left: 2px;
   padding-right: 2px; }
 
-.about-contrib-box {
+#about-contrib-box {
   border: 1px solid #afafaf;
   border-radius: 5px;
   -moz-border-radius: 5px;
