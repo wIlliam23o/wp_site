@@ -1385,8 +1385,6 @@ def print_block(msgitems, singlevalue=None):
 
     maxlen = len(max((k for k, _ in msgitems), key=len))
     indent = ' ' * maxlen
-    print('{!r}'.format(msgitems))
-
     for k, v in msgitems:
         if isinstance(v, (list, tuple)):
             print('{}{}'.format(k.rjust(maxlen), v[0]))
