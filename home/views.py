@@ -4,7 +4,7 @@ from django.utils.version import get_version as get_django_version
 from django.conf import settings
 
 # safe html in responses.
-from django.utils.safestring import mark_safe, mark_for_escaping
+from django.utils.safestring import mark_for_escaping
 # authentication
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
@@ -18,23 +18,10 @@ from wp_main.utilities import (
 
 # logging
 log = logging.getLogger('wp.home')
-# @todo: make log_context() so context keys/values can be passed to logging!
+
 # Home tools
 from home import hometools
 from home.models import home_config
-
-
-def convert_line(line):
-    """ Format a single line for stats info. """
-    return mark_safe('{}\n<br>\n'.format(line.replace(' ', '&nbsp;')))
-
-
-def convert_pblock(pblock):
-    """ Format a print_block() for stats info. """
-    if not pblock:
-        return []
-    pblock_args = {'append_key': ': '}
-    return [convert_line(line) for line in pblock.iterblock(**pblock_args)]
 
 
 def index(request):
