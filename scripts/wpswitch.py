@@ -92,84 +92,6 @@ help_str = """
         'debug' switch's 'finder' would be set to 'DEBUG =' or 'TEMPLATE_DEBUG
         = DEBUG =', this tells wpswitch what this switch is, so it can find it
         and switch between it's configured 'on' and 'off' values.
-
-
-    how to make a switch:
-        create a file called "switches.conf" in the same dir as this script.
-        in that file, each line will be a switch.
-        (except for comments, i will explain later).
-        the switch data line should look like this:
-
-        filename|name,or several names|on value,off value|finder|description
-        or:
-        filename|name,name2,name3|on_value,off_value|regex_finder
-        * in this one the description has been left out on purpose.
-
-            filename: the file containing this switch/finder.
-                      must be a full path or relative to this script.
-                name: the name of the switch.
-                      this can be a comma-separated list of aliases so the same
-                      switch can be called by different names.
-        on,off value: two values with a comma between them. the first is what
-                      'on' means, the second is what 'off' means.
-              finder: how to find this switch. it can be plain text, or a
-                      regular expression.
-                      if a regex is used, it must start and end with / like:
-                      /regex+goes+here/
-         description: just a short comment/description about this switch, or
-                      empty.
-
-         example switch for simple django debug setting:
-             /mydir/myapp/settings.py|debug|True,False|DEBUG =|toggle debug mode
-             * notice the = sign, this ensures that only a line with
-               DEBUG = gets replaced.
-             * without it, the word DEBUG (case-sensative) would be replaced
-               everywhere in the file.
-            ** be careful with your finders! make sure the variable is uniquely
-               named and can be found easily by the finder.
-
-         example switch using regex for the finder:
-             settings.py|database,db|PSQL_DB,TEST_DB|/DEFAULT_D(ATA)?B(ASE)?/|switch prod. and test db
-             * this would switch a variable named DEFAULT_DB or
-               DEFAULT_DATABASE to the configured on or off values.
-             * make sure your regex only matches a single variable/switch!
-               otherwise it will not work correctly.
-             * in this example the default database being used is switched by
-               changing DEFAULT_DB's value to one of two preset variables,
-               PSQL_DB or TEST_DB.
-
-         comments:
-             the switch configuration does several types of commenting.
-             comments may not be on the same line as switch lines. you can
-             start a line with "#" or "//" with or without spaces/tabs
-             preceding it, or you can do a block style comment using /* to
-             start and */ to end.
-             example comments:
-                 # this would work
-                 // this would also work
-                 /* this
-                     would
-                      work
-                       also */
-                 # this would not!
-                 myfile.txt|myswitch|1,0|myuniquevariablename|example
-                 # 2 would be in the desc.
-                 myfile2.txt|myswitch2|1,0|myuniquevariablename2|example
-
-        notes:
-            there are many ways to accomplish what this script does.
-            things like 'awk' and 'sed'come to mind. this script was
-            designed for a very specific purpose, and does only what i
-            needed it to do and nothing else. it was meant to be
-            extendable and easily accessable. some times i don't want to
-            use a terminal editor to change 1 line of code in my
-            settings. i like to edit offline on my own machine. some
-            times it would take longer to open the file, scroll to the
-            line, edit, and save the changes. running something like
-            'wpswitch testdatabase off' seems a lot better to me, as
-            long as care is taken when defining a 'switch' and you don't
-            try to get too fancy. if you want to get fancy then don't
-            even use this. use an editor.
     """
 
 
@@ -1456,20 +1378,16 @@ def parse_values(values):
 
 
 def print_block(msgitems, singlevalue=None):
-    """ Print key: value style messages.
-        Example:
-            print_block({'test: ', ('this', 'msg')})
-            # Results in:
-            test: this
-                  msg
-    """
+    """ Print key: value style messages. """
     if singlevalue:
         print('{:>4}: {}'.format(msgitems, singlevalue))
         return None
 
-    maxlen = len(max(msgitems, key=len))
+    maxlen = len(max((k for k, _ in msgitems), key=len))
     indent = ' ' * maxlen
-    for k, v in msgitems.items():
+    print('{!r}'.format(msgitems))
+
+    for k, v in msgitems:
         if isinstance(v, (list, tuple)):
             print('{}{}'.format(k.rjust(maxlen), v[0]))
             for subval in v[1:]:
@@ -1776,24 +1694,25 @@ def write_switch_line(
                     oldgroup = str(prev_switch.group)
                     newgroup = str(switch_.group)
                     print('\n')
-                    warnmsg = {
-                        '** warning: ': (
+                    warnmsg = (
+                        ('** warning: ', (
                             'group has changed from \'{}\' to \'{}\'.'.format(
                                 oldgroup,
                                 newgroup),
                             'this switch is being placed in \'{}\'.'.format(
                                 groupname))
-                    }
+                         ),
+                    )
                     print_block(warnmsg)
 
                 # Replace old switch setting.
                 editedline = oldline.replace(oldtrim, switchstr)
                 if dryrun:
                     print('\n')
-                    print_block({
-                        'replacing old switch: ': oldtrim,
-                        'with: ': switchstr
-                    })
+                    print_block((
+                        ('replacing old switch: ', oldtrim),
+                        ('with: ', switchstr)
+                    ))
 
                 replaced = True
 
