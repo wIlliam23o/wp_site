@@ -1455,60 +1455,27 @@ def parse_values(values):
     return values
 
 
-def print_block(msgdata, max_line_len=80):
-    """ prints formatted blocks of text like:
-        print_block(('warning: ', 'line1',
-                                  'line 2'))
-        print_block(('warning: ', 'line2\nline2')
-        print_block((('warning2: ', 'test'),
-                     ('sub-warning:', 'test2')))
+def print_block(msgitems, singlevalue=None):
+    """ Print key: value style messages.
+        Example:
+            print_block({'test: ', ('this', 'msg')})
+            # Results in:
+            test: this
+                  msg
     """
-    # TODO: This mess could be replaced with max(), rjust()/ljust().
-    def get_longest_tag(taglist):
-        current_len = 0
-        for tagname in taglist:
-            if isinstance(tagname, (list, tuple)):
-                tagname = tagname[0]
-            if len(tagname) > current_len:
-                current_len = len(tagname)
-        return current_len
-    taglen = get_longest_tag(msgdata)
+    if singlevalue:
+        print('{:>4}: {}'.format(msgitems, singlevalue))
+        return None
 
-    def format_tag(tagname, len_):
-        return (' ' * (len_ - len(tagname))) + tagname
-
-    def format_val(val, len_):
-        return (' ' * len_) + val
-
-    def parse_vals(valraw):
-        outvals = []
-        for val in valraw:
-            if '\n' in val:
-                outvals += val.split('\n')
-            else:
-                outvals.append(val)
-        return outvals
-
-    fixedvals = []
-    # simple 1 tag with values tuple
-    if hasattr(msgdata[0], 'encode'):
-        tagname = msgdata[0]
-        taglen = len(tagname)
-        rawvalues = msgdata[1:]
-        fixedvals = parse_vals(rawvalues)
-        print(tagname + fixedvals[0])
-        for val in fixedvals[1:]:
-            print(format_val(val, taglen))
-    # multiple tags, each item is a tuple with (tagname, value1, value2..)
-    elif isinstance(msgdata[0], (list, tuple)):
-        taglen = get_longest_tag(msgdata)
-        for mainitem in msgdata:
-            tagname = mainitem[0]
-            rawvalues = mainitem[1:]
-            fixedvals = parse_vals(rawvalues)
-            print(format_tag(tagname, taglen) + fixedvals[0])
-            for val in fixedvals[1:]:
-                print(format_val(val, taglen))
+    maxlen = len(max(msgitems, key=len))
+    indent = ' ' * maxlen
+    for k, v in msgitems.items():
+        if isinstance(v, (list, tuple)):
+            print('{}{}'.format(k.rjust(maxlen), v[0]))
+            for subval in v[1:]:
+                print('{}{}'.format(indent, subval))
+        else:
+            print('{}{}'.format(k.rjust(maxlen), v))
 
 
 def print_debug(*args, **kwargs):
@@ -1809,21 +1776,24 @@ def write_switch_line(
                     oldgroup = str(prev_switch.group)
                     newgroup = str(switch_.group)
                     print('\n')
-                    warnmsg = (
-                        '** warning: ', (
+                    warnmsg = {
+                        '** warning: ': (
                             'group has changed from \'{}\' to \'{}\'.'.format(
                                 oldgroup,
                                 newgroup),
                             'this switch is being placed in \'{}\'.'.format(
-                                groupname)))
+                                groupname))
+                    }
                     print_block(warnmsg)
 
                 # Replace old switch setting.
                 editedline = oldline.replace(oldtrim, switchstr)
                 if dryrun:
                     print('\n')
-                    print_block((('replacing old switch: ', oldtrim),
-                                 ('with: ', switchstr)))
+                    print_block({
+                        'replacing old switch: ': oldtrim,
+                        'with: ': switchstr
+                    })
 
                 replaced = True
 
