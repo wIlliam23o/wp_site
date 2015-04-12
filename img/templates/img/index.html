@@ -87,6 +87,13 @@
                     </div>
                 </a>
             </div>
+            <!-- Hide/Show private images -->
+            <div class='img-hide-private-box'>
+                <input id='chk-img-hide-private' type='checkbox'>
+                <span class='img-checkbox-label'>
+                    Hide private images
+                </span>
+            </div>
         {% endif %}
          <div class='img-images-list'>
             <div class='img-header'>
@@ -104,7 +111,7 @@
 
             {% if images %}
                 {% for image in images %}
-                    <div class='img-image-item'>
+                    <div class='img-image-item {% if image.private %}img-image-item-private{% endif %}'>
                         {% if request.user.is_staff %}
                             <a href='/adminimg/wp_image/{{ image.id }}' title='edit this image'>
                                 <div class='wpbutton img-edit-btn'>
@@ -193,6 +200,16 @@
     {% if request.user.is_staff %}
         <script type='text/javascript'>
             imgtools.init_upload_floater();
+            $(document).ready(function () {
+                {# Handle hide/show private images #}
+                $('#chk-img-hide-private').change(function () {
+                    if ($(this).prop('checked')) {
+                        $('.img-image-item-private').hide();
+                    } else {
+                        $('.img-image-item-private').show();
+                    }
+                });
+            });
         </script>
     {% endif %}
 {% endblock %}
