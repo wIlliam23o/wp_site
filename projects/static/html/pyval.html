@@ -97,7 +97,7 @@
     <div>
         The bot connects to [python]irc.freenode.net[/python].
         <br><br>
-        Joins [bash]#pyval[/bash] on successful connection.
+        Joins [bash]#<bots_nick>[/bash] on successful connection.
         <br>
         You can set the auto-join channels with the [bash]--channels[/bash] command-line option.
         <br><br>
@@ -144,7 +144,7 @@
     <div>
         Send the [code]!py[/code] or [code]!python[/code] command followed with your code:<br>
         <pre class='codewrap'>
-    User1: How can I make a dict out the first and last items in a list of lists?
+    User1: How can I make a dict out of the first and last items in a list of lists?
 PyValUser: !py {l[0]:l[-1] for l in [['a', 'b', 'c', 'd'], ['e', 'f', 'g', 'h']]}
     pyval: PyValUser, {'a': 'd', 'e': 'h'}
         </pre><br>
@@ -256,6 +256,10 @@ PyValAdmin: !adminhelp
                 [cval]List all admin nicks.[/cval]
             </div>
             <div class='cmditem'>
+                [copt]adminmsg &lt;msg&gt;[/copt]
+                [cval]Send msg to all bot admins.[/cval]
+            </div>
+            <div class='cmditem'>
                 [copt]adminreload[/copt]
                 [cval]Reload the admin list from the pyval_admins.lst file.[/cval]
             </div>
@@ -277,7 +281,7 @@ PyValAdmin: !adminhelp
             </div>
             <div class='cmditem'>
                 [copt]banwarns[/copt]
-                [cval]Show ban-warning counts.[/cval]
+                [cval]Show ban warnings count.[/cval]
             </div>
             <div class='cmditem'>
                 [copt]blacklist &#91;on, off, ?&#93;[/copt]
@@ -286,6 +290,10 @@ PyValAdmin: !adminhelp
             <div class='cmditem'>
                 [copt]channels[/copt]
                 [cval]List all current channels pyval is in.[/cval]
+            </div>
+            <div class="cmditem">
+                [copt]chanmsg &lt;msg&gt;[/copt]
+                [cval]Send msg to all channels pyval is in.[/cval]
             </div>
             <div class='cmditem'>
                 [copt]configget &lt;option&gt;[/copt]
@@ -309,6 +317,10 @@ PyValAdmin: !adminhelp
             <div class='cmditem'>
                 [copt]getattr &lt;attribute&gt;[/copt]
                 [cval]Show the value of a CommandHandler attribute (ex: admin.blacklist)[/cval]
+            </div>
+            <div class='cmditem'>
+                [copt]id &lt;password&gt;[/copt]
+                [cval]Shortcut to the identify command.[/cval]
             </div>
             <div class='cmditem'>
                 [copt]identify &lt;password&gt;[/copt]
@@ -496,6 +508,26 @@ if __name__ != '__pyval__':
         <h3 class='title'>
             Updates
         </h3>
+    </div>
+
+    <!-- Update: 1.0.7-4 -->
+    <div class='update-box'>
+        <span class='update-title'>
+            Update: version 1.0.7-4
+        </span>
+        <ul class='circle blue'>
+            <li>
+                Added [code]adminmsg[?code] and [code]chanmsg[?code] commands.
+            </li>
+            <div class='listdesc'>
+                The bot can send a msg to all admins, or all joined channels
+                at once.
+            </div>
+            <li>
+                Private messages that are not valid bot commands are now
+                forwarded to the admins through IRC.
+            </li>
+        </ul>
     </div>
 
     <!-- Update: 1.0.7-1-->
