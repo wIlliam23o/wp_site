@@ -5,19 +5,19 @@
 {% block title %}{% if misc %}- {{ misc.name }}{% endif %}{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="A small script or tool from welborn productions{% if misc %}: {{ misc.name }} v. {{ misc.version }}{% if misc.description %}, {{ misc.description }}{% endif %}{% else %}.{% endif %}">
+    <meta name='description' content='A small script or tool from welborn productions{% if misc %}: {{ misc.name }} v. {{ misc.version }}{% if misc.description %}, {{ misc.description }}{% endif %}{% else %}.{% endif %}'>
 {% endblock %}
 
 <!-- Screenshots Javascript -->
 {% if misc %}
     {% if misc|has_screenshots %}
         {% block extrahead %}
-            <script type="text/javascript">
+            <script type='text/javascript'>
                 $(document).ready(
                         function() {
-                            $(".screenshots_box").wtRotator(wprotator_settings);
-                            $(".wt-rotator").width("100%");
-                            $(".screen").width("100%");
+                            $('.screenshots_box').wtRotator(wprotator_settings);
+                            $('.wt-rotator').width('100%');
+                            $('.screen').width('100%');
                         }
                     );
             </script>
@@ -27,18 +27,18 @@
 
 <!-- Cancel out index.html blocks -->
 {% block extrastyle %}{% endblock %}
-{% block javascript %}{% endblock %}
+{% block bodyend %}{% endblock %}
 
 <!-- Main Misc Page -->
 {% block content %}
     {% if misc %}
-        <div class="misc-container">
+        <div class='misc-container'>
             <!-- Header (Name/Link/Version) -->
             <div class='misc-header-box'>
-                <h1 class="misc-header">{{ misc.name }}</h1>
+                <h1 class='misc-header'>{{ misc.name }}</h1>
                 <br/>
                 {% if misc.version %}
-                    <span class="version">version {{ misc.version }}</span>
+                    <span class='version'>version {{ misc.version }}</span>
                     <br/>
                 {% endif %}
                 <!-- Misc Type Info -->
@@ -55,20 +55,31 @@
             </div>
 
             <!-- misc Body -->
-            <div class="misc-content">
+            <div class='misc-content'>
                 <!-- Content -->
                 {% if misc|has_html_content %}
                     <!-- Process misc content and display it. -->
                     <div class='misc-desc'>
                         {{ misc|get_content }}
-                        <!-- Possible Warning -->
-                        {% if misc|has_warning %}
-                            <br>
-                            <div class='misc-warning'>
-                                {{ misc|get_warning }}
-                            </div>
-                        {% endif %}
                     </div>
+                {% endif %}
+
+                <!-- Usage String -->
+                {% if misc.usage_string %}
+                    <div class='miscusage miscusage-main'>
+                        <pre>{{ misc.usage_string }}</pre>
+                    </div>
+                {% endif %}
+
+                {% if misc|has_html_content or misc.usage_string %}
+                    <!-- Possible Warning -->
+                    {% if misc|has_warning %}
+                        <br>
+                        <div class='misc-warning'>
+                            {{ misc|get_warning }}
+                        </div>
+                    {% endif %}
+
                     <!-- Screenshots -->
                     {% if misc|has_screenshots %}
                         <div class='misc-desc'>
@@ -89,11 +100,11 @@
                             {% if misc|is_viewable %}
                                 <div class='misc-download-button'>
                                     <!-- Form for submitting file names to the /viewer -->
-                                    <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
+                                    <form id='file-viewer' method='post' action='/view/'>{% csrf_token %}
                                         <!-- Includes Token for Django's CSRF handling. -->
-                                        <input id="viewer-filename" name="file" type="hidden" value="{{ misc.filename }}">
+                                        <input id='viewer-filename' name='file' type='hidden' value='{{ misc.filename }}'>
                                     </form>
-                                    <a href='javascript: void(0);' onclick="javascript: $('#file-viewer').submit();">
+                                    <a href='javascript: void(0);' onclick='javascript: $("#file-viewer").submit();'>
                                         View {{ misc.name }} (local)
                                     </a>
                                 </div>

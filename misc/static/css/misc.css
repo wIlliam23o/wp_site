@@ -151,7 +151,7 @@
   text-align: center; }
 
 /* Long Description */
-.misclongdesc {
+.misclongdesc, .miscusage {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   -ms-border-radius: 5px;
@@ -165,10 +165,30 @@
   -ms-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
   -o-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
   box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  display: block;
   background: white;
   font-size: 0.8em;
   padding: 5px;
   margin-bottom: 10px; }
+
+.miscusage {
+  color: #4d4d4d;
+  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+  font-size: 0.9em;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-top: 10px;
+  margin-bottom: 0px; }
+
+.miscusage-main {
+  /* No box shadow on the misc items main page. */
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  -ms-box-shadow: none;
+  -o-box-shadow: none;
+  box-shadow: none; }
 
 /* Misc Page */
 .misc_title, .misc-title {
@@ -195,7 +215,7 @@
   margin-top: 10px; }
 
 /* ensure all usage strings are wrapped with proper font size */
-.misclongdesc .codewrap {
+.misclongdesc .codewrap, .miscusage .codewrap {
   font-size: 1em; }
 
 .misc-sub-desc *.title {

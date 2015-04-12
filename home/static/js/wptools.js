@@ -305,9 +305,8 @@ var misctools = {
     },
 
     toggleLongDesc: function (alias) {
-        var longdescid = '#misclongdesc-' + alias;
-        var longdesc = $(longdescid);
-        longdesc.slideToggle();
+        $('#misclongdesc-' + alias).slideToggle();
+        $('#miscusage-' + alias).slideToggle();
         this.fixLongDescBtn(alias);
     }
 };

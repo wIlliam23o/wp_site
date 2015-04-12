@@ -127,11 +127,32 @@
 .misclongdesc {
     @include border-radius-thick(5px);
     @include box-shadow-normal();
+    display: block;
     background: $whitemain;
     font-size:$fontsmall;
     padding: 5px;
     margin-bottom: 10px;
 }
+
+.miscusage {
+    @extend .misclongdesc;
+    color: $greydark;
+    font-family: $fontsmono;
+    font-size: $fontmono;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-top: 10px;
+    margin-bottom: 0px;
+
+}
+
+.miscusage-main {
+    /* No box shadow on the misc items main page. */
+    @include box-shadow(none);
+}
+
 /* Misc Page */
 .misc_title, .misc-title {
     margin-bottom: 15px;
