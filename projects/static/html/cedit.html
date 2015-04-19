@@ -1,3 +1,6 @@
+{% load wp_nodes %}
+{% load projects_tags %}
+
 <div class='wp-block feature-list'>
 	<!-- Description -->
 	<p>
@@ -10,19 +13,19 @@
 		If root-permissions are required for write-access, your elevation command will ask you
 		for the password. If they are not required, your editor command will be used alone.
 		This is because opening all files as root may put root ownership/group status on files
-		that don't really need it, which is also annoying. 
+		that don't really need it, which is also annoying.
 	</p>
 </div>
 
 <!-- Insert article ad -->
-{{ article_ad }}
+{% ad_article %}
 
 <!-- Download -->
 <div class='wp-block feature-list'>
 	<div class='title-box'>
 		<h3 class='title'>Download</h3>
 	</div>
-	{{ download_code }}
+	{% downloads project %}
 </div>
 
 <!-- Source -->
@@ -34,10 +37,10 @@
 	    <a href='https://github.com/welbornprod/cedit.git' target='blank'>
 	    cedit (github)
 	    </a>
-	    &nbsp;- current <strong>cedit</strong> source code at 
+	    &nbsp;- current <strong>cedit</strong> source code at
 	    <a href='http://github.com' target="_blank">github</a>.
 	</p>
-	{{ source_view }}
+	{% source_view project request %}
 </div>
 
 <!-- Usage -->
@@ -49,10 +52,10 @@
 	<pre class='bash'>
 cedit <filename>
 # ...to open a file.
-	
+
 cedit --list
 # ...lists current configuration (editor and elevation command)
-		
+
 cedit --editor path_to_editor
 cedit --elevcmd path_to_elevcmd
 # ...sets your favorite commands so cedit will remember what to use.
@@ -81,13 +84,13 @@ cedit -e /my/path/to/myeditor
     <pre class='bash'>
 sudo ./cedit.py -i
 	</pre>
-	
+
 	<p>
 		To install cedit for a single user run:
    	</p>
    	<pre class='bash'>
 ./cedit.py --install --user
-    
+
 # this will try to install cedit to /home/USERNAME/.local/bin
 # you will need this directory to exist, and be included in your PATH variable.
 	</pre>
@@ -108,7 +111,7 @@ cedit <filename>
 	</div>
 	<p>
 		If no settings are set, cedit will try to look for a few 'popular' commands to
-		work with. 
+		work with.
 	</p>
 	<p>
 		cedit will look for these editors if your favorite isn't set:
@@ -129,7 +132,7 @@ cedit <filename>
 		<li>sudo</li>
 	</ul>
 	<p>
-		Without any settings, if you have both <span class='B'>kate</span> and 
+		Without any settings, if you have both <span class='B'>kate</span> and
 		<span class='B'>kdesudo</span> installed, cedit will
 		open your 'root-permissions' file by running:<br>
 		[bash]kdesudo kate filename[/bash]
@@ -148,7 +151,7 @@ cedit <filename>
 		<span class='update-title'>Update: version 1.2.2</span>
 		<ul class='blue circle'>
 			<li>
-				Uses python 3 by default <span class='highlight-embedded python'>/usr/bin/env python3</span>
+				Uses python 3 by default [bash]/usr/bin/env python3[?bash]
 			</li>
 			<div class='listdesc'>
 				if you can't use python 3 you can always change the first line of cedit.py,
@@ -160,7 +163,7 @@ cedit <filename>
 				Added multi-file ability.
 			</li>
 			<div class='listdesc'>
-				...if your favorite editor doesn't allow opening multiple files like 
+				...if your favorite editor doesn't allow opening multiple files like
 				[code]myeditor file1.txt file2.txt file3.txt[/code],
 				<br>
 				you can use the [code]--shellall[/code] flag. It will shell an editor process for each file.<br>
@@ -198,5 +201,5 @@ cedit <filename>
 cedit --set .py,geany
 	</pre>
 </div>
-	
+
 

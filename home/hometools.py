@@ -11,6 +11,7 @@
 
    start date: Apr 1, 2013
 '''
+import logging
 import os
 import os.path  # @UnusedImport: os is used.
 
@@ -24,10 +25,9 @@ from projects.models import wp_project
 from apps.models import wp_app
 
 # Local tools
-from wp_main.utilities.wp_logging import logger
 from wp_main.utilities import utilities
 
-_log = logger('home.tools').log
+log = logging.getLogger('wp.home.tools')
 
 
 def get_featured_app(config=None):
@@ -42,7 +42,7 @@ def get_featured_app(config=None):
         app = config.featured_app
         return app if app else get_latest_app()
     except Exception as ex:
-        _log.error('Unable to retrieve featured app:\n{}'.format(ex))
+        log.error('Unable to retrieve featured app:\n{}'.format(ex))
     return get_latest_app()
 
 
@@ -59,7 +59,7 @@ def get_featured_blog(config=None):
         post = config.featured_blog
         return post if post else get_latest_blog()
     except Exception as ex:
-        _log.error('Unable to retrieve featured blog post:\n{}'.format(ex))
+        log.error('Unable to retrieve featured blog post:\n{}'.format(ex))
         return get_latest_blog()
 
 
@@ -79,7 +79,7 @@ def get_featured_project(config=None):
         return proj if proj else get_latest_project()
     except Exception as ex:
         # bad alias?
-        _log.error('Unable to retrieve featured project:\n{}'.format(ex))
+        log.error('Unable to retrieve featured project:\n{}'.format(ex))
     return get_latest_project()
 
 
@@ -88,7 +88,7 @@ def get_latest_app():
     try:
         app = wp_app.objects.filter(disabled=False).latest('publish_date')
     except Exception as ex:
-        _log.error('Unable to retrieve latest app:\n{}'.format(ex))
+        log.error('Unable to retrieve latest app:\n{}'.format(ex))
         return None
     return app
 
@@ -99,7 +99,7 @@ def get_latest_blog():
     try:
         post = wp_blog.objects.filter(disabled=False).latest('posted_datetime')
     except Exception as ex:
-        _log.error('Unable to retrieve latest blog post:\n{}'.format(ex))
+        log.error('Unable to retrieve latest blog post:\n{}'.format(ex))
         return None
     return post
 
@@ -110,7 +110,7 @@ def get_latest_project():
     try:
         proj = wp_project.objects.filter(disabled=False).latest('publish_date')
     except Exception as ex:
-        _log.error('Unable to retrieve latest project:\n{}'.format(ex))
+        log.error('Unable to retrieve latest project:\n{}'.format(ex))
         return None
     return proj
 
@@ -125,10 +125,10 @@ def get_scriptkid_image():
         images = [img for img in os.listdir(image_dir)
                   if img[-4:].lower() in goodexts]
     except Exception as ex:
-        _log.error("can't do listdir() on: " + image_dir + '\n' + str(ex))
+        log.error("can't do listdir() on: " + image_dir + '\n' + str(ex))
         return None
     if not images:
-        _log.error("images was empty!")
+        log.error("images was empty!")
         return None
 
     randomindex = random.randint(0, len(images) - 1)

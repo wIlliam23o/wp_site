@@ -5,7 +5,7 @@
 {% block title %}- Miscellaneous{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="Miscellaneous tools or scripts from welborn productions.">
+    <meta name='description' content='Miscellaneous tools or scripts from welborn productions.'>
 {% endblock %}
 
 {% block extrastyle %}
@@ -17,24 +17,16 @@
     </style>
 {% endblock %}
 
-{% block javascript %}
-    <script type="text/javascript">        
-        $(document).ready( function () {
-            // hide long descriptions on load.
-            $(".misclongdesc").hide();
-        });
-    </script>
-{% endblock %}
 
 <!-- Build misc objects menu -->
 {% block verticalmenu %}
     {% if miscobjects %}
-        <div class="vertical-menu">
-            <ul class="vertical-menu-main">
+        <div class='vertical-menu'>
+            <ul class='vertical-menu-main'>
                 {% for misc in miscobjects %}
-                    <li class="vertical-menu-item">
-                        <a class="vertical-menu-link" href="#{{ misc.alias }}">
-                            <span class="vertical-menu-text">{{ misc.name }}</span>
+                    <li class='vertical-menu-item'>
+                        <a class='vertical-menu-link' href='#{{ misc.alias }}'>
+                            <span class='vertical-menu-text'>{{ misc.name }}</span>
                         </a>
                     </li>
                 {% endfor %}
@@ -46,16 +38,16 @@
 <!-- Build misc Listing -->
 {% block content %}
     {% if miscobjects %}
-        <div class="wp-block misc-listing">
+        <div class='wp-block misc-listing'>
              <!-- Form for submitting file names to the /viewer -->
-             <form id="file-viewer" method="post" action="/view/">{% csrf_token %}
+             <form id='file-viewer' method='post' action='/view/'>{% csrf_token %}
                   <!-- Includes Token for Django's CSRF handling. -->
-                  <input id="viewer-filename" name="file" type="hidden" value="none">
-             </form>                            
-            
+                  <input id='viewer-filename' name='file' type='hidden' value='none'>
+             </form>
+
             {% for misc in miscobjects %}
                 <!-- Single misc listing. -->
-                <div id='{{ misc.alias }}' class="wp-block misc-container">
+                <div id='{{ misc.alias }}' class='wp-block misc-container'>
                     <!-- EDIT -->
                     {% if request|is_staff %}
                         <a href='/adminmisc/wp_misc/{{misc.id}}'>
@@ -66,12 +58,12 @@
                     {% endif %}
                     <!-- Header (Name/Link/Version) -->
                     <div class='misc-header-box'>
-                        <a href="/misc/{{ misc.alias }}">
-                            <span class="header misc-name">{{ misc.name }}</span>
+                        <a href='/misc/{{ misc.alias }}'>
+                            <span class='header misc-name'>{{ misc.name }}</span>
                         </a>
                         <br/>
                         {% if misc.version %}
-                            <span class="version">version {{ misc.version }}</span>
+                            <span class='version'>version {{ misc.version }}</span>
                             <br/>
                         {% endif %}
                         <!-- Misc Type Info -->
@@ -86,13 +78,15 @@
                             </div>
                         </div>
                     </div>
-                
+
                     <!-- Short Description -->
                     {% if misc.description %}
-                        <div id="miscdesc" class="misc-desc misc-index">
-                            <span class="desc">{{ misc.description|safe }}</span>
+                        <div id='miscdesc-{{ misc.alias }}' class='misc-desc misc-index'>
+                            <span class='desc'>{{ misc.description|safe }}</span>
                         </div>
                     {% endif %}
+
+
                     <!-- Misc object download box -->
                     <div class='misc-download-box misc-index'>
                         <div class='misc-download-button misc-index'>
@@ -102,9 +96,9 @@
                         </div>
                         {% if misc|is_viewable %}
                             <div class='misc-download-button misc-index'>
-                                <a href='javascript: void(0);' title='View source code for {{ misc.name }} locally.' onclick="javascript: misctools.submitMisc('{{ misc.filename }}');">
+                                <a href='javascript: void(0);' title='View source code for {{ misc.name }} locally.' onclick='javascript: misctools.submitMisc("{{ misc.filename }}");'>
                                     View {{ misc.name }} (local)
-                                </a>                      
+                                </a>
                             </div>
                         {% endif %}
                         <!-- Screenshots Button -->
@@ -113,30 +107,38 @@
                                 <a href='/misc/{{ misc.alias }}#screenshots' title='View screenshot for {{ misc.name }}.'>
                                     Screenshots
                                 </a>
-                            </div>      
+                            </div>
                         {% endif %}
                         <!-- Long Description Button-->
-                        {% if misc|has_html_content %}
-                            <div class="misc-download-button misc-index">
-                                <a href='javascript: void(0);' title='Show long description for {{ misc.name }}.' onclick="javascript: misctools.toggleLongDesc('{{ misc.alias }}');">
-                                        <span id="misclongdescbtn-{{ misc.alias }}">Show More</span>
+                        {% if misc|has_html_content or misc.usage_string %}
+                            <div class='misc-download-button misc-index'>
+                                <a href='javascript: void(0);' title='Show long description for {{ misc.name }}.' onclick='javascript: misctools.toggleLongDesc("{{ misc.alias }}");'>
+                                        <span id='misclongdescbtn-{{ misc.alias }}'>Show More</span>
                                 </a>
                             </div>
-                        {% endif %}                            
+                        {% endif %}
                     </div>
 
-                    {% if misc|has_html_content %}
+                    {% if misc|has_html_content or misc.usage_string %}
                         <!-- Long Description -->
-                        <div id="misclongdesc-{{ misc.alias }}" class="misclongdesc">
-                            {{ misc|processed_content}}
-                            <!-- Possible Warning -->
-                            {% if misc|has_warning %}
-                                <br>
-                                <div class='misc-warning'>
-                                    {{ misc|get_warning }}
-                                </div>
-                            {% endif %}
+                        <div id='misclongdesc-{{ misc.alias }}' class='misclongdesc'>
+                            {{ misc|get_content}}
                         </div>
+
+                        <!-- Usage String -->
+                        {% if misc.usage_string %}
+                            <div id='miscusage-{{ misc.alias }}' class='miscusage'>
+                                <pre>{{ misc.usage_string }}</pre>
+                            </div>
+                        {% endif %}
+
+                         <!-- Possible Warning -->
+                        {% if misc|has_warning %}
+                            <br>
+                            <div class='misc-warning'>
+                                {{ misc|get_warning }}
+                            </div>
+                        {% endif %}
                     {% endif %}
                 </div>
             {% endfor %}
@@ -145,4 +147,14 @@
         <!-- No Misc Objects -->
         <span>Sorry, no misc items are here yet.</span>
     {% endif %}
+{% endblock %}
+
+{% block bodyend %}
+    <script type='text/javascript'>
+        $(document).ready( function () {
+            // hide long descriptions on load.
+            $('.misclongdesc').hide();
+            $('.miscusage').hide();
+        });
+    </script>
 {% endblock %}

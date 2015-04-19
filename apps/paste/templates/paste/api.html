@@ -25,6 +25,8 @@
             <h3 class='header paste-api-header'>
                 Retrieving
             </h3>
+
+            <!-- Retrieval JSON -->
             <div class='paste-api-section-content'>
                 <div>
                     Pastes are available for viewing in JSON form. Access them using
@@ -33,18 +35,36 @@
                 <div class='paste-api-section-json'>
                     <code>http://{% if server_name %}{{ server_name }}{% else %}welbornprod.com{% endif %}/paste/api/?id=&lt;paste_id&gt;</code>
                 </div>
-
+                <!-- JSON ID format -->
                 <div class='paste-api-section-paragraph'>
-                Id format:
-<pre class='codewrap' style='display: block;'>
+                    Id format:
+                    <div class='clearfix'>
+                        <pre class='codewrap'>
 &lt;paste_id&gt; : a valid paste id.
 all        : same as 'latest'.
 latest     : list of all pastes sorted by reverse date. (last paste is first)
 top        : list of all pastes sorted by view_count. (highest view count is first)
-</pre>
+                        </pre>
+                    </div>
+                </div>
+                <div class='paste-api-section-paragraph'>
+                    Raw content:
+                </div>
+                <div class='paste-api-section-text'>
+                    <!-- Retrieval Raw format -->
+                    You can also view a paste in plain-text at the <code>/paste/raw</code> url:
+                    <div class='paste-api-section-json'>
+                        <code>http://{% if server_name %}{{ server_name }}{% else %}welbornprod.com{% endif %}/paste/raw/?id=&lt;paste_id&gt;</code>
+                    </div>
+                    <div class='paste-api-section-text-note'>
+                        <code>all</code>, <code>latest</code>, and <code>top</code>
+                        cannot be used with <code>/raw</code>.
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Response Format -->
         <div class='paste-api-section'>
             <h3 class='header paste-api-header'>
                 Responses

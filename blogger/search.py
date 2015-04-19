@@ -6,7 +6,7 @@ from blogger.models import wp_blog
 from blogger import blogtools
 
 
-def get_content(post):
+def get_content(post, request=None):
     """ Return the full body/content for a post. """
     return blogtools.get_post_body(post)
 

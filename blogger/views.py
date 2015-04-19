@@ -1,3 +1,4 @@
+import logging
 # Blog Info/Tools
 from blogger.models import wp_blog
 from blogger import blogtools
@@ -8,8 +9,7 @@ from blogger import blogtools
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import responses
-from wp_main.utilities.wp_logging import logger
-_log = logger("blog").log
+log = logging.getLogger('wp.blog')
 
 
 def index(request):
@@ -21,7 +21,7 @@ def index(request):
         post_count = len(raw_posts)
         blog_posts = blogtools.fix_post_list(raw_posts)
     except Exception as ex:
-        _log.error("Error getting blog posts!:\n" + str(ex))
+        log.error("Error getting blog posts!:\n" + str(ex))
         blog_posts = False
         post_count = 0
 
@@ -38,7 +38,7 @@ def index_page(request):
     """ return a slice of all posts using start_id and max_posts
         to determine the location.
     """
-    
+
     # get overall total of all blog posts
     post_count = wp_blog.objects.count()
     # get request args.
@@ -60,7 +60,7 @@ def index_page(request):
         # fix posts for listing.
         blog_posts = blogtools.fix_post_list(post_slice)
     except Exception as ex:
-        _log.debug('Error getting blog posts slice:\n{}'.format(ex))
+        log.debug('Error getting blog posts slice:\n{}'.format(ex))
         blog_posts = post_slice = end_id = False
 
     # get last index, 'has next page', and 'has prev page'
@@ -91,11 +91,11 @@ def view_post(request, identifier):
             slug
             title
     """
-    
+
     post = blogtools.get_post_byany(identifier)
-    
+
     if post is None:
-        _log.error('Post not found: {}'.format(identifier))
+        log.error('Post not found: {}'.format(identifier))
         errmsg = 'Sorry, I can\'t find that post.'
         errlink = '\n'.join([
             '<a href=\'/blog\'><span>',
@@ -105,13 +105,13 @@ def view_post(request, identifier):
         return responses.alert_message(request, errmsg, body_message=errlink)
 
     # build blog post.
-    
+
     # get short title for window-text
     if len(post.title) > 20:
         post_title_short = '..{}'.format(post.title[len(post.title) - 30:])
     else:
         post_title_short = post.title
-    
+
     # no content found.
     if not blogtools.get_post_body(post):
         errmsg = 'Sorry, no content found for this post.'
@@ -126,8 +126,8 @@ def view_post(request, identifier):
         post.view_count += 1
         post.save()
     except Exception as exsave:
-        _log.error('Unable to increment view_count for: '
-                   '{}\n{}'.format(post, exsave))
+        log.error('Unable to increment view_count for: '
+                  '{}\n{}'.format(post, exsave))
 
     # Build clean HttpResponse with post template...
     context = {
@@ -143,7 +143,7 @@ def view_post(request, identifier):
 
 def view_tags(request):
     """ list all posts by tags (categories) """
-    
+
     # get all tag counts
     tag_count = blogtools.get_tags_post_count()
     tag_sizes = blogtools.get_tags_fontsizes(tag_count)
@@ -167,7 +167,7 @@ def view_tags(request):
 
 def view_tag(request, tag):
     """ list all posts with these tags """
-    
+
     tag_name = utilities.trim_special(tag).replace(',', ' ')
     found_posts = blogtools.get_posts_by_tag(tag_name,
                                              starting_index=0,
@@ -189,7 +189,7 @@ def view_tag(request, tag):
 
 def tag_page(request, tag):
     """ view all posts with this tag, paged. """
-    
+
     # fix tag name
     tag_name = utilities.trim_special(tag).replace(',', ' ')
     # get all found posts. no slice.
@@ -209,7 +209,7 @@ def tag_page(request, tag):
                                             starting_index=startid,
                                             max_posts=maxitems,
                                             order_by=orderby)
-        
+
     # fix posts for listing.
     blog_posts = blogtools.fix_post_list(post_slice)
     # number of items in this slice (to get the last index)
@@ -235,5 +235,5 @@ def tag_page(request, tag):
 
 def no_identifier(request):
     """ Redirects when user forgets to add an identifier """
-    
+
     return responses.redirect_response('/blog')

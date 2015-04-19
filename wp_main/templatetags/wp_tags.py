@@ -13,6 +13,9 @@
 # For insert_video, building a mimetype from file extension.
 import os
 
+import base64
+import logging
+
 # Django stuff
 from django import template
 from django.conf import settings
@@ -21,17 +24,18 @@ from django.utils.safestring import mark_safe
 
 # Local tools
 from wp_main.utilities import utilities
-from wp_main.utilities.highlighter import wp_highlighter, highlight_codes
-from wp_main.utilities.wp_logging import logger
+from wp_main.utilities.highlighter import WpHighlighter, highlight_codes
+
 # for admin site filtering
 from blogger.models import wp_blog
+from img.models import wp_image
 from projects.models import wp_project
 from misc.models import wp_misc
 from apps.models import wp_app
 from apps.phonewords.models import pw_result
 from apps.paste.models import wp_paste
 
-_log = logger("wp_main.tags").log
+log = logging.getLogger('wp.wp_main.tags')
 
 register = template.Library()
 
@@ -39,9 +43,19 @@ register = template.Library()
 import re
 #                               adminpage type  id     str()
 disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
-#disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
-#disabled_patstr = r'(<a href).+"/(admin\w+)/(.+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
+
+
+@register.filter
+def b64decode(s):
+    """ Decode a Base64 string. """
+    return base64.decodebytes(s.encode('utf-8')).decode('utf-8')
+
+
+@register.filter
+def b64encode(s):
+    """ Base64 encode a string. """
+    return base64.encodebytes(s.encode('utf-8')).decode('utf-8').strip()
 
 
 @register.filter
@@ -50,9 +64,9 @@ def colorize_admin_css(item):
         if the object has .disabled attribute and it is set to True.
         This is used in change_list_results.html template for admin.
     """
-
     obj_match = disabled_pat.search(item)
     if obj_match is None:
+        log.debug('Not an object link: {}'.format(item))
         # This is not an object link.
         return item
     else:
@@ -66,15 +80,15 @@ def colorize_admin_css(item):
             try:
                 objid = int(idstr)
             except Exception as ex:
-                _log.error('Failed to parsed disable-item id: '
-                           '{}\n{}'.format(idstr, ex))
+                log.error('Failed to parsed disable-item id: '
+                          '{}\n{}'.format(idstr, ex))
                 return item
 
             # name/title of object (My Blog Post)
             name = obj_match.groups()[3]
         else:
             # failed to match our pattern exactly.
-            _log.debug("Incorrect number of items in match: " + str(item))
+            log.debug("Incorrect number of items in match: " + str(item))
             return item
 
     # convert to object
@@ -85,16 +99,17 @@ def colorize_admin_css(item):
         'wp_misc': wp_misc.objects,
         'wp_paste': wp_paste.objects,
         'pw_result': pw_result.objects,
+        'wp_image': wp_image.objects,
     }
     obj = None
     for objname, objects in objectsets.items():
         if objname == otype:
             obj = utilities.get_object_safe(objects, id=objid)
             break
-
+    log.debug('Found: {}'.format(obj))
     # no object found for this type.
     if obj is None:
-        _log.debug(''.join((
+        log.debug(''.join((
             'Colorize-Admin: Can\'t find: '
             '{} [{}]')).format(name, otype))
         return item
@@ -252,6 +267,15 @@ def get_remote_ip(request):
 
 
 @register.filter
+def get_time_since(date):
+    """ Shortcut to utilities.get_time_since(date, limit=True). """
+    if not date:
+        return date
+    since = utilities.get_time_since(date, limit=True)
+    return since if ':' in since else '{} ago'.format(since)
+
+
+@register.filter
 def hcodes(content):
     """ Highlight using short codes found with highlighter.highlight_codes.
         Example:
@@ -270,11 +294,11 @@ def highlight_python(scontent):
     """
 
     try:
-        highlighter = wp_highlighter(lexer_name='python', line_nums=False)
+        highlighter = WpHighlighter(lexer_name='python', line_nums=False)
         highlighter.code = scontent
         results = highlighter.highlight()
     except Exception as ex:
-        _log.error('Error in highlight_python:\n{}'.format(ex))
+        log.error('Error in highlight_python:\n{}'.format(ex))
         results = scontent
     return results
 
@@ -282,12 +306,11 @@ def highlight_python(scontent):
 @register.filter
 def insert_video(videourl, posterimg=None, id_=None):
     """ Return a Video.js video player with a url to a video.
-        video.css and video.js must be included in <head>!
-        ****************************************************************
-        ** This has not been tested, and won't be until
-        ** the project, blog, etc. pages use template-rendering to load.
-        ** see: htmltools.load_html_file()
-        ****************************************************************
+
+        video.css and video.js must be included in < head >!
+        This has not been tested, and won't be until
+        the project, blog, etc. pages use template-rendering to load.
+        see: htmltools.load_html_file()
     """
     if not videourl:
         return ''
@@ -326,7 +349,7 @@ def is_authenticated(req_or_user):
     """ Shortcut to request.user.is_authenticated() """
     if not req_or_user:
         errmsgfmt = 'Falsey object passed to is_authenticated(): {!r}'
-        _log.error(errmsgfmt.format(req_or_user))
+        log.error(errmsgfmt.format(req_or_user))
         return False
 
     if hasattr(req_or_user, 'user'):
@@ -340,10 +363,10 @@ def is_authenticated(req_or_user):
             return isauthed
         except Exception as exauthcall:
             errmsgfmt = 'Can\'t call is_authenticated() on: {}\n{}'
-            _log.error(errmsgfmt.format(user, exauthcall))
+            log.error(errmsgfmt.format(user, exauthcall))
             return False
     # Request or User was not passed!
-    _log.error('is_authenticated(): No \'user\' or \'is_authenticated\' attr!')
+    log.error('is_authenticated(): No \'user\' or \'is_authenticated\' attr!')
     return False
 
 
@@ -352,10 +375,7 @@ def is_disabled(model_obj):
     """ if object has .disabled attribute, returns it,
         if not, returns False.
     """
-
-    if hasattr(model_obj, 'disabled'):
-        return model_obj.disabled
-    return False
+    return getattr(model_obj, 'disabled', False)
 
 
 @register.filter
@@ -402,10 +422,7 @@ def is_onhold(model_obj):
     """ if object has .disabled attribute, returns it,
         if not, returns False.
     """
-
-    if hasattr(model_obj, 'onhold'):
-        return model_obj.onhold
-    return False
+    return getattr(model_obj, 'onhold', False)
 
 
 @register.filter
@@ -413,9 +430,7 @@ def is_private(obj):
     """ If object has a .private attribute, returns it.
         if not, returns False.
     """
-    if hasattr(obj, 'private'):
-        return obj.private
-    return False
+    return getattr(obj, 'private', False)
 
 
 @register.filter
@@ -429,14 +444,12 @@ def is_staff(request):
 
 
 @register.filter
-def is_test_site(request_object):
+def is_test_site(request):
     """ determines whether or not the site is a test-server.
         looks for 'test.welbornprod' domains.
         returns True/False.
     """
-    if (request_object is None or
-       request_object.META is None or
-       (not request_object)):
+    if (not request) or (not getattr(request, 'META', None)):
         # happens on errors,
         # Should always do what the live site does in case of error.
         return False
@@ -444,10 +457,11 @@ def is_test_site(request_object):
     # Get current server name for this instance.
     # Could be the live server, test server, or local server
     # the local server_name changes depending on where it's accessed from.
-    server_name = request_object.META['SERVER_NAME']
+    server_name = request.META.get('SERVER_NAME', '')
 
-    return (server_name.startswith('test.') or      # remote test site
-            (server_name in settings.INTERNAL_IPS))  # local dev
+    return (
+        server_name.startswith('test.') or       # remote test site
+        (server_name in settings.INTERNAL_IPS))  # local dev
 
 
 @register.filter
@@ -469,7 +483,7 @@ def log_debug(data):
         s = '\n'.join(data)
     else:
         s = str(data)
-    _log.debug(s)
+    log.debug(s)
     return data
 
 
@@ -544,7 +558,6 @@ registered_filters = (
     utilities.get_date,
     utilities.get_datetime,
     utilities.get_time,
-    utilities.get_time_since,
 )
 
 # register all filters in the registered tuple.

@@ -41,9 +41,11 @@ The control icons are from a custom font. Each icon corresponds to a character
 
 .vjs-default-skin .vjs-slider:focus {
   /* box-shadow */
-  -webkit-box-shadow: 0 0 2em #ffffff;
-  -moz-box-shadow: 0 0 2em #ffffff;
-  box-shadow: 0 0 2em #ffffff; }
+  -webkit-box-shadow: 0 0 2em white;
+  -moz-box-shadow: 0 0 2em white;
+  -ms-box-shadow: 0 0 2em white;
+  -o-box-shadow: 0 0 2em white;
+  box-shadow: 0 0 2em white; }
 
 .vjs-default-skin .vjs-slider-handle {
   position: absolute;
@@ -52,13 +54,13 @@ The control icons are from a custom font. Each icon corresponds to a character
   top: 0; }
 
 .vjs-default-skin .vjs-slider-handle:before {
+  position: absolute;
   content: "\e009";
   font-family: VideoJS;
   font-size: 1em;
   line-height: 1;
   text-align: center;
   text-shadow: 0em 0em 1em #fff;
-  position: absolute;
   top: 0;
   left: 0;
   /* Rotate the square icon to make a diamond */
@@ -134,8 +136,8 @@ fonts to show/hide properly.
     content: ""; } }
 /* General styles for individual controls. */
 .vjs-default-skin .vjs-control {
-  outline: none;
   position: relative;
+  outline: none;
   float: left;
   text-align: center;
   margin: 0;
@@ -382,10 +384,14 @@ easily in the skin designer. http://designer.videojs.com/
   /* border-radius */
   -webkit-border-radius: 0.8em;
   -moz-border-radius: 0.8em;
+  -ms-border-radius: 0.8em;
+  -o-border-radius: 0.8em;
   border-radius: 0.8em;
   /* box-shadow */
   -webkit-box-shadow: 0px 0px 1em rgba(255, 255, 255, 0.25);
   -moz-box-shadow: 0px 0px 1em rgba(255, 255, 255, 0.25);
+  -ms-box-shadow: 0px 0px 1em rgba(255, 255, 255, 0.25);
+  -o-box-shadow: 0px 0px 1em rgba(255, 255, 255, 0.25);
   box-shadow: 0px 0px 1em rgba(255, 255, 255, 0.25);
   /* transition */
   -webkit-transition: all 0.4s;
@@ -423,9 +429,11 @@ easily in the skin designer. http://designer.videojs.com/
   background-color: #505050;
   background-color: rgba(50, 50, 50, 0.75);
   /* box-shadow */
-  -webkit-box-shadow: 0 0 3em #ffffff;
-  -moz-box-shadow: 0 0 3em #ffffff;
-  box-shadow: 0 0 3em #ffffff;
+  -webkit-box-shadow: 0 0 3em white;
+  -moz-box-shadow: 0 0 3em white;
+  -ms-box-shadow: 0 0 3em white;
+  -o-box-shadow: 0 0 3em white;
+  box-shadow: 0 0 3em white;
   /* transition */
   -webkit-transition: all 0s;
   -moz-transition: all 0s;
@@ -547,6 +555,8 @@ easily in the skin designer. http://designer.videojs.com/
   /* box-shadow */
   -webkit-box-shadow: -0.2em -0.2em 0.3em rgba(255, 255, 255, 0.2);
   -moz-box-shadow: -0.2em -0.2em 0.3em rgba(255, 255, 255, 0.2);
+  -ms-box-shadow: -0.2em -0.2em 0.3em rgba(255, 255, 255, 0.2);
+  -o-box-shadow: -0.2em -0.2em 0.3em rgba(255, 255, 255, 0.2);
   box-shadow: -0.2em -0.2em 0.3em rgba(255, 255, 255, 0.2); }
 
 .vjs-default-skin .vjs-menu-button:hover .vjs-menu {
@@ -574,9 +584,11 @@ easily in the skin designer. http://designer.videojs.com/
   background-color: #ffffff;
   background-color: rgba(255, 255, 255, 0.75);
   /* box-shadow */
-  -webkit-box-shadow: 0 0 1em #ffffff;
-  -moz-box-shadow: 0 0 1em #ffffff;
-  box-shadow: 0 0 1em #ffffff; }
+  -webkit-box-shadow: 0 0 1em white;
+  -moz-box-shadow: 0 0 1em white;
+  -ms-box-shadow: 0 0 1em white;
+  -o-box-shadow: 0 0 1em white;
+  box-shadow: 0 0 1em white; }
 
 .vjs-default-skin .vjs-menu-button ul li.vjs-menu-title {
   text-align: center;
@@ -600,9 +612,11 @@ easily in the skin designer. http://designer.videojs.com/
 .vjs-default-skin .vjs-captions-button:focus .vjs-control-content:before,
 .vjs-default-skin .vjs-captions-button:hover .vjs-control-content:before {
   /* box-shadow */
-  -webkit-box-shadow: 0 0 1em #ffffff;
-  -moz-box-shadow: 0 0 1em #ffffff;
-  box-shadow: 0 0 1em #ffffff; }
+  -webkit-box-shadow: 0 0 1em white;
+  -moz-box-shadow: 0 0 1em white;
+  -ms-box-shadow: 0 0 1em white;
+  -o-box-shadow: 0 0 1em white;
+  box-shadow: 0 0 1em white; }
 
 /*
 REQUIRED STYLES (be careful overriding)
@@ -672,7 +686,7 @@ body.vjs-full-window {
 .video-js.vjs-fullscreen {
   position: fixed;
   overflow: hidden;
-  z-index: 1000;
+  z-index: 20;
   left: 0;
   top: 0;
   bottom: 0;

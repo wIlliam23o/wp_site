@@ -1,3 +1,6 @@
+{% load wp_nodes %}
+{% load projects_tags %}
+
 <div class='wp-block feature-list'>
 	<!-- Description -->
 	<p>
@@ -12,14 +15,14 @@
 	</p>
 </div>
 <!-- Article Ad -->
-{{ article_ad }}
+{% ad_article %}
 
 <!-- Download -->
 <div class="wp-block feature-list">
 	<div class="title-box">
 		<h3 class="title">Download</h3>
 	</div>
-	{{ download_code }}
+	{% downloads project %}
 </div>
 
 <!-- Source View -->
@@ -33,7 +36,7 @@
 		</a>
 		&nbsp;- Source code hosted at <a href="http://github.com" target="_blank">github.</a>
 	</span>
-	{{ source_view }}
+	{% source_view project request %}
 </div>
 
 <!-- Installation -->
@@ -206,7 +209,7 @@ print(settings)
                <br>
 
 				This fix also allows you to save values with the newline
-				character in them. So code like his will work:
+				character in them. So code like this will work:
 				<pre class='python'>
 settings.set('mytext', 'this\nstring\n\has\nnewlines.')
 print settings.get('mytext')

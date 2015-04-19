@@ -1,0 +1,67 @@
+.stats-header {
+  margin-bottom: 10px; }
+  .stats-header.header {
+    font-size: 2.5em; }
+
+.stats-group {
+  display: block;
+  background: #fafafa;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-width: 1px;
+  border-color: rgba(202, 217, 224, 0.5);
+  padding: 5px;
+  margin-bottom: 5px; }
+
+.stats-group-name {
+  display: block;
+  color: #26a1f4;
+  font-size: 1.2em;
+  text-shadow: #999999 1px 1px 3px; }
+  .stats-group-name:hover {
+    color: #007dd1; }
+
+.stats-group-items {
+  display: none;
+  position: relative; }
+
+.stats-item {
+  display: block;
+  margin-left: 15px;
+  margin-right: 15px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #e7e7e7;
+  padding: 6px;
+  margin-top: 3px; }
+
+.stats-item-name {
+  display: block;
+  font-weight: bold;
+  color: #919191; }
+
+.stats-item-attrs {
+  display: block; }
+
+.stats-item-attr {
+  display: block; }
+
+.stats-item-attr-label {
+  display: inline-block;
+  color: #afafaf;
+  text-align: right;
+  width: 6em; }
+
+.stats-item-attr-value {
+  display: inline-block;
+  color: #74afee;
+  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+  font-size: 1.1em; }

@@ -1,26 +1,29 @@
+{% load wp_nodes %}
+{% load projects_tags %}
+
 <!-- Description -->
 <div class="wp-block feature-list">
 	<p>
-		A Python script I wrote to count various lines in my scripts. This script counts up all the code, 
-		comment, &amp; blank lines. It also counts inline-comments, classes, functions, ifs, trys, and 
-		some more things. It has the ability to list all imports, variables, caught exceptions, and 
-		docstrings. This was one of my first projects, and I may have went overboard a little, but some 
-		of this is valuable information to have. I still use this script when I'm making bigger projects, 
-		to keep track of my percentage of comments to code (which <strong>CodeCounter</strong> displays. 
-		It will display all totals by default, but can be told to display only the basic totals 
+		A Python script I wrote to count various lines in my scripts. This script counts up all the code,
+		comment, &amp; blank lines. It also counts inline-comments, classes, functions, ifs, trys, and
+		some more things. It has the ability to list all imports, variables, caught exceptions, and
+		docstrings. This was one of my first projects, and I may have went overboard a little, but some
+		of this is valuable information to have. I still use this script when I'm making bigger projects,
+		to keep track of my percentage of comments to code (which <strong>CodeCounter</strong> displays.
+		It will display all totals by default, but can be told to display only the basic totals
 		(Total Lines, Code, Comment, Blank, DocString) using the -t flag. Anyway, here's codecount.py.
 	</p>
 </div>
 
 <!-- InArticle Ad -->
-{{ article_ad }}
+{% ad_article %}
 
 <!-- Download Module -->
 <div class="wp-block feature-list">
 	<div class="title-box">
 		<h3 class="title">Download</h3>
 	</div>
-	{{ download_code }}
+	{% downloads project %}
 </div>
 
 <!-- Source View -->
@@ -30,7 +33,7 @@
 			Source Code
 		</h3>
 	</div>
-	{{ source_view }}
+	{% source_view project request %}
 </div>
 <!-- Sample Output -->
 <div class="wp-block feature-list">
@@ -74,7 +77,7 @@ Finished analyzing: codecount.py...
                  Variables: 52
 	</pre>
 
-	
+
 	<!-- Sample Output: Variables -->
 	<h2 class="title">
 		Variables List
@@ -97,7 +100,7 @@ Finished analyzing: codecount.py...
          iCodePer
 	</pre>
     <span>...(too many to list here)</span>
-	
+
 	<!-- Sample Output: Imports -->
 	<h2 class="title">
 		Imports
@@ -115,9 +118,9 @@ Finished analyzing: codecount.py...
 	</pre>
 
 
-	
+
 	<!-- Sample Output: Exceptions -->
-	
+
 	<p>
 		With <strong>-e</strong> passed as an argument codecount.py will output all exceptions caught with <strong>except</strong>:
 	</p>
@@ -128,7 +131,7 @@ Finished analyzing: codecount.py...
 	</pre>
 
 
-	
+
 	<!-- Sample Output: DocStrings -->
 	<h2 class="title">
 		DocStrings
@@ -150,15 +153,15 @@ Finished analyzing: codecount.py...
         *     Lists can be sorted in the order of discovery, or alphabetical
         Analyze file, find all tags
 	</pre>
-	
+
 	<!-- Duplicates Warning -->
 	<p>
-		* codecount.py will not list duplicate entries, except for docstrings. This is by design. 
+		* codecount.py will not list duplicate entries, except for docstrings. This is by design.
 		If duplicates are found it will print&nbsp;"1 of 2 unique exceptions found", hence the word&nbsp;"unique"...
 		<br />
 		<br />
 		<span>
-			**When using <strong>-vies,</strong> you may also use <strong>-d</strong> to report items in the 
+			**When using <strong>-vies,</strong> you may also use <strong>-d</strong> to report items in the
 			order they are discovered, the default is sorted.
 		</span>
 	</p>
@@ -206,7 +209,7 @@ cc.printimports(myresults)
                 new printing style, use -t to print only the basic totals for a file.
     	    </li>
         </ul>
-    	
+
         <!--Update 1.8 -->
     	<span class="update-title">
     		Update: version 1.8
@@ -243,11 +246,11 @@ from sys import path,platform
 This is my multi-line DocString
 """
     	        </pre>
-            		...also has the ability to list all DocStrings found with the -s argument. 
+            		...also has the ability to list all DocStrings found with the -s argument.
             		(You might want to use -sd if you want the list to make sense)
             </div>
         </ul>
-    	
+
         <!-- Update 1.5 -->
     	<span class="update-title">
     		Update: version 1.5
@@ -257,9 +260,9 @@ This is my multi-line DocString
         		CodeCounter works on single files, or whole directories.
             </li>
             <div class='listdesc'>
-                It looks for .py files to analyze 
-        		them and generates a report with a total from all the files. It can now handle Doc Strings, 
-        		"Quote Comments",  and multiple variable declarations on the same line. Better error handling 
+                It looks for .py files to analyze
+        		them and generates a report with a total from all the files. It can now handle Doc Strings,
+        		"Quote Comments",  and multiple variable declarations on the same line. Better error handling
         		was added, and overall performance was improved.
         	</div>
         </ul>
@@ -274,12 +277,12 @@ This is my multi-line DocString
 		</h3>
 	</div>
 	<p>
-		This script was designed using Linux (<a href="http://www.linuxmint.com/" target="_blank" title="LinuxMint.com">Linux Mint</a>), 
-		but will also work for <a href="http://www.windows.com" target="_blank" title="Windows.com">Windows</a>. 
-		Obviously you must have <a href="http://www.python.org/" target="_blank" title="Python.org">Python</a> installed, 
-		if you do not have python installed you may find instructions on how to download it 
-		<a href="http://www.python.org/download/" target="_blank" title="Python.org">here</a>. 
-		To run the script locate your python executable (python.exe, or pythonw.exe in Windows, 
+		This script was designed using Linux (<a href="http://www.linuxmint.com/" target="_blank" title="LinuxMint.com">Linux Mint</a>),
+		but will also work for <a href="http://www.windows.com" target="_blank" title="Windows.com">Windows</a>.
+		Obviously you must have <a href="http://www.python.org/" target="_blank" title="Python.org">Python</a> installed,
+		if you do not have python installed you may find instructions on how to download it
+		<a href="http://www.python.org/download/" target="_blank" title="Python.org">here</a>.
+		To run the script locate your python executable (python.exe, or pythonw.exe in Windows,
 		/usr/bin/python in Linux) and run it like this (Linux method shown):
 	</p>
 	<pre class='bash'>
@@ -287,11 +290,11 @@ python /directory/codecount.py [-hitvesd] script_file_to_analyze.py
 OR:
 python /directory/codecount.py [-hitvesd] /directory/with/pyfiles
 	</pre><br>
-	
+
 	<!-- End Description -->
 	<p>
-		That's about it, I hope this script helps you in some way. For anyone wanting to learn about <strong>string parsing</strong> 
-		or basic <strong>python syntax</strong> like the <strong>if</strong> statement, <strong>list</strong> objects, 
+		That's about it, I hope this script helps you in some way. For anyone wanting to learn about <strong>string parsing</strong>
+		or basic <strong>python syntax</strong> like the <strong>if</strong> statement, <strong>list</strong> objects,
 		or <strong>file</strong> input, this might be a good script to look at and learn from.<br/>
 		-<em><strong>Cj</strong></em>
 	</p>

@@ -13,14 +13,23 @@
   color: #4d4d4d;
   font-weight: bold; }
 
-/* Index Styles */
+.blog-posts {
+  position: relative; }
+
 .blog-listing {
+  position: relative;
   padding: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
+  -webkit-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  -moz-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  -ms-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  -o-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
   background: white;
-  box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-  -moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-  -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
   margin-bottom: 10px; }
 
 .blog-listing-title {
@@ -36,10 +45,14 @@
   color: #007dd1; }
 
 .blog-listing-body {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
   border-style: solid;
   border-width: 1px;
-  border-color: #afafaf;
+  border-color: rgba(202, 217, 224, 0.5);
   margin-top: 40px;
   padding-left: 20px;
   padding-right: 20px;
@@ -48,12 +61,19 @@
 
 /* Post Styles */
 .blog-post {
-  background: white;
+  position: relative;
+  background: #fafafa;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
+  -webkit-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  -moz-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  -ms-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  -o-box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.07);
   padding: 5px;
-  box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-  -moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-  -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
   margin-bottom: 10px; }
 
 .blog-post-header-box {
@@ -70,15 +90,19 @@
   color: #26a1f4; }
 
 .blog-post-date-box {
+  position: absolute;
   display: inline-block;
   margin-left: 5px;
-  border-style: solid;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
+  border-style: solid;
   border-width: 1px;
-  border-color: #afafaf;
+  border-color: rgba(202, 217, 224, 0.5);
   padding: 2px;
-  right: 15px;
-  position: absolute; }
+  right: 15px; }
 
 .blog-post-date {
   font-size: 0.8em;
@@ -100,10 +124,14 @@
 
 .blog-post-tag-link-box {
   /* single link container */
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
   border-style: solid;
   border-width: 1px;
-  border-color: #afafaf;
+  border-color: rgba(202, 217, 224, 0.5);
   line-height: 1em;
   display: inline-block;
   padding-bottom: 2px;
@@ -126,12 +154,16 @@
 
 /* Navigation */
 .blog-nav-box {
-  border-style: solid;
+  display: inline-block;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
+  border-style: solid;
   border-width: 1px;
-  border-color: #afafaf;
-  padding: 2px;
-  display: inline-block; }
+  border-color: rgba(202, 217, 224, 0.5);
+  padding: 2px; }
 
 .blog-nav-label {
   text-transform: lowercase;
@@ -143,8 +175,12 @@
   padding-left: 5px; }
 
 .blog-nav-button {
-  border-style: solid;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
   border-radius: 5px;
+  border-style: solid;
   border-width: 1px;
   border-color: #74afee;
   padding-left: 2px;
@@ -171,7 +207,7 @@
   display: block;
   margin-top: 10px;
   margin-bottom: 10px;
-  border-top: 1px solid #afafaf;
+  border-top: 1px solid rgba(202, 217, 224, 0.5);
   padding-top: 5px; }
 
 .blog-related-projects-box {
@@ -188,15 +224,21 @@
 
 .blog-related-project {
   display: inline;
-  border: 1px solid #afafaf;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  -o-border-radius: 3px;
   border-radius: 3px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(202, 217, 224, 0.5);
   padding-left: 2px;
   padding-right: 2px;
   padding-bottom: 2px;
   margin-right: 2px;
   font-size: 0.8em; }
 
-.wpbutton.blog-edit-button {
+.blog-edit-button {
   position: absolute;
   right: 130px;
-  margin-top: 4px; }
+  top: -5px; }

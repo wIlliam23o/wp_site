@@ -8,35 +8,47 @@
           @author: Christopher Welborn <cj@welbornprod.com>
     @organization: welborn productions <welbornprod.com>
 """
-
+import logging
 import os
 import sys
 import traceback
 from datetime import datetime
 
-# global settings
 from django.conf import settings
+# Import modules within this project.
+from django.utils.module_loading import import_module
+
 # User-Agent helper...
 from wp_user_agents.utils import get_user_agent  # @UnresolvedImport
 
-# use log wrapper for debug and file logging.
-from wp_main.utilities.wp_logging import logger
-_log = logger("utilities").log
+log = logging.getLogger('wp.utilities')
 
 
-def append_path(appendto_path, append_this):
+class _NoValue(object):
+
+    """ Something other than 'None' to represent no value, or missing attr. """
+
+    def __bool__(self):
+        """ NoValue is falsey. """
+        return False
+
+    def __str__(self):
+        return 'NoValue'
+NoValue = _NoValue()
+
+
+def append_path(*args):
     """ os.path.join fails if append_this starts with '/'.
         so I made my own. it's not as dynamic as os.path.join, but
-        it will work.
+        it will work. It doesn't short-circuit to a root dir when using
+        args like 'home', '/wp'.
         ex:
-            mypath = append_path("/view" , project.source_dir)
+            mypath = append_path('/view' , project.source_dir)
     """
-
-    if append_this.startswith('/'):
-        spath = (appendto_path + append_this)
-    else:
-        spath = (appendto_path + '/' + append_this)
-    return spath.replace("//", '/')
+    spath = '/'.join(args)
+    while '//' in spath:
+        spath = spath.replace('//', '/')
+    return spath
 
 
 def debug_allowed(request):
@@ -66,7 +78,7 @@ def debug_allowed(request):
         ipwarnmsg = '\n'.join((
             'Debug not allowed for ip: {}'.format(str(remote_addr)),
             '             ...DEBUG is: {}'.format(str(settings.DEBUG))))
-        _log.warn(ipwarnmsg)
+        log.warn(ipwarnmsg)
     return (ip_in_settings and bool(settings.DEBUG))
 
 
@@ -111,6 +123,106 @@ def get_absolute_path(relative_file_path):
     return sabsolutepath
 
 
+def get_apps(
+        exclude=None, include=None, name_filter=None,
+        child=None, no_django=True):
+    """ Returns a list of modules (apps) from INSTALLED_APPS.
+        Arguments:
+            exclude     : A function to exclude modules from being added.
+                          It should return True to exclude, False to not.
+                          It's signature is:
+                          exclude(module) -> bool
+                          Default: None
+            include     : A function to include modules to be added.
+                          It should return True to include, False to not.
+                          It's signature is:
+                          include(module) -> bool
+                          Default: None
+            name_filter : A function to include modules by name.
+                          It should return True to include, False to not.
+                          It's signature is:
+                          name_filter(appname) -> bool
+            child       : A str containing child modules to load instead of
+                          the parent apps.
+                          Example: (grab all apps with a 'search' module)
+                              # Import all <app_name>.search
+                              apps = search_apps(child='search')
+                          Default: None
+            no_django   : True/False. Whether or not to include modules
+                          starting with 'django'.
+                          Default: True
+    """
+    apps = []
+    for appname in settings.INSTALLED_APPS:
+        if no_django and appname.startswith('django'):
+            continue
+        elif name_filter and not name_filter(appname):
+            continue
+        if child:
+            childname = '{}.{}'.format(appname, child.strip('.'))
+        else:
+            childname = appname
+        try:
+            app = import_module(childname)
+            if exclude and exclude(app):
+                continue
+            elif include and include(app):
+                apps.append(app)
+        except ImportError as ex:
+            log.debug('Module wasn\'t imported: {}\n  {}'.format(
+                childname, ex))
+
+    return apps
+
+
+def get_attrs(o, attrs, default=NoValue):
+    """ Like getattr(), but accepts dotted names to retrieve attributes of
+        another attribute. Like: o.image.name
+        It will first try o.image, and on success try o.image.name.
+        None is an acceptable default, and will return None on failure.
+        To raise AttributeError, simply don't provide any default argument.
+
+        Example: val = get_attrs(obj, 'image.name', default=None)
+
+        Returns default on failure if set, otherwise raises AttributeError.
+    """
+    if not attrs:
+        raise AttributeError('You must provide attributes to retrieve.')
+
+    def attr_return(obj, val, attr):
+        """ Determine whether AttributeError should be raised,
+            or the default should be returned.
+        """
+        if val is NoValue:
+            if default is NoValue:
+                errmsg = '{} has no attribute: {} from ({})'.format(
+                    obj.__class__.__name__,
+                    attr,
+                    attrs)
+                raise AttributeError(errmsg)
+            return default
+        return val
+
+    def try_attr(obj, attr):
+        """ Try getting an attribute, raise AttributeError if no default is
+            provided, otherwise return the default.
+        """
+        val = getattr(obj, attr, NoValue)
+        return attr_return(obj, val, attr)
+
+    attrlst = tuple((a for a in attrs.split('.') if a))
+    root = try_attr(o, attrlst[0])
+    lastroot = o
+    subattr = NoValue
+    for subattr in attrlst[1:]:
+        lastroot = root
+        root = try_attr(lastroot, subattr)
+
+    if subattr is NoValue:
+        return attr_return(lastroot, root, attrlst[0])
+    return attr_return(lastroot, root, subattr)
+
+
 def get_browser_name(request):
     """ return the user's browser name """
 
@@ -134,21 +246,6 @@ def get_browser_style(request):
         return False
 
 
-def get_datetime(date=None, shortdate=False):
-    """ Return date/time string.
-        Arguments:
-            date       : Existing datetime object to format.
-                         Default: datetime.now()
-            shortdate  : Return date part in short format (m-d-yyyy)
-                         Default: False
-    """
-    if date is None:
-        date = datetime.now()
-    if shortdate:
-        return date.strftime('%m-%d-%Y %I:%M:%S %p')
-    return date.strftime('%A %b. %d, %Y %I:%M:%S %p')
-
-
 def get_date(date=None, shortdate=False):
     """ Return date string.
         Arguments:
@@ -164,11 +261,28 @@ def get_date(date=None, shortdate=False):
     return date.strftime('%A %b. %d, %Y')
 
 
+def get_datetime(date=None, shortdate=False):
+    """ Return date/time string.
+        Arguments:
+            date       : Existing datetime object to format.
+                         Default: datetime.now()
+            shortdate  : Return date part in short format (m-d-yyyy)
+                         Default: False
+    """
+    if date is None:
+        date = datetime.now()
+    if shortdate:
+        return date.strftime('%m-%d-%Y %I:%M:%S %p')
+    return date.strftime('%A %b. %d, %Y %I:%M:%S %p')
+
+
 def get_filename(file_path):
+    if not file_path:
+        return file_path
     try:
         sfilename = os.path.split(file_path)[1]
     except Exception:
-        _log.error('error in os.path.split({})'.format(file_path))
+        log.error('Error in os.path.split({})'.format(file_path))
         sfilename = file_path
     return sfilename
 
@@ -185,27 +299,25 @@ def get_objects_enabled(objects_):
     try:
         allobjs = objects_.filter(disabled=False)
     except Exception as ex:
-        _log.error('No objects to get!: {}\n{}'.format(objects_.__name__, ex))
+        log.error('No objects to get!: {}\n{}'.format(objects_.__name__, ex))
         allobjs = None
 
     return allobjs
 
 
-def get_object_safe(objects_, **kwargs):
+def get_object_safe(objects, **kwargs):
     """ does a mymodel.objects.get(kwargs),
-        Other Keyword Arguments:
-
         returns None on error.
     """
-    if hasattr(objects_, 'objects'):
+    if hasattr(objects, 'objects'):
         # Main Model passed instead of Model.objects.
-        objects_ = getattr(objects_, 'objects')
+        objects = getattr(objects, 'objects')
 
     try:
-        obj = objects_.get(**kwargs)
+        obj = objects.get(**kwargs)
     except Exception:
         # No Error is raised, just return None
-        obj = None
+        return None
     return obj
 
 # Alias for function.
@@ -263,8 +375,8 @@ def get_server(request):
     try:
         meta = request.META
     except AttributeError as exatt:
-        _log.error('Unable to retrieve META from request:\n'
-                   '{}'.format(exatt))
+        log.error('Unable to retrieve META from request:\n'
+                  '{}'.format(exatt))
         return None
 
     tryattrs = (
@@ -282,7 +394,7 @@ def get_server(request):
     return None
 
 
-def get_time(time=None, shorttime=False):
+def get_time(time=None, shorttime=False,):
     """ Return time string.
         Arguments:
             time       : Existing datetime object to format.
@@ -297,9 +409,14 @@ def get_time(time=None, shorttime=False):
     return time.strftime('%I:%M:%S %p')
 
 
-def get_time_since(date, humanform=True):
+def get_time_since(date, humanform=True, limit=False):
     """ Parse a datetime object,
         return human-readable time-elapsed.
+        Arguments:
+            date       : datetime object to work with.
+            humanform  : Use minutes, seconds, etc. instead of m, s, etc.
+            limit      : If True, uses get_datetime() when it's been over one
+                         week.
     """
 
     secs = (datetime.now() - date).total_seconds()
@@ -352,6 +469,9 @@ def get_time_since(date, humanform=True):
 
     days = int(hours / 24)
     hours = int(hours % 24)
+    if limit and (days > 7):
+        return get_datetime(date)
+
     # Days, hours
     daystr = 'day' if days == 1 else 'days'
     hourstr = 'hour' if hours == 1 else 'hours'
@@ -438,64 +558,50 @@ def parse_bool(s):
     return False
 
 
-def prepend_path(prepend_this, prependto_path):
-    """ os.path.join fails if prependto_path starts with '/'.
-        so I made my own. it's not as dynamic as os.path.join, but
-        it will work.
-        ex:
-            mypath = prepend_path("/view" , project.source_dir)
-    """
-
-    if prependto_path.startswith('/'):
-        spath = (prepend_this + prependto_path)
-    else:
-        spath = (prepend_this + '/' + prependto_path)
-    return spath.replace("//", '/')
-
-
-def remove_list_dupes(list_, max_allowed=1):
+def remove_list_dupes(lst, max_allowed=1):
     """ removes duplicates from a list object.
         default allowed duplicates is 1, you can allow more if needed.
         minimum allowed is 1. this is not a list deleter.
     """
+    if max_allowed <= 1:
+        try:
+            new = lst.__class__(set(lst))
+        except Exception as ex:
+            log.error(
+                'Incompatible type passed: {}\n{}'.format(lst.__class__, ex)
+            )
+        else:
+            return new
 
-    for item_ in [item_copy for item_copy in list_]:
-        while list_.count(item_) > max_allowed:
-            list_.remove(item_)
+    # Modify a copy, the original should remain untouched (even lists)
+    # Tuples have to be copied anyway.
+    copy = list(lst)
+    for item in lst:
+        while copy.count(item) > max_allowed:
+            copy.remove(item)
 
-    return list_
-
-
-def safe_arg(_url):
-    """ basically just trims the / from the POST args right now """
-
-    s = _url
-    if s.endswith('/'):
-        s = s[:-1]
-    if s.startswith('/'):
-        s = s[1:]
-    return s
+    return copy
 
 
-def slice_list(list_, starting_index=0, max_items=-1):
+def safe_arg(url):
+    """ basically just trims one / from the POST args right now """
+    s = url[:-1] if url.endswith('/') else url
+    return s[1:] if s.startswith('/') else s
+
+
+def slice_list(lst, start=0, max_items=-1):
     """ slice a list starting at: starting index.
         if max_items > 0 then only that length of items is returned.
         otherwise, all items are returned.
     """
-    if list_ is None:
+    if not lst:
         return []
-    if len(list_) == 0:
-        return []
-
-    sliced_ = list_[starting_index:]
-    if ((max_items > 0) and
-       (len(sliced_) > max_items)):
-        return sliced_[:max_items]
-    else:
-        return sliced_
+    if max_items > 0:
+        return lst[start: start + max_items]
+    return lst[start:]
 
 
-def trim_special(source_string):
+def trim_special(source):
     """ removes all html, and other code related special chars.
         so <tag> becomes tag, and javascript.code("write");
         becomes javascriptcodewrite.
@@ -505,10 +611,7 @@ def trim_special(source_string):
                 document.write("d");
             </script>
     """
-
-    special_chars = "<>/.'" + '"' + "#!;:&"
-    working_copy = source_string
-    for char_ in source_string:
-        if char_ in special_chars:
-            working_copy = working_copy.replace(char_, '')
-    return working_copy
+    if not source:
+        return source
+    special = '<>/.\'"#!;:\\&='
+    return ''.join((c for c in source if c not in special))

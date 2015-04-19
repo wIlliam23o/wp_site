@@ -1,15 +1,14 @@
 """ Welborn Productions - MiddleWare - Requests
     Handles requests coming in to welbornprod.
 """
-
-from os.path import isfile
+import logging
 import re
+from os.path import isfile
 
 from django.conf import settings
 from django.http import HttpResponse
 
-from wp_main.utilities.wp_logging import logger
-_log = logger('middleware.requests').log
+log = logging.getLogger('wp.middleware.requests')
 
 
 def get_remote_host(request):
@@ -20,7 +19,7 @@ def get_remote_host(request):
     try:
         host = request.META.get('REMOTE_HOST', None)
     except Exception as ex:
-        _log.error('Unable to get remote host:\n{}'.format(ex))
+        log.error('Unable to get remote host:\n{}'.format(ex))
         return None
     return host
 
@@ -38,7 +37,7 @@ def get_remote_ip(request):
         else:
             remote_addr = request.META.get('REMOTE_ADDR', None)
     except Exception as ex:
-        _log.error('Unable to retrieve remote ip:\n{}'.format(ex))
+        log.error('Unable to retrieve remote ip:\n{}'.format(ex))
         return None
 
     return remote_addr
@@ -52,7 +51,7 @@ class WpBanIpMiddleware(object):
         self.configraw = []
         # Compiled regex patterns (after successful file load/parse)
         self.banpatterns = []
-        self.log = logger('middleware.requests.wpbanip').log
+        self.log = logging.getLogger('wp.middleware.requests.wpbanip')
         if isfile(self.configfile):
             self.parse_config()
 

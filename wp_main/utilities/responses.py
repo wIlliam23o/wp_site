@@ -6,6 +6,7 @@
 
     -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
 '''
+import logging
 
 # Default dict for request args.
 from collections import defaultdict
@@ -19,14 +20,11 @@ from wp_main.utilities.utilities import (
     logtraceback
 )
 
-# Log
-from wp_main.utilities.wp_logging import logger
-_log = logger("utilities.responses").log
+log = logging.getLogger('wp.utilities.responses')
 # Template loading, and Contexts
 from django.contrib import messages
 from django.http import (
     HttpResponse,
-    HttpResponseForbidden,
     HttpResponseServerError,
     Http404)
 from django.template import RequestContext, Context, loader  # noqa
@@ -84,34 +82,34 @@ def basic_response(scontent='', *args, **kwargs):
     return HttpResponse(scontent, *args, **kwargs)
 
 
-def clean_response(template_name, context_dict, **kwargs):
+def clean_response(template_name, context, **kwargs):
     """ same as render_response, except does code cleanup (no comments, etc.)
         returns cleaned HttpResponse.
 
         Keyword Args:
             see htmltools.render_clean()...
     """
-    if context_dict is None:
-        context_dict = {}
+    if context is None:
+        context = {}
     # Check kwargs for a request obj, then check the context if it's not there.
-    request = kwargs.get('request', context_dict.get('request', None))
+    request = kwargs.get('request', context.get('request', None))
 
     # Add request to context if available.
     if request:
-        context_dict.update({'request': request})
+        context.update({'request': request})
         # Add server name, remote ip to context if not added already.
-        if not context_dict.get('server_name', False):
-            context_dict['server_name'] = get_server(request)
-        if not context_dict.get('remote_ip', False):
-            context_dict['remote_ip'] = get_remote_ip(request)
+        if not context.get('server_name', False):
+            context['server_name'] = get_server(request)
+        if not context.get('remote_ip', False):
+            context['remote_ip'] = get_remote_ip(request)
 
     # Add new context dict to kwargs for render_clean().
-    kwargs['context_dict'] = context_dict
+    kwargs['context'] = context
 
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception:
-        logtraceback(_log.error, message='Unable to render.')
+        logtraceback(log.error, message='Unable to render.')
         if request:
             # 500 page.
             return error500(request, msgs=('Error while building that page.',))
@@ -133,34 +131,34 @@ def clean_response(template_name, context_dict, **kwargs):
         return HttpResponse(rendered)
 
 
-def clean_response_req(template_name, context_dict, **kwargs):
+def clean_response_req(template_name, context, **kwargs):
     """ handles responses with RequestContext instead of Context,
         otherwise it's the same as clean_response
     """
 
-    if not context_dict:
-        context_dict = {}
+    if not context:
+        context = {}
     # Check kwargs for a request obj, then check the context if it's not there.
-    request = kwargs.get('request', context_dict.get('request', None))
+    request = kwargs.get('request', context.get('request', None))
     if request:
         # Add server name, remote ip to context if not added already.
-        if not context_dict.get('server_name', False):
-            context_dict['server_name'] = get_server(request)
-        if not context_dict.get('remote_ip', False):
-            context_dict['remote_ip'] = get_remote_ip(request)
+        if not context.get('server_name', False):
+            context['server_name'] = get_server(request)
+        if not context.get('remote_ip', False):
+            context['remote_ip'] = get_remote_ip(request)
         # Turn this into a request context.
-        context_dict = RequestContext(request, context_dict)
+        context = RequestContext(request, context)
     else:
-        _log.error('No request passed to clean_response_req!\n'
-                   'template: {}\n'.format(template_name) +
-                   'context: {}\n'.format(repr(context_dict)))
+        log.error('No request passed to clean_response_req!\n'
+                  'template: {}\n'.format(template_name) +
+                  'context: {}\n'.format(repr(context)))
 
-    kwargs['context_dict'] = context_dict
+    kwargs['context'] = context
 
     try:
         rendered = htmltools.render_clean(template_name, **kwargs)
     except Exception:
-        logtraceback(_log.error, message='Unable to render.')
+        logtraceback(log.error, message='Unable to render.')
         if request:
             # 500 page.
             return error500(request, msgs=('Error while building that page.',))
@@ -240,11 +238,11 @@ def error_response(request, errnum, msgs=None, user_error=None):
     templatefile = 'home/{}.html'.format(errnum)
     try:
         rendered = htmltools.render_clean(templatefile,
-                                          context_dict=context,
+                                          context=context,
                                           request=request)
     except Exception as ex:
         logmsg = 'Unable to render template: {}\n{}'.format(templatefile, ex)
-        _log.error(logmsg)
+        log.error(logmsg)
         # Send message manually.
         errmsgfmt = '<html><body>\n{}</body></html>'
         # Style each message.
@@ -465,7 +463,7 @@ def get_request_arg(request, arg_names, **kwargs):
                 # If an error isn't trigured, we converted successfully.
                 val = desiredval
         except Exception as ex:
-            _log.error('Unable to determine type from: {}\n{}'.format(val, ex))
+            log.error('Unable to determine type from: {}\n{}'.format(val, ex))
 
     # final return after processing,
     # will goto default value if val is empty.
@@ -509,8 +507,8 @@ def get_request_args(request, requesttype=None, default=None):
         try:
             reqargs = getattr(request, requesttype.upper())
         except Exception as ex:
-            _log.error('Invalid request arg type!: {}\n{}'.format(requesttype,
-                                                                  ex))
+            log.error('Invalid request arg type!: {}\n{}'.format(requesttype,
+                                                                 ex))
             return defaultargs
     else:
         # Default request type is REQUEST (both GET and POST)
@@ -521,7 +519,7 @@ def get_request_args(request, requesttype=None, default=None):
     return defaultargs
 
 
-def json_get(data):
+def json_get(data, suppress_errors=False):
     """ Retrieves a dict from json data string. """
 
     originaltype = type(data)
@@ -535,26 +533,28 @@ def json_get(data):
     try:
         datadict = json.loads(data)
     except TypeError as extype:
-        _log.debug('Wrong type passed in: {}\n{}'.format(originaltype, extype))
+        log.debug('Wrong type passed in: {}\n{}'.format(originaltype, extype))
     except ValueError as exval:
         # This happens when url-encoded data is sent in, but we try to get json
         # data first. Logging a 65 line file that has been urlencoded sucks.
         # It could be a real error, so instead of ignoring it
         # I am trimming the data to a smaller size, and logging that and the
-        # error.
-        sampledata = data[:64]
-        _log.debug(('Bad data passed in: '
-                    '(first {} chars) == {}\n{}').format(len(sampledata),
-                                                         sampledata,
-                                                         exval))
+        # error. This can be disabled completely by passing:
+        # suppress_errors=True, if you know beforehand that this might happen.
+        if not suppress_errors:
+            sampledata = data[:64]
+            log.debug((
+                'Bad data passed in:  (first {} chars) == {}\n{}'
+            ).format(len(sampledata), sampledata, exval))
+
     return datadict
 
 
-def json_get_request(request):
+def json_get_request(request, suppress_errors=False):
     """ retrieve JSON data from a request (uses json_get()). """
 
     if hasattr(request, 'body'):
-        return json_get(request.body)
+        return json_get(request.body, suppress_errors=suppress_errors)
     return None
 
 
@@ -573,7 +573,7 @@ def json_response(data):
 def json_response_err(ex, log=False):
     """ Respond with contents of error message using JSON. """
     if log:
-        _log.error('Sent JSON error:\n{}'.format(ex))
+        log.error('Sent JSON error:\n{}'.format(ex))
 
     if hasattr(ex, '__class__'):
         extyp = str(ex.__class__)
@@ -604,21 +604,21 @@ def redirect_response(redirect_to, status_code=302):
     return response
 
 
-def render_response(template_name, context_dict):
+def render_response(template_name, context):
     """ same as render_to_response,
         loads template, renders with context,
         returns HttpResponse.
     """
-    request = context_dict.get('request', None) if context_dict else None
+    request = context.get('request', None) if context else None
     try:
-        rendered = htmltools.render_clean(template_name, context_dict)
+        rendered = htmltools.render_clean(template_name, context)
         return HttpResponse(rendered)
     except:
         return alert_message(request,
                              'Sorry, there was an error loading this page.')
 
 
-class staff_required(object):
+class staff_required(object):  # noqa
 
     """ Decorator for views. Redirects straight to 403 if the user isn't staff.
         Allows you to pass in messages for the messages-framework.
@@ -645,7 +645,7 @@ class staff_required(object):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if not args[0].user.is_staff:
-                return responses.error403(
+                return error403(
                     args[0],
                     msgs=self.msgs,
                     user_error=self.user_error)
@@ -677,16 +677,16 @@ def wsgi_error(request, smessage):
     request.META['wsgi_errors'] = smessage
 
 
-def xml_response(template_name, context_dict=None):
-    """ loads sitemap.xml template, renders with context_dict,
+def xml_response(template_name, context=None):
+    """ loads sitemap.xml template, renders with context,
         returns HttpResponse with content_type='application/xml'.
     """
-    contextdict = context_dict or {}
+    contextdict = context or {}
     try:
         tmplate = loader.get_template(template_name)
-        context = Context(contextdict)
+        contextobj = Context(contextdict)
         clean_render = htmltools.remove_whitespace(
-            htmltools.remove_comments(tmplate.render(context)))
+            htmltools.remove_comments(tmplate.render(contextobj)))
         response = HttpResponse(clean_render, content_type='application/xml')
     except Exception as ex:
         errmsg = 'Error: {}'.format(ex)

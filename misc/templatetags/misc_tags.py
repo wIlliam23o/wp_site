@@ -6,10 +6,10 @@
 
 @author: Christopher Welborn
 '''
+import logging
 
 from django import template
 from django.utils.safestring import mark_safe
-from wp_main.utilities.wp_logging import logger
 from wp_main.utilities import htmltools
 
 from misc import tools as misctools
@@ -18,14 +18,21 @@ from misc.types import misctype_byname
 
 register = template.Library()
 
-_log = logger('misc_tags').log
+log = logging.getLogger('wp.misc_tags')
 
 
+@register.filter
 def is_viewable(miscobj):
     """ Whether or not a View File (locally) button should be used. """
     return misctype_byname(miscobj.filetype).viewable
 
 
+@register.filter
+def get_content(miscobj):
+    return mark_safe(misctools.get_long_desc(miscobj))
+
+
+@register.filter
 def get_screenshots(miscobj):
     """ Return screenshots code for this miscobj.
         (if any are available)
@@ -38,6 +45,7 @@ def get_screenshots(miscobj):
         return None
 
 
+@register.filter
 def get_warning(miscobj):
     """ Return any warning associated with this type. """
 
@@ -61,13 +69,15 @@ def get_warning(miscobj):
         return finalwarning[0] if finalwarning else ''
 
 
+@register.filter
 def has_html_content(miscobj):
-    nocontent = ((miscobj.contentfile == '') and
-                 (miscobj.contentfile == 'none') and
-                 (miscobj.content == ''))
+    nocontent = (
+        ((miscobj.contentfile == '') or (miscobj.contentfile == 'none')) and
+        (miscobj.content == ''))
     return not nocontent
 
 
+@register.filter
 def has_screenshots(miscobj):
     """ Returns True if this obj has a screenshots dir.
         Otherwise, False.
@@ -77,6 +87,7 @@ def has_screenshots(miscobj):
     return imagedir
 
 
+@register.filter
 def has_warning(miscobj):
     """ Determines whether this object needs a warning attached. """
 
@@ -85,49 +96,8 @@ def has_warning(miscobj):
     return (typewarning or langwarning)
 
 
-def load_html_content(miscobj):
-    return misctools.get_long_desc(miscobj)
-
-
+@register.filter
 def misctype_str(miscobj):
     """ Retrieves proper description for this Misc objects filetype. """
 
     return misctype_byname(miscobj.filetype).description
-
-
-def processed_content(miscobj):
-    """ Process a miscobjs content, highlights and all. """
-
-    content = load_html_content(miscobj)
-    if content:
-        return process_highlighting(content)
-    else:
-        return content
-
-
-def process_highlighting(htmlcontent):
-    """ Highlights all code/class=highlight python tags """
-
-    # Turn this into a html_content() object
-    # for easy access to helper functions
-    html_con = htmltools.html_content(htmlcontent)
-    html_con.highlight()
-    return mark_safe(html_con.tostring())
-
-
-# List of registered functions for use with templates
-registered = (get_screenshots,
-              get_warning,
-              has_screenshots,
-              has_warning,
-              has_html_content,
-              is_viewable,
-              load_html_content,
-              misctype_str,
-              processed_content,
-              process_highlighting,
-              )
-
-# Register them
-for registerfunc in registered:
-    register.filter(registerfunc.__name__, registerfunc)

@@ -44,6 +44,8 @@ Created on Nov 1, 2013
 @author: Christopher Welborn (cj@welbornprod.com)
 '''
 
+# TODO: Model this like the 'search' app. Any apps that are updateable
+#       will contain an 'update.py' module, with the required funcs/info.
 # Standard modules
 import os
 import sys
@@ -72,6 +74,7 @@ except ImportError as eximp:
 try:
     from projects.models import wp_project
     from blogger.models import wp_blog
+    from img.models import wp_image
     from misc.models import wp_misc
     from downloads.models import file_tracker
     from apps.paste.models import wp_paste, repr_header as paste_repr_header
@@ -88,21 +91,25 @@ except ImportError as eximp:
     sys.exit(1)
 
 # Helpers for filtering/gathering alias names for updateobject.py
-is_updatealias = lambda f: f.startswith('update') and (not 'updateobject' in f)
+is_updatealias = lambda s: s.startswith('update') and ('updateobj' not in s)
 # Helper for trimming .py from a filename (for aliases, and _SCRIPT)
-trim_pyext = lambda f: f[:-3] if f.endswith('.py') else f
+trim_ext = lambda s: os.path.splitext(s)[0]
 # Directory where the alias scripts for updateobject.py can be found.
 SCRIPTSDIR = django_init.scripts_dir
 
 try:
     # Grab all updateobject aliases (but not updateobject).
     raw_scripts = os.listdir(SCRIPTSDIR)
-    available_aliases = [trim_pyext(f) for f in raw_scripts if is_updatealias(f)]
+    available_aliases = [
+        trim_ext(f) for f in raw_scripts if is_updatealias(f)
+    ]
 except Exception as ex:
-    print('\nUnable to list available aliases, this may or may not work!\n{}'.format(ex))
+    print('\n'.join((
+        '\nUnable to list available aliases, this may or may not work!',
+        '{}'.format(ex))))
     available_aliases = None
 
-# Info used to decide which model we're working on based on what the script name is.
+# Info used to decide which model we're working on, based on the script name.
 modelinfo = {
     'project': {
         'name': 'Project',
@@ -113,6 +120,11 @@ modelinfo = {
         'name': 'Blog',
         'model': wp_blog,
         'attrs': ('title', 'slug'),
+    },
+    'image': {
+        'name': 'Image',
+        'model': wp_image,
+        'attrs': ('image_id', 'id', 'title', 'filename')
     },
     'misc': {
         'name': 'Misc',
@@ -135,10 +147,11 @@ modelinfo = {
 modelinfo['proj'] = modelinfo['project']
 modelinfo['post'] = modelinfo['blog']
 modelinfo['tracker'] = modelinfo['file']
+modelinfo['img'] = modelinfo['image']
 
 # Get the name that this script was called by
 # (used in determining which model we're going to be working with.)
-_SCRIPT = trim_pyext(os.path.split(sys.argv[0])[1])
+_SCRIPT = trim_ext(os.path.split(sys.argv[0])[1])
 
 # Determine which model we are working with.
 modelname = None
@@ -151,15 +164,18 @@ if not modelname:
           'It is meant to be called by one of its aliases:')
     if available_aliases:
         print('{}'.format(', '.join(available_aliases)))
-        print('\nFor example, you could type: {} --help\n'.format(available_aliases[0]))
+        print(
+            '\nFor example, you could type: {} --help\n'.format(
+                available_aliases[0]))
     else:
         print('Unable to locate aliases for updateobject.py!')
     sys.exit(1)
 
 modelused = modelinfo[modelname]
-# Script info changes a little depending on how its called (busybox-style I guess)
+# Script info changes a little depending on how its called (busybox-style
+# I guess)
 _NAME = 'Update{}'.format(modelused['name'])
-_VERSION = '1.1.0'
+_VERSION = '1.1.1'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 
 # Usage string to use with docopt.
@@ -176,6 +192,8 @@ def main(argd):
     """ main entry point, expects arg dict from docopt. """
     ret = 0
     # Args for simple object operations.
+    # TODO: Pass a single object with all the info needed, grabbed from
+    #       the app itself (maybe in an updater.py module)
     id_args = [argd['<identifier>'], modelused['model'], modelused['attrs']]
 
     # Function map for simple object operations.
@@ -272,6 +290,22 @@ def do_list_filetrackers():
     print('Found {} file trackers:'.format(str(len(files))))
     for f in files:
         print('    {}'.format(f.filename))
+    return 0
+
+
+def do_list_images():
+    """ List all images. """
+    try:
+        images = wp_image.objects.order_by('image_id')
+    except Exception as ex:
+        print('\nUnable to list images!\n{}'.format(ex))
+        return 1
+    print('Found {} images:'.format(len(images)))
+    for i in images:
+        print('    {} - {}\n      {}'.format(
+            str(i.image_id).ljust(5),
+            i.title,
+            i.filename))
     return 0
 
 
@@ -374,12 +408,14 @@ def print_pasteresult(iresult):
     print('{}{!r}'.format(indention, iresult.paste))
 
 # Set list handler for this model.
-listfuncs = {'Project': do_list_projects,
-             'Misc': do_list_misc,
-             'Blog': do_list_blogs,
-             'FileTracker': do_list_filetrackers,
-             'Paste': do_list_pastes,
-             }
+listfuncs = {
+    'Project': do_list_projects,
+    'Image': do_list_images,
+    'Misc': do_list_misc,
+    'Blog': do_list_blogs,
+    'FileTracker': do_list_filetrackers,
+    'Paste': do_list_pastes,
+}
 do_list = listfuncs[modelused['name']]
 
 # MAIN

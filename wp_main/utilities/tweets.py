@@ -8,6 +8,7 @@
            will ultimately return None if these things are not satisfied.
 """
 import json
+import logging
 import os
 import sys
 
@@ -18,53 +19,52 @@ available = True
 # Initialize django environment.
 try:
     from django.conf import settings
-    from wp_main.utilities.wp_logging import logger
-    _log = logger('utilities.tweets').log
+    log = logging.getLogger('wp.utilities.tweets')
 except ImportError:
-    class __log(object):
+    class Log(object):
 
         def error(self, s):
             print('Error: {}'.format(s))
-    _log = __log()
-    _log.error('Django could not be intialized or imported.')
+    log = Log()
+    log.error('Django could not be intialized or imported.')
     available = False
 
 try:
     from twython import Twython
 except ImportError as eximp:
-    _log.error('Cannot load Twython! Tweets will not be available.')
-    _log.error('Twython error was: {}'.format(eximp))
+    log.error('Cannot load Twython! Tweets will not be available.')
+    log.error('Twython error was: {}'.format(eximp))
     available = False
 
-APIKEYFILE = os.path.join(settings.BASE_DIR, 'secretapikeys.json')
-APIKEYS = {}
-if os.path.isfile(APIKEYFILE):
+SETTINGSFILE = os.path.join(settings.BASE_DIR, 'secret_settings.json')
+SETTINGS = {}
+if os.path.isfile(SETTINGSFILE):
     try:
-        with open(APIKEYFILE, 'r') as f:
+        with open(SETTINGSFILE, 'r') as f:
             try:
-                APIKEYS = json.loads(f.read())
+                SETTINGS = json.loads(f.read())
             except (ValueError) as exjson:
                 errmsgfmt = 'Error loading JSON from: {}\n{}'
-                _log.error(errmsgfmt.format(APIKEYFILE, exjson))
+                log.error(errmsgfmt.format(SETTINGSFILE, exjson))
                 available = False
     except EnvironmentError as exread:
         errmsgfmt = 'Error read api key file: {}\n{}'
-        _log.error(errmsgfmt.format(APIKEYFILE, exread))
+        log.error(errmsgfmt.format(SETTINGSFILE, exread))
         available = False
 else:
-    _log.error('No api key file found: {}'.format(APIKEYFILE))
+    log.error('No api key file found: {}'.format(SETTINGSFILE))
     available = False
 
-if not APIKEYS.get('twitter', {}).get('key', False):
-    _log.error('Missing api key: twitter.key!')
+if not SETTINGS.get('twitter', {}).get('key', False):
+    log.error('Missing api key: twitter.key!')
     available = False
-elif not APIKEYS.get('twitter', {}).get('secret', False):
-    _log.error('Missing api key: twitter.secret!')
+elif not SETTINGS.get('twitter', {}).get('secret', False):
+    log.error('Missing api key: twitter.secret!')
     available = False
 
 # Final warning.
 if not available:
-    _log.error('Tweets will not be available!')
+    log.error('Tweets will not be available!')
 # Give the user access to Twython() and the authorization tokens.
 twitter = None
 auth = None
@@ -73,25 +73,25 @@ auth = None
 def get_tweets(screen_name, count=1):
     """ Retrieve latest tweets for a specific screen name. """
     global twitter, auth
-    # Don't even bother if the APIKEYS, Django, and everything else is broke.
+    # Don't even bother if the SETTINGS, Django, and everything else is broke.
     if not available:
-        _log.error('Tweets are not available!')
+        log.error('Tweets are not available!')
         return None
 
-    twitterkeys = APIKEYS['twitter']
+    twitterkeys = SETTINGS['twitter']
     if twitter is None:
         try:
             twitter = Twython(twitterkeys['key'], twitterkeys['secret'])
             auth = twitter.get_authentication_tokens()
         except Exception as ex:
-            _log.error('Error authorizing with twitter:\n{}'.format(ex))
+            log.error('Error authorizing with twitter:\n{}'.format(ex))
             return {}
 
     try:
         t = twitter.get_user_timeline(screen_name=screen_name, count=count)
     except Exception as ex:
         errmsgfmt = 'Error getting {} tweets for {}:\n{}'
-        _log.error(errmsgfmt.format(count, screen_name, ex))
+        log.error(errmsgfmt.format(count, screen_name, ex))
         return {}
     return t
 

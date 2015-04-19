@@ -28,7 +28,7 @@
 
 <!-- Floating message -->
 {% block floater %}
-    <div id="floater" onclick='javascript: kill_message();'>
+    <div id="floater" onclick='javascript: wppaste.kill_message();'>
         <p id="floater-msg">
             Loading...
         </p>
@@ -70,7 +70,7 @@
                                 {{ reply.title|trim_reply_title }}
                             </div>
                             <div class='vertical-menu-reply-date'>
-                                {{ reply.publish_date|paste_time:"true" }}
+                                {{ reply.publish_date|get_time_since }}
                             </div>
                         </li>
                     </a>
@@ -135,11 +135,19 @@
                             {% if paste.publish_date %}
                                 <div class='paste-date-box' title='Publish date for this paste.'>
                                     <span class='paste-date'>
-                                        {{ paste.publish_date|paste_time }}
+                                        {{ paste.publish_date|get_time_since }}
                                     </span>
                                 </div>
                             {% endif %}
                         </div>
+                        <!-- Edit button for staff. -->
+                        {% if request.user.is_staff %}
+                            <a href='/adminpaste/wp_paste/{{ paste.id }}' title='Edit this paste.'>
+                                <div class='wpbutton paste-edit-button'>
+                                    <span>edit paste</span>
+                                </div>
+                            </a>
+                        {% endif %}
                     {% endif %}
                 </div>
                 {% if paste %}
@@ -210,7 +218,7 @@
                             </a>
                             <div class='paste-date-box'>
                                 <span class='paste-date'>
-                                    {{ replyto.publish_date|paste_time }}
+                                    {{ replyto.publish_date|get_time_since }}
                                 </span>
                             </div>
                         </div>
@@ -298,7 +306,7 @@
         <!-- Hidden paste-content. -->
         {# paste content is used if available, otherwise replyto content #}
         {# no line breaks/tabs, so no unwanted blanks are introduced. #}
-        <pre id='hidden-content' style='display: none;'>{% if paste.content %}{{ paste.content }}{% elif replyto.content %}{{ replyto.content }}{% endif %}</pre>
+        <pre id='encoded-content' style='display: none;'>{% if paste.content %}{{ paste.content|b64encode }}{% elif replyto.content %}{{ replyto.content|b64encode }}{% endif %}</pre>
     </div>
 
     <!-- Setup ace editor.. -->
@@ -307,7 +315,7 @@
         var doreadonly = {% if paste %}true{% else %}false{% endif %};
 
         {# setup basic settings for ace. #}
-        setup_ace(doreadonly);
+        wppaste.setup_ace(doreadonly);
 
 
         {# setup individual-paste-related settings. #}
@@ -324,8 +332,8 @@
 
         {% if paste.content or replyto.content %}
             {# ---- Load paste content.. ---- #}
-            var content = $('#hidden-content').text();
-            wp_content.getSession().setValue(content);
+            wppaste.load_paste_content();
+
         {% else %}
             {# Clear editor, This is a new paste. #}
             wp_content.getSession().setValue('');

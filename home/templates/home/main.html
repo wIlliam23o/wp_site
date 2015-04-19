@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load wp_tags %}
+{% load wp_nodes %}
 <html>
 <head>
 	<title>
@@ -12,6 +13,7 @@
 	</title>
 
 	<!-- Meta Info -->
+	<meta charset='utf-8'/>
 	{% block metainfo %}
 		{# This meta info should be overridden per-page by using the metainfo block. #}
 		{# It's only here as a backup, and only provides a very generic description. #}
@@ -62,25 +64,23 @@
 	{% if request|is_mobile %}
 		<style type='text/css'>
 			<!-- Fixes mobile view of menus -->
-			#dock { top: -32px; }
+			#dock { margin-top: 0px; }
 			a.dock-item { position: relative; float: left; margin-right: 30px; }
 			a.dock-item:hover { color: #9c9c9c; }
 			a.dock-item:active { color: #9c9c9c; }
 			.dock-item span { display: block; }
 
 			.vertical-menu { top: 200px; }
-			.menubar { margin-top: 0px; }
 
 		</style>
 	{% else %}
 		<noscript>
 			<style type='text/css'>
-				#dock { top: -32px; }
+				#dock { margin-top: 0px; }
 				a.dock-item { position: relative; float: left; margin-right: 30px; }
 				a.dock-item:hover { color: #9c9c9c; }
 				a.dock-item:active { color: #9c9c9c; }
 				.dock-item span { display: block; }
-
 			</style>
 		</noscript>
 	{% endif %}
@@ -116,24 +116,6 @@
 	{% block javascript %}
 	{% endblock %}
 
-	<!-- Google Analytics -->
-	<script type='text/javascript'>
-
-	  var _gaq = _gaq || [];
-	  _gaq.push(['_setAccount', 'UA-33573966-1']);
-	  _gaq.push(['_setDomainName', 'welbornprod.com']);
-	  _gaq.push(['_setAllowLinker', true]);
-	  _gaq.push(['_trackPageview']);
-
-	  (function() {
-	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-	  })();
-
-	</script>
-	<!-- End of Google Analytics -->
-
 	<!-- Extra Head (could be anything) -->
 	{% block extrahead %}
 	{% endblock %}
@@ -149,10 +131,10 @@
 
    	<!-- Debug box -->
 	{% block debug-box %}
-	   	{% if request|debug_allowed and request|is_test_site %}
+	   	{% if request|debug_allowed and request|is_test_site and request.user.is_staff %}
 	   		<!-- show/hide debug btn (top button) -->
 	   		<div class='debug-button' id='debug-button-top'>
-	   			<a href='#' onclick='javascript: wptool.toggle_debug();'>
+	   			<a href='#' onclick='javascript: wptools.toggle_debug();'>
 	   				<span class='debug-button-text'>
 	   					show debug
 	   				</span>
@@ -175,6 +157,35 @@
 	   	{% endif %}
 	{% endblock %}
 
+	{% if request|is_test_site and not request.user.is_staff %}
+		<!-- Build alert_message for test site. -->
+		<div id='alert-box' class='alert'>
+			<div id='alert-title'>
+		    	Permission Denied
+		    </div>
+		</div>
+	{% else %}
+	    <!-- Alert area built based on alert_content or alert_message. -->
+	    {% with default_alert_class="alert" %}
+			{% if alert_content %}
+				{# html-formatted block for alert-message #}
+				<div id='alert-box' class='{% if alert_class %}{{ alert_class }}{% else %}{{ default_alert_class }}{% endif %}'>
+					{% if alert_title %}
+						<div id='alert-title'>{{ alert_title|safe }}</div>
+					{% endif %}
+					{{ alert_content|safe }}
+				</div>
+			{% elif alert_message %}
+				{# single alert-message #}
+				<div id='alert-box' class='{% if alert_class %}{{ alert_class }}{% else %}{{ default_alert_class }}{% endif %}'>
+					{% if alert_title %}
+						<div id='alert-title'>{{ alert_title|safe }}</div>
+					{% endif %}
+					<span class='alert-message'>{{ alert_message|safe }}</span>
+				</div>
+			{% endif %}
+		{% endwith %}
+	{% endif %}
 	<!-- Whole Page Container (Background and everything inside) -->
 	<div id='bg-surround'>
 	    <div id='bg-pattern' class='main-pattern'>
@@ -185,30 +196,13 @@
 		{#{% if false %} {# <-- TESTING PURPOSES #}
 		{% if request|is_test_site and not request.user.is_staff %}
 		    <!-- Show no access msg for non-admins on test site. -->
-		    <div class='alert'>
-		    	<span class='alert-message'>
-		    		Permission Denied{% if request.user.username %}: {{ request.user.username }}{% endif %}
-		    	</span>
-		    </div>
-			<div id='page-surround' class='wp-block'>
+			<div id='page-surround'>
 				<div class='error-noaccess-message'>
 					Sorry, you do not have access to the test site.
 				</div>
 			</div>
 
 		{% else %}
-		    <!-- Alert area built based on alert_content or alert_message. -->
-			{% if alert_content %}
-				{# html-formatted block for alert-message #}
-				<div class='alert'>
-					{{ alert_content }}
-				</div>
-			{% elif alert_message %}
-				{# single alert-message #}
-				<div class='alert'>
-					<span class='alert-message'>{{ alert_message }}</span>
-				</div>
-			{% endif %}
 
 			<!-- Floating Box placeholder -->
 			{% block floater %}
@@ -229,50 +223,50 @@
 
 
 		        <!-- Navigation -->
-		        <div class='wp-block navigation'>
-		        	<div class='menubar'>
-						<div id='dock'>
-							<div class='dock-container' id='dock-box' style='left: 0px;'>
-									<a class='dock-item' id='dock-home' href='/'>
-										<span>Home</span>
-										<img src='/static/images/dock/wp-home.png' alt='home'/>
-									</a>
-									<a class='dock-item' id='dock-projects' href='/projects'>
-										<span>Projects</span>
-										<img src='/static/images/dock/wp-projects.png' alt='projects'/>
-									</a>
-									<a class='dock-item' id='dock-apps' href='/apps'>
-										<span>Apps</span>
-										<img src='/static/images/dock/wp-apps.png' alt='apps'/>
-									</a>
-									<a class='dock-item' id='dock-misc' href='/misc'>
-									    <span>Misc.</span>
-									    <img src='/static/images/dock/wp-misc.png' alt='misc'/>
-									</a>
-									<a class='dock-item' id='dock-paste' href='/paste'>
-										<span>Paste</span>
-										<img src='/static/images/dock/wp-paste.png' alt='paste'/>
-									</a>
-									<a class='dock-item' id='dock-blog' href='/blog'>
-										<span>Blog</span>
-										<img src='/static/images/dock/wp-blog.png' alt='blog'/>
-									</a>
-									<a class='dock-item' id='dock-about' href='/about'>
-										<span>About</span>
-										<img src='/static/images/dock/wp-about.png' alt='about'/>
-									</a>
-									<a class='dock-item' id='dock-search' href='/search'>
-										<span>Search</span>
-										<img src='/static/images/dock/wp-search.png' alt='search'/>
-									</a>
+		        <div id='dock'>
+					<div class='dock-container' id='dock-box'>
+						<a class='dock-item' id='dock-home' href='/'>
+							<span>Home</span>
+							<img src='/static/images/dock/wp-home.png' alt='home'/>
+						</a>
+						<a class='dock-item' id='dock-projects' href='/projects'>
+							<span>Projects</span>
+							<img src='/static/images/dock/wp-projects.png' alt='projects'/>
+						</a>
+						<a class='dock-item' id='dock-apps' href='/apps'>
+							<span>Apps</span>
+							<img src='/static/images/dock/wp-apps.png' alt='apps'/>
+						</a>
+						<a class='dock-item' id='dock-misc' href='/misc'>
+						    <span>Misc.</span>
+						    <img src='/static/images/dock/wp-misc.png' alt='misc'/>
+						</a>
+						<a class='dock-item' id='dock-paste' href='/paste'>
+							<span>Paste</span>
+							<img src='/static/images/dock/wp-paste.png' alt='paste'/>
+						</a>
+						<a class='dock-item' id='dock-img' href='/img'>
+							<span>Images</span>
+							<img src='/static/images/dock/wp-img.png' alt='images'/>
+						</a>
+						<a class='dock-item' id='dock-blog' href='/blog'>
+							<span>Blog</span>
+							<img src='/static/images/dock/wp-blog.png' alt='blog'/>
+						</a>
+						<a class='dock-item' id='dock-about' href='/about'>
+							<span>About</span>
+							<img src='/static/images/dock/wp-about.png' alt='about'/>
+						</a>
+						<a class='dock-item' id='dock-search' href='/search'>
+							<span>Search</span>
+							<img src='/static/images/dock/wp-search.png' alt='search'/>
+						</a>
+					</div>
+				</div>
 
-							</div>
-						</div>
-		        	</div>
-		        </div>
 
-				<!-- Page Surround -->
-		        <div id='page-surround' class='wp-block'>
+				<!-- Child page content -->
+		        <div id='page-surround'>
 					<!-- Above Page Content -->
 					{% block contentabove %}
 					{% endblock %}
@@ -325,18 +319,8 @@
 		{% endif %}
 
 		<!-- Google Ads -->
-		<div id='google-ads-bottom' class='wp-block google-ads'>
-			<script type='text/javascript'>//<!--
-				google_ad_client = 'ca-pub-0811371441457236';
-				/* Leaderboard - Grey */
-				google_ad_slot = '0116723433';
-				google_ad_width = 728;
-				google_ad_height = 90;
-				//-->
-			</script>
-			<script src='http://pagead2.googlesyndication.com/pagead/show_ads.js' type='text/javascript'></script>
+		{% ad_bottom %}
 
-		</div>
 		<div class='wp-block donations'>
 			<!-- Paypal donation form -->
 			<form action='https://www.paypal.com/cgi-bin/webscr' method='post' target='blank'>
@@ -369,15 +353,34 @@
 	<script type='text/javascript'>
 		$(document).ready( function () {
 			wptools.wpreveal('.wp-address');
-			<!-- fix iFisheyes weird dock positioning. -->
-			var dockbox = $('#dock-box');
-			if (dockbox.length) {
-				// Some error pages don't have the dock-box.
-				$('#dock-box').css({'left':'0px'});
-			}
 
+			{# Make alert messages clickable. #}
+			{% if alert_message or alert_content %}
+				var alertbox = $('#alert-box');
+				$(alertbox).slideDown();
+				$(alertbox).click(function () {
+					$('#alert-box').slideUp();
+				});
+				setTimeout(function () { $(alertbox).slideUp(); }, 5000);
+
+			{% elif request|is_test_site and not request.user.is_staff %}
+				var alertbox = $('#alert-box');
+				$(alertbox).slideDown();
+				$(alertbox).click(function () {
+					$('#alert-box').slideUp();
+				});
+			{% endif %}
+
+			{# Make all floaters destroyable #}
+			var floater = $('#floater');
+			if (floater.length) {
+				$(floater).click(function () { $(floater).fadeOut(); });
+			}
 		});
 	</script>
+
+	<!-- Google Tracking - Universal Analytics code -->
+	{% tracking_google %}
 
 	<!-- For inserting JS before closing BODY tag -->
 	{% block bodyend %}

@@ -2,31 +2,43 @@
 
 '''Welborn productions - Utilities - HtmlTools
     Provides html string manipulation, code injection/generation
-    
+
    -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
 '''
 
-
-# Files/Paths
+import logging
 import os.path
-from sys import version as sysversion
-# Global settings
-#from django.conf import settings
-
-# Regex for email hiding
-import re
 import base64
+import re
+from sys import version as sysversion
 
+# Fixing html fragments (from shortening blog posts and other stuff)
+from tidylib import tidy_fragment
+TIDYLIB_IGNORE = (
+    # These errors from tidylib will not be logged ever.
+    # They apply mostly to whole html docs, not fragments.
+    # Others are expected after splitting html content up into small chunks.
+
+    # Caused by splitting. '<div class="test">' -> '"test">'
+    '<div> unexpected or duplicate quote mark',
+    # Caused by splitting. '<div> attribute lacks value'
+    'lacks value',
+    # These don't apply to html fragments.
+    '<head> previously mentioned',
+    'inserting implicit <body>',
+    'inserting missing \'title\' element',
+    'missing <!DOCTYPE> declaration',
+    'plain text isn\'t allowed in <head> elements'
+)
 # Django template loaders
 from django.template import RequestContext, Context, loader
+from django.template.base import TemplateDoesNotExist
+from django.conf import settings
 
-# Basic utilities
-from wp_main.utilities import utilities
-# Code highlighting
-from wp_main.utilities import highlighter
-# Log
-from wp_main.utilities.wp_logging import logger
-_log = logger("utilities.htmltools").log
+# Basic utilities and highlighting
+from wp_main.utilities import (highlighter, utilities)
+
+log = logging.getLogger('wp.utilities.htmltools')
 
 # Fix for python 3 in strip_()
 if sysversion[0] == '3':
@@ -44,7 +56,7 @@ re_opening_incomplete = re.compile(r'[\074][\w "\'=\-]+')
 re_start_tag = re.compile(r'[\074]\w+')
 
 
-class html_content(object):
+class html_content(object):  # noqa
 
     """ class to hold html content, and perform various operations on it.
         set self.content on initialization, set(), set_if(content, True),
@@ -272,38 +284,6 @@ class html_content(object):
         """
 
         return check_replacement(self.content, target_replacement)
-
-    def inject_article_ad(self, target_replacement="{{ article_ad }}"):
-        """ basically does a text replacement,
-            see: htmltools.inject_article_ad()
-        """
-
-        self.content = inject_article_ad(self.content, target_replacement)
-        return self
-
-    def inject_screenshots(self, images_dir, **kwargs):
-        """ inject code for screenshots box.
-            see: htmltools.inject_screenshots()
-        """
-        self.content = inject_screenshots(self.content, images_dir, **kwargs)
-        return self
-
-    def inject_sourceview(self, project, **kwargs):
-        """ injects code for source viewing.
-            see: htmltools.inject_sourceview()
-        """
-        request = kwargs.get('request', None)
-        link_text = kwargs.get('link_text', None)
-        desc_text = kwargs.get('desc_text', None)
-        target_replacement = kwargs.get('target_replacement',
-                                        '{{ source_view }}')
-        self.content = inject_sourceview(project,
-                                         self.content,
-                                         request,
-                                         link_text,
-                                         desc_text,
-                                         target_replacement)
-        return self
 
     def remove_comments(self):
         """ splits source_string by newlines and
@@ -539,8 +519,8 @@ def auto_link_line(str_, link_list, **kwargs):
         if len(link_list[0]) < 2:
             return str_
     except Exception:
-        _log.error('Invalid input to auto_link()!, '
-                   'expecting a list/tuple of 2-tuple/lists')
+        log.error('Invalid input to auto_link()!, '
+                  'expecting a list/tuple of 2-tuple/lists')
         return str_
     # build attributes
 
@@ -580,8 +560,8 @@ def auto_link_line(str_, link_list, **kwargs):
                                     ])
                 str_ = str_.replace(link_text, new_link)
         except Exception as ex:
-            _log.error('Error in auto_link_line(): {}\n{}'.format(link_pat,
-                                                                  ex))
+            log.error('Error in auto_link_line(): {}\n{}'.format(link_pat,
+                                                                 ex))
             return str_
     return str_
 
@@ -618,13 +598,16 @@ def clean_html(source_string):
     """
 
     # these things have to be done in a certain order to work correctly.
-    # hide_email, fix p spaces, remove_comments,
-    # remove_whitespace, remove_newlines
+    # hide_email, highlight, remove_comments, remove_whitespace
     if source_string is None:
-        _log.debug('Final HTML for page was None!')
+        log.debug('Final HTML for page was None!')
         return ''
 
-    return remove_whitespace(remove_comments(hide_email(source_string)))
+    return remove_whitespace(
+        remove_comments(
+            highlight(
+                hide_email(
+                    source_string))))
 
 
 def fatal_error_page(message=None):
@@ -646,6 +629,23 @@ def fatal_error_page(message=None):
     if message is None:
         message = 'Something has gone horribly wrong with the site.'
     return '\n'.join(s).format(message)
+
+
+def filter_tidylib_errors(errortext):
+    """ Filters lines in tidylib output based on TIDYLIB_IGNORE.
+        Errors are only logged when DEBUG=True, but this will Help
+        filter errors we don't care about. Like 'implicit <body>' in
+        a small html fragment.
+    """
+    filtered = []
+    for line in errortext.split('\n'):
+        for ignored in TIDYLIB_IGNORE:
+            if ignored in line:
+                break
+        else:
+            # This line made it through.
+            filtered.append(line)
+    return '\n'.join(filtered).strip()
 
 
 def find_email_addresses(source_string):
@@ -696,105 +696,16 @@ def find_mailtos(source_string):
 
 
 def fix_open_tags(source):
-    """ scans string, or list of strings for
-        open <tags> without their </closing> tag.
-        adds the closing tags to the end (in order)
-        (ignores certain tags like <br> and <img>)
-
-        if you put a list in, you get a list back.
-        if you put a string in, you get a string back.
-
-    """
-    try:
-        if hasattr(source, 'encode'):
-            if '\n' in source:
-                source = source.split('\n')
-                joiner = '\n'
-            elif '<br>' in source:
-                source = source.split('<br>')
-                joiner = '<br>'
-            else:
-                # single line of text to scan.
-                source = [source]
-                joiner = ''
-
-        elif isinstance(source, (list, tuple)):
-            joiner = None
-        else:
-            raise ValueError('Unknown type passed: {}'.format(type(source)))
-    except Exception as ex:
-        # error splitting text?
-        _log.error('Error splitting text:\n{}'.format(ex))
+    """ Fixes missing tags in html fragments. """
+    if not source:
         return source
 
-    # keeps track of tags opened so far,
-    opening_tags = []
-    #incomplete_tags = []
-    # list to hold good and 'fixed' lines.
-    fixed_lines = []
-
-    def find_opening(closing):
-        if '/' in closing:
-            closing = closing.replace('/', '')
-        if closing.endswith('>'):
-            closing = closing[:-1]
-
-        for starts in opening_tags:
-            if closing in starts:
-                return starts
-        return False
-
-    for line in source:
-        opening = re_opening_complete.search(line)
-        incomplete = re_opening_incomplete.search(line)
-        closing = re_closing_complete.search(line)
-        closing_inc = re_closing_incomplete.search(line)
-
-        # Incomplete start tag (no '>')
-        if incomplete and not opening:
-            # try fixing the opening tag.
-            line = line.replace(incomplete.group(),
-                                '{}>'.format(incomplete.group()))
-            opening_tags.append(incomplete.group())
-        # Good tag
-        elif incomplete and opening:
-            # add to the list of known good tags.
-            opening_tagmatch = re_start_tag.search(opening.group())
-            if opening_tagmatch:
-                opening_tag = opening_tagmatch.group()
-                opening_tags.append(opening_tag)
-
-        # Incomplete closing tag (no '>')
-        if closing_inc and not closing:
-            # find it's start tag, and use it to build a 'fixed' end tag.
-            closestart = opening_tags[len(opening_tags) - 1].replace('<', '</')
-            expecting = '{}>'.format(closestart)
-            line = line.replace(closing_inc.group(), expecting)
-            tag_opening = find_opening(expecting)
-            if tag_opening:
-                opening_tags.remove(tag_opening)
-        # Good closing tag...
-        elif closing_inc and closing:
-            # remove it's start tag from the list.
-            has_start = find_opening(closing.group())
-            if has_start:
-                opening_tags.remove(has_start)
-
-        fixed_lines.append(line)
-
-    # Add left over tags (last open tag gets first closing tag.)...
-    ignore_tags = ('<img', '<br')
-
-    if len(opening_tags) > 0:
-        for i in range(len(opening_tags), 0, -1):
-            left_over = opening_tags[i - 1]
-            if not left_over in ignore_tags:
-                fixed_lines.append(left_over.replace('<', '</') + '>')
-
-    if joiner is None:
-        return fixed_lines
-    else:
-        return joiner.join(fixed_lines)
+    fixedhtml, errors = tidy_fragment(source)
+    if settings.DEBUG and errors:
+        errors = filter_tidylib_errors(errors)
+        if errors:
+            log.debug('Tidylib errors:\n{}'.format(errors))
+    return fixedhtml
 
 
 def fix_p_spaces(source_string):
@@ -838,8 +749,8 @@ def fix_p_spaces(source_string):
                     sline += '&nbsp;'
         # start of p tag? (the <p> line itself will not be processed.)
         if (strim.startswith('<p>') or
-           strim.startswith("<pid") or
-           strim.startswith("<pclass")):
+                strim.startswith("<pid") or
+                strim.startswith("<pclass")):
             inside_p = True
 
         # append line to list, modified or not.
@@ -859,12 +770,12 @@ def get_html_file(wpobj):
     elif hasattr(wpobj, 'contentfile'):
         htmlattr = 'contentfile'
     else:
-        _log.error('Object doesn\'t have a html file attribute!: '
-                   '{}'.format(wpobj.__name__))
+        log.error('Object doesn\'t have a html file attribute!: '
+                  '{}'.format(wpobj.__name__))
         return ''
     if not hasattr(wpobj, 'alias'):
-        _log.error('Object doesn\'t have an \'alias\' attribute!: '
-                   '{}'.format(wpobj.__name__))
+        log.error('Object doesn\'t have an \'alias\' attribute!: '
+                  '{}'.format(wpobj.__name__))
         return ''
     # Get objects html_url/contentfile
     obj_file = getattr(wpobj, htmlattr)
@@ -872,7 +783,7 @@ def get_html_file(wpobj):
         # use default location if no manual override is set.
         possiblefile = 'static/html/{}.html'.format(wpobj.alias)
         html_file = utilities.get_absolute_path(possiblefile)
-    elif obj_file.lower() == "none":
+    elif obj_file.lower() == 'none':
         # html files can be disabled by putting None in the
         # html_url/contentfile field.
         return ''
@@ -898,7 +809,7 @@ def get_screenshots(images_dir, noscript_image=None):
 
     """
     # accceptable image formats (last 4 chars)
-    formats = [".png", ".jpg", ".gif", ".bmp", "jpeg"]
+    formats = ['.png', '.jpg', '.gif', '.bmp', 'jpeg']
 
     # Make sure we are using the right dir.
     # get absolute path for images dir,
@@ -914,7 +825,7 @@ def get_screenshots(images_dir, noscript_image=None):
     try:
         all_files = os.listdir(images_dir)
     except Exception as ex:
-        _log.debug("Can't list dir: " + images_dir + '\n' + str(ex))
+        log.debug('Can\'t list dir: {}\n{}'.format(images_dir, ex))
         return None
 
     # Help functions for building screenshots.
@@ -932,10 +843,12 @@ def get_screenshots(images_dir, noscript_image=None):
         noscript_image = None
 
     # Render from template.
-    screenshots = render_clean("home/screenshots.html",
-                               context_dict={'images': good_pics,
-                                             'noscript_image': noscript_image,
-                                             })
+    screenshots = render_clean(
+        'home/imageviewer.html',
+        context={
+            'images': good_pics,
+            'noscript_image': noscript_image,
+        })
     return screenshots
 
 
@@ -946,11 +859,7 @@ def hide_email(source_string):
         (providing the email-harvest-bot doesn't decode Base64)
     """
 
-    if '\n' in source_string:
-        slines = source_string.split('\n')
-    else:
-        # single line
-        slines = [source_string]
+    slines = source_string.split('\n')
 
     # Fix py3 with base64.encodebytes(), encode/decode also added.
     # (until I remove py2 completely)
@@ -978,166 +887,66 @@ def hide_email(source_string):
     return '\n'.join(final_output)
 
 
-def inject_article_ad(source_string, target_replacement="{{ article_ad }}"):
-    """ basically does a text replacement,
-        replaces 'target_replacement' with the code for article ads.
-        returns finished html string.
-    """
-
-    # fail check.
-    target = check_replacement(source_string, target_replacement)
-    if target:
-        # at this moment article ad needs no Context.
-        article_ad = render_clean('home/articlead.html')
-        return source_string.replace(target, article_ad)
-
-    # target not found.
-    return source_string
+def highlight(content):
+    """ Uses the highlighter tools to syntax highlight everything. """
+    return highlighter.highlight_inline(
+        highlighter.highlight_codes(
+            content))
 
 
-def inject_screenshots(source_string, images_dir, **kwargs):
-    """ inject code for screenshots box.
-        walks image directory, grabbing images for the image rotator box.
-        uses screenshots.html template to display them.
-        Arguments:
-            source_string       : Original string containing the replacement
-                                  target.
-                                  like: '<body>{{ screenshots_code }}</body>'
-            images_dir          : Relative dir containing all the images.
-        Keyword Arguments:
-            target_replacement  : string to replace screenshot html with.
-                                  default: '{{ screenshots_code }}'
-            noscript_image      : Path to image to show for <noscript> tag.
-        examples:
-            s = inject_screenshots(s, "static/images/myapp")
-            s = inject_screenshots(s,
-                                   "images/myapp/",
-                                   noscript_image="sorry_no_javascript.png")
-            s = inject_screenshots(s,
-                                   "images/myapp",
-                                   "{{ screenshots }}",
-                                   "noscript.png")
-    """
-    # Grab kw args, set defaults.
-    target_replacement = kwargs.get('target_replacement',
-                                    '{{ screenshots_code }}')
-    noscript_image = kwargs.get('noscript_image', None)
-
-    # fail checks, make sure target exists in source_string
-    target = check_replacement(source_string, target_replacement)
-    if not target:
-        return source_string
-
-    screenshots = get_screenshots(images_dir, noscript_image=noscript_image)
-    if screenshots:
-        # Return fixed source_string with screenshots.
-        return source_string.replace(target, screenshots)
-    else:
-        # No screenshots found.
-        return source_string
-
-
-def inject_sourceview(project, source_string,
-                      request=None, link_text=None, desc_text=None,
-                      target_replacement="{{ source_view }}"):
-    """ injects code for source viewing.
-        needs wp_project (project) passed to gather info.
-        if target_replacement is not found, returns source_string.
-
-        uses sourceview.html template to display. the template handles
-        missing information.
-        returns rendered source_string.
-    """
-
-    # fail check.
-    target = check_replacement(source_string, target_replacement)
-    if not target:
-        return source_string
-
-    # has project info?
-    if project is None:
-        return source_string.replace(target, "")
-
-    # use source_file if no source_dir was set.
-    relativefile = utilities.get_relative_path(project.source_file)
-    relativedir = utilities.get_relative_path(project.source_dir)
-    relativepath = relativedir if relativedir else relativefile
-    # has good link?
-    if relativepath == "":
-        _log.debug("missing source file/dir for: " + project.name)
-
-    # get default filename to display in link.
-    if project.source_file:
-        file_name = utilities.get_filename(project.source_file)
-    else:
-        file_name = project.name
-
-    # get link text
-    if link_text is None:
-        link_text = file_name + " (local)"
-
-    sourceview = render_clean("home/sourceview.html",
-                              context_dict={'project': project,
-                                            'file_path': relativepath,
-                                            'link_text': link_text,
-                                            'desc_text': desc_text,
-                                            },
-                              request=request,
-                              )
-    return source_string.replace(target, sourceview)
-
-
-def load_html_file(sfile, request=None, context=None):
+def load_html_file(sfile, request=None, context=None, template=None):
     """ Trys loading a template by name,
         If context is passed it is used to render the template.
         If a request was passed then RequestContext is used,
         otherwise Context is used.
         If no template is found, it trys loading html content from file.
         returns string with html content.
+
+        This can all be short-circuited by passing in a pre-loaded template
+        with: template=load.get_template(templatename)
     """
 
-    # TODO: project pages and blogs don't need to use the old style
-    #       {{ inject_something }} tags. They need a new templatetag like:
-    #       {{ post|injectsomething }} or {{ project|sourceview }}.
-    # Template code is disabled until then.
-    # see: projects.tools.get_html_content()
+    if template is None:
+        try:
+            template = loader.get_template(sfile)
+        except TemplateDoesNotExist:
+            # It wasn't a template name.
+            log.debug('Not a template: {}'.format(sfile))
 
-    # try:
-    #    template = loader.get_template(sfile)
-    # except Exception:
-    #    template = None
-    #
-    # if template:
-    # Found template for this file, use it.
-    #    if context:
-    #        if request:
-    # Try creating a request context.
-    #            try:
-    #                contextobj = RequestContext(request, context)
-    #            except Exception as ex:
-    #                _log.error('Error creating request context from: '
-    #                           '{}\n{}'.format(request, ex))
-    #                return ''
-    #        else:
-    # No request, use normal context.
-    #            contextobj = Context(context)
-    #    else:
-    # No context dict given, use empty context.
-    #        contextobj = Context({})
-    #
-    # Have context, try rendering.
-    #    try:
-    #        content = template.render(contextobj)
-    # Good content, return it.
-    #        return content
-    #    except Exception as ex:
-    #        _log.error(''.join(['Error rendering template: {} '.format(sfile),
-    #                            'Context: {}'.format(context),
-    #                            '\n{}'.format(ex),
-    #                            ]))
-    #        return ''
+    if template:
+        # Found template for this file, use it.
+        if context:
+            if request:
+                # Try creating a request context.
+                try:
+                    contextobj = RequestContext(request, context)
+                except Exception as ex:
+                    log.error((
+                        'Error creating request context from: {}\n{}'
+                    ).format(request, ex))
+                    return ''
+            else:
+                # No request, use normal context.
+                contextobj = Context(context)
+        else:
+            # No context dict given, use empty context.
+            contextobj = Context({})
+
+        # Have context, try rendering.
+        try:
+            content = template.render(contextobj)
+            # Good content, return it.
+            return content
+        except Exception as ex:
+            log.error(''.join([
+                'Error rendering template: {} '.format(sfile),
+                'Context: {}'.format(context),
+                '\n{}'.format(ex),
+            ]))
+            return ''
 
     # no template, probably a filename. check it:
+    log.debug('No template, falling back to HTML: {}'.format(sfile))
     if not os.path.isfile(sfile):
         # try getting absolute path
         spath = utilities.get_absolute_path(sfile)
@@ -1145,26 +954,22 @@ def load_html_file(sfile, request=None, context=None):
             sfile = spath
         else:
             # no file found.
-            _log.debug('No file found at: {}'.format(sfile))
+            log.debug('No file found at: {}'.format(sfile))
             return ''
 
     try:
         with open(sfile) as fhtml:
             # Successful file open, return the contents.
             return fhtml.read()
-
     except IOError as exIO:
-        _log.error('Cannot open file: {}\n{}'.format(sfile, exIO))
-        return ''
-
+        log.error('Cannot open file: {}\n{}'.format(sfile, exIO))
     except OSError as exOS:
-        _log.error('Possible bad permissions opening file: {}'.format(sfile) +
-                   '{}'.format(exOS))
-        return ''
-
+        log.error((
+            'Possible bad permissions opening file: {}\n{}'
+        ).format(sfile, exOS))
     except Exception as ex:
-        _log.error('General error opening file: {}\n{}'.format(sfile, ex))
-        return ''
+        log.error('General error opening file: {}\n{}'.format(sfile, ex))
+    return ''
 
 
 def remove_comments(source_string):
@@ -1189,68 +994,53 @@ def remove_comments(source_string):
         return source_string
 
 
-def remove_newlines(source_string):
-    """ remove all newlines from a string
-        skips some tags, leaving them alone. like 'pre', so
-        formatting doesn't get messed up.
+def remove_newlines(source):
+    """ Remove all newlines from an html string.
+        Skips <pre> and <script> blocks.
+        DEPRECATED
     """
+    is_skipstart = lambda s: ('<pre' in s) or ('<script' in s)
+    is_skipend = lambda s: ('</pre>' in s) or ('</script>' in s)
+    newline = '{}\n'.format
+    noline = lambda s: s.replace('\n', '')
+    in_skip = False
+    output = []
+    for sline in source.split('\n'):
+        sline_lower = sline.lower()
+        # start of skipped tag
+        if is_skipstart(sline_lower):
+            in_skip = True
+        # Add with newline if its a skipped tag, otherwise no newlines.
+        output.append(newline(sline) if in_skip else noline(sline))
+        # end of skipped tag
+        if is_skipend(sline_lower):
+            in_skip = False
 
-    # removes newlines, except for in pre blocks.
-    if '\n' in source_string:
-        in_skipped = False
-        final_output = []
-        for sline in source_string.split('\n'):
-            sline_lower = sline.lower()
-            # start of pre tag
-            if (("<pre" in sline_lower) or
-               ("<script" in sline_lower)):
-                in_skipped = True
-            # process line.
-            if in_skipped:
-                # add original line.
-                final_output.append(sline + '\n')
-            else:
-                # add trimmed line.
-                final_output.append(sline.replace('\n', ''))
-            # end of tag
-            if (("</pre>" in sline_lower) or
-               ("</script>" in sline_lower)):
-                in_skipped = False
-    else:
-        final_output = [source_string]
-    return "".join(final_output)
+    return ''.join(output)
 
 
-def remove_whitespace(source_string):
-    """ removes leading and trailing whitespace from lines,
+def remove_whitespace(source):
+    """ Removes leading and trailing whitespace from lines,
         and removes blank lines.
         This ignores <pre> blocks, to keep <pre> formatting.
     """
-
-    slines = source_string.split('\n')
-
-    # start processing
-    in_skipped = False
-    final_output = []
-    for sline in slines:
-        sline_lower = sline.lower()
+    is_skipstart = lambda s: '<pre' in s
+    is_skipend = lambda s: '</pre>' in s
+    in_skip = False
+    output = []
+    for line in source.split('\n'):
+        line_lower = line.lower()
         # start of skipped tag
-        if "<pre" in sline_lower:
-            in_skipped = True
-        # process line.
-        if in_skipped:
-            # add original line.
-            final_output.append(sline)
-        else:
-            trimmed = sline.strip()
-            # no blanks.
-            if trimmed != '\n' and trimmed != '':
-                final_output.append(trimmed)
+        if is_skipstart(line_lower):
+            in_skip = True
+        trimmed = line if in_skip else line.strip()
+        if trimmed:
+            output.append(trimmed)
         # end of tag
-        if "</pre>" in sline_lower:
-            in_skipped = False
+        if is_skipend(line_lower):
+            in_skip = False
 
-    return '\n'.join(final_output)
+    return '\n'.join(output)
 
 
 def render_clean(template_name, **kwargs):
@@ -1258,7 +1048,7 @@ def render_clean(template_name, **kwargs):
         renders template by name and context dict,
         RequestContext is used if 'request' kwarg is present.
         Keyword Arguments (same as render_html()):
-              context_dict : dict to be used by Context() or RequestContext()
+              context      : dict to be used by Context() or RequestContext()
                    request : HttpRequest() object passed on to RequestContext()
                  link_list : link_list to be used with htmltools.auto_link()
                              Default: False
@@ -1276,9 +1066,9 @@ def render_html(template_name, **kwargs):
     """ renders template by name and context dict,
         returns the resulting html.
         Keyword arguments are:
-            context_dict : Context or RequestContext dict to be used
+            context      : Context or RequestContext dict to be used
                            RequestContext is used if a request is passed in
-                           with 'request' kwarg. 
+                           with 'request' kwarg.
                            Default: {}
                  request : HttpRequest object to pass on to RequestContext
                            Default: False (causes Context to be used)
@@ -1287,7 +1077,7 @@ def render_html(template_name, **kwargs):
                            see: htmltools.auto_link()
                            Default: False (disables auto_link())
           auto_link_args : dict containing arguments for auto_link()
-                           ex: 
+                           ex:
                            render_html("mytemplate",
                                        link_list=my_link_list,
                                        auto_link_args={"target":"_blank",
@@ -1295,23 +1085,23 @@ def render_html(template_name, **kwargs):
                                                        })
                            Default: {}
     """
-    context_dict = kwargs.get('context_dict', {})
+    context = kwargs.get('context', kwargs.get('context_dict', {}))
     request = kwargs.get('request', False)
     link_list = kwargs.get('link_list', False)
     auto_link_args = kwargs.get('auto_link_args', {})
 
     try:
         tmplate = loader.get_template(template_name)
-        if isinstance(context_dict, dict):
+        if isinstance(context, dict):
             if request:
-                context_ = RequestContext(request, context_dict)
+                contextobj = RequestContext(request, context)
             else:
-                context_ = Context(context_dict)
+                contextobj = Context(context)
         else:
             # whole Context was passed
-            context_ = context_dict
+            contextobj = context
 
-        rendered = tmplate.render(context_)
+        rendered = tmplate.render(contextobj)
         if link_list:
             rendered = auto_link(rendered, link_list, **auto_link_args)
         return rendered
@@ -1320,29 +1110,28 @@ def render_html(template_name, **kwargs):
         if request:
             errstr = '{} with request context'.format(errstr)
         message = '{}: {}'.format(errstr, template_name)
-        utilities.logtraceback(_log.error, message=message)
+        utilities.logtraceback(log.error, message=message)
 
         return None
 
 
 def strip_all(s, strip_chars):
-    """ runs s.strip() for every char in strip_chars.
-        if strip_chars is a list/tuple, then it strips
-        every character of every item in the list.
+    """ Strips all occurrences of strip_chars (str or list/tuple) from the
+        beginning and end of a string.
+        # Removes all x, y, and z characters from both ends.
+        strip_all('xzythisyxz', 'zyx') == 'this'
+
+        # The f and d are blocking the middle o's from being removed.
+        strip_all('omnfoodnmo', 'mno') == 'food'
     """
-
-    if s is None:
+    if not s:
         return s
-    if isinstance(strip_chars, (list, tuple)):
-        strip_chars = ''.join(strip_chars)
 
-    if isinstance(s, str):
-        strip_ = str.strip
-    elif isinstance(s, unicode):
-        strip_ = unicode.strip
-
-    for c in strip_chars:
-        s = strip_(s, c)
+    chars = tuple(strip_chars)
+    while s.startswith(chars):
+        s = s[1:]
+    while s.endswith(chars):
+        s = s[:-1]
     return s
 
 

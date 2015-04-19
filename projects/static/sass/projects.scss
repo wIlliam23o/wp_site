@@ -1,18 +1,18 @@
 @import 'welbornprod';
 /* Styles for projects listing/pages */
 
-/* Project Listings */ 
+/* Project Listings */
 .project-listing {
     text-align: center;
 }
 .project-container {
+    position: relative;
+    @include border-radius(5px);
+    @include box-shadow-medium();
     margin: 15px;
     padding: 10px;
     background-color: $whitedull;
-    border-radius: 5px;
-    box-shadow: $shadowmedium;
     text-align: left;
-
 }
 
 .project-header-box {
@@ -27,7 +27,7 @@
     color: $bluemain;
     text-transform: lowercase;
     }
-    
+
 .project-name {
     font-size: $fontmedium;
     text-shadow: $shadowtextsmall;
@@ -43,16 +43,13 @@
 }
 
 .project-desc {
+    @include border-radius-thick(10px);
     margin-top: 10px;
     padding: 5px;
-    border-radius: 10px;
-    border-color: $bordermain;
-    border-style: solid;
-    border-width: 2px;
 }
 
 .project-matches {
-    border-radius: 5px;
+    @include border-radius(5px);
 }
 .project-match {
     font-family: $fontsnormal;
@@ -72,19 +69,19 @@
 }
 
 .feature-list {
+    position: relative;
+    @include border-radius-thin(5px);
+    @include box-shadow-normal();
     padding-left: 40px;
     padding-right: 40px;
     padding-bottom: 10px;
     margin-top: 10px;
     margin: 15px;
-    position: relative;
-    border-radius: 5px;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-color: $bordermain;
-    border-style: solid;
-    border-width: 1px;
-    box-shadow: $shadownormal;
     background: white;
 }
 
+.project-edit-button {
+    position: absolute;
+    right: 10px;
+    top: 0px;
+}

@@ -4,6 +4,7 @@
     -Christopher Welborn 2014
 """
 
+import logging
 from datetime import datetime
 
 from django.views.decorators.csrf import (
@@ -12,7 +13,6 @@ from django.views.decorators.csrf import (
 from django.views.decorators.cache import never_cache
 
 from wp_main.utilities import responses
-from wp_main.utilities.wp_logging import logger
 from wp_main.utilities.utilities import (
     get_object, get_remote_ip, parse_bool
 )
@@ -23,7 +23,7 @@ from apps.models import wp_app
 
 
 # Log object for logging.
-_log = logger('apps.paste').log
+log = logging.getLogger('wp.apps.paste')
 # Maximum amount of replies to build a vertical menu with.
 REPLYMAX = 10
 # Maximum amount of pastes to show in simple listings.
@@ -54,8 +54,8 @@ def invalidate_submit(submitdata):
     try:
         elapsed = (datetime.now() - lastpaste.publish_date).total_seconds()
     except Exception as ex:
-        _log.error('Error getting elapsed paste-time for: '
-                   '{}\n{}'.format(lastpaste, ex))
+        log.error('Error getting elapsed paste-time for: '
+                  '{}\n{}'.format(lastpaste, ex))
         # Don't fault a possibly good user for our error.
         return None
 
@@ -85,9 +85,9 @@ def list_view(request, title=None, filterkw=None, orderby=None):
     if title is None:
         title = 'Pastes'
     # Default behaviour is to not show disabled/private pastes.
-    if not 'disabled' in filterkw.keys():
+    if 'disabled' not in filterkw.keys():
         filterkw['disabled'] = False
-    if not 'private' in filterkw.keys():
+    if 'private' not in filterkw.keys():
         filterkw['private'] = False
 
     try:
@@ -96,7 +96,7 @@ def list_view(request, title=None, filterkw=None, orderby=None):
             p = p.order_by(orderby)
     except Exception as ex:
         errmsg = 'Unable to retrieve pastes for: {}\n{}'
-        _log.error(errmsg.format(title, ex))
+        log.error(errmsg.format(title, ex))
         p = []
 
     if len(p) > LISTINGMAX:
@@ -176,7 +176,7 @@ def process_submit(submitdata, apisubmit=False):
             'parent': getattr(newpaste.parent, 'paste_id', None),
         }
     except Exception as ex:
-        _log.error('Error saving new paste:\n{}'.format(ex))
+        log.error('Error saving new paste:\n{}'.format(ex))
         return responses.json_response_err(ex)
 
     # Send JSON response back.
@@ -195,7 +195,7 @@ def submit_ajax(request):
         remoteip = get_remote_ip(request)
         if not remoteip:
             remoteip = '<Unknown IP>'
-        _log.error('Received non-ajax request from: {}'.format(remoteip))
+        log.error('Received non-ajax request from: {}'.format(remoteip))
         errormsgs = ['Invalid request.']
         usermsg = ''.join((
             'Try entering a valid url, or using the forms/buttons provided.',
@@ -224,7 +224,7 @@ def submit_public(request):
     """
 
     # Get the request args for this submit.
-    submitdata = responses.json_get_request(request)
+    submitdata = responses.json_get_request(request, suppress_errors=True)
     # Try using GET/POST..
     if not submitdata:
         submitdata = responses.get_request_args(request)
@@ -244,8 +244,8 @@ def submit_public(request):
     invalidsubmit = invalidate_submit(submitdata)
     if invalidsubmit:
         # User is not allowed to paste again right now.
-        _log.debug('User paste invalidated: '
-                   '{} - {}'.format(submitdata['author_ip'], invalidsubmit))
+        log.debug('User paste invalidated: '
+                  '{} - {}'.format(submitdata['author_ip'], invalidsubmit))
         err = ValueError(invalidsubmit)
         return responses.json_response_err(err)
 
@@ -424,13 +424,13 @@ def view_paste(request):
 
     if pasteidarg is not None:
         # Check for id aliases.
-        IDALIAS = {
+        id_alias = {
             'top': view_top,
             'latest': view_latest,
             'all': view_latest
         }
-        if pasteidarg in IDALIAS.keys():
-            return IDALIAS[pasteidarg](request)
+        if pasteidarg in id_alias.keys():
+            return id_alias[pasteidarg](request)
 
         # Lookup existing paste by id.
         pasteobj = get_object(wp_paste.objects,
@@ -498,7 +498,7 @@ def view_paste_raw(request):
     except wp_paste.DoesNotExist:
         return responses.error404(request, 'Paste not found.')
     except Exception as ex:
-        _log.error('Error retrieving paste: {}\n{}'.format(pasteidarg, ex))
+        log.error('Error retrieving paste: {}\n{}'.format(pasteidarg, ex))
         return responses.error404(request, 'Paste not found.')
 
     if pasteobj is None:
@@ -508,11 +508,11 @@ def view_paste_raw(request):
         pasteobj.view_count += 1
         pasteobj.save()
     except Exception as ex:
-        _log.error('Unable to update view_count!\n{}'.format(ex))
+        log.error('Unable to update view_count!\n{}'.format(ex))
     try:
         content = pasteobj.content
     except Exception as ex:
-        _log.error('paste.content is not available!\n{}'.format(ex))
+        log.error('paste.content is not available!\n{}'.format(ex))
         return responses.error404(request, 'Paste content not found.')
 
     # Valid paste, return the plain content.

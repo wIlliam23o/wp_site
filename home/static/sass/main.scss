@@ -23,7 +23,7 @@ html {
 }
 
 body {
-    min-width: 960px;
+    min-width: 650px; // original: 960px (playing with responsive design)
     background-color: black;
     background-repeat:no-repeat;
     background-attachment:fixed;
@@ -34,18 +34,12 @@ body {
     color: $greydark;
     }
 
-body.component-body {
-    min-width: 320px;
-    }
-
 a {
     color: $bluelink;
     font-weight: normal;
     text-decoration: none;
-    transition: color 0.2s ease-out;
-    -webkit-transition: color 0.2s ease-out;
-    -moz-transition: color 0.2s ease-out;
-    }
+    @include transition((color 0.2s ease-out, color 0.2s ease-in));
+}
 a:hover { color: $greymain;}
 a:-webkite-any-link {
     text-decoration: none;
@@ -124,6 +118,10 @@ p {
     margin-bottom: 10px;
 }
 
+.clearfix {
+    display: block;
+}
+
 .paragraph {
     // Putting a div inside a p breaks some of the highlight-code formatting.
     // The fix is using a div, so the formatted div will flow correctly.
@@ -135,6 +133,23 @@ p {
 
 ul {list-style-image: none;}
 ul.menu {padding-left: 0;}
+
+kbd {
+    // Keyboard key element
+    display: inline-block;
+    @include box-shadow((0 1px 0 rgba(0,0,0,0.2), 0 0 0 2px #fff inset));
+    @include border-radius(3px);
+    border: 1px solid #ccc;
+    text-shadow: 0 1px 0 #fff;
+    font-family: $fontsmono;
+    font-size: $fontsmall;
+    background-color: #f7f7f7;
+    color: #333;
+    line-height: 1em;
+    padding: .3em .6em;
+    margin: .1em .2em;
+    white-space: nowrap;
+}
 
 /* Cj's Text Styles */
 .header {
@@ -178,18 +193,13 @@ a .header:hover, a .header.featured-name:hover {
     margin-bottom: 5px;
 }
 .viewer-download-box {
-    background: white;
-    border-radius: 5px;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
+    display: inline-block;
+    @include border-radius-thick(5px);
+    background: $whitedull;
     margin-left: 5px;
     margin-bottom: 5px;
     padding-left: 3px;
     padding-right: 3px;
-    border-style: solid;
-    border-color: $bordermain;
-    border-width: 2px;
-    display: inline-block;
     text-align: center;
 }
 .viewer-download-box:hover {
@@ -233,6 +243,7 @@ a .header:hover, a .header.featured-name:hover {
     }
 
 .wp-block {
+    // A generic div with a border radius and margin-top.
     position: relative;
     margin: 15px 0;
     @include border-radius(5px);
@@ -243,7 +254,7 @@ a .header:hover, a .header.featured-name:hover {
     margin-bottom: 10px;
     background-color: $whitedull;
     @include border-radius(5px);
-    box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.17);
+    @include box-shadow-normal();
     }
 .bottom {
     background-color: $blackmain;
@@ -259,27 +270,36 @@ a .header:hover, a .header.featured-name:hover {
     }
 
 #page-surround {
+    position: relative;
+    @include border-radius(5px);
+    @include box-shadow-big();
     background-color: $greysurround;
     padding: 10px;
-    position: relative;
     overflow: hidden;
-    @include border-radius(5px);
-    box-shadow: $shadowbig;
+    margin-top: 15px;
     margin-bottom: 20px;
-    min-height: 240px; /* helps with short pages that have a vertical menu */
+    min-height: 240px; // helps with short pages that have a vertical menu
     }
 
+@media (max-width: 800px) {
+    // Push the surround to the right a bit when space is squeezed.
+    #page-surround {
+        margin-left: 20px;
+    }
+}
+
 .title-box {
+    // fancy swoosh-loooking borders.
     border-bottom-style: solid;
     border-bottom-width: 2px;
-    border-bottom-color: $borderlight;
+    border-bottom-color: $bordermain;
     @include border-radius(15px);
     border-left-style: solid;
     border-left-width: 2px;
-    border-left-color: $borderlight;
+    border-left-color: $bordermain;
     border-right-style: solid;
     border-right-width: 2px;
-    border-right-color: $borderlight;
+    border-right-color: $bordermain;
     margin-bottom: 10px;
 
 }
@@ -289,19 +309,16 @@ a .header:hover, a .header.featured-name:hover {
 }
 
 .comments-box {
-    background: white;
+    background: $whitedull;
     padding: 5px;
     @include border-radius(5px);
-    @include box-shadow(4px 4px 5px rgba(0, 0, 0, 0.13));
+    @include box-shadow-normal();
 }
 
 .img-rounded {
-    border-style: solid;
-    border-width: 1px;
-    border-color: $bordermain;
-    @include border-radius(5px);
+    @include border-radius-thin(5px);
     padding: 5px;
-    background: $whitemain;
+    background: $whitedull;
     height: auto;
     width: auto;
 }
@@ -309,23 +326,26 @@ a .header:hover, a .header.featured-name:hover {
 /* Floating message */
 #floater {
     position: fixed;
+    display: none;
+    @include border-radius-thick(10px);
+    @include box-shadow-floater();
     width: 45%;
     height: auto;
     font-size: $fontnormal;
     text-align: center;
     color: $greydark;
     background: white;
-    border: 2px solid $bordermain;
-    @include border-radius(10px);
-    z-index: 99999;
-    display: none;
-    @include box-shadow(6px 6px 7px rgba(0, 0, 0, 0.52));
-    /* top: 20px; */
+    z-index: 30;
 }
 
 #floater-msg {
     font-family: $fontssmall;
     font-weight: normal;
+    &.floater-msg-error {
+        color: $redmain;
+        font-size: $fontbigger;
+        text-shadow: $shadowtextmedium;
+    }
 }
 
 #floater-smalltext {
@@ -342,10 +362,7 @@ a .header:hover, a .header.featured-name:hover {
     margin-top: 20px;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    @include border-radius(5px);
-    border-width: 1px;
-    border-style: solid;
-    border-color: $bordermain;
+    @include border-radius-thin(5px);
     text-align: left;
 }
 
@@ -362,12 +379,9 @@ a .header:hover, a .header.featured-name:hover {
 }
 
 a.jumpto-nav {
-    @include border-radius(5px);
-    border-style: solid;
-    border-color: $borderlight;
+    @include border-radius-thin(5px);
     border-bottom-color: $bluemain;
     border-right-color: $bluemain;
-    border-width: 1px;
     margin-left: 3px;
     margin-right: 3px;
     padding-left: 3px;
@@ -378,14 +392,11 @@ a.jumpto-nav {
    (use @extend .wpbutton; to modify css properties for new button styles)
 */
 .wpbutton {
+    display: inline;
+    @include border-radius-thin-color(5px, $borderblue);
     margin-top: 10px;
-    border-style: solid;
-    @include border-radius(5px);
-    border-width: 1px;
-    border-color: $borderblue;
     padding-left: 2px;
     padding-right: 2px;
-    display: inline;
     // Text styles...
     font-size: $fontsmall;
     font-weight: bold;
@@ -415,7 +426,8 @@ a.jumpto-nav {
 
 .comments-button {
     @extend .wpbutton;
-    margin-left: 20px;
+    display: inline-block;
+    margin-top: 5px;
 }
 
 .continued {
@@ -424,12 +436,7 @@ a.jumpto-nav {
     color: $greymain;
 }
 
-/* In-Article Ads */
-.article-ad {
-    text-align: center;
-    margin-bottom: 10px;
-    margin-top: 10px;
-}
+
 
 
 /* Navigation */
@@ -469,10 +476,7 @@ a.jumpto-nav {
 /* Projects Vertical Menu */
 .vertical-menu {
     position: absolute;
-    /* trying out a fixed menu, doesn't really fit.
-    position: fixed;
-    z-index: 999;
-    */
+    z-index: 1;
     left: 5px;
     top: 220px;
     background: transparent;
@@ -489,7 +493,7 @@ a.jumpto-nav {
     background: transparent;
     padding: 5px;
     list-style: none;
-    list-image-style: none;
+    list-style-image: none;
 
 }
 
@@ -505,7 +509,7 @@ a.jumpto-nav {
     padding-right: 6px;
     border-right-style: none;
     border-left-style: none;
-    @include box-shadow(4px 4px 5px black);
+    @include box-shadow(4px 4px 5px #000000);
 
     &:active {
         border-color: $borderblue;
@@ -589,7 +593,7 @@ a.jumpto-nav {
     display: block;
     margin: -8px 0 0 -20px;
     position: relative;
-    z-index: 1000;
+    z-index: 2;
     }
 
 /* Copyright */
@@ -609,12 +613,22 @@ a.jumpto-nav {
     text-align: left;
     color: $greymain;
     }
-
 /* Google Ads */
-.google-ads {
+.ad-google {
     display: block;
     text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
+
+.ad-article {
+    @extend .ad-google;
+}
+
+.ad-bottom {
+    @extend .ad-google;
+}
+
 /* Donations */
 .donations {
     position: relative;
@@ -654,12 +668,11 @@ a.jumpto-nav {
 /* Form Styles */
 .submit-button {
     display: inline-block;
-    background: white;
+    @include border-radius-thin(5px);
+    background: $whitemain;
     color: $bluemain;
     font-family: $fontsnormal;
     font-weight: bold;
-    border: 1px solid $bordermain;
-    @include border-radius(5px);
     padding: 2px;
 
     &:hover {
@@ -673,14 +686,17 @@ a.jumpto-nav {
 }
 
 .input-text, .input-textbox {
-    background: white;
+    @include border-radius-thin(5px);
+    background: $whitemain;
     color: $greymain;
     font-family: $fontssmall;
-    border-color: $borderlight;
-    @include border-radius(5px);
-    border-width: 1px;
     width: 200px;
     padding-left: 5px;
+}
+
+.input-checkbox {
+    @extend .input-text;
+    width: auto;
 }
 
 /* Inset Styles */
@@ -744,39 +760,86 @@ ul.circle.black li:after, ul.checkmark.black li:after {border-color: #000;}
 ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
 /* List items with description text */
 .listdesc {
-    font-size: .85em;
-    @include border-radius(5px);
-    border-color: $bordermain;
-    border-width: 1px;
-    border-style: solid;
+    display: block;
+    position: relative;
+    @include border-radius-thin(5px);
+    font-size: $fontsmall;
     padding: 5px;
     padding-left: 20px;
     margin-left: 30px;
-    //margin-top: -7px;
     margin-bottom: 10px;
-    display: block;
-    position: relative;
 }
-/* Notice/System Styles */
-.approved, .attention, .alert, .notice {padding: 10px 10px 10px 45px;border-radius: 5px;font-weight: bold;background-position: 10px 50%;background-repeat: no-repeat;}
-#system-message dd ul {border-radius: 6px;background-repeat: no-repeat;background-position: 10px 50%;}
-.approved a, .attention a, .alert a, .notice a {color: #000 !important;text-decoration: underline;}
-.approved a:hover, .attention a:hover, .alert a:hover, .notice a:hover {color: #fff !important;text-shadow: none;}
-.approved {background-color: #74924A;background-image: url(/static/images/typography/dark/approved.png);color: #232F12;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}
-.attention, #system-message dd.notice ul {background-color: #D69839; background-image: url(/static/images/typography/dark/attention.png);color: #5A3800;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}
-.alert, #system-message dd.error ul {background-color: #BD5151; background-image: url(/static/images/typography/dark/alert.png);color: #4C1818;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}
-.notice, #system-message dd ul {background-color: #488AAD; background-image: url(/static/images/typography/dark/notice.png);color: #133548;text-shadow: 1px 1px 1px rgba(255,255,255,0.3);border-top: 1px solid rgba(255,255,255,0.3);}
+
+// ---------- Alert / System Notice Styles -------------------
+#alert-box {
+    // Main box containing alert/notice/attention/approved.
+    display: none;
+    opacity: 0.85;
+    z-index: 21;
+}
+
+#alert-title dd ul {
+    @include border-radius(6px);
+    background-repeat: no-repeat;
+    background-position: 10px 50%;
+}
 
 .alert-message {
+    display: inline-block;
     font-weight: bold;
 }
 
+.approved, .attention, .alert, .notice, .error {
+    padding: 10px 10px 10px 45px;
+    @include border-radius(5px);
+    font-weight: bold;
+    background-position: 10px 50%;
+    background-repeat: no-repeat;
+}
+
+.approved a, .attention a, .alert a, .notice a, .error a {
+    color: #000 !important;
+    //text-decoration: underline;
+}
+.approved a:hover, .attention a:hover, .alert a:hover, .notice a:hover, .error a:hover {
+    color: #6F2D2D !important;
+    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+}
+.approved {
+    background-color: #74924A;
+    background-image: url(/static/images/typography/dark/approved.png);
+    color: #232F12;
+    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(255,255,255,0.3);
+}
+.attention, #alert-title dd.notice ul {
+    background-color: #D69839;
+    background-image: url(/static/images/typography/dark/attention.png);
+    color: #5A3800;
+    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(255,255,255,0.3);
+}
+.alert, .error, #alert-title dd.error ul {
+    background-color: #BD5151;
+    background-image: url(/static/images/typography/dark/alert.png);
+    color: #4C1818;
+    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(255,255,255,0.3);
+}
+.notice,  #alert-title dd ul {
+    background-color: #488AAD;
+    background-image: url(/static/images/typography/dark/notice.png);
+    color: #133548;
+    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+    border-top: 1px solid rgba(255,255,255,0.3);
+}
+
+
 /* Code wrap. Border with blueish text. (use pre for indention) */
 .codewrap,.sampwrap {
-    margin: 2px;
     display: inline-block;
-    border: 1px solid $bordercode;
-    @include border-radius(3px);
+    @include border-radius-thin-color(3px, $bordercode);
+    margin: 2px;
     padding: 2px;
     color: $greydark;
     font-family: $fontsmono;
@@ -793,22 +856,16 @@ code, samp {
 .cmdhelp-box {
     position: relative;
     display: block;
+    @include border-radius-thin-color(5px, $bordercode);
     font-family: $fontsmono;
     font-size: $fontsmall;
-    border-style: solid;
-    border-color: $bordercode;
-    @include border-radius(5px);
-    border-width: 1px;
     padding: 5px;
 }
 
 .cmditem {
     display: block;
+    @include border-radius-thin-color(5px, $bordercode);
     margin-bottom: 5px;
-    border-style: solid;
-    border-color: $bordercode;
-    border-width: 1px;
-    @include border-radius(5px);
     padding: 2px;
 
 }
@@ -825,9 +882,6 @@ code, samp {
     color: $greymain;
     font-size: 0.9em;
 }
-
-// Apply main border color to any element.
-.bordermain { border-color: $bordermain; }
 
 // apply monospace font to any element.
 .mono { font-family: $fontsmono; }
@@ -847,12 +901,9 @@ code, samp {
 }
 
 .error-box {
-    @include border-radius(5px);
+    @include border-radius-thick(5px);
     background: $whitedull;
     height: 300px;
-    border-style: solid;
-    border-width: 2px;
-    border-color: $bordermain;
     padding: 5px;
     text-align: center;
 }
@@ -905,7 +956,6 @@ code, samp {
 .debug-box {
     // Small debug box for every page is displayed with javascript.
     display: none;
-
     position: relative;
     background-color: $whitedull;
     padding-top: 5px;
@@ -918,23 +968,49 @@ code, samp {
 
 }
 
+.debug-info-box {
+    // Wrapper for pieces of debugging info.
+    // .debug-info-box
+    //     .debug-info-item
+    //        .debug-info-label
+    //        .debug-info-value
+    display: block;
+    @include border-radius-thick(5px);
+    margin-top: 10px;
+    padding: 5px;
+    background: $whitedull;
+    font-size: $fontnormal;
+    font-family: $fontsmono;
+}
+
+.debug-info-item {
+    // Wrapper for a single piece of debugging info.
+    display: block;
+    padding-left: 20px;
+}
+.debug-info-label {
+    font-weight: normal;
+    font-size: $fontsmall;
+    display: inline-block;
+}
+
+.debug-info-value {
+    font-weight: bold;
+    font-size: $fontsmall;
+    display: inline-block;
+}
+
 .debug-page-box {
     // Entire debug info is layed out.
     position: relative;
+    @include border-radius-thick(5px);
     background-color: $whitedull;
-    @include border-radius(5px);
-    border-width: 2px;
-    border-style: solid;
-    border-color: $borderlight;
     padding: 5px;
     overflow-x: scroll;
 }
 
 .debug-button {
-    @include border-radius(5px);
-    border-style: solid;
-    border-width: 2px;
-    border-color: $bordermain;
+    @include border-radius-thick(5px);
     padding-left: 2px;
     padding-right: 2px;
     background: white;
@@ -942,7 +1018,7 @@ code, samp {
     text-align: center;
     position: absolute;
     right: 0px;
-    z-index: 1000;
+    z-index: 3;
 }
 
 #debug-button-top {
@@ -959,17 +1035,14 @@ code, samp {
 /* Login Box Styles */
 .login-box {
     position: absolute;
+    display: none;
     top: 100px;
-    right: 33%; /* positioned by wpTools.js */
-    z-index: 99999;
-    @include border-radius(5px);
-    border-style: solid;
-    border-width: 1px;
-    border-color: $bordermain;
-    background: $whitemain;
+    right: 33%; /* positioned by wptools.js */
+    z-index: 4;
+    @include border-radius-thin(5px);
+    background: $whitedull;
     color: $blackmain;
     padding: 10px;
-    display: none;
 }
 
 .login-label {
@@ -981,26 +1054,11 @@ code, samp {
     display: block;
 }
 
-/* Stats page */
-.stats-block {
-    display: block;
-
-}
-
-.stats-lines {
-    background: white;
-    font-family: $fontsmono;
-    padding: 20px;
-    border-radius: 5px;
-}
 
 /* Test-site only stuff */
 #test-site-box {
+    @include border-radius-thick-color(15px, $borderred);
     text-align: center;
-    border-style: solid;
-    border-color: $borderred;
-    border-width: 2px;
-    @include border-radius(15px);
     margin-bottom: 20px;
 }
 
@@ -1025,7 +1083,7 @@ code, samp {
     left: 20%;
     padding: 5px 15px;
     position: absolute;
-    z-index: 98;
+    z-index: 4;
     width: 220px;
 }
 
@@ -1037,7 +1095,7 @@ code, samp {
     content: "";
     left: 50%;
     position: absolute;
-    z-index: 99;
+    z-index: 4;
 }
 
 
@@ -1054,18 +1112,11 @@ code, samp {
 /* Video related styles (video titles, video descriptions) */
 .video-box {
     padding: 10px;
-    //@include border-radius(5px);
-    //border-color: $bordermain;
-    //border-width: 1px;
-    //border-style: solid;
 }
 
 .video-info {
     // Container for both video-title and video-desc.
-    @include border-radius(5px);
-    border-color: $bordermain;
-    border-width: 1px;
-    border-style: solid;
+    @include border-radius-thin(5px);
     padding: 5px;
     margin-bottom: 10px;
 }
@@ -1075,10 +1126,7 @@ code, samp {
     font-family: $fontsnormal;
     font-size: $fontbigger;
     color: $bluemain;
-    //text-shadow: $shadowtext;
     text-transform: lowercase;
-    //@include border-radius(5px);
-    //border-color: $bordermain;
     padding: 5px;
 }
 
@@ -1086,7 +1134,6 @@ code, samp {
     // Short description for video (seated above the video)
     font-family: $fontsnormal;
     font-size: $fontsmall;
-    //@include border-radius(5px);
     border-color: $bordermain;
     padding: 5px;
 }

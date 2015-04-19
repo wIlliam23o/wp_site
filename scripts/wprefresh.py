@@ -22,7 +22,7 @@ from docopt import docopt
 
 # Script info...
 NAME = 'WpRefresh'
-VERSION = '1.2.0'
+VERSION = '1.2.1'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
 
@@ -52,25 +52,26 @@ USAGESTR = """{version}
         wprefresh.py [options]
 
     Options:
-        -A,--noadmin     : Skip admin css copy.
-        -b,--buildwp     : Only build wp files.
-        -B,--nobuild     : Skip building files.
-        -c,--collect     : Auto static collection.
-        -C,--nocollect   : Skip static collection.
-        -d,--debug       : Prints extra info (not much right now).
-        -h,--help        : Show this message.
-        -k,--clearcache  : Clear Django's cache for the WP site.
-        -l,--live        : Suppress warning about live site.
-        -r,--restart     : Just restart the server, nothing else.
-        -R,--norestart   : Skip apache restart.
-        -v,--version     : Show version.
+        -A,--noadmin         : Skip admin css copy.
+        -b,--buildwp         : Only build wp files.
+        -B,--nobuild         : Skip building files.
+        -c,--collect         : Auto static collection.
+        -C,--nocollect       : Skip static collection.
+        -d,--debug           : Prints extra info (not much right now).
+        -h,--help            : Show this message.
+        -k,--clearcache      : Clear Django's cache for the WP site.
+        -l,--live            : Suppress warning about live site.
+        -r,--restart         : Just restart the server, nothing else.
+        -R,--norestart       : Skip apache restart.
+        -t,--admintemplates  : Refresh admin templates also.
+        -v,--version         : Show version.
 """.format(version=VERSIONSTR)
 
 
 def main(argd):
     # if test is passed no warning is given before restarting the server.
-    TEST = ('wp_test' in django_init.project_dir)
-    WARN = False if TEST else (not (argd['--live'] or argd['--norestart']))
+    test = ('wp_test' in django_init.project_dir)
+    warn = False if test else (not (argd['--live'] or argd['--norestart']))
 
     # Check for mismatched args..
     mismatched = check_argset(argd,
@@ -91,7 +92,7 @@ def main(argd):
         return 0
 
     # Show warning if needed..
-    if WARN and (not warn_live()):
+    if warn and (not warn_live()):
         return 0
 
     # Just restart
@@ -108,6 +109,8 @@ def main(argd):
     # Run admin copy (overwrites anything in /static)
     if not argd['--noadmin']:
         check_call(collect_admin_css, printskipped=argd['--debug'])
+        if argd['--admintemplates']:
+            check_call(collect_admin_templates, printskipped=argd['--debug'])
     # Run apache restart
     if not argd['--norestart']:
         check_call(apache_restart)
@@ -131,7 +134,7 @@ def apache_restart():
 
     print("\nRestarting apache... (" + apachecmd + 'restart)')
     if (os.path.isfile(apachecmd.strip(' ')) or
-       os.path.isdir(apachecmd.strip('/').strip('. '))):
+            os.path.isdir(apachecmd.strip('/').strip('. '))):
         try:
             if use_elevation:
                 apachecmd = 'sudo ' + apachecmd
@@ -269,19 +272,62 @@ def collect_admin_css(printskipped=False):
                     print('     Skipping: {}'.format(srcfile))
         ret = True
     else:
-        print("\nadmin css directories not found:\n    source: " + admin_css +
-              '\n    target: ' + admin_css_static + '\n')
+        print('\n'.join((
+            'admin css directories not found:',
+            '    source: {src}',
+            '    target: {dest}\n')).format(
+                src=admin_css,
+                dest=admin_css_static))
         ret = False
     return ret
 
 
-def copy_file(srcfile, dstfile):
+def collect_admin_templates(printskipped=False):
+    """ Move admin templates to proper dir if they have changed. """
+    # admin css dirs (source, target)
+    admin_dest = os.path.join(
+        django_init.project_dir,
+        'wp_main/templates/admin')
+    admin_src = '/'.join((
+        '/usr/local/lib/python3.4/dist-packages',
+        'django/contrib/admin/templates/admin'))
+
+    change_files = ('change_list_results.html',)
+    change_msg = 'This file must be edited again!'
+    if os.path.isdir(admin_dest) and os.path.isdir(admin_src):
+        print('\nCopying admin templates...')
+        srcfiles = os.listdir(admin_src)
+        for filename in srcfiles:
+            srcfile = os.path.join(admin_src, filename)
+            dstfile = os.path.join(admin_dest, filename)
+            if copy_file(srcfile, dstfile, nosudo=True):
+                print('    Copied to: {}'.format(dstfile))
+                if filename in change_files:
+                    print('               ** {} **'.format(change_msg))
+            else:
+                if printskipped:
+                    print('     Skipping: {}'.format(srcfile))
+        ret = True
+    else:
+        print('\n'.join((
+            '',
+            'admin template directories not found:'
+            '    source: {src}',
+            '    target: {dest}\n')).format(
+                src=admin_src,
+                dest=admin_dest))
+
+        ret = False
+    return ret
+
+
+def copy_file(srcfile, dstfile, nosudo=False):
     """ Copies a single file. """
-    use_elevation = 'workspace/' in settings.BASE_DIR
+    use_elevation = ('workspace/' in settings.BASE_DIR) and (not nosudo)
     if is_modified(srcfile, dstfile):
-        css_cmd = ['sudo'] if use_elevation else []
-        css_cmd += ['cp', srcfile, dstfile]
-        callret = os.system(' '.join(css_cmd))
+        cp_cmd = ['sudo'] if use_elevation else []
+        cp_cmd += ['cp', '-r', srcfile, dstfile]
+        callret = os.system(' '.join(cp_cmd))
         return (callret == 0)
     return False
 

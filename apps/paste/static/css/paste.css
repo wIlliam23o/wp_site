@@ -7,9 +7,9 @@
   -ms-border-radius: 3px;
   -o-border-radius: 3px;
   border-radius: 3px;
-  border-color: rgba(202, 217, 224, 0.5);
-  border-width: 2px;
   border-style: solid;
+  border-width: 2px;
+  border-color: rgba(202, 217, 224, 0.5);
   padding: 3px;
   background-color: #fafafa;
   color: #919191; }
@@ -24,11 +24,12 @@
   -ms-border-radius: 5px;
   -o-border-radius: 5px;
   border-radius: 5px;
-  border-width: 2px;
-  border-color: #afafaf;
   border-style: solid;
+  border-width: 2px;
+  border-color: rgba(202, 217, 224, 0.5);
   padding: 5px;
-  margin-bottom: 5px; }
+  margin-bottom: 5px;
+  position: relative; }
 
 .paste-page-header {
   margin-bottom: 10px; }
@@ -87,6 +88,9 @@
 .paste-title {
   font-size: 1.5em;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); }
+
+.paste-title-box {
+  position: relative; }
 
 .paste-title-date {
   position: relative;
@@ -151,7 +155,7 @@
   border-radius: 7px;
   border-style: solid;
   border-width: 1px;
-  border-color: #afafaf;
+  border-color: rgba(202, 217, 224, 0.5);
   padding: 1px 1px 1px 5px; }
 
 .paste-theme-label {
@@ -218,14 +222,16 @@
 
 /* Styles for listing individual pastes. */
 .paste-item {
+  display: block;
+  position: relative;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   -ms-border-radius: 5px;
   -o-border-radius: 5px;
   border-radius: 5px;
   border-style: solid;
-  border-color: rgba(202, 217, 224, 0.5);
   border-width: 2px;
+  border-color: rgba(202, 217, 224, 0.5);
   -webkit-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
   -moz-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
   -ms-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
@@ -233,8 +239,7 @@
   box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4);
   background-color: #fafafa;
   padding: 5px;
-  margin-bottom: 5px;
-  display: block; }
+  margin-bottom: 5px; }
 
 .paste-item-title, .paste-item-replyto, .paste-item-reply-title {
   display: block;
@@ -277,9 +282,9 @@
   -ms-border-radius: 5px;
   -o-border-radius: 5px;
   border-radius: 5px;
-  border-color: rgba(202, 217, 224, 0.5);
-  border-width: 1px;
   border-style: solid;
+  border-width: 1px;
+  border-color: rgba(202, 217, 224, 0.5);
   padding: 1px;
   font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
   font-weight: bold;
@@ -299,8 +304,8 @@
   -ms-border-radius: 5px;
   -o-border-radius: 5px;
   border-radius: 5px;
-  border-width: 1px;
   border-style: solid;
+  border-width: 1px;
   border-color: rgba(202, 217, 224, 0.5);
   padding: 5px;
   margin-top: 5px; }
@@ -332,9 +337,9 @@
   -ms-border-radius: 5px;
   -o-border-radius: 5px;
   border-radius: 5px;
-  border-color: rgba(202, 217, 224, 0.5);
-  border-width: 1px;
   border-style: solid;
+  border-width: 1px;
+  border-color: rgba(202, 217, 224, 0.5);
   padding: 1px;
   font-family: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberations Sans", Arial, sans-serif;
   font-weight: bold;
@@ -358,8 +363,8 @@
   -ms-border-radius: 5px;
   -o-border-radius: 5px;
   border-radius: 5px;
-  border-width: 1px;
   border-style: solid;
+  border-width: 1px;
   border-color: rgba(202, 217, 224, 0.5);
   background: #fafafa;
   padding: 10px;
@@ -377,6 +382,18 @@ a .paste-api-section-paragraph {
   a .paste-api-section-paragraph:hover {
     color: #2358a6; }
 
+.paste-api-section-text {
+  font-size: 1em;
+  color: #4d4d4d;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  margin-left: 15px; }
+
+.paste-api-section-text-note {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-size: 0.8em; }
+
 .paste-api-section-codelabel {
   font-size: 0.75em;
   margin-top: 10px;
@@ -386,3 +403,8 @@ a .paste-api-section-paragraph {
 .paste-api-section-json {
   font-size: 1em;
   color: #919191; }
+
+.paste-edit-button {
+  position: absolute;
+  right: 10px;
+  top: 0px; }

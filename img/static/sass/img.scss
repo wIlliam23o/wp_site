@@ -1,0 +1,201 @@
+@import 'welbornprod';
+
+.img-main {
+    // Main wrapper for both the index and the upload form.
+    position: relative;
+    display:block;
+}
+
+.img-header {
+    margin-bottom: 5px;
+}
+
+.img-images-list {
+    // Wraps the entire image listing
+    display: block;
+    background: $whitedull;
+    @include border-radius-thin-color(5px, $bordermain);
+    padding: 5px;
+}
+
+.img-image-item {
+    // Wraps a single image item, with title, desc, pic, etc.
+    position: relative;
+    @include border-radius-thin-color(5px, $bordermain);
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.img-image-item-private {
+    /*  Currently only used as a selector for hiding/showing private images
+        for admins.
+    */
+}
+
+.img-hide-private-box {
+    display: inline;
+    color: $bluemain;
+}
+
+#chk-img-hide-private {
+    margin-left: 20px;
+}
+
+.img-edit-btn {
+    position: absolute;
+    display: block;
+    top: 0px;
+    right: 5px;
+}
+
+.img-image-title {
+    // Title for a single image.
+    position: absolute;
+    top: 2em;
+    font-size: $fontbigger;
+    color: $bluemain;
+}
+
+.img-image-title-private {
+    // Title for private images.
+    @extend .img-image-title;
+    color: $redmain;
+}
+
+.img-image-attribute {
+    display: block;
+    margin-left: 70%;
+}
+
+.img-image-label {
+    display: inline-block;
+    color: $greymain;
+    font-size: $fontsmaller;
+    width: 4em;
+    text-align: right;
+
+}
+
+.img-image-value {
+    display: inline;
+    color: $bluemain;
+    font-size: $fontsmall;
+}
+
+.img-image-desc {
+    // Description for a single image.
+    margin-top: 5px;
+    text-indent: 10px;
+}
+
+#upload-desc {
+    // Stop the desc box from growing too large.
+    max-width: 680px;
+}
+
+.img-image-preview {
+    // Wraps the actual image that is being previewed
+    width: 100%;
+    text-align: center;
+    @include border-radius-none(5px);
+    @include box-shadow-big();
+    margin-top: 5px;
+}
+
+.img-image-src {
+    // The actual img tag.
+    max-height: 200px;
+    max-width: 1000px;
+}
+
+.img-no-images {
+    // Text displayed when there are no images to preview.
+    color: $redmain;
+    font-size: $fontbigger;
+    text-shadow: $shadowtextmedium;
+}
+
+#upload-form {
+    display: block;
+}
+
+#img-upload-form-floater {
+    // This is almost the same as #floater. Sass did not like @extend #floater
+    // because it's in another file.
+    position: fixed;
+    display: none;
+    @include border-radius-thick(10px);
+    @include box-shadow-floater();
+    // max-width stops the upload-desc box from growing too large.
+    max-width: 700px;
+    width: auto;
+    height: auto;
+    font-size: $fontnormal;
+    text-align: center;
+    color: $greydark;
+    background: white;
+    z-index: 5;
+}
+
+.img-upload-form {
+    // Wraps the upload form.
+    display: block;
+    position: relative;
+    padding: 5px;
+    @include border-radius-thin-color(5px, $bordermain);
+}
+
+.img-upload-form-attribute {
+    display: block;
+    text-align: left;
+}
+
+.img-upload-form-private {
+    @extend .img-upload-form-attribute;
+    margin-top: 10px;
+}
+
+.img-upload-form-buttons {
+    display: block;
+    position: relative;
+    padding: 25px;
+}
+
+.img-upload-form-button {
+    position: absolute;
+    top: 5px;
+    padding: 5px;
+}
+
+.img-upload-form-upload-btn {
+    @extend .img-upload-form-button;
+    left: 10px;
+}
+
+.img-upload-form-cancel-btn {
+    @extend .img-upload-form-button;
+    right: 10px;
+}
+
+.img-upload-form-reveal-btn {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 5px;
+    @include border-radius(5px);
+    background: $whitedull;
+    padding: 2px;
+    //position: fixed;
+    //left: 10px;
+    //top: 50px;
+    //z-index: 1;
+    //@include box-shadow-floater;
+}
+
+.img-input-label {
+    display: block;
+}
+
+.img-checkbox-label {
+    display: inline;
+    vertical-align: text-top;
+}

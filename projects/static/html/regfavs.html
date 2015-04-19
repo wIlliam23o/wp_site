@@ -1,33 +1,36 @@
+{% load wp_nodes %}
+{% load projects_tags %}
+
 <!-- Description -->
 <div class='wp-block feature-list'>
 	<p>
-		I wrote this program because RegEdit's favorites feature is, in my opinion, too limited. 
-		RegEdit favorites are displayed in the order they are created and are not moveable or sortable by default. 
-		If you're like me, and have quite a few favorites, it's nice to keep them in some kind of order. 
-		It's makes navigating the favorites menu a little bit quicker. <strong>RegFavs</strong> is not a full registry editor, 
-		it tricks RegEdit into thinking you saved your favorites in the chosen order, 
-		therefor allowing you to organize them how ever you like. 
-		You can sort by ascending/descending alphabetical order, or just move things around any way you see fit. 
-		<strong>RegFavs</strong> has never lost my favorites, or corrupted anything, 
-		but it's always a good idea for you to backup your favorites using RegEdit or <strong>RegFavs</strong> before you start editing. 
-		You can use the Export/Import functionality of either application to do so.<br />All features are self-explanatory, 
+		I wrote this program because RegEdit's favorites feature is, in my opinion, too limited.
+		RegEdit favorites are displayed in the order they are created and are not moveable or sortable by default.
+		If you're like me, and have quite a few favorites, it's nice to keep them in some kind of order.
+		It's makes navigating the favorites menu a little bit quicker. <strong>RegFavs</strong> is not a full registry editor,
+		it tricks RegEdit into thinking you saved your favorites in the chosen order,
+		therefor allowing you to organize them how ever you like.
+		You can sort by ascending/descending alphabetical order, or just move things around any way you see fit.
+		<strong>RegFavs</strong> has never lost my favorites, or corrupted anything,
+		but it's always a good idea for you to backup your favorites using RegEdit or <strong>RegFavs</strong> before you start editing.
+		You can use the Export/Import functionality of either application to do so.<br />All features are self-explanatory,
 		all keyboard shortcuts are shown on the menu.
 	</p>
 	<p>
-		Contact me at <span class='wp-address'>cj@welbornprod.com</span> if you run into any problems. 
-		If you've never installed a Visual Basic .Net application before, you might need the runtime libraries. 
-		They're easily installed from microsoft.com. 
+		Contact me at <span class='wp-address'>cj@welbornprod.com</span> if you run into any problems.
+		If you've never installed a Visual Basic .Net application before, you might need the runtime libraries.
+		They're easily installed from microsoft.com.
 	<p>
 </div>
 <!-- InArticle Ad -->
-{{ article_ad }}
+{% ad_article %}
 
 <!-- Download -->
 <div class='wp-block feature-list'>
 	<div class='title-box'>
 		<h3 class='title' id='download'>Download</h3>
 	</div>
-	{{ download_code }}
+	{% downloads project %}
 </div>
 
 <!-- Screenshots -->
@@ -35,7 +38,7 @@
 	<div class='title-box'>
 		<h3 class='title' id='screenshots'>Screenshots</h3>
 	</div>
-	{{ screenshots_code }}
+	{% image_viewer project.screenshot_dir %}
 </div>
 
 

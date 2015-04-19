@@ -5,12 +5,16 @@ from django.conf.urls import patterns, include, url
 from django.conf import settings
 # main views
 from home import views as homeviews
+
 # get sitemaps
 from wp_main.sitemaps import sitemaps
 # get robots.txt
 from wp_main.robots import robots
-# enable the admin:
+# get custom admin
+# from wp_main.admin import admin_site
+# Used for django.contrib.admin.site.urls
 from django.contrib import admin
+# Django 1.7 doesn't need this.
 admin.autodiscover()
 
 # Main Site (home)
@@ -38,9 +42,6 @@ urlpatterns = patterns(
     # ip html
     url(r'^ip\.html?$',
         homeviews.view_ip),
-    # stats info
-    url(r'^stats\.html$',
-        homeviews.view_stats),
     # login processor
     url(settings.LOGIN_URL_REGEX,
         'django.contrib.auth.views.login'),
@@ -69,6 +70,13 @@ urlpatterns += patterns(
     # shortcut for /apps/paste
     url(r'^[Pp]aste',
         include('apps.paste.urls')),
+)
+
+# Image share
+urlpatterns += patterns(
+    '',
+    url(r'^[Ii][Mm][Gg]',
+        include('img.urls'))
 )
 
 # Projects view (projects)
@@ -120,19 +128,21 @@ urlpatterns += patterns(
         include('sandbox.urls'))
 )
 
+# Stats views.
+urlpatterns += patterns(
+    '',
+    # stats info
+    url(r'^[Ss]tats',
+        include('stats.urls'))
+)
 # Admin/Other
 urlpatterns += patterns(
     '',
-    # Examples:
-    # url(r'^$', 'wp_main.home.views.index', name='home'),
-    # url(r'^wp_main/', include('wp_main.foo.urls')),
-
-    # Uncomment the admin/doc line below
-    # to enable admin documentation:
+    # Admin docs.
     url(r'^admin/doc/?',
         include('django.contrib.admindocs.urls')),
 
-    # Uncomment the next line to enable the admin:
+    # Default admin site.
     url(r'^admin/?',
         include(admin.site.urls)),
 )
@@ -148,6 +158,8 @@ handler500 = 'home.views.view_500'
 urlpatterns += patterns(
     '',
     # wordpress login
+    url(r'^wp-admin',
+        homeviews.view_scriptkids),
     url(r'^wordpress/wp-admin/?$',
         homeviews.view_scriptkids),
     url(r'^wp\-login\.php$',

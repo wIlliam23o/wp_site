@@ -27,13 +27,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wp_main.settings")
 # This application object is used by any WSGI server configured to use this
 # file. This includes Django's development server, if the WSGI_APPLICATION
 # setting points here.
-#from django.core.wsgi import get_wsgi_application
-from django.core.handlers.wsgi import WSGIHandler
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
 
-
-# django.core.wsgi.
-application = WSGIHandler()
-
-# Apply WSGI middleware here.
+# TODO: Apply WSGI middleware here.
 # from helloworld.wsgi import HelloWorldApplication
 # application = HelloWorldApplication(application)

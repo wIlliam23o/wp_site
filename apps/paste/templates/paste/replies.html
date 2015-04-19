@@ -39,7 +39,7 @@
             </a>
         </div>
     </div>
-    <div class='paste-listing-surround'>     
+    <div class='paste-listing-surround'>
         <div class='replies-title-box'>
             <a href='/paste/?id={{ paste.paste_id }}'>
                 <div class='header replies-title'>
@@ -48,7 +48,7 @@
             </a>
             <div class='replies-date-box'>
                 <span class='paste-date'>
-                    {{ paste.publish_date|paste_time }}
+                    {{ paste.publish_date|get_time_since }}
                 </span>
             </div>
             <div class='replies-title-label'>
@@ -56,7 +56,7 @@
             </div>
             <div class='replies-title-count'>
                 {{ replies|length }}
-            </div>           
+            </div>
         </div>
         <div class='paste-listing-box'>
             {% if not replies %}
@@ -83,7 +83,7 @@
                             </span>
                         </div>
                         <div class='paste-item-date'>
-                            {{ reply.publish_date|paste_time }}
+                            {{ reply.publish_date|get_time_since }}
                         </div>
                         <div class='paste-item-views'>
                             {{ reply.view_count }}

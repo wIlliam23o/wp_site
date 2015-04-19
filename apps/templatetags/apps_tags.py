@@ -1,10 +1,10 @@
+import logging
 from django import template
 register = template.Library()
 
-from wp_main.utilities.wp_logging import logger
 from apps import tools as apptools
 
-_log = logger('apps.tags').log
+log = logging.getLogger('wp.apps.tags')
 
 
 def gitdir(appname):
@@ -24,7 +24,7 @@ def gitdir(appname):
         sgitdir = apptools.get_appgitdir(appname, branch=gitbranch)
     except Exception as ex:
         appinfo = 'appname: {}, branch: {}'.format(appname, gitbranch)
-        _log.error('Error getting git dir: {}\n{}'.format(appinfo, ex))
+        log.error('Error getting git dir: {}\n{}'.format(appinfo, ex))
         return None
     return sgitdir
 

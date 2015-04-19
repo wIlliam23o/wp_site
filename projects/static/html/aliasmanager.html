@@ -1,3 +1,6 @@
+{% load wp_nodes %}
+{% load projects_tags %}
+
 <div class='wp-block feature-list'>
 	<!-- Description -->
 	<p>
@@ -15,7 +18,7 @@
 </div>
 
 <!-- Article Ad -->
-{{ article_ad }}
+{% ad_article %}
 
 <div class='wp-block feature-list'>
 	<!-- New Features -->
@@ -86,7 +89,7 @@
 	<div class='title-box'>
 		<h3 class='title'>Download</h3>
 	</div>
-	{{ download_code }}
+	{% downloads project %}
 </div>
 
 <!-- Source -->
@@ -101,7 +104,7 @@
 	    &nbsp;- current <strong>Alias Manager</strong> source code at
 	    <a href='http://github.com' target="_blank">github</a>.
 	</p>
-	{{ source_view }}
+	{% source_view project request %}
 </div>
 
 <!-- Screenshots -->
@@ -109,5 +112,5 @@
 	<div class='title-box'>
 		<h3 class='title' id='screenshots'>Screenshots</h3>
 	</div>
-	{{ screenshots_code }}
+	{% image_viewer project.screenshot_dir %}
 </div>

@@ -6,8 +6,9 @@
 
 @author: Christopher Welborn
 '''
-from wp_main.utilities.wp_logging import logger
-_log = logger('misc.types').log
+import logging
+
+log = logging.getLogger('wp.misc.types')
 
 
 class MiscType(object):
@@ -73,20 +74,31 @@ class MiscType(object):
 
 
 # Create MiscTypes...
-all_types = (MiscType('Code', 'Code File', viewable=True),
-             MiscType('Snippet', 'Code Snippet', viewable=True),
-             MiscType('Script', 'Script File', viewable=True),
-             MiscType('Text', 'Text File', viewable=True),
-             MiscType('None', 'None', viewable=True),
-             MiscType('Executable', 'Executable File'),
-             MiscType('Archive', 'Archive File'),
-             MiscType('XChat', 'XChat Script', viewable=True,
-                      warning=('To use these xchat scripts you can either '
-                               'drop them in the XChat2 config directory '
-                               '(usually ~/.xchat2), or load the script '
-                               'manually by going to:\n'
-                               'Window -> Plugins &amp; Scripts -> Load...')),
-             )
+all_types = (
+    MiscType('Code', 'Code File', viewable=True),
+    MiscType('Snippet', 'Code Snippet', viewable=True),
+    MiscType('Script', 'Script File', viewable=True),
+    MiscType('Text', 'Text File', viewable=True),
+    MiscType('None', 'None', viewable=True),
+    MiscType('Executable', 'Executable File'),
+    MiscType('Archive', 'Archive File'),
+    MiscType(
+        'HexChat', 'HexChat Script', viewable=True,
+        warning=(
+            'To use these xchat scripts you can either '
+            'drop them in the HexChat config directory '
+            '(usually ~/.config/hexchat/addons), '
+            'or load the script manually by going to:\n'
+            '<kbd>Window -> Plugins &amp; Scripts -> Load...</kbd>')),
+    MiscType(
+        'XChat', 'XChat Script', viewable=True,
+        warning=(
+            'To use these xchat scripts you can either '
+            'drop them in the XChat2 config directory '
+            '(usually ~/.xchat2), or load the script '
+            'manually by going to:\n'
+            '<kbd>Window -> Plugins &amp; Scripts -> Load...</kbd>')),
+)
 
 # Generate a map from String value to Actual value for MiscTypes.
 # used to look up MiscTypes by name later (misctype_byname())
@@ -136,7 +148,7 @@ def misctype_byname(s):
         misctype = types_info[s]
     except (KeyError, ValueError):
         # This type doesn't exist.
-        _log.error('Can\'t find that misctype: {}'.format(s))
+        log.error('Can\'t find that misctype: {}'.format(s))
         return None
     return misctype
 

@@ -9,29 +9,25 @@
 
 // container for 'Featured Project/Latest Blog
 .featured-main-box, .home-welcome-box {
+    position: relative;
+    @include border-radius-thin(5px);
+    @include box-shadow-normal();
     padding-left: 40px;
     padding-right: 40px;
     padding-bottom: 10px;
     margin-top: 10px;
     margin: 15px;
-    position: relative;
-    @include border-radius(5px);
-    border-color: $bordermain;
-    border-style: solid;
-    border-width: 1px;
-    @include box-shadow($shadownormal);
-    background: white;
+    background: $whitedull;
 }
 
 // container for feature/blog entry/project
 .featured-item-container {
+    @include border-radius(5px);
+    @include box-shadow-medium();
     margin: 15px;
     padding: 10px;
-    background-color: $whitedull;
-    @include border-radius(5px);
-    box-shadow: $shadowmedium;
+    background-color: $greysurround;
     text-align: left;
-
 }
 
 // Header box with name/title version/date
@@ -55,12 +51,11 @@
 
 // box holding description/body
 .featured-desc {
+    @include border-radius-thick-color(10px, $border-featured-desc);
     margin-top: 10px;
     padding: 5px;
-    @include border-radius(10px);
-    border-color: $bordermain;
-    border-style: solid;
-    border-width: 2px;
+    background-color: $whitedull;
+    background: $whitedull;
 }
 
 // latest tweet stuff.
@@ -68,22 +63,16 @@
     // a div containing a single tweet.
     padding: 5px;
     @include border-radius(5px);
-    //border-width: 1px;
-    //border-style: solid;
-    //border-color: $bordermain;
-
 }
 
 .tweet-text {
     // a div containing a the text from a tweet.
+    @include border-radius-thin(5px);
     font-family: $fontsnormal;
     font-size: 1em;
     padding: 5px;
     margin-top: 5px;
-    @include border-radius(5px);
-    border-width: 1px;
-    border-style: solid;
-    border-color: $bordermain;
+    background-color: $whitedull;
 }
 
 .tweet-screen-name {
@@ -113,8 +102,7 @@
     display: inline-block;
 
     & img {
-        border-width: 0px;
-        @include border-radius(5px);
+        @include border-radius-none(5px);
         @include box-shadow($shadowbox);
 
     }
@@ -123,11 +111,7 @@
 .tweet-photo-box {
     display: block;
     padding: 5px;
-    //border-width: 1px;
-    //border-style: solid;
-    //border-color: $bordermain;
-    @include border-radius(5px);
-    //@include box-shadow($shadowbox);
+    @include border-radius-none(5px);
     margin-top: 10px;
     margin-bottom: 10px;
     margin-left: 20px;
@@ -145,6 +129,6 @@
 
 .tweet-photo {
     display: inline-block;
-    border-radius: 5px;
+    @include border-radius(5px);
 }
 

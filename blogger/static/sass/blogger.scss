@@ -18,18 +18,18 @@
     font-weight: bold;
 }
 
-/* Index Styles */
+// Index Styles
 .blog-posts {
-    
+    position: relative;
 }
 
 .blog-listing {
+    position: relative;
     padding: 5px;
-    border-radius: 5px;
+    @include border-radius(5px);
+    @include box-shadow-normal();
     background: white;
-    box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-    -moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-    -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
+
     margin-bottom: 10px;
 }
 
@@ -47,15 +47,12 @@
 .blog-listing-title:hover {
         color: $bluehover;
 }
-    
+
 
 
 
 .blog-listing-body {
-    border-radius: 5px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: $borderlight;
+    @include border-radius-thin(5px);
     margin-top: 40px;
     padding-left: 20px;
     padding-right: 20px;
@@ -69,12 +66,11 @@
 
 /* Post Styles */
 .blog-post {
-    background: white;
-    border-radius: 5px;
+    position: relative;
+    background: $whitedull;
+    @include border-radius(5px);
+    @include box-shadow-normal();
     padding: 5px;
-    box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-    -moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
-    -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.13);
     margin-bottom: 10px;
 }
 
@@ -95,21 +91,18 @@
 }
 
 .blog-post-date-box {
+    position: absolute;
     display: inline-block;
     margin-left: 5px;
-    border-style: solid;
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: $borderlight;
+    @include border-radius-thin(5px);
     padding: 2px;
     right: 15px;
-    position: absolute;
 }
 
 .blog-post-date {
     font-size:$fontsmall;
     font-weight: bold;
-    color: $greymain;   
+    color: $greymain;
 }
 
 .blog-post-tags {
@@ -129,17 +122,14 @@
 
 .blog-post-tag-link-box {
     /* single link container */
-    border-radius: 5px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: $borderlight;
+    @include border-radius-thin(5px);
     line-height: 1em;
     display: inline-block;
     padding-bottom: 2px;
     padding-top: 1px;
     padding-left: 2px;
     padding-right: 2px;
-    
+
 }
 
 .blog-post-tag-link-text {
@@ -155,17 +145,14 @@
 .blog-post-body {
     margin-top: 40px;
     padding-left: 20px;
-    padding-right: 20px;    
+    padding-right: 20px;
 }
 
 /* Navigation */
 .blog-nav-box {
-    border-style: solid;
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: $borderlight;
-    padding: 2px;
     display: inline-block;
+    @include border-radius-thin(5px);
+    padding: 2px;
 }
 
 .blog-nav-label {
@@ -179,10 +166,7 @@
 }
 
 .blog-nav-button {
-    border-style: solid;
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: $borderblue;
+    @include border-radius-thin-color(5px, $borderblue);
     padding-left: 2px;
     padding-right: 2px;
     display: inline-block;
@@ -209,7 +193,7 @@
     display: block;
     margin-top: 10px;
     margin-bottom: 10px;
-    border-top: 1px solid $borderlight;
+    border-top: 1px solid $bordermain;
     padding-top: 5px;
 }
 .blog-related-projects-box {
@@ -229,8 +213,7 @@
 
 .blog-related-project {
     display: inline;
-    border: 1px solid $borderlight;
-    border-radius: 3px;
+    @include border-radius-thin(3px);
     padding-left: 2px;
     padding-right: 2px;
     padding-bottom: 2px;
@@ -238,9 +221,9 @@
     font-size:$fontsmall;
 }
 
-.wpbutton.blog-edit-button {
+.blog-edit-button {
     // Edit button for admin only.
     position: absolute;
     right: 130px;
-    margin-top: 4px;
+    top: -5px;
 }

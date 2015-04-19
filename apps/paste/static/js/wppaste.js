@@ -112,13 +112,10 @@ var wppaste = {
 
     get_selected_onhold : function () {
         /* Get 'on hold' option selection. */
-        var chk = $('#paste-onhold-opt');
+        var chk = document.getElementById('paste-onhold-opt');
         // This option is not always created. (only authenticated users see it)
-        if (chk.length) {
-            return $(chk).prop('checked');
-        } else {
-            return false;
-        }
+        return chk === null ? false : $(chk).prop('checked');
+
     },
 
     get_selected_private : function () {
@@ -141,7 +138,22 @@ var wppaste = {
         return $(selected).text();
     },
 
-    load_paste_settings : function (options) {
+    kill_message: function () {
+        /* Remove the floater message immediately. */
+        $('#floater').fadeOut();
+    },
+
+    load_paste_content: function () {
+        /*  Loads the paste content from the #encoded-content.
+            Content is Base64 encoded by the server, so it needs to be decoded.
+        */
+        var content = $('#encoded-content').text();
+        if (content) {
+            wp_content.getSession().setValue(Base64.decode(content));
+        }
+    },
+
+    load_paste_settings: function (options) {
         /* Load user's paste settings from cookie. */
         var cookieraw = $.cookie('pastesettings');
         var author = '';
@@ -250,9 +262,9 @@ var wppaste = {
             Arguments:
                 checked : true/false, whether onhold opt is checked.
         */
-        var chk = $('#paste-onhold-opt');
+        var chk = document.getElementById('paste-onhold-opt');
         // This option is not always created. (only authenticated users see it)
-        if (chk.length) {
+        if (chk) {
             var boolval = checked || false;
             $(chk).attr({'checked': boolval});
         }
@@ -264,7 +276,7 @@ var wppaste = {
                 checked  : true/false, whether the private opt. is checked.
         */
 
-        var chk = $('#paste-private-opt');
+        var chk = document.getElementById('paste-private-opt');
         var boolval = checked || false;
         $(chk).attr({'checked': boolval});
 
@@ -288,6 +300,38 @@ var wppaste = {
         return false;
     },
 
+    setup_ace: function (doreadonly) {
+        /* Initial setup for ace editor.*/
+        wp_content = ace.edit('paste-content');
+
+        // various settings for ace
+        wp_content.setHighlightActiveLine(true);
+        wp_content.setAnimatedScroll(true);
+        wp_content.setFontSize(14);
+        wp_content.getSession().setUseSoftTabs(true);
+        // ensure read-only access to content
+        if (doreadonly) {
+            wp_content.setReadOnly(true);
+        }
+        // Get mode/theme list for ace. We will be using them later.
+        wp_modelist = ace.require('ace/ext/modelist');
+        wppaste.build_lang_menu();
+        wp_themelist = ace.require('ace/ext/themelist');
+        wppaste.build_theme_menu();
+    },
+
+    show_error_msg: function (message) {
+        /* Show an error message by changing the floaters text and displaying it.
+        */
+        $('#floater-msg').html(message);
+        wptools.center('#floater');
+        var floater = $('#floater');
+        var scrollpos = $(this).scrollTop();
+
+        $('#floater').fadeIn();
+        setTimeout(function () { wppaste.kill_message(); }, 3000);
+    },
+
     split_string: function (string, size) {
         var re = new RegExp('.{1,' + size + '}', 'g');
         return string.match(re);
@@ -309,11 +353,9 @@ var wppaste = {
         var replyto = $('#replyto-id').attr('value');
         pastedata['replyto'] = replyto
 
-        // TODO: include 'onhold' on frontend.
-
         // Parse some of the user input.
         if (wptools.is_emptystr(pastedata.content)) {
-            show_error_msg('<span class="warning-msg">Paste must have some content.</span>');
+            wppaste.show_error_msg('<span class="warning-msg">Paste must have some content.</span>');
             return false;
         }
 
@@ -323,7 +365,7 @@ var wppaste = {
         }
 
         // change the loading message.
-        update_loading_msg('<span>Submitting paste...</span>');
+        wppaste.update_loading_msg('<span>Submitting paste...</span>');
 
         $.ajax({
             type: 'post',
@@ -331,20 +373,24 @@ var wppaste = {
             url: '/apps/paste/submit',
             data: JSON.stringify(pastedata),
             dataType: 'json',
-            failure: function (xhr, status, errorthrown) {
-                console.log('failure: ' + status);
-            },
-            complete: function (xhr, status) {
-
+            status: {
+                404: function () { console.log('Page not found.'); },
+                500: function () { console.log('A major error occurred.'); }
+            }
+        })
+            .fail(function (xhr, status, err) {
+                var msg = err.message ? err.message : 'The error was unknown.';
+                console.log('failure: ' + status + '\n    msg:' + msg);
+                msg = 'An error occurred while submitting. ' + msg;
+                wppaste.show_error_msg('<span class="warning-msg"> ' + msg + '</span>');
+            })
+            .done(function (data, status, xhr) {
                 // handle errors...
                 if (status == 'error') {
-                    // TODO: Handle server errors.
-                    // TODO: App errors are handled, but what if the app doesn't
-                    // TODO: ..even get to talk to the client? :)
                     console.log('wp-error response: ' + xhr.responseText);
                     if (xhr.responseText) {
                         // This will probably be an ugly message.
-                        show_error_msg('<span class="warning-msg">' + xhr.responseText + '</span>');
+                        wppaste.show_error_msg('<span class="warning-msg">' + xhr.responseText + '</span>');
                     }
                 } else {
                     // Paste was successfully submitted.
@@ -352,7 +398,7 @@ var wppaste = {
 
                     if (respdata.status && respdata.status === 'error') {
                         // App sent an error msg back.
-                        show_error_msg('<span class="warning-msg">' + respdata.message + '</span>');
+                        wppaste.show_error_msg('<span class="warning-msg">' + respdata.message + '</span>');
                         console.log('error: ' + respdata.message);
                     } else {
                         // App sent back a success.
@@ -364,12 +410,7 @@ var wppaste = {
 
                 }
 
-            },
-            status: {
-                404: function () { console.log('PAGE NOT FOUND!'); },
-                500: function () { console.log('A major error occurred.'); }
-            }
-        });
+            });
     },
 
     submit_success : function (jsondata) {
@@ -381,10 +422,6 @@ var wppaste = {
             // Move to newly created paste.
             wptools.navigateto(jsondata.url);
         }
-    },
-
-    toggle_editor_size: function () {
-        /* TODO: Implement this size toggler. */
     },
 
     updatejson : function (jsondata, newdata) {
@@ -403,6 +440,17 @@ var wppaste = {
         if (!oldobj) { return jsondata;}
         var newobj = wppaste.updateobject(oldobj, newdata);
         return JSON.stringify(newobj);
+    },
+
+    update_loading_msg: function (message) {
+        /* Update floater message and size/position. */
+        $('#floater-msg').html(message);
+        wptools.center('#floater');
+        var floater = $('#floater');
+        var scrollpos = $(this).scrollTop();
+        //floater.css({'top': scrollpos + 'px'});
+
+        $('#floater').fadeIn();
     },
 
     update_paste_settings : function (newsettings) {
@@ -470,55 +518,3 @@ var wppaste = {
 
 
 };
-
-/* I don't think there's a real reason for these to not be part of
-    wppaste.
-*/
-
-// setup initial ace editor
-function setup_ace (doreadonly) {
-    wp_content = ace.edit('paste-content');
-    // highlight style (set in load_paste_settings)
-    //wp_content.setTheme('ace/theme/solarized_dark');
-    // various settings for ace
-    wp_content.setHighlightActiveLine(true);
-    wp_content.setAnimatedScroll(true);
-    wp_content.setFontSize(14);
-    wp_content.getSession().setUseSoftTabs(true);
-    // ensure read-only access to content
-    if (doreadonly) {
-        wp_content.setReadOnly(true);
-    }
-    // Get mode/theme list for ace. We will be using them later.
-    wp_modelist = ace.require('ace/ext/modelist');
-    wppaste.build_lang_menu();
-    wp_themelist = ace.require('ace/ext/themelist');
-    wppaste.build_theme_menu();
-}
-
-// update floater message and size/position
-function update_loading_msg (message) {
-    $('#floater-msg').html(message);
-    wptools.center('#floater');
-    var floater = $('#floater');
-    var scrollpos = $(this).scrollTop();
-    //floater.css({'top': scrollpos + 'px'});
-
-    $('#floater').fadeIn();
-}
-
-function show_error_msg (message) {
-    $('#floater-msg').html(message);
-    wptools.center('#floater');
-    var floater = $('#floater');
-    var scrollpos = $(this).scrollTop();
-    //floater.css({'top': scrollpos + 'px'});
-
-    $('#floater').fadeIn();
-    setTimeout(function () { kill_message(); }, 3000);
-}
-
-function kill_message () {
-    /* Remove the floater message immediately. */
-    $('#floater').fadeOut();
-}

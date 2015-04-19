@@ -7,6 +7,18 @@
     <meta name="description" content="Blog post from welborn productions{% if blog_post %}: {{ blog_post.title }}{% else %}.{% endif %}">
 {% endblock %}
 
+{% block extrahead %}
+    <script type="text/javascript">
+        $(document).ready(
+                function() {
+                    $(".screenshots_box").wtRotator(wprotator_settings);
+                    $(".wt-rotator").width("100%");
+                    $(".screen").width("100%");
+                }
+            );
+    </script>
+{% endblock %}
+
 {% block extrastylelink %}
 	{{ block.super }}
 {% endblock %}
@@ -19,6 +31,14 @@
 {% block content %}
 	<div class="blog-post">
 		{% if blog_post %}
+			<!-- EDIT -->
+            {% if request|is_staff %}
+                <a href='/adminblogger/wp_blog/{{ blog_post.id }}'>
+                    <div class='wpbutton blog-edit-button'>
+                        <span>edit</span>
+                    </div>
+                </a>
+            {% endif %}
 			<div class="blog-post-title-box">
 				<span class="blog-post-title">{{ blog_post.title }}</span>
 			</div>
