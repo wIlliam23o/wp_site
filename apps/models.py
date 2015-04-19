@@ -55,7 +55,7 @@ class wp_app(models.Model):
         default='',
         max_length=512,
         help_text=('Html file for this app, containing the long description.'))
-     # directory for screenshot images
+    # directory for screenshot images
     screenshot_dir = models.CharField(
         blank=True,
         default='',
@@ -77,7 +77,7 @@ class wp_app(models.Model):
     # publish date (for sort-order mainly)
     publish_date = models.DateField(
         blank=False,
-        default=datetime.date.today(),
+        default=datetime.date.today,
         help_text=('Date the app was published, automatically set to today.'))
 
     # disables app (instead of deleting it, it simply won't be viewed)
