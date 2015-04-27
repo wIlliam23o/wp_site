@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from django.conf.urls import patterns, include, url
+# simple redirect urls.
+from django.views.generic.base import RedirectView
 # login url is set in settings
 from django.conf import settings
 # main views
@@ -168,6 +170,13 @@ urlpatterns += patterns(
         homeviews.view_scriptkids),
     url(r'^admin\.php$',
         homeviews.view_scriptkids),
+)
+
+# Simple redirects
+urlpatterns += patterns(
+    '',
+    url(r'^favicon\.ico$',
+        RedirectView.as_view(url='/static/images/favicons/favicon.ico')),
 )
 
 # Debug toolbar explicit setup (per new debug_toolbar version)
