@@ -53,6 +53,7 @@ DEBUG = False
 #    ace is already minimized. .min and -min is already minimized.
 #    _welbornprod.scss need not be minimized. it is to be human-readable.
 DEFAULT_FILTERS = [
+    '/admin/css/'
     'node_modules',
     '.min.',
     '-min.',
