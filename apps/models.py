@@ -9,7 +9,7 @@ import datetime
 import json
 
 
-class wp_app(models.Model):
+class wp_app(models.Model):  # noqa
 
     """ Holds information about a single wp app. """
     # project name
