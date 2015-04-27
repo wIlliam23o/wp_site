@@ -7,6 +7,7 @@ from apps import tools as apptools
 log = logging.getLogger('wp.apps.tags')
 
 
+@register.filter
 def gitdir(appname):
     """ Retrieves github directory for app by appname.
         If '/' is found in the appname, the appname is interpreted as:
@@ -27,9 +28,3 @@ def gitdir(appname):
         log.error('Error getting git dir: {}\n{}'.format(appinfo, ex))
         return None
     return sgitdir
-
-registered = (gitdir,)
-
-# register all filters in the registered tuple.
-for func in registered:
-    register.filter(func.__name__, func)

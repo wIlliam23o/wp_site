@@ -30,6 +30,11 @@ def ad_bottom(parser, token):
 
 
 @register.tag
+def fav_icons(parser, token):
+    return FavIcons()
+
+
+@register.tag
 def highlight(parser, token):
     """ Highlight code syntax, given a lexer name for pygments and a string.
     """
@@ -110,6 +115,17 @@ class AdBottom(template.Node):
             'home/ad_bottom.html',
             context=context)
         return adbottom
+
+
+class FavIcons(template.Node):
+
+    """ Renders favicons code for many browsers/devices. """
+
+    def render(self, context):
+        favs = htmltools.render_clean(
+            'home/fav_icons.html',
+            context=context)
+        return favs
 
 
 class Highlighter(template.Node):
