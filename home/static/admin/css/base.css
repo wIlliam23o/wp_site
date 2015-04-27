@@ -805,7 +805,7 @@ table#change-history tbody th {
     font-size: 18px;
     margin: 8px 0;
     font-weight: normal;
-    color: #FFFCFC;
+    color: #fffcfc;
     text-shadow: 2px 2px 3px rgba(0,0,0,0.13);
 }
 
@@ -814,7 +814,7 @@ table#change-history tbody th {
     font-size: 14px;
     margin: -8px 0 8px 0;
     font-weight: normal;
-    color: #ffc;
+    color: #fffcfc;
 }
 
 #user-tools {
