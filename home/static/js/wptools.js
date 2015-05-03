@@ -21,7 +21,7 @@
                    (easier development, pretty much the same deployment)
 
 */
-
+'use strict';
 var wptools = {
     alert : function (msg, smallmsg) {
         /*  Show an alert message using #floater if available,
@@ -55,7 +55,7 @@ var wptools = {
                 useouter     : (bool)
                                use window's outerHeight for vertical position.
         */
-        'use strict';
+
         var screen_width = $(document).width(),
             elem = $(selector),
             elempos = $(elem).css('position'),
@@ -87,8 +87,8 @@ var wptools = {
     },
 
     csrf_safe_method : function (method) {
+        /* Return true if this HTTP method name required csrf protection. */
         // these HTTP methods do not require CSRF protection
-        'use strict';
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     },
 
