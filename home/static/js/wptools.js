@@ -15,6 +15,9 @@
     Debug button/box toggle added.
         shows/hides the django debug info box (for use with test site)
 
+
+    Version: 0.2.0 (added safe native css selection, for future development)
+
 */
 
 var wptools = {
@@ -187,14 +190,36 @@ var wptools = {
         }
     },
 
+    select : function (selector, container) {
+        /*  Native css selector that returns the first element found, or null.
+            Arguments:
+                selector       : CSS selector.
+                container  : Node to start from. Default: document
+        */
+        if (typeof selector !== 'string') {
+            return null;
+        }
+        return (container || document).querySelector(selector);
+    },
+
+    select_all : function (selector, container) {
+        /*  Native css selector that returns an array of all matching elements.
+            Returns null on failure.
+            Arguments:
+                selector       : (string) CSS selector.
+                container  : Node to start from. Default: document
+        */
+        if (typeof selector !== 'string') {
+            return null;
+        }
+        return (container || document).querySelectorAll(selector);
+    },
+
     show_debug : function () {
         /* Displays the debug box and changes it's label text. */
         $('.debug-box').show();
         $('.debug-button-text').text('hide debug');
     },
-
-    // Whether or not the window has been squeezed (< 800px) yet.
-    squeezed: false,
 
     strdup : function (char_, count_) {
         var s = '',
