@@ -17,6 +17,8 @@
 
 
     Version: 0.2.0 (added safe native css selection, for future development)
+             TODO: Use browserify to split some of this up, and rebundle it.
+                   (easier development, pretty much the same deployment)
 
 */
 
@@ -204,13 +206,13 @@ var wptools = {
 
     select_all : function (selector, container) {
         /*  Native css selector that returns an array of all matching elements.
-            Returns null on failure.
+            Returns an empty array on failure.
             Arguments:
                 selector       : (string) CSS selector.
                 container  : Node to start from. Default: document
         */
         if (typeof selector !== 'string') {
-            return null;
+            return [];
         }
         return (container || document).querySelectorAll(selector);
     },
@@ -306,6 +308,8 @@ var wptools = {
 
 };
 
+/* ------------------------------------------------------------------------- */
+
 /* Various tools for Misc section
     ..instead of adding yet another file for this small amount of code.
       it is kept here in the 'global' utilities. If the code ever grows
@@ -336,6 +340,8 @@ var misctools = {
     }
 };
 
+
+/* ------------------------------------------------------------------------- */
 
 /**
 *
@@ -470,6 +476,7 @@ var Base64 = {
 
 /*ignore jslint end*/
 
+/* ------------------------------------------------------------------------- */
 
 /* Rotator settings specific to welbornprod.... */
 var wprotator_settings = {
