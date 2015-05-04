@@ -22,7 +22,7 @@ from docopt import docopt
 
 # Script info...
 NAME = 'WpRefresh'
-VERSION = '1.2.1'
+VERSION = '1.2.2'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
 
@@ -73,7 +73,7 @@ def main(argd):
     test = ('wp_test' in django_init.project_dir)
     warn = False if test else (not (argd['--live'] or argd['--norestart']))
 
-    # Check for mismatched args..
+    # Check for mismatched args (rather than write a complicated USAGESTR)..
     mismatched = check_argset(argd,
                               [('--collect', '--nocollect'),
                                ('--nobuild', '--buildwp'),
@@ -126,48 +126,51 @@ def apache_restart():
     # apache restart locations.
     remote_apache_path = os.path.join(settings.BASE_PARENT, 'apache2', 'bin')
     if os.path.isdir(remote_apache_path):
+        # Remote: `../apache2/bin/restart`
         apachecmd = ''.join(['. ', remote_apache_path]) + '/'
         use_elevation = False
     else:
+        # Local: `apache2 restart`
         apachecmd = os.path.join('/etc', 'init.d', 'apache2') + ' '
         use_elevation = True
 
-    print("\nRestarting apache... (" + apachecmd + 'restart)')
-    if (os.path.isfile(apachecmd.strip(' ')) or
+    print('\nRestarting apache... ({}restart)'.format(apachecmd))
+    if not (
+            os.path.isfile(apachecmd.strip(' ')) or
             os.path.isdir(apachecmd.strip('/').strip('. '))):
-        try:
-            if use_elevation:
-                apachecmd = 'sudo ' + apachecmd
-            callret = os.system(apachecmd + 'restart')
-            ret = (callret == 0)
-        except Exception as ex:
-            print('\nunable to restart apache:\n' + str(ex))
-            ret = False
-    else:
-        print('\napache command not found!: ' + apachecmd + '\n')
+        print('\napache command not found!: {}\n'.format(apachecmd))
+        return False
+
+    try:
+        if use_elevation:
+            apachecmd = 'sudo ' + apachecmd
+        callret = os.system(apachecmd + 'restart')
+        ret = (callret == 0)
+    except Exception as ex:
+        print('\nunable to restart apache:\n' + str(ex))
         ret = False
+
     return ret
 
 
 def build_files(wponly=False):
     """ Build css/js files """
     builder_py = os.path.join(settings.BASE_DIR, 'scripts', 'builder.py')
-    if os.path.isfile(builder_py):
-        print('\nRunning builder...')
-        build_cmd = ['python3', builder_py]
-        if settings.SITE_VERSION.lower().startswith('local'):
-            build_cmd.insert(0, 'sudo')
-
-        if wponly:
-            # only build wp*.js files. not external stuff. (takes too long)
-            build_cmd = build_cmd + ['-i', 'wp', '-f', '-wp']
-        print('running: {}'.format(' '.join(build_cmd)))
-        callret = os.system(' '.join(build_cmd))
-        ret = (callret == 0)
-    else:
+    if not os.path.isfile(builder_py):
         print('\nbuilder.py not found!: {}'.format(builder_py))
-        ret = False
-    return ret
+        return False
+
+    print('\nRunning builder...')
+    build_cmd = ['python3', builder_py]
+    if settings.SITE_VERSION.lower().startswith('local'):
+        build_cmd.insert(0, 'sudo')
+
+    if wponly:
+        # only build wp*.js files. not external stuff. (takes too long)
+        build_cmd = build_cmd + ['-i', 'wp', '-f', '-wp']
+    print('running: {}'.format(' '.join(build_cmd)))
+    callret = os.system(' '.join(build_cmd))
+    return (callret == 0)
 
 
 def check_args(argd, arglist, unless=None):
@@ -236,19 +239,19 @@ def collect_static(autocollect=False):
     manage_py = os.path.join(settings.BASE_DIR, "manage.py")
     use_elevation = 'workspace/' in settings.BASE_DIR
 
-    if os.path.isfile(manage_py):
-        print("\nRunning collectstatic...")
-        collect_cmd = ['echo', '"yes"', '|'] if autocollect else []
-        if use_elevation:
-            collect_cmd += ['sudo']
-        collect_cmd += ['python3', manage_py, 'collectstatic']
-        print("running: " + ' '.join(collect_cmd))
-        callret = os.system(' '.join(collect_cmd))
-        ret = (callret == 0)
-    else:
+    if not os.path.isfile(manage_py):
         print("\nmanage.py not found!: " + manage_py + '\n')
-        ret = False
-    return ret
+        return False
+
+    print("\nRunning collectstatic...")
+    collect_cmd = ['echo', '"yes"', '|'] if autocollect else []
+    if use_elevation:
+        collect_cmd += ['sudo']
+    collect_cmd += ['python3', manage_py, 'collectstatic']
+    print("running: " + ' '.join(collect_cmd))
+    callret = os.system(' '.join(collect_cmd))
+
+    return (callret == 0)
 
 
 def collect_admin_css(printskipped=False):
@@ -259,27 +262,27 @@ def collect_admin_css(printskipped=False):
 
     if not admin_css_static.endswith('/'):
         admin_css_static += '/'
-    if os.path.isdir(admin_css) and os.path.isdir(admin_css_static):
-        print("\nCopying admin css...")
-        srcfiles = os.listdir(admin_css)
-        for filename in srcfiles:
-            srcfile = os.path.join(admin_css, filename)
-            dstfile = os.path.join(admin_css_static, filename)
-            if copy_file(srcfile, dstfile):
-                print('    Copied to: {}'.format(dstfile))
-            else:
-                if printskipped:
-                    print('     Skipping: {}'.format(srcfile))
-        ret = True
-    else:
+
+    if not (os.path.isdir(admin_css) and os.path.isdir(admin_css_static)):
         print('\n'.join((
             'admin css directories not found:',
             '    source: {src}',
             '    target: {dest}\n')).format(
                 src=admin_css,
                 dest=admin_css_static))
-        ret = False
-    return ret
+        return False
+
+    print("\nCopying admin css...")
+    srcfiles = os.listdir(admin_css)
+    for filename in srcfiles:
+        srcfile = os.path.join(admin_css, filename)
+        dstfile = os.path.join(admin_css_static, filename)
+        if copy_file(srcfile, dstfile):
+            print('    Copied to: {}'.format(dstfile))
+        else:
+            if printskipped:
+                print('     Skipping: {}'.format(srcfile))
+    return True
 
 
 def collect_admin_templates(printskipped=False):
@@ -287,28 +290,16 @@ def collect_admin_templates(printskipped=False):
     # admin css dirs (source, target)
     admin_dest = os.path.join(
         django_init.project_dir,
-        'wp_main/templates/admin')
-    admin_src = '/'.join((
-        '/usr/local/lib/python3.4/dist-packages',
-        'django/contrib/admin/templates/admin'))
+        'wp_main/templates/admin'
+    )
 
-    change_files = ('change_list_results.html',)
-    change_msg = 'This file must be edited again!'
-    if os.path.isdir(admin_dest) and os.path.isdir(admin_src):
-        print('\nCopying admin templates...')
-        srcfiles = os.listdir(admin_src)
-        for filename in srcfiles:
-            srcfile = os.path.join(admin_src, filename)
-            dstfile = os.path.join(admin_dest, filename)
-            if copy_file(srcfile, dstfile, nosudo=True):
-                print('    Copied to: {}'.format(dstfile))
-                if filename in change_files:
-                    print('               ** {} **'.format(change_msg))
-            else:
-                if printskipped:
-                    print('     Skipping: {}'.format(srcfile))
-        ret = True
-    else:
+    pyver = '{}.{}'.format(sys.version_info.major, sys.version_info.minor)
+    admin_src = '/'.join((
+        '/usr/local/lib/python{}/dist-packages'.format(pyver),
+        'django/contrib/admin/templates/admin'
+    ))
+
+    if not (os.path.isdir(admin_dest) and os.path.isdir(admin_src)):
         print('\n'.join((
             '',
             'admin template directories not found:'
@@ -317,8 +308,24 @@ def collect_admin_templates(printskipped=False):
                 src=admin_src,
                 dest=admin_dest))
 
-        ret = False
-    return ret
+        return False
+
+    change_files = ('change_list_results.html',)
+    change_msg = 'This file must be edited again!'
+
+    print('\nCopying admin templates from: {}'.format(admin_src))
+    srcfiles = os.listdir(admin_src)
+    for filename in srcfiles:
+        srcfile = os.path.join(admin_src, filename)
+        dstfile = os.path.join(admin_dest, filename)
+        if copy_file(srcfile, dstfile, nosudo=True):
+            print('    Copied to: {}'.format(dstfile))
+            if filename in change_files:
+                print('               ** {} **'.format(change_msg))
+        else:
+            if printskipped:
+                print('     Skipping: {}'.format(srcfile))
+    return True
 
 
 def copy_file(srcfile, dstfile, nosudo=False):
