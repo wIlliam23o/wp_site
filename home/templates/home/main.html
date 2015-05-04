@@ -95,13 +95,7 @@
 	{# Javascript: Local Tools (email protection) #}
 	<script type='text/javascript' src='/static/js/wptools.min.js'></script>
 
-	{# Extra Javascript Files (passed by view) #}
-	{% if extra_js_files %}
-		{% for jsrc in extra_js_files %}
-			<script type='text/javascript' src='{{ jsrc }}'></script>
-		{% endfor %}
-	{% endif %}
-	{# EXTRA JAVASCRIPT (per page) #}
+	{# Extra JavaScript (per page) #}
 	{% block javascript %}
 	{% endblock %}
 
