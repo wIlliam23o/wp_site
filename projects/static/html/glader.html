@@ -70,6 +70,26 @@
     <div class='paragraph'>
         You can pass [bash]-[?bash] as the output file name to write to stdout.
     </div>
+
+    {# CommandLine Help #}
+    <h2 class='title'>CommandLine Help</h3>
+
+    <pre class='codewrap'>
+    Usage:
+        glader.py -h | -v
+        glader.py [FILE] [OUTFILE] [-d] [-g]
+
+    Options:
+        FILE           : Glade file to parse.
+        OUTFILE        : File name for output.
+                         If - is given, output will be printed to stdout.
+        -d,--dynamic   : Use dynamic object initialization method.
+        -g,--gui       : Force use of a GUI, even when an output file is given.
+                         You still have to use the 'Save' button to apply
+                         changes.
+        -h,--help      : Show this help message.
+    -v,--version   : Show version.
+    </pre>
 </div>
 
 <div class='wp-block feature-list'>
@@ -98,74 +118,47 @@
 </div>
 
 <div class='wp-block feature-list'>
-    {# Usage #}
-    <div class='title-box'>
-        <h3 class='title'>Usage</h3>
-    </div>
-    <pre class='codewrap'>
-Usage:
-    glader.py -h | -v
-    glader.py [FILE] [OUTFILE] [-d] [-g]
-
-Options:
-    FILE           : Glade file to parse.
-    OUTFILE        : File name for output.
-                     If - is given, output will be printed to stdout.
-    -d,--dynamic   : Use dynamic object initialization method.
-    -g,--gui       : Force use of a GUI, even when an output file is given.
-                     You still have to use the 'Save' button to apply
-                     changes.
-    -h,--help      : Show this help message.
-    -v,--version   : Show version.
-    </pre>
-</div>
-
-<div class='wp-block feature-list'>
     {# Dependencies #}
     <div class='title-box'>
         <h3 class='title'>Dependencies</h3>
     </div>
 
-    <div class='feature-list'>
-        {# Python Modules #}
-        <div class='title-box'>
-            <h4 class='title'>Python modules</h4>
-        </div>
-        <div class='paragraph'>
-            These are installed with
-            <a href='https://pypi.python.org/'>pip</a>.
-        </div>
-        <ul class='blue circle'>
-            <li>
-                [b]docopt[/b] - [i]Handles command-line arguments.[/i]
-            </li>
-        </ul>
+
+    {# Python Modules #}
+    <h2 class='title'>Python modules</h4>
+
+    <div class='paragraph'>
+        These are installed with
+        <a href='https://pypi.python.org/'>pip</a>.
+    </div>
+    <ul class='blue circle'>
+        <li>
+            [b]docopt[?b] - [i]Handles command-line arguments.[?i]
+        </li>
+    </ul>
+
+    {# System Packages #}
+    <h2 class='title'>System packages</h4>
+
+    <div class='paragraph'>
+        These are install with your package manager, like
+        <a href='https://wiki.debian.org/apt-get'>apt</a>.
+    </div>
+    <ul class='blue circle'>
+        <li>
+            [b]gir1.2-gtk-3.0[?b] - [i]Provides helpers and access to GIRepository.[?i]
+        </li>
+        <li>
+            [b]libgtksourceview-3.0-dev[?b] - [i]Provides the <code>GtkSourceView</code> object.[?i]
+        </li>
+        <li>
+            [b]python3-gi[?b] - [i]Provides python bindings for gobject-introspection.[?i]
+        </li>
+    </ul>
+    <div class='paragraph'>
+        There may be others. If I have missed something please send me a message.
     </div>
 
-    <div class='feature-list'>
-        {# System Packages #}
-        <div class='title-box'>
-            <h4 class='title'>System packages</h4>
-        </div>
-        <div class='paragraph'>
-            These are install with your package manager, like
-            <a href='https://wiki.debian.org/apt-get'>apt</a>.
-        </div>
-        <ul class='blue circle'>
-            <li>
-                [b]gir1.2-gtk-3.0[/b] - [i]Provides helpers and access to GIRepository.[/i]
-            </li>
-            <li>
-                [b]libgtksourceview-3.0-dev[/b] - [i]Provides the <code>GtkSourceView</code> object.[/i]
-            </li>
-            <li>
-                [b]python3-gi[/b] - [i]Provides python bindings for gobject-introspection.[/i]
-            </li>
-        </ul>
-        <div class='paragraph'>
-            There may be others. If I have missed something please send me a message.
-        </div>
-    </div>
 </div>
 
 <div class='wp-block feature-list'>
