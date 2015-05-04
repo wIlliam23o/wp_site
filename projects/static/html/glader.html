@@ -1,0 +1,202 @@
+{% load wp_nodes %}
+{% load projects_tags %}
+
+<div class='wp-block feature-list'>
+    {# Description #}
+    <div class='paragraph'>
+        Generates skeleton code from a glade file. The generated signal handler
+        stubs can then be filled in to provide functionality.
+        Arguments for signal handlers are automatically decided through
+        introspection using Gtk.
+    </div>
+    <div class='paragraph'>
+        I didn't know this before I wrote it, but this does the exact same
+        thing that [bash]pyqt4uic[?bash] and [bash]pykde4uic[?bash] do for Qt designer files.
+        It does a little more actually.
+        It includes a GUI for previewing/editing, and also generates stubs for
+        the signal handlers. It does this by reading the glade file's XML,
+        parsing it, and using introspection to generate the stubs.
+    </div>
+    <div class='paragraph'>
+        The glade file still needs to be present in the finished application
+        directory.
+        It is used with [py]Gtk.Builder.add_from_file()[/py] to generate the
+        widgets.
+    </div>
+    <div class='paragraph'>
+        When everything is working as expected, doing
+        [bash]glader input.glade output.py[?bash] will create an executable Gtk
+        application that can be ran and previewed by running
+        [bash]./output.py[?bash]
+    </div>
+</div>
+
+{# Article Ad #}
+{% ad_article %}
+
+{# Download #}
+<div class='wp-block feature-list'>
+    <div class='title-box'>
+        <h3 class='title'>Download</h3>
+    </div>
+    {% downloads project %}
+</div>
+
+{# Source #}
+<div class='wp-block feature-list' id='source'>
+    <div class='title-box'>
+        <h3 class='title'>Source Code</h3>
+    </div>
+    <div class='paragraph'>
+        <a href='https://github.com/welbornprod/glader.git' target='blank'>
+        Glader (github)
+        </a>
+        &nbsp;- current <strong>Glader</strong> source code at
+        <a href='http://github.com' target="_blank">github</a>.
+    </div>
+    {% source_view project request %}
+</div>
+
+<div class='wp-block feature-list'>
+    {# Command Line #}
+    <div class='title-box'>
+        <h3 class='title'>Command Line</h3>
+    </div>
+    <div class='paragraph'>
+        If an input file name (glade), and an output file name (python) are
+        passed to [bash]glader[?bash], the code will be generated and written
+        to the output file.
+    </div>
+    <div class='paragraph'>
+        You can pass [bash]-[?bash] as the output file name to write to stdout.
+    </div>
+</div>
+
+<div class='wp-block feature-list'>
+    {# GUI Mode #}
+    <div class='title-box'>
+        <h3 class='title'>GUI Mode</h3>
+    </div>
+    <div class='paragraph'>
+        When [bash]glader[?bash] is ran with no arguments, or just an input
+        file is given, a GUI is loaded.
+        In GUI mode a preview is generated, and can be edited before saving.
+        When an input file is given, or [bash]--gui[?bash] is used,
+        the preview code is automatically generated when the program loads.
+    </div>
+    <div class='paragraph'>
+        The GUI supports Python syntax highlighting using GtkSourceView.
+        The viewer uses GtkSourceView themes, and can be changed using the
+        theme selector.
+        Themes are located in [bash]/usr/share/gtksourceview-3.0/styles[?bash],
+        and can be downloaded from various places on the internet.
+        The most common is
+        <a href='https://wiki.gnome.org/Projects/GtkSourceView/StyleScheme'>
+            https://wiki.gnome.org/Projects/GtkSourceView/StyleScheme
+        </a>.
+    </div>
+</div>
+
+<div class='wp-block feature-list'>
+    {# Usage #}
+    <div class='title-box'>
+        <h3 class='title'>Usage</h3>
+    </div>
+    <pre class='codewrap'>
+Usage:
+    glader.py -h | -v
+    glader.py [FILE] [OUTFILE] [-d] [-g]
+
+Options:
+    FILE           : Glade file to parse.
+    OUTFILE        : File name for output.
+                     If - is given, output will be printed to stdout.
+    -d,--dynamic   : Use dynamic object initialization method.
+    -g,--gui       : Force use of a GUI, even when an output file is given.
+                     You still have to use the 'Save' button to apply
+                     changes.
+    -h,--help      : Show this help message.
+    -v,--version   : Show version.
+    </pre>
+</div>
+
+<div class='wp-block feature-list'>
+    {# Dependencies #}
+    <div class='title-box'>
+        <h3 class='title'>Dependencies</h3>
+    </div>
+
+    <div class='feature-list'>
+        {# Python Modules #}
+        <div class='title-box'>
+            <h4 class='title'>Python modules</h4>
+        </div>
+        <div class='paragraph'>
+            These are installed with
+            <a href='https://pypi.python.org/'>pip</a>.
+        </div>
+        <ul class='blue circle'>
+            <li>
+                [b]docopt[/b] - [i]Handles command-line arguments.[/i]
+            </li>
+        </ul>
+    </div>
+
+    <div class='feature-list'>
+        {# System Packages #}
+        <div class='title-box'>
+            <h4 class='title'>System packages</h4>
+        </div>
+        <div class='paragraph'>
+            These are install with your package manager, like
+            <a href='https://wiki.debian.org/apt-get'>apt</a>.
+        </div>
+        <ul class='blue circle'>
+            <li>
+                [b]gir1.2-gtk-3.0[/b] - [i]Provides helpers and access to GIRepository.[/i]
+            </li>
+            <li>
+                [b]libgtksourceview-3.0-dev[/b] - [i]Provides the <code>GtkSourceView</code> object.[/i]
+            </li>
+            <li>
+                [b]python3-gi[/b] - [i]Provides python bindings for gobject-introspection.[/i]
+            </li>
+        </ul>
+        <div class='paragraph'>
+            There may be others. If I have missed something please send me a message.
+        </div>
+    </div>
+</div>
+
+<div class='wp-block feature-list'>
+    {# Compatibility #}
+    <div class='title-box'>
+        <h3 class='title'>Compatibility</h3>
+    </div>
+    <div class='paragraph'>
+        Glader is designed for
+        <a href='http://python-gtk-3-tutorial.readthedocs.org/en/latest/install.html'>
+            PyGTK3
+        </a>
+        and
+        <a href='https://www.python.org/downloads/'>
+            Python 3
+        </a>
+        .
+    </div>
+    <div class='paragraph'>
+        It's possible to backport this to older versions, but no work will be
+        done on that.
+    </div>
+    <div class='paragraph'>
+        File an issue if that is something you would like to see.
+    </div>
+</div>
+
+{# Screenshots #}
+<div class='wp-block feature-list'>
+    <div class='title-box'>
+        <h3 class='title' id='screenshots'>Screenshots</h3>
+    </div>
+    {% image_viewer project.screenshot_dir %}
+</div>
