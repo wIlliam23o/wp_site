@@ -5,21 +5,22 @@
 {% block title %}- Phone Words{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="Retrieves english words that can be formed with a phone number.">
+    <meta name='description' content='Retrieves english words that can be formed with a phone number.'>
 {% endblock %}
 
-{% block extrastyle %}
-    <link type="text/css" rel="stylesheet" href="/static/css/phonewords.min.css"/>
+{% block extrastylelink %}
+    <link type='text/css' rel='stylesheet' href='/static/css/phonewords.min.css'/>
+    {{ block.super }}
 {% endblock %}
 
 {% block javascript %}
-    <script type="text/javascript" src="/static/js/phonewords.min.js"></script>
+    <script type='text/javascript' src='/static/js/phonewords.min.js'></script>
 {% endblock %}
 
 <!-- Floating message -->
 {% block floater %}
-    <div id="floater">
-        <span id="floater-msg">
+    <div id='floater'>
+        <span id='floater-msg'>
             Generating results
             {% if query %}
                 for: {{ query }}
@@ -80,12 +81,12 @@
                                 Results:
                             </h3>
                             <span class='phonewords-results-count'>
-                                Total: {{ results|getlength }}
+                                Total: {{ results|get_length }}
                             </span>
                             <div class='phoneword-results-box'>
                                 <!-- Results from lookup function. -->
                                 {% if results %}
-                                    <textarea id='pw_results' rows={% if results.items|getlength < 40 %} '{{ results.items|getlength|add:"1" }}' {% else %} '40' {% endif %} cols='40' readonly placeholder='Loading results...' class='phonewords-textarea'>
+                                    <textarea id='pw_results' rows={% if results.items|get_length < 40 %} '{{ results.items|get_length|add:"1" }}' {% else %} '40' {% endif %} cols='40' readonly placeholder='Loading results...' class='phonewords-textarea'>
                                         {% for resnumber, resword in results|sortdict %}
                                             {{ resnumber }} : {{ resword }}
                                         {% endfor %}
@@ -138,7 +139,7 @@
                                 <br><br>
                                 This is an open-source site, you can look at the source
                                 code for this app at
-                                <a href='http://github.com{{ "phonewords/dev"|gitdir }}' target="_blank">
+                                <a href='http://github.com{{ "phonewords/dev"|gitdir }}' target='_blank'>
                                     github.com
                                 </a>.
                             </p>
@@ -182,16 +183,4 @@
             </p>
         </div>
     </div>
-{% endblock %}
-
-{% block bodyend %}
-    <script type='text/javascript'>
-        // Initialization
-        $(document).ready(function () {
-            wptools.center('#floater', true);
-        });
-        window.onresize = function () {
-            wptools.center('#floater', true);
-        };
-    </script>
 {% endblock %}

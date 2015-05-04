@@ -4,12 +4,16 @@
 {% block title %}- Paste{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="Submit or view a paste with welborn productions paste bin app.">
+    <meta name='description' content='Submit or view a paste with welborn productions paste bin app.'>
 {% endblock %}
 
 <!-- Initial CSS to use -->
-{% block extrastyle %}
+{% block extrastylelink %}
     <link type='text/css' rel='stylesheet' href='/static/css/paste.min.css'/>
+    {{ block.super }}
+{% endblock %}
+
+{% block extrastyle %}
     <style type='text/css'>
         <!-- Height must be set inline here (for Ace) -->
         #paste-content {
@@ -28,17 +32,17 @@
 
 <!-- Floating message -->
 {% block floater %}
-    <div id="floater" onclick='javascript: wppaste.kill_message();'>
-        <p id="floater-msg">
+    <div id='floater' onclick='javascript: wppaste.kill_message();'>
+        <p id='floater-msg'>
             Loading...
         </p>
     </div>
 {% endblock %}
 <!-- Reply browser menu -->
 {% block verticalmenu %}
-    <div id="reply-menu" class="vertical-menu">
+    <div id='reply-menu' class='vertical-menu'>
         {% if replies %}
-            <ul id="reply-menu-items" class="vertical-menu-main">
+            <ul id='reply-menu-items' class='vertical-menu-main'>
                 <div class='vertical-menu-title'>
                     {% if replycount == 1 %}
                         Reply:
@@ -196,7 +200,7 @@
                     </div>
                     {# Show the 'onhold' option for registered users. except no one is registered but me! :) #}
                     {% if request|is_authenticated %}
-                        <div class='paste-onhold-box' title='Check this box to mark this paste as "on hold".'>
+                        <div class='paste-onhold-box' title='Check this box to mark this paste as 'on hold'.'>
                             <div class='paste-onhold-label'>
                                 On Hold:
                             </div>
@@ -342,24 +346,13 @@
 {% endblock content %}
 
 {% block bodyend %}
-    <script type="text/javascript">
+<script type='text/javascript'>
+    $(document).ready(function () {
+        {# setup ajax #}
+        wptools.pre_ajax();
 
-        $(document).ready( function () {
-            {# position floater #}
-            wptools.center('#floater', true);
-
-            {# setup ajax #}
-            wptools.pre_ajax();
-
-            {# Scroll to content #}
-            wptools.scroll_to_anchor('#paste-content-box');
-
-        });
-
-        window.onresize = function () {
-            wptools.center('#floater', true);
-        };
-
-
-    </script>
+        {# Scroll to content #}
+        wptools.scroll_to_anchor('#paste-content-box');
+    });
+</script>
 {% endblock %}

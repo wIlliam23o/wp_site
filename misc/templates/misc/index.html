@@ -8,6 +8,11 @@
     <meta name='description' content='Miscellaneous tools or scripts from welborn productions.'>
 {% endblock %}
 
+{% block extrastylelink %}
+    <link type='text/css' rel='stylesheet' href='/static/css/misc.min.css' />
+    {{ block.super }}
+{% endblock %}
+
 {% block extrastyle %}
     <style type='text/css'>
         .wpbutton.misc-edit-button {

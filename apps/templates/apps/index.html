@@ -1,24 +1,29 @@
-{% extends "home/main.html" %}
+{% extends 'home/main.html' %}
 {% load wp_tags %}
 
 {% block title %}- Apps{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="Listing for all welborn productions web applications.">
+    <meta name='description' content='Listing for all welborn productions web applications.'>
+{% endblock %}
+
+{% block extrastylelink %}
+    <link type='text/css' rel='stylesheet' href='/static/css/apps.min.css' />
+    {{ block.super }}
 {% endblock %}
 
 <!-- Build Apps Listing -->
 {% block content %}
     <!-- Apps Header -->
-    <div class="apps-header">
-        <div class="apps-header-title">
+    <div class='apps-header'>
+        <div class='apps-header-title'>
             <a href='/apps'>
                 <h3 class='header'>Apps</h3>
             </a>
         </div>
-        
-        <div class="apps-header-text">
-                <span class="title">Welborn productions web apps...</span>
+
+        <div class='apps-header-text'>
+                <span class='title'>Welborn productions web apps...</span>
         </div>
     </div>
 

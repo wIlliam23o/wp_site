@@ -28,26 +28,17 @@
  	<link type='text/css' rel='stylesheet' href='/static/css/main.min.css'/>
 	<link type='text/css' rel='stylesheet' href='/static/css/dock.min.css' media='screen'/>
 	<link type='text/css' rel='stylesheet' href='/static/css/wt-rotator.min.css'/>
+	<link type='text/css' rel='stylesheet' href='/static/css/highlighter.min.css'/>
 
-	{# Browser-Specific or Extra CSS Files (Browser detected in views...) #}
-	{% block extrastylelink %}
-		{% if extra_style_link_list %}
-			{# add all extra style links #}
-			{% for extra_link in extra_style_link_list %}
-				<link type='text/css' rel='stylesheet' href='{{ extra_link }}'/>
-			{% endfor %}
-			{# add highlighter css if not already added for debug (test-site) #}
-			{% if request|is_test_site %}
-				{% if not extra_style_link_list|contains:'/static/css/highlighter.min.css' %}
-					<link type='text/css' rel='stylesheet' href='/static/css/highlighter.min.css'/>
-				{% endif %}
-			{% endif %}
-		{% else %}
-			{# no extra style, but we need highlighter css for debug (test-site) #}
-			{% if request|is_test_site %}
-				<link type='text/css' rel='stylesheet' href='/static/css/highlighter.min.css'/>
-			{% endif %}
+	{# Browser-Specific CSS Files  #}
+	{% with request|get_browser_style as browser_style %}
+		{% if browser_style %}
+			<link type='text/css' rel='stylesheet' href='{{ browser_style }}'/>
 		{% endif %}
+	{% endwith %}
+
+	{# View-Specific or Extra CSS Files #}
+	{% block extrastylelink %}
 	{% endblock %}
 
 	{# Custom Local CSS #}
@@ -351,6 +342,7 @@
 	{# Email protection (reveal base64 encoded addresses with the wp-address class.)#}
 	<script type='text/javascript'>
 		$(document).ready( function () {
+			{# Fix any base64 encoded email addresses. #}
 			wptools.wpreveal('.wp-address');
 
 			{# Make alert messages clickable. #}
@@ -370,19 +362,24 @@
 				});
 			{% endif %}
 
-			{# Make all floaters destroyable #}
+			{# Make all floaters destroyable and self-centering #}
 			var floater = $('#floater');
 			if (floater.length) {
 				$(floater).click(function () { $(floater).fadeOut(); });
+				wptools.center('#floater', true);
+				window.onresize = function () {
+					wptools.center('#floater', true);
+				};
 			}
 		});
 	</script>
 
+	{# For views inserting JS that should run before the body closes. #}
+	{% block bodyend %}
+	{% endblock %}
+
 	{# Google Tracking - Universal Analytics code #}
 	{% tracking_google %}
 
-	{# For inserting JS before closing BODY tag #}
-	{% block bodyend %}
-	{% endblock %}
 </body>
 </html>

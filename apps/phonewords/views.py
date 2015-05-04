@@ -7,7 +7,7 @@ from django.views.decorators import csrf
 from django.conf import settings
 
 # Local stuff
-from wp_main.utilities import responses, utilities
+from wp_main.utilities import responses
 from apps.phonewords import phone_words, pwtools
 
 from apps.models import wp_app
@@ -26,23 +26,24 @@ except Exception as ex:
 def view_index(request):
     """ Main view for phone words. """
 
-    reqargs = responses.get_request_args(request,
-                                         requesttype='request',
-                                         default='')
+    reqargs = responses.get_request_args(
+        request,
+        requesttype='request',
+        default='')
     if reqargs:
         # This request came with args, send it to view_results()
         return view_results(request, args=reqargs)
     else:
         # Basic index view.
-        context = {'request': request,
-                   'version': app_version,
-                   'hasargs': False,
-                   'extra_style_link_list':
-                   [utilities.get_browser_style(request)],
-                   }
-        return responses.clean_response_req('phonewords/index.html',
-                                            context,
-                                            request=request)
+        context = {
+            'request': request,
+            'version': app_version,
+            'hasargs': False,
+        }
+        return responses.clean_response_req(
+            'phonewords/index.html',
+            context,
+            request=request)
 
 
 @csrf.csrf_protect
@@ -75,8 +76,9 @@ def view_results(request, args=None):
 
     if lookupfunc:
         # Get wp words file.
-        wordfile = os.path.join(settings.BASE_DIR,
-                                'apps/phonewords/words')
+        wordfile = os.path.join(
+            settings.BASE_DIR,
+            'apps/phonewords/words')
         if os.path.isfile(wordfile):
             # Get results.
             try:
@@ -92,8 +94,9 @@ def view_results(request, args=None):
                     results, total = fix_results(rawresults)
                 except Exception as ex:
                     log.error('Error fixing results:\n{}'.format(ex))
-                    errors = Exception('Sorry, there was an error parsing '
-                                       'the results.<br>{}'.format(ex))
+                    errmsg = (
+                        'Sorry, there was an error parsing the results.<br>{}')
+                    errors = Exception(errmsg.format(ex))
                 # Cache these results for later if its a number.
                 if method == 'number' and (not cache_used):
                     pwtools.save_results(query, results, total)
@@ -106,7 +109,6 @@ def view_results(request, args=None):
         'request': request,
         'version': app_version,
         'hasargs': True,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
         'query': args['query'],
         'results': results,
         'errors': errors,

@@ -7,8 +7,9 @@
     <meta name='description' content='Images shared by Welborn Productions.'/>
 {% endblock %}
 
-{% block extrastyle %}
+{% block extrastylelink %}
     <link type='text/css' rel='stylesheet' href='/static/css/img.min.css'/>
+    {{ block.super }}
 {% endblock %}
 
 {% block javascript %}

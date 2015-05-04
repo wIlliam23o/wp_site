@@ -4,12 +4,14 @@
 {% block title %}- Projects{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="Current projects from welborn productions."/>
+    <meta name='description' content='Current projects from welborn productions.'/>
 {% endblock %}
 
-{% block extrastyle %}
+{% block extrastylelink %}
 	<!-- Style for Video.js -->
-    <link type='text/css' rel='stylesheet' href='/static/css/video-js.css' rel='stylesheet'/>
+	<link type='text/css' rel='stylesheet' href='/static/css/projects.min.css' />
+    <link type='text/css' rel='stylesheet' href='/static/css/video-js.css' />
+    {{ block.super }}
 {% endblock %}
 
 {% block javascript %}
@@ -20,12 +22,12 @@
 <!-- Build projects menu -->
 {% block verticalmenu %}
 	{% if projects %}
-		<div class="vertical-menu">
-			<ul class="vertical-menu-main">
+		<div class='vertical-menu'>
+			<ul class='vertical-menu-main'>
 				{% for project in projects %}
-					<li class="vertical-menu-item">
-						<a class="vertical-menu-link" href="/projects/{{ project.alias }}">
-							<span class="vertical-menu-text">{{ project.name }}</span>
+					<li class='vertical-menu-item'>
+						<a class='vertical-menu-link' href='/projects/{{ project.alias }}'>
+							<span class='vertical-menu-text'>{{ project.name }}</span>
 						</a>
 					</li>
 				{% endfor %}
@@ -37,10 +39,10 @@
 <!-- Build Project Listing -->
 {% block content %}
 	{% if projects %}
-		<div class="wp-block project-listing">
+		<div class='wp-block project-listing'>
 			{% for project in projects %}
 				<!-- Single project listing. -->
-				<div class="wp-block project-container">
+				<div class='wp-block project-container'>
 					<!-- EDIT -->
 					{% if request.user.is_staff %}
 						<a href='/adminprojects/wp_project/{{ project.id }}'>
@@ -51,17 +53,17 @@
 					{% endif %}
 					<!-- Header (Name/Link/Version) -->
 					<div class='project-header-box'>
-						<a href="/projects/{{ project.alias }}">
-							<span class="header project-name">{{ project.name }}</span>
+						<a href='/projects/{{ project.alias }}'>
+							<span class='header project-name'>{{ project.name }}</span>
 						</a>
 						<br/>
-						<span class="version">version {{ project.version }}</span>
+						<span class='version'>version {{ project.version }}</span>
 						<br/>
 					</div>
 
 					<!-- Description -->
-					<div class="project-desc">
-						<span class="desc">{{ project.description|safe }}</span>
+					<div class='project-desc'>
+						<span class='desc'>{{ project.description|safe }}</span>
 					</div>
 				</div>
 			{% endfor %}

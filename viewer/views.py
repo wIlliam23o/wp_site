@@ -103,17 +103,15 @@ def view_loader(request):
 
     if request.REQUEST.get('file', False):
         file_path = request.REQUEST['file'].strip("'").strip('"')
-        context = {'file': file_path,
-                   'extra_style_link_list':
-                   [utilities.get_browser_style(request),
-                    '/static/css/projects.min.css'],
-                   }
+        context = {
+            'file': file_path,
+        }
 
         return responses.clean_response_req('viewer/loader.html',
                                             context=context,
                                             request=request)
     else:
-        raise Http404("No file passed to request.")
+        raise Http404('No file passed to request.')
 
 
 def get_source_files(project):
@@ -189,9 +187,10 @@ def get_file_info(file_path):
     static_path = utilities.get_relative_path(file_path)
     # no file to load.
     if not absolute_path:
-        log.error('Invalid file path for viewer.get_file_content(): '
-                  '{}'.format(file_path))
-        raise Http404("Sorry, that file doesn't exist.")
+        log.error(
+            'Invalid file path for viewer.get_file_content(): {}'.format(
+                file_path))
+        raise Http404('Sorry, that file doesn\'t exist.')
 
     project = ptools.get_project_from_path(absolute_path)
 
@@ -203,9 +202,9 @@ def get_file_info(file_path):
                                                          project)
             if static_path is None or absolute_path is None:
                 # Raise error which will display a 404.
-                raise Http404("Sorry, there was an error viewing that file.")
+                raise Http404('Sorry, there was an error viewing that file.')
         else:
-            raise Http404("Sorry, that file doesn't exist.")
+            raise Http404('Sorry, that file doesn\'t exist.')
 
     # Update project view count tracker
     miscobj = None
@@ -222,8 +221,9 @@ def get_file_info(file_path):
             miscobj.view_count += 1
             miscobj.save()
         else:
-            log.debug('get_file_content: not a project or misc object: '
-                      '{}'.format(file_path))
+            log.debug(
+                'get_file_content: not a project or misc object: {}'.format(
+                    file_path))
 
     # Update file tracker
     if os.path.isfile(absolute_path):

@@ -30,13 +30,11 @@ def view_index(request):
         alertmsg = 'Sorry, no projects yet.'
         response = responses.alert_message(request, alert_msg=alertmsg)
     else:
-        context = {'request': request,
-                   'extra_style_link_list':
-                   [utilities.get_browser_style(request),
-                    "/static/css/projects.min.css"],
-                   'projects': all_projects,
-                   }
-        response = responses.clean_response("projects/index.html", context)
+        context = {
+            'request': request,
+            'projects': all_projects,
+        }
+        response = responses.clean_response('projects/index.html', context)
 
     return response
 
@@ -52,22 +50,21 @@ def view_project(request, project, requested_page, source=None):
 
     # default flags
     use_screenshots = False
-    extra_style_link_list = [utilities.get_browser_style(request),
-                             "/static/css/projects.min.css",
-                             "/static/css/highlighter.min.css"]
 
     # no project, no matches found (or error retrieving).
     if not project:
         alertmsg = 'Sorry, I can\'t find that project.'
-        notfound_msg = ("<a href='/projects'>"
-                        "Click here to visit a listing of my projects."
-                        "</a><br/>\n"
-                        "<span>Or you could try "
-                        "<a href='/search?q={page}'>searching</a>"
-                        "...</span>").format(page=str(requested_page))
-        return responses.alert_message(request,
-                                       alert_msg=alertmsg,
-                                       body_message=notfound_msg)
+        notfound_msg = (
+            '<a href=\'/projects\'>'
+            'Click here to visit a listing of my projects.'
+            '</a><br/>\n'
+            '<span>Or you could try '
+            '<a href=\'/search?q={page}\'>searching</a>'
+            '...</span>').format(page=str(requested_page))
+        return responses.alert_message(
+            request,
+            alert_msg=alertmsg,
+            body_message=notfound_msg)
 
     # possible matches passed?
     matches = project if isinstance(project, (list, tuple)) else None
@@ -84,17 +81,18 @@ def view_project(request, project, requested_page, source=None):
 
     # Grab projects list for vertical menu
     all_projects = wp_project.objects.filter(disabled=False).order_by('name')
-    context = {'request': request,
-               'requested_page': requested_page,
-               'extra_style_link_list': extra_style_link_list,
-               'projects': all_projects,
-               'project': project,
-               'matches': matches,
-               'use_screenshots': use_screenshots,
-               }
-    return responses.clean_response_req("projects/project.html",
-                                        context,
-                                        request=request)
+    context = {
+        'request': request,
+        'requested_page': requested_page,
+        'projects': all_projects,
+        'project': project,
+        'matches': matches,
+        'use_screenshots': use_screenshots,
+    }
+    return responses.clean_response_req(
+        'projects/project.html',
+        context,
+        request=request)
 
 
 def request_any(request, identifier):
@@ -104,28 +102,28 @@ def request_any(request, identifier):
     """
 
     proj = get_withmatches(utilities.safe_arg(identifier))
-    return view_project(request, proj, identifier, source="by_any")
+    return view_project(request, proj, identifier, source='by_any')
 
 
 def request_id(request, _id):
     """ returns project by id """
 
     proj = get_byid(utilities.safe_arg(_id))
-    return view_project(request, proj, str(_id), source="by_id")
+    return view_project(request, proj, str(_id), source='by_id')
 
 
 def request_alias(request, _alias):
     """ returns project by alias """
 
     proj = get_byalias(utilities.safe_arg(_alias))
-    return view_project(request, proj, _alias, source="by_alias")
+    return view_project(request, proj, _alias, source='by_alias')
 
 
 def request_name(request, _name):
     """ returns project by name """
 
     proj = get_byname(utilities.safe_arg(_name))
-    return view_project(request, proj, _name, source="by_name")
+    return view_project(request, proj, _name, source='by_name')
 
 
 def get_byname(_name):

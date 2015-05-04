@@ -232,18 +232,14 @@ def get_browser_name(request):
 
 
 def get_browser_style(request):
-    """ return browser-specific css file (or False if not needed) """
+    """ return browser-specific css file (or None if not needed) """
 
     browser_name = get_browser_name(request)
     # get browser css to use...
-    if browser_name.startswith("ie"):
-        return "/static/css/main-ie.min.css"
-    elif "firefox" in browser_name:
-        return "/static/css/main-gecko.min.css"
-    elif "chrome" in browser_name:
-        return "/static/css/main-webkit.min.css"
-    else:
-        return False
+    if browser_name.startswith('ie'):
+        return '/static/css/main-ie.min.css'
+
+    return None
 
 
 def get_date(date=None, shortdate=False):

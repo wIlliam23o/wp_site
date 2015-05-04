@@ -14,7 +14,6 @@ from collections import defaultdict
 # Local tools
 from wp_main.utilities import htmltools
 from wp_main.utilities.utilities import (
-    get_browser_style,
     get_server,
     get_remote_ip,
     logtraceback
@@ -182,23 +181,12 @@ def clean_response_req(template_name, context, **kwargs):
 
 def default_dict(request=None, extradict=None):
     """ Use default context contents for rendering templates,
-        This dict will return with at least:
-        {
-            'request': request,
-            'extra_style_link_list': utilities.get_browser_style(request),
-        }
+        This dict will return with at least: {'request': request}
         Request must be passed to use this.
         Any extra dict items in the extradict override the defaults.
     """
-    if request is None:
-        defaults = {}
-    else:
-        # Items guaranteed to be present in the context dict.
-        defaults = {
-            'request': request,
-            'extra_style_link_list': [get_browser_style(request)],
-        }
-
+    # Items guaranteed to be present in the context dict.
+    defaults = {'request': request} if request is not None else {}
     if extradict:
         defaults.update(extradict)
 

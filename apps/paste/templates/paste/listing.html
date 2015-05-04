@@ -4,11 +4,15 @@
 {% block title %}- {{ listing_title }}{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="View a listing of pastes from the welborn productions paste bin app.">
+    <meta name='description' content='View a listing of pastes from the welborn productions paste bin app.'>
+{% endblock %}
+
+{% block extrastylelink %}
+    <link type='text/css' rel='stylesheet' href='/static/css/paste.min.css'/>
+    {{ block.super }}
 {% endblock %}
 
 {% block extrastyle %}
-    <link type="text/css" rel="stylesheet" href="/static/css/paste.min.css"/>
     <style type='text/css'>
         .paste-item-replies-box {
             display: none;

@@ -231,7 +231,21 @@ def exceeds_min(value, min_):
 
 
 @register.filter
-def getlength(lennable):
+def get_browser_style(request):
+    """ Get specific browser style based on the user agent. """
+    try:
+        cssfile = utilities.get_browser_style(request)
+    except Exception as ex:
+        # Not a valid request object.
+        log.error(
+            'Unable to get browser style with: {!r}\n  {}'.format(request, ex)
+        )
+        return None
+    return cssfile
+
+
+@register.filter
+def get_length(lennable):
     """ Tag for len() """
     if not lennable:
         return 0

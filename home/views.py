@@ -44,7 +44,6 @@ def index(request):
         'featured_app': hometools.get_featured_app(homeconfig),
         'welcome_message': homeconfig.welcome_message,
         'latest_tweet': latest_tweet,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('home/index.html', context)
 
@@ -70,14 +69,13 @@ def view_about(request):
     # Pass link list for the about page
     context = {
         'request': request,
-        'extra_style_link_list': [
-            '/static/css/about.min.css',
-            utilities.get_browser_style(request)],
     }
-    return responses.clean_response('home/about.html', context,
-                                    link_list=htmltools.auto_link_list,
-                                    auto_link_args={'target': '_blank'}
-                                    )
+    return responses.clean_response(
+        'home/about.html',
+        context,
+        link_list=htmltools.auto_link_list,
+        auto_link_args={'target': '_blank'}
+    )
 
 
 def view_badlogin(request):
@@ -85,7 +83,6 @@ def view_badlogin(request):
 
     context = {
         'request': request,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('home/badlogin.html', context)
 
@@ -99,9 +96,6 @@ def view_debug(request):
         'sysversion': getattr(settings, 'SYSVERSION', ''),
         'siteversion': getattr(settings, 'SITE_VERSION', ''),
         'siteversionnum': getattr(settings, 'WPVERSION', ''),
-        'extra_style_link_list': [
-            utilities.get_browser_style(request),
-            '/static/css/highlighter.min.css'],
     }
     return responses.clean_response('home/debug.html', context)
 
@@ -121,7 +115,6 @@ def view_error(request, error_number):
     context = {
         'request': request,
         'request_path': mark_for_escaping(request_path),
-        'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response_req('home/{}.html'.format(serror),
                                         context,
@@ -132,7 +125,6 @@ def view_ip(request):
     """  returns the remote ip page. """
     context = {
         'request': request,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('home/ip.html', context)
 
@@ -206,9 +198,6 @@ def view_scriptkids(request):
 
     context = {
         'request': request,
-        'extra_style_link_list': [
-            utilities.get_browser_style(request),
-            '/static/css/highlighter.min.css'],
         'use_img': use_img,
         'scriptkid_img': scriptkid_img,
         'use_ip': use_ip,
