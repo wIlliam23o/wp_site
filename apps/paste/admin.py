@@ -28,9 +28,10 @@ def delete_expired(pastes):
 
 def delete_sel_expired(modeladmin, request, queryset):
     """ Deleted expired selected pastes. """
+    querylen = len(queryset)
     delcount = delete_expired(queryset)
     pstr = 'paste' if delcount == 1 else 'pastes'
-    msg = 'Deleted {} of {} selected {}.'.format(delcount, len(queryset), pstr)
+    msg = 'Deleted {} of {} selected {}.'.format(delcount, querylen, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
 delete_sel_expired.short_description = 'Delete selected expired pastes'
 
