@@ -1,7 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""pyvalbot.py
-    Python Evaluation Bot (PyVal)
+"""
+    PyVal (Sandboxed python evaluation and IRC bot.)
+    Copyright (C) 2015  Christopher Welborn
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    About:
+
     IRC Bot that accepts commands, mostly to evaluate and return the result
     of python code.
 
@@ -58,6 +75,7 @@ import sys
 # Arg parsing
 from docopt import docopt
 # Config file
+# TODO: Switch to local json_settings module.
 from easysettings import EasySettings
 
 # Irc stuff
@@ -169,7 +187,7 @@ class PyValIRCProtocol(irc.IRCClient):
         self.username = self.admin.username
         # The password attributes are deleted as soon as they are used.
         self.nickservpw = self.get_config('password', default=None)
-        #self.password = self.get_config('loginpw', default=None)
+
         self.erroneousNickFallback = '{}_'.format(self.nickname)
         # Settings for client/version replies.
         self.versionName = NAME
@@ -228,7 +246,7 @@ class PyValIRCProtocol(irc.IRCClient):
             return True
 
         # Try erasing an attribute value (without erasing the attribute)
-        if not '.' in attr:
+        if '.' not in attr:
             try:
                 setattr(self, attr, None)
                 return True
@@ -546,7 +564,7 @@ class PyValIRCProtocol(irc.IRCClient):
         # Handle auto-bans for command msgs.
         ban_msg = None
         if (self.admin.last_handle and
-           self.admin.last_nick and self.is_command(message)):
+                self.admin.last_nick and self.is_command(message)):
             # save seconds since last response.
             respondtime = (datetime.now() - self.admin.last_handle)
             respondsecs = respondtime.total_seconds()
@@ -597,7 +615,7 @@ class PyValIRCProtocol(irc.IRCClient):
             # Disallow backup of requests. If handlingcount is too much
             # just ignore this one.
             if ((not is_admin) and
-               (self.admin.handlingcount > self.admin.banwarn_limit)):
+                    (self.admin.handlingcount > self.admin.banwarn_limit)):
                 log.msg('Too busy, ignoring command: {}'.format(message))
                 return None
             # Keep track of how many requests are unanswered (handling).
@@ -719,8 +737,8 @@ class PyValIRCProtocol(irc.IRCClient):
                           target,
                           nick)
 
-    def _showError(self, failure):
-        return failure.getErrorMessage()
+    def _showError(self, failureobj):
+        return failureobj.getErrorMessage()
 
 
 class PyValIRCFactory(protocol.ReconnectingClientFactory):
@@ -932,4 +950,5 @@ if __name__ == '__main__':
     # main() creates the instance.
     factory = None
     # Start irc client.
+    log.msg('Connecting to: {}, port: {}'.format(servername, portnum))
     task.react(main, [serverstr, MAIN_ARGD])
