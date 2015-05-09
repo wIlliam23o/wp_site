@@ -17,7 +17,7 @@
 
     -Christopher Welborn
 
-    Version: 0.3.5-1
+    Version: 0.3.5-3
         Fixed encoding errors when printing unicode.
 """
 
