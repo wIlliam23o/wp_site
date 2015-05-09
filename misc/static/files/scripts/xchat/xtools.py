@@ -16,6 +16,9 @@
     their own home.
 
     -Christopher Welborn
+
+    Version: 0.3.5-1
+        Fixed encoding errors when printing unicode.
 """
 
 from code import InteractiveInterpreter
@@ -27,15 +30,10 @@ import sys
 from threading import Thread
 # XChat style version info.
 __module_name__ = 'xtools'
-__module_version__ = '0.3.5-1'
+__module_version__ = '0.3.5-3'
 __module_description__ = 'Various tools/commands for extending XChat...'
-# really minor changes bump this 'versionx'
-VERSIONX = '3'
 # Convenience version str for help commands.
-VERSIONSTR = '{} v. {}-{}'.format(
-    __module_name__,
-    __module_version__,
-    VERSIONX)
+VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
 
 try:
     import hexchat as xchat
