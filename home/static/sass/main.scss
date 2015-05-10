@@ -17,6 +17,24 @@ h1, h2, h3, h4, h5, h6, span, p {
 /* Core */
 *:focus { outline: 0 !important; } /* hopefully fixes IE9's stupid little attitude */
 
+
+/* ----------------------------- Media queries ----------------------------- */
+@media (max-width: 800px) {
+    /* Push the surround to the right a bit when space is squeezed. */
+    #page-surround {
+        margin-left: 20px;
+    }
+}
+
+@media (max-width: 980px) {
+    /* Reduce the font-size on android and other phones/tablets,
+       it's actually too big without this.
+    */
+    body {
+        font-size: 12px;
+    }
+}
+
 html {
     margin-bottom: 1px;
     height: 100%;
@@ -281,12 +299,6 @@ a .header:hover, a .header.featured-name:hover {
     min-height: 240px; // helps with short pages that have a vertical menu
     }
 
-@media (max-width: 800px) {
-    // Push the surround to the right a bit when space is squeezed.
-    #page-surround {
-        margin-left: 20px;
-    }
-}
 
 .title-box {
     // fancy swoosh-loooking borders.
@@ -1143,5 +1155,3 @@ code, samp {
     color: $redmain;
     font-weight: bold;
 }
-
-
