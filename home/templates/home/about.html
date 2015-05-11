@@ -123,7 +123,9 @@
                 </div>
                 <!-- Github -->
                 <div id='github-badge-wrapper' class='about-contrib-item'>
-
+                    <span class='github-badge-status'>
+                        Loading github info...
+                    </span>
                 </div>
                 <!-- Django Powered -->
                 <div class='about-contrib-item'>
@@ -148,8 +150,6 @@
     <script type='text/javascript'>
         $(document).ready(function () {
             var ghdiv = $('#github-badge-wrapper');
-            $(ghdiv).html('<span class="github-badge-status">Loading github info...</span>');
-
             {# Build a github badge, or remove the div entirely. #}
             github_badge.build_badge('welbornprod',
                 function success (jqnode) {
