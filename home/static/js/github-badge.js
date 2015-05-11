@@ -47,7 +47,7 @@ var github_badge = {
     forks: 0,
     stars: 0,
 
-    build_badge: function (username, cbsuccess, cberror) {
+    build: function (username, cbsuccess, cberror) {
         github_badge.get_info(
             username,
             function success() {

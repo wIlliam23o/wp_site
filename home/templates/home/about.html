@@ -151,9 +151,8 @@
         $(document).ready(function () {
             var ghdiv = $('#github-badge-wrapper');
             {# Build a github badge, or remove the div entirely. #}
-            github_badge.build_badge('welbornprod',
+            github_badge.build('welbornprod',
                 function success (jqnode) {
-                    console.log('Info was gathered.');
                     $('#github-badge-wrapper').html(jqnode);
                 },
                 function error (msg) {
