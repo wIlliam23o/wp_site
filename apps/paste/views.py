@@ -85,15 +85,19 @@ def list_view(request, title=None, filterkw=None, orderby=None):
     if title is None:
         title = 'Pastes'
     # Default behaviour is to not show disabled/private pastes.
-    if 'disabled' not in filterkw.keys():
+    if 'disabled' not in filterkw:
         filterkw['disabled'] = False
-    if 'private' not in filterkw.keys():
+    # Private pastes are only viewable directly, not in listings.
+    if 'private' not in filterkw:
         filterkw['private'] = False
 
     try:
         p = wp_paste.objects.filter(**filterkw)
         if orderby is not None:
             p = p.order_by(orderby)
+        # Expired pastes should not show up in the list for non-admins.
+        if not request.user.is_staff:
+            p = [paste for paste in p if not paste.is_expired()]
     except Exception as ex:
         errmsg = 'Unable to retrieve pastes for: {}\n{}'
         log.error(errmsg.format(title, ex))
@@ -153,16 +157,17 @@ def process_submit(submitdata, apisubmit=False):
                 exc = ValueError('Paste is disabled: {}'.format(replytoid))
                 return responses.json_response_err(exc)
 
-    newpaste = wp_paste(author=submitdata.get('author', ''),
-                        author_ip=submitdata.get('author_ip', ''),
-                        title=submitdata.get('title', ''),
-                        content=pastecontent,
-                        onhold=submitdata.get('onhold', False),
-                        language=submitdata.get('language', ''),
-                        parent=replytoobj,
-                        private=submitdata.get('private', False),
-                        apisubmit=apisubmit,
-                        )
+    newpaste = wp_paste(
+        author=submitdata.get('author', ''),
+        author_ip=submitdata.get('author_ip', ''),
+        title=submitdata.get('title', ''),
+        content=pastecontent,
+        onhold=submitdata.get('onhold', False),
+        language=submitdata.get('language', ''),
+        parent=replytoobj,
+        private=submitdata.get('private', False),
+        apisubmit=apisubmit,
+    )
 
     try:
         # Try saving the new paste.
@@ -297,7 +302,7 @@ def view_json(request):
 
     def err_data(msg=None):
         """ Build JSON data for an error. """
-        errresp = {
+        return {
             'status': 'error',
             'title': '',
             'author': '',
@@ -313,7 +318,6 @@ def view_json(request):
             'replyto': '',
             'message': msg if msg else '',
         }
-        return errresp
 
     def paste_data(paste, doreplies=True, doparent=True):
         """ Build JSON data for a paste. """
@@ -385,8 +389,12 @@ def view_json(request):
 
         # Have paste object, make sure it's not disabled.
         if pasteobj.disabled:
-            respdata = err_data('Paste was disabled.')
+            respdata = err_data('Paste is disabled.')
             return responses.json_response(respdata)
+        elif (not request.user.is_staff) and pasteobj.is_expired():
+            respdata = err_data('Paste is expired.')
+            return responses.json_response(respdata)
+
         # Valid paste, build the response data.
         respdata = paste_data(pasteobj)
         respdata['status'] = 'ok'
@@ -434,13 +442,15 @@ def view_paste(request):
 
         # Lookup existing paste by id.
         pasteobj = get_object(wp_paste.objects,
-                              paste_id=pasteidarg)
+                              paste_id=pasteidarg,
+                              disabled=False)
+
         if pasteobj is None:
             # Return a 404, that paste cannot be found.
             errmsg = 'Paste not found: {}'.format(pasteidarg)
             return responses.error404(request, errmsg)
-        elif pasteobj.disabled:
-            errmsg = 'Paste was disabled: {}'.format(pasteidarg)
+        elif (not request.user.is_staff) and pasteobj.is_expired():
+            errmsg = 'Paste is expired: {}'.format(pasteidarg)
             return responses.error404(request, errmsg)
         else:
             # Grab parent as the replyto object.
@@ -459,8 +469,9 @@ def view_paste(request):
             errmsg = 'Paste not found: {}'.format(replytoidarg)
             return responses.error404(request, errmsg)
         elif replytoobj.disabled:
-            errmsg = 'Paste was disabled: {}'.format(replytoidarg)
+            errmsg = 'Paste is disabled: {}'.format(replytoidarg)
             return responses.error_response(request, errmsg)
+
     # If this paste has a parent, get it and use it as the replyto.
     if pasteobj is not None:
         if pasteobj.parent is not None:
@@ -494,7 +505,9 @@ def view_paste_raw(request):
         return responses.error404(request, 'Invalid url.')
 
     try:
-        pasteobj = wp_paste.objects.get(paste_id=pasteidarg)
+        pasteobj = wp_paste.objects.get(
+            paste_id=pasteidarg,
+            disabled=False)
     except wp_paste.DoesNotExist:
         return responses.error404(request, 'Paste not found.')
     except Exception as ex:
@@ -503,6 +516,8 @@ def view_paste_raw(request):
 
     if pasteobj is None:
         return responses.error404(request, 'Paste content not found.')
+    elif (not request.user.is_staff) and pasteobj.is_expired():
+        return responses.error404(request, 'Paste is expired.')
 
     try:
         pasteobj.view_count += 1
@@ -525,7 +540,7 @@ def view_replies(request):
     """ View all replies for a paste. """
     pasteidarg = responses.get_request_arg(request, 'id')
     if pasteidarg is None:
-        raise responses.error404(request, 'No paste id given.')
+        return responses.error404(request, 'No paste id given.')
 
     pasteobj = get_object(wp_paste.objects,
                           paste_id=pasteidarg,
@@ -533,7 +548,7 @@ def view_replies(request):
     if pasteobj is None:
         # No paste found.
         errmsg = 'Paste not found: {}'.format(pasteidarg)
-        raise responses.error404(request, errmsg)
+        return responses.error404(request, errmsg)
 
     replies = pasteobj.children.order_by('-publish_date')
     context = {
