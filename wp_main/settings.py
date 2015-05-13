@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Version for welbornprod.com
-WPVERSION = '2.2.1'
+WPVERSION = '2.2.2'
 
 # file/path (path joining)
 import os.path
@@ -121,34 +121,35 @@ STATICFILES_FINDERS = (
     #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    #     'django.template.loaders.eggs.Loader',
-)
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.request',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.media',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+        'DIRS': (
+            TEMPLATES_BASE,
+            os.path.join(TEMPLATES_BASE, 'admin/templates'),
+            os.path.join(TEMPLATES_BASE, 'admindoc/templates'),
+            # Include project pages as possible templates.
+            os.path.join(BASE_DIR, 'projects/static/html'),
+            # Include blog post html as possible templates.
+            os.path.join(BASE_DIR, 'blogger/static/html'),
+        ),
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+            ],
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or
-    # "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    TEMPLATES_BASE,
-    os.path.join(TEMPLATES_BASE, 'admin/templates'),
-    os.path.join(TEMPLATES_BASE, 'admindoc/templates'),
-    # Include project pages as possible templates.
-    os.path.join(BASE_DIR, 'projects/static/html'),
-    # Include blog post html as possible templates.
-    os.path.join(BASE_DIR, 'blogger/static/html'),
-)
+        },
+    }
+]
 
 MIDDLEWARE_CLASSES = (
     # WelbornProd IP bans..
