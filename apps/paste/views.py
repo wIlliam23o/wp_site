@@ -372,7 +372,7 @@ def view_json(request):
 
         # Build pastes data. Only public and unexpired pastes should show.
         respdata['pastes'] = [
-            p for p in pastes.order_by(orderby)
+            paste_data(p) for p in pastes.order_by(orderby)
             if not p.is_expired()
         ]
         respdata['count'] = len(respdata['pastes'])
