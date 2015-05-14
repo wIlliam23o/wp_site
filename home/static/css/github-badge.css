@@ -12,7 +12,7 @@
   display: block;
   background: #fafafa;
   text-align: left;
-  /* height: 120px; */
+  font-size: 14px;
   width: 200px;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -73,33 +73,44 @@ a .github-badge-username:hover {
 
 .github-badge-info {
   display: block;
+  position: relative;
   border-style: solid;
   border-color: #919191;
   border-width: 1px;
   border-radius: 5px;
   margin: 2px 2px 0px 2px;
   padding: 2px 2px 0px 2px;
-  text-align: center; }
+  text-align: center;
+  line-height: 1em;
+  list-style-type: none;
+  list-style-image: none;
+  line-height: 1.1em;
+  font-size: .9em; }
+
+.github-badge-info-left {
+  display: inline-block;
+  text-align: right;
+  border-right-style: solid;
+  border-right-width: 1px;
+  border-right-color: #919191;
+  padding-right: 8px; }
+
+.github-badge-info-right {
+  display: inline-block;
+  text-align: left;
+  padding-left: 4px; }
 
 .github-badge-info-item {
   position: relative;
-  display: inline;
-  font-size: 0.8em;
+  display: block;
   vertical-align: text-top; }
 
 .github-badge-info-label {
   position: relative;
   display: inline;
-  color: #4d4d4d;
+  font-family: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
+  color: #919191;
   text-shadow: 1px 1px 1px #fff; }
-
-.github-badge-info-div {
-  display: inline;
-  border-left-style: solid;
-  border-left-width: 1px;
-  border-left-color: #919191;
-  margin-left: 4px;
-  margin-right: 8px; }
 
 .github-badge-info-value {
   position: relative;

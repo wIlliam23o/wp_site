@@ -20,7 +20,7 @@
     display: block;
     background: $whitedull;
     text-align: left;
-    /* height: 120px; */
+    font-size: 14px;
     width: 200px;
     @include border-radius-thin(5px);
     padding: 2px;
@@ -82,6 +82,7 @@ a .github-badge-username:hover {
 
 .github-badge-info {
     display: block;
+    position: relative;
     border-style: solid;
     border-color: $greymain;
     border-width: 1px;
@@ -89,29 +90,41 @@ a .github-badge-username:hover {
     margin: 2px 2px 0px 2px;
     padding: 2px 2px 0px 2px;
     text-align: center;
+    line-height: 1em;
+    list-style-type: none;
+    list-style-image: none;
+    line-height: 1.1em;
+    font-size: .9em;
 }
+
+.github-badge-info-left {
+    display: inline-block;
+    text-align: right;
+    border-right-style: solid;
+    border-right-width: 1px;
+    border-right-color: $greymain;
+    padding-right: 8px;
+}
+
+.github-badge-info-right {
+    display: inline-block;
+    text-align: left;
+    padding-left: 4px;
+}
+
 
 .github-badge-info-item {
     position: relative;
-    display: inline;
-    font-size: 0.8em;
+    display: block;
     vertical-align: text-top;
 }
 
 .github-badge-info-label {
     position: relative;
     display: inline;
-    color: $greydark;
+    font-family: $fontsmono;
+    color: $greymain;
     text-shadow: 1px 1px 1px #fff;
-}
-
-.github-badge-info-div {
-    display: inline;
-    border-left-style: solid;
-    border-left-width: 1px;
-    border-left-color: $greymain;
-    margin-left: 4px;
-    margin-right: 8px;
 }
 
 .github-badge-info-value {

@@ -38,7 +38,8 @@
 */
 'use strict';
 var github_badge = {
-    version: '0.0.1',
+    version: '0.0.2',
+    // Github user info.
     username: null,
     userinfo: null,
     avatar_url: null,
@@ -46,61 +47,20 @@ var github_badge = {
     repos: 0,
     forks: 0,
     stars: 0,
+    followers: 0,
 
     build: function (username, cbsuccess, cberror) {
         github_badge.get_info(
             username,
             function success() {
-                var forkplural = github_badge.forks === 1 ? '' : 's',
-                    starplural = github_badge.stars === 1 ? '' : 's';
-
-                var lblrepos = github_badge.repos === 1 ? 'repo' : 'repos',
-                    lblforks = 'fork' + forkplural,
-                    lblforktimes = 'time' + forkplural,
-                    lblstars = 'star' + starplural,
-                    lblstartimes = 'time' + starplural;
-
-                cbsuccess($([
-                    '<div id="github-badge">',
-                    '  <div id="github-badge-branding">',
-                    '    <a href="https://github.com" target="_blank">',
-                    '      <div class="github-badge-branding-label">github.com</div>',
-                    '    </a>',
-                    '  </div>',
-                    '  <div id="github-badge-main">',
-                    '    <div class="github-badge-header">',
-                    '      <a href="https://github.com/' + github_badge.username + '">',
-                    '        <img class="github-badge-avatar" src="' + github_badge.avatar_url + '">',
-                    '      </a>',
-                    '      <a href="https://github.com/' + github_badge.username + '">',
-                    '        <div class="github-badge-username"><strong>' + github_badge.username + '</strong></div>',
-                    '      </a>',
-                    '      <div class="github-badge-name">' + github_badge.name + '</div>',
-                    '    </div>',
-                    '    <div class="github-badge-info">',
-                    '      <div class="github-badge-info-item" title="' + github_badge.name + ' has created ' + github_badge.repos + ' ' + lblrepos + '.">',
-                    '        <span class="github-badge-info-value">' + github_badge.repos + '</span>',
-                    '        <span class="github-badge-info-label">' + lblrepos + '</span>',
-                    '      </div>',
-                    '      <div class="github-badge-info-div"></div>',
-                    '      <div class="github-badge-info-item" title="' + github_badge.name + ' has been forked ' + github_badge.forks + ' ' + lblforktimes + '.">',
-                    '        <span class="github-badge-info-value">' + github_badge.forks + '</span>',
-                    '        <span class="github-badge-info-label">' + lblforks + '</span>',
-                    '      </div>',
-                    '      <div class="github-badge-info-div"></div>',
-                    '      <div class="github-badge-info-item" title="' + github_badge.name + ' has been starred ' + github_badge.stars + ' ' + lblstartimes + '.">',
-                    '        <span class="github-badge-info-value">' + github_badge.stars + '</span>',
-                    '        <span class="github-badge-info-label">' + lblstars + '</span>',
-                    '      </div>',
-                    '    </div>',
-                    '  </div>',
-                    '</div>'
-                ].join('\n')));
+                // Build the final html, send it to the callback.
+                cbsuccess($(github_badge.render_template(github_badge)));
             },
             cberror
         );
 
     },
+
     get_info: function (username, cbsuccess, cberror) {
         github_badge.username = username;
 
@@ -119,9 +79,17 @@ var github_badge = {
     },
 
     parse_info: function (data, cbsuccess, cberror) {
+        var force_int = function force_int(value, fallback) {
+            /* Parse a string as an integer. Use the default on failure. */
+            var val = parseInt(value, 10);
+            return val.toString() === 'NaN' ? (fallback || 0) : val;
+        };
+
         github_badge.name = data.name || 'unknown';
         github_badge.avatar_url = data.avatar_url || null;
-        github_badge.repos = data.public_repos || 0;
+
+        github_badge.repos = force_int(data.public_repos, 0);
+        github_badge.followers = force_int(data.followers, 0);
 
         /*jslint unparam:true*/
         $.ajax('https://api.github.com/users/' + github_badge.username + '/repos', {
@@ -158,5 +126,168 @@ var github_badge = {
                 cbsuccess();
             }
         });
+    },
+
+    render_template: function (obj) {
+        /*  Return an element containing the formatted badge.
+            Expects an object with these attributes:
+                forks, stars, followers, repos, username, name, avatar_url
+        */
+        var forkplural = obj.forks === 1 ? '' : 's',
+            starplural = obj.stars === 1 ? '' : 's',
+            followersplural = obj.followers === 1 ? '' : 's';
+
+        var lblrepos = obj.repos === 1 ? 'repo' : 'repos',
+            lblforks = 'fork' + forkplural,
+            lblforktimes = 'time' + forkplural,
+            lblstars = 'star' + starplural,
+            lblstartimes = 'time' + starplural,
+            lblfollowers = 'follower' + followersplural;
+
+        var humanize_count = function (val) {
+            /*  Use a 'k' to symbolize thousands.
+                If the number is less then 1000, just return it.
+            */
+            if (val < 1000) {
+                return val.toString();
+            }
+            return (val / 1000).toFixed(1) + 'k';
+        };
+
+        return [
+            '<div id="github-badge">',
+            '  <div id="github-badge-branding">',
+            '    <a href="https://github.com" target="_blank">',
+            '      <div class="github-badge-branding-label">github.com</div>',
+            '    </a>',
+            '  </div>',
+            '  <div id="github-badge-main">',
+            // Username, avatar, name.
+            '    <div class="github-badge-header">',
+            '      <a href="https://github.com/' + obj.username + '">',
+            '        <img class="github-badge-avatar" src="' + obj.avatar_url + '">',
+            '      </a>',
+            '      <a href="https://github.com/' + obj.username + '">',
+            '        <div class="github-badge-username"><strong>' + obj.username + '</strong></div>',
+            '      </a>',
+            '      <div class="github-badge-name">' + obj.name + '</div>',
+            '    </div>',
+            // Counts
+            '    <ul class="github-badge-info">',
+            '      <li class="github-badge-info-left">',
+            '        <div class="github-badge-info-item" title="' + obj.name + ' has created ' + obj.repos + ' ' + lblrepos + '.">',
+            '          <span class="github-badge-info-value">' + humanize_count(obj.repos) + '</span>',
+            '          <span class="github-badge-info-label">' + lblrepos + '</span>',
+            '        </div>',
+            '        <div class="github-badge-info-item" title="' + obj.name + ' has been forked ' + obj.forks + ' ' + lblforktimes + '.">',
+            '          <span class="github-badge-info-value">' + humanize_count(obj.forks) + '</span>',
+            '          <span class="github-badge-info-label">' + lblforks + '</span>',
+            '        </div>',
+            '      </li>',
+            '      <li class="github-badge-info-right">',
+            '        <div class="github-badge-info-item" title="' + obj.name + ' has been starred ' + obj.stars + ' ' + lblstartimes + '.">',
+            '          <span class="github-badge-info-value">' + humanize_count(obj.stars) + '</span>',
+            '          <span class="github-badge-info-label">' + lblstars + '</span>',
+            '        </div>',
+            '        <div class="github-badge-info-item" title="' + obj.name + ' has ' + obj.followers + ' ' + lblfollowers + '.">',
+            '          <span class="github-badge-info-value">' + humanize_count(obj.followers) + '</span>',
+            '          <span class="github-badge-info-label">' + lblfollowers + '</span>',
+            '      </li>',
+            '    </ul>',
+            '  </div>',
+            '</div>'
+        ].join('\n');
+    },
+
+    url_info: function (options) {
+        /*global window, document*/
+        /*  Gathers info and parameters from a url (window.location.href).
+
+            Options:
+                {
+                    url:         Url to work with.
+                                 Default: window.location.href
+                    unescape:    Unescape url-escaped stuff.
+                                 Default: true
+                    convert_num: Convert integer-like arguments to integers.
+                                 Default: true
+                }
+        */
+        var url_search_arr,
+            option_key,
+            i,
+            urlObj,
+            get_param,
+            key,
+            val,
+            url_query,
+            url_get_params = {},
+            a = document.createElement('a'),
+            default_options = {
+                'url': window.location.href,
+                'unescape': true,
+                'convert_num': true
+            };
+
+        if (typeof options !== "object") {
+            options = default_options;
+        } else {
+            for (option_key in default_options) {
+                if (default_options.hasOwnProperty(option_key)) {
+                    if (options[option_key] === undefined) {
+                        options[option_key] = default_options[option_key];
+                    }
+                }
+            }
+        }
+
+        a.href = options.url;
+        url_query = a.search.substring(1);
+        url_search_arr = url_query.split('&');
+
+        if (url_search_arr[0].length > 1) {
+            for (i = 0; i < url_search_arr.length; i += 1) {
+                get_param = url_search_arr[i].split("=");
+
+                if (options.unescape) {
+                    key = decodeURI(get_param[0]);
+                    val = decodeURI(get_param[1]);
+                } else {
+                    key = get_param[0];
+                    val = get_param[1];
+                }
+
+                if (options.convert_num) {
+                    if (val.match(/^\d+$/)) {
+                        val = parseInt(val, 10);
+                    } else if (val.match(/^\d+\.\d+$/)) {
+                        val = parseFloat(val);
+                    }
+                }
+
+                if (url_get_params[key] === undefined) {
+                    url_get_params[key] = val;
+                } else if (typeof url_get_params[key] === "string") {
+                    url_get_params[key] = [url_get_params[key], val];
+                } else {
+                    url_get_params[key].push(val);
+                }
+
+                get_param = [];
+            }
+        }
+
+        urlObj = {
+            protocol: a.protocol,
+            hostname: a.hostname,
+            host: a.host,
+            port: a.port,
+            hash: a.hash.substr(1),
+            pathname: a.pathname,
+            search: a.search,
+            parameters: url_get_params
+        };
+
+        return urlObj;
     }
 };
