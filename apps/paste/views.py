@@ -363,15 +363,18 @@ def view_json(request):
 
     if pasteidarg.lower() in ('all', 'latest', 'top'):
         # List all paste items (with custom orderby)
-        pastes = wp_paste.objects.filter(disabled=False)
+        pastes = wp_paste.objects.filter(disabled=False, private=False)
         respdata = {'count': 0, 'pastes': []}
         if pasteidarg.lower() == 'top':
             orderby = '-view_count'
         else:
             orderby = '-publish_date'
-        # Build pastes data.
-        for p in pastes.order_by(orderby):
-            respdata['pastes'].append(paste_data(p))
+
+        # Build pastes data. Only public and unexpired pastes should show.
+        respdata['pastes'] = [
+            p for p in pastes.order_by(orderby)
+            if not p.is_expired()
+        ]
         respdata['count'] = len(respdata['pastes'])
         respdata['status'] = 'ok'
         if respdata['count'] > 0:
