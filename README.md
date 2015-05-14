@@ -41,7 +41,7 @@ At the least, maybe someone could take inspiration from the apps, or modify them
 to work with their setup.
 
 
-------------------
+-----------------------
 
 _*Language/Libraries*_:
 -----------------------
