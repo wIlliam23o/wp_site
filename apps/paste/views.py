@@ -378,10 +378,10 @@ def view_json(request):
         respdata['count'] = len(respdata['pastes'])
         respdata['status'] = 'ok'
         if respdata['count'] == 0:
-            msg = 'No pastes to retrieve.'
+            respdata['message'] = 'No pastes to retrieve.'
         else:
-            msg = '{} pastes retrieved.'.format(respdata['count'])
-        respdata['message'] = msg
+            respdata['message'] = (
+                '{} pastes retrieved.'.format(respdata['count']))
     else:
         # Try getting a single paste object.
         pasteobj = get_object(wp_paste.objects, paste_id=pasteidarg)
