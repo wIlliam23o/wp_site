@@ -7,7 +7,7 @@
 
 {% block extrastylelink %}
     <link type='text/css' rel='stylesheet' href='/static/css/about.min.css' />
-    <link type='text/css' rel='stylesheet' href='/static/css/github-badge.min.css' />
+    <link type='text/css' rel='stylesheet' href='http://cdn.jsdelivr.net/octobadge.github/0.0.1/badge.min.css'/>
     {{ block.super }}
 {% endblock %}
 
@@ -115,17 +115,15 @@
                 additional info:
             </h3>
             <div id='about-contrib-box'>
+                <!-- Github -->
+                <div id="github-badge-wrapper" class='about-contrib-item'>
+                    <github-badge user='welbornprod' badge='octogeek'></github-badge>
+                </div>
                 <!-- Daniweb -->
                 <div class='about-contrib-item'>
                     <a href='http://www.daniweb.com/members/572777/chriswelborn' target='_blank'>
                         <img src='http://www.daniweb.com/stats/badge/572777/solved.jpg' width='120' height='90' alt='chriswelborn Contributes to DaniWeb' border='0' target='_blank' />
                     </a>
-                </div>
-                <!-- Github -->
-                <div id='github-badge-wrapper' class='about-contrib-item'>
-                    <span class='github-badge-status'>
-                        Loading github info...
-                    </span>
                 </div>
                 <!-- Django Powered -->
                 <div class='about-contrib-item'>
@@ -147,18 +145,6 @@
 {% endblock %}
 
 {% block bodyend %}
-    <script type='text/javascript'>
-        $(document).ready(function () {
-            var ghdiv = $('#github-badge-wrapper');
-            {# Build a github badge, or remove the div entirely. #}
-            github_badge.build('welbornprod',
-                function success (jqnode) {
-                    $('#github-badge-wrapper').html(jqnode);
-                },
-                function error (msg) {
-                    console.log('Error gathering github user info: ' + msg);
-                    $(ghdiv).css({'display': 'none'});
-                });
-        });
-    </script>
+        {# Load the github octo badge #}
+        <script type='text/javascript' src='http://cdn.jsdelivr.net/octobadge.github/0.0.1/badge.min.js'></script>
 {% endblock %}
