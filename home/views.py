@@ -8,6 +8,10 @@ from django.utils.safestring import mark_for_escaping
 # authentication
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
+
+# disable cache for ip/useragent pages.
+from django.views.decorators.cache import never_cache
+
 # various welbornprod tools
 from wp_main.utilities import (
     utilities,
@@ -121,6 +125,7 @@ def view_error(request, error_number):
                                         request=request)
 
 
+@never_cache
 def view_ip(request):
     """  returns the remote ip page. """
     context = {
@@ -129,6 +134,7 @@ def view_ip(request):
     return responses.clean_response('home/ip.html', context)
 
 
+@never_cache
 def view_ip_simple(request):
     """ returns the remote ip in plain text. """
     ip = '{}\n'.format(utilities.get_remote_ip(request))
@@ -220,6 +226,7 @@ def view_raiseerror(request):
     return responses.error500(request, msgs=msgs)
 
 
+@never_cache
 def view_useragent(request):
     """  returns the user agent page. """
     context = {
@@ -228,6 +235,7 @@ def view_useragent(request):
     return responses.clean_response('home/useragent.html', context)
 
 
+@never_cache
 def view_useragent_simple(request):
     """ returns the user agent string in plain text. """
     ua = utilities.get_user_agent(request)
