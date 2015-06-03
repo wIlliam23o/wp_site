@@ -290,6 +290,12 @@ def get_time_since(date):
 
 
 @register.filter
+def get_user_agent(request):
+    """ Get the user agent string from a request. """
+    return utilities.get_user_agent(request)
+
+
+@register.filter
 def hcodes(content):
     """ Highlight using short codes found with highlighter.highlight_codes.
         Example:

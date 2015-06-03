@@ -218,3 +218,18 @@ def view_raiseerror(request):
     else:
         msgs = None
     return responses.error500(request, msgs=msgs)
+
+
+def view_useragent(request):
+    """  returns the user agent page. """
+    context = {
+        'request': request,
+    }
+    return responses.clean_response('home/useragent.html', context)
+
+
+def view_useragent_simple(request):
+    """ returns the user agent string in plain text. """
+    ua = utilities.get_user_agent(request)
+    uastr = getattr(ua, 'ua_string', 'Unknown')
+    return responses.text_response('{}\n'.format(uastr))

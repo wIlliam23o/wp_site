@@ -7,38 +7,6 @@
     <meta name="description" content="View your remote ip by visiting this welborn productions page. For plain-text you can visit /ip instead of /ip.html">
 {% endblock %}
 
-{% block extrastyle %}
-    {{ block.super }}
-    <style type="text/css">
-        .ip-info-box {
-            text-align: center;
-            border-radius: 5px;
-            border-color: #D7D7D7;
-            border-width: 2px;
-            border-style: solid;
-            background: #FFFFFF;
-            padding: 10px;
-        }
-        
-        .ip-box {
-            display: inline-block;
-            margin-top: 5px;
-            border-radius: 3px;
-            border-color: #d7d7d7;
-            border-style: solid;
-            border-width: 1px;
-            padding: 5px;
-            color: #970000;
-            font-size: 1.2em;
-        }
-        
-        .ip-box.ip-host {
-            color: #02448B;
-            font-size: 0.85em;
-        }
-       
-    </style>
-{% endblock %}
 {% block content %}
     <div class='home-welcome-box'>
         <div class='ip-info-box'>

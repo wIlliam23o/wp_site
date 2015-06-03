@@ -56,6 +56,14 @@ urlpatterns = patterns(
     # sitemap server
     url(r'^sitemap\.xml$',
         sitemaps.view_byserver),
+    # useragent simple
+    url(r'^useragent$',
+        homeviews.view_useragent_simple),
+    url(r'^ua$',
+        homeviews.view_useragent_simple),
+    # useragent html
+    url(r'^useragent\.html?$',
+        homeviews.view_useragent),
     # home (index)
     url(r'^$',
         homeviews.index),

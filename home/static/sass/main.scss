@@ -1155,3 +1155,42 @@ code, samp {
     color: $redmain;
     font-weight: bold;
 }
+
+/* IP page styles */
+.ip-info-box {
+    text-align: center;
+    @include border-radius-thin(5px);
+    background: $whitedull;
+    padding: 10px;
+}
+
+.ip-box {
+    display: inline-block;
+    margin-top: 5px;
+    @include border-radius-thin(5px);
+    padding: 5px;
+    color: $redmain;
+    font-size: 1.2em;
+}
+
+.ip-box.ip-host {
+    color: $bluemain;
+    font-size: 0.85em;
+}
+
+/* User agent page styles */
+.useragent-info-box {
+    text-align: center;
+    @include border-radius-thin(5px);
+    background: $whitedull;
+    padding: 10px;
+}
+
+.useragent-value {
+    display: inline-block;
+    margin-top: 5px;
+    @include border-radius-thin(5px);
+    padding: 5px;
+    color: $redmain;
+    font-family: $fontsmono;
+}
