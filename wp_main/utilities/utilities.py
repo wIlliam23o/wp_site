@@ -146,9 +146,9 @@ def get_apps(
                           the parent apps.
                           Example: (grab all apps with a 'search' module)
                               # Import all <app_name>.search
-                              apps = search_apps(child='search')
+                              apps = get_apps(child='search')
                           Default: None
-            no_django   : True/False. Whether or not to include modules
+            no_django   : True/False. Whether to exclude modules
                           starting with 'django'.
                           Default: True
     """
