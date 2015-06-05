@@ -3,7 +3,12 @@
    - Christopher Welborn 2013 -desc added in 2014 :)
 */
 
-/*global ace:true, wptools:true, wp_content:true, wp_modelist:true */
+/*  JSHint/JSLint options:
+    `ace` and `wptools` are read-only.
+
+    global ace:false, wptools:false
+    global wp_content:true, wp_modelist:true
+*/
 
 // Store current relative filename here. The template sends it on the first
 // page load, and then it is set with JS when doing ajax calls.

@@ -36,6 +36,12 @@
             });
         </script>
 */
+/*  Some JSHint options:
+    Allow browser globals, including console, and $ for jQuery.
+    Allow a global 'use strict'.
+*/
+/* jshint browser:true, devel: true, jquery:true, globalstrict: true */
+
 'use strict';
 var github_badge = {
     version: '0.0.2',

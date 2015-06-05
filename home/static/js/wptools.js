@@ -21,6 +21,16 @@
                    (easier development, pretty much the same deployment)
 
 */
+
+/*  Some JSHint options:
+    Allow browser globals, including console, and $ for jQuery.
+    Allow a global 'use strict'.
+*/
+/* jshint browser:true, devel: true, jquery:true, globalstrict:true */
+
+// Base64 is not linted, but is used in wptools. It should be read-only.
+/* global Base64:false */
+
 'use strict';
 var wptools = {
     alert : function (msg, smallmsg) {
@@ -350,7 +360,7 @@ var misctools = {
 *
 **/
 
-/*ignore jslint start*/
+/* jshint ignore:start */
 var Base64 = {
 
     // private property
@@ -474,7 +484,7 @@ var Base64 = {
     }
 };
 
-/*ignore jslint end*/
+/* jshint ignore:end */
 
 /* ------------------------------------------------------------------------- */
 

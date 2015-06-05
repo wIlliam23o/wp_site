@@ -1,5 +1,14 @@
-/*global ace:true, wptools:true, wp_modelist:true, wp_themelist:true, wp_content:true*/
-// Paste tools/helpers
+/*  Welborn Productions - Paste - Tools
+    Client side utilities for loading/submitting pastes.
+*/
+
+/*  JSHint/JSLint options.
+    `ace` and `wptools` are read-only globals.
+
+    global ace:false, wptools:false
+    global wp_modelist:true, wp_themelist:true, wp_content:true
+*/
+
 var wppaste = {
     build_lang_menu : function () {
         /* Build language options. */
@@ -351,7 +360,9 @@ var wppaste = {
         pastedata.title = wppaste.get_paste_title();
         pastedata.language = wppaste.get_selected_lang();
         pastedata.onhold = wppaste.get_selected_onhold();
+        /* jshint ignore: start */
         pastedata['private'] = wppaste.get_selected_private();
+        /* jshint ignore: end */
         var replyto = $('#replyto-id').attr('value');
         pastedata.replyto = replyto;
 
