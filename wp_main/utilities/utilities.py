@@ -243,7 +243,7 @@ def get_browser_style(request):
 
 
 def get_date(date=None, shortdate=False):
-    """ Return date string.
+    """ Return a string from a datetime object, or now() when `date` is empty.
         Arguments:
             date       : Existing datetime object to format.
                          Default: datetime.now()
