@@ -116,8 +116,8 @@
             </h3>
             <div id='about-contrib-box'>
                 <!-- Github -->
-                <div id="github-badge-wrapper" class='about-contrib-item'>
-                    <github-badge user='welbornprod' badge='octogeek'></github-badge>
+                <div id='github-badge-wrapper' class='about-contrib-item'>
+                    <github-badge user='welbornprod' badge='octogeek'/>
                 </div>
                 <!-- Daniweb -->
                 <div class='about-contrib-item'>
@@ -146,5 +146,8 @@
 
 {% block bodyend %}
         {# Load the github octo badge #}
-        <script type='text/javascript' src='http://cdn.jsdelivr.net/octobadge.github/0.0.1/badge.min.js'></script>
+        {# Old method #}
+        {# <script type='text/javascript' src='http://cdn.jsdelivr.net/octobadge.github/0.0.1/badge.min.js'></script> #}
+        <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script>
+
 {% endblock %}
