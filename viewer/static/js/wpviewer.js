@@ -32,6 +32,8 @@ var wpviewer = {
             console.log('can\'t find href for element: ' + linkelem);
             return false;
         }
+        // TODO: Just use event handlers. Set elem.click() to the proper
+        //       function when enabled, and to a dummy when disabled.
         if (enabled) {
             // ensure this link is 'enabled'
             if (menutarget.indexOf('false') < 0) {
@@ -253,7 +255,6 @@ var wpviewer = {
         var displayname = wpviewer.current_file || filename;
         wpviewer.update_loading_msg('<span>Loading file: ' + displayname + '...</span>');
 
-        //$('#project-info').fadeOut();
         $('#file-info').fadeOut();
         /*jslint unparam:true*/
         $.ajax({

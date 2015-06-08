@@ -379,8 +379,10 @@ def build_js_file(filename):
     cmdargs = [
         'java',
         '-jar', closure,
-        '--warning_level', 'QUIET',
+        '--compilation_level', 'SIMPLE',
+        # '--warning_level', 'QUIET',
         '--language_in', 'ECMASCRIPT5',
+        # '--language_out', 'ES5_STRICT',
         '--js', filename,
         '--js_output_file', outfile]
 
