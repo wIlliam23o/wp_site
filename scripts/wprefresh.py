@@ -22,7 +22,7 @@ from docopt import docopt
 
 # Script info...
 NAME = 'WpRefresh'
-VERSION = '1.2.2'
+VERSION = '2.0.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
 
@@ -53,9 +53,6 @@ USAGESTR = """{version}
 
     Options:
         -A,--noadmin         : Skip admin css copy.
-        -b,--buildwp         : Only build wp files.
-        -B,--nobuild         : Skip building files.
-        -c,--collect         : Auto static collection.
         -C,--nocollect       : Skip static collection.
         -d,--debug           : Prints extra info (not much right now).
         -h,--help            : Show this message.
@@ -74,19 +71,13 @@ def main(argd):
     warn = False if test else (not (argd['--live'] or argd['--norestart']))
 
     # Check for mismatched args (rather than write a complicated USAGESTR)..
-    mismatched = check_argset(argd,
-                              [('--collect', '--nocollect'),
-                               ('--nobuild', '--buildwp'),
-                               ('--restart', '--collect'),
-                               ('--restart', '--buildwp'),
-                               ('--restart', '--norestart'),
-                               ])
+    mismatched = check_argset(argd, [('--restart', '--norestart')])
     if mismatched:
         return 1
 
     # Check overall skip.
     if check_args(argd,
-                  ('--norestart', '--nobuild', '--nocollect', '--noadmin'),
+                  ('--norestart', '--nocollect', '--noadmin'),
                   unless=('--clearcache',)):
         print('\nSkipping entire refresh...')
         return 0
@@ -100,12 +91,9 @@ def main(argd):
         check_call(apache_restart)
         return 0
 
-    # Run build files..
-    if not argd['--nobuild']:
-        check_call(build_files, wponly=argd['--buildwp'])
     # Run collect static
     if not argd['--nocollect']:
-        check_call(collect_static, autocollect=argd['--collect'])
+        check_call(collect_static)
     # Run admin copy (overwrites anything in /static)
     if not argd['--noadmin']:
         check_call(collect_admin_css, printskipped=argd['--debug'])
@@ -234,7 +222,7 @@ def clear_cache():
     return True
 
 
-def collect_static(autocollect=False):
+def collect_static():
     """ Run manage.py collectstatic """
     manage_py = os.path.join(settings.BASE_DIR, "manage.py")
     use_elevation = 'workspace/' in settings.BASE_DIR
@@ -244,12 +232,12 @@ def collect_static(autocollect=False):
         return False
 
     print("\nRunning collectstatic...")
-    collect_cmd = ['echo', '"yes"', '|'] if autocollect else []
-    if use_elevation:
-        collect_cmd += ['sudo']
-    collect_cmd += ['python3', manage_py, 'collectstatic']
-    print("running: " + ' '.join(collect_cmd))
-    callret = os.system(' '.join(collect_cmd))
+    collect_cmd = ['sudo'] if use_elevation else []
+    collect_cmd.extend(['python3', manage_py, 'collectstatic', '--noinput'])
+
+    cmdstr = ' '.join(collect_cmd)
+    print('running: {}'.format(cmdstr))
+    callret = os.system(cmdstr)
 
     return (callret == 0)
 
@@ -257,8 +245,8 @@ def collect_static(autocollect=False):
 def collect_admin_css(printskipped=False):
     """ Move admin css to proper dir """
     # admin css dirs (source, target)
-    admin_css = os.path.join(django_init.project_dir, "home/static/admin/css")
-    admin_css_static = os.path.join(settings.STATIC_ROOT, "admin/css")
+    admin_css = os.path.join(django_init.project_dir, 'home/static/admin/css')
+    admin_css_static = os.path.join(settings.STATIC_ROOT, 'admin/css')
 
     if not admin_css_static.endswith('/'):
         admin_css_static += '/'
@@ -272,7 +260,7 @@ def collect_admin_css(printskipped=False):
                 dest=admin_css_static))
         return False
 
-    print("\nCopying admin css...")
+    print('\nCopying admin css...')
     srcfiles = os.listdir(admin_css)
     for filename in srcfiles:
         srcfile = os.path.join(admin_css, filename)

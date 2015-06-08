@@ -4,7 +4,7 @@
 # ...A simpler build tool for js and sass.
 # -Christopher Welborn 06-08-2015
 
-# TODO: Modify /static/ dirs and builder.py so that "git pull" requires
+# TODO: Modify /static/ dirs and builder.py so that a "git pull" requires
 #       no building on production.
 appname="WpBuild"
 appversion="0.0.1"
@@ -19,7 +19,11 @@ forced_mode=false
 
 dir_project="$appdir/.."
 # Final home for minified files.
-dir_out=~/dump/buildtest
+dir_out="$dir_project/built"
+if [[ ! -e "$dir_out" ]]; then
+    echo "Output directory is missing: $dir_out"
+    exit 1
+fi
 dir_css="$dir_out/css"
 dir_js="$dir_out/js"
 
@@ -51,6 +55,118 @@ js_args=(
 )
 
 
+function build_file {
+    # Build a single file. File extension determines the builder.
+    if [[ "$1" =~ \.js$ ]]; then
+        build_js_file "$1"
+    elif [[ "$1" =~ \.scss$ ]]; then
+        build_sass_file "$1"
+    else
+        echo "Unknown file type: $1"
+        return 1
+    fi
+}
+
+function build_files {
+    # Use file extension to build all files passed in.
+    for filename in "${@}"
+    do
+        build_file "$filename"
+    done
+}
+
+function build_js {
+    if [[ ! -e "$closure_path" ]]; then
+        echo "Unable to locate closure: $closure_path"
+        return 1
+    fi
+
+    if [[ ! -d "$dir_js" ]]; then
+        echo "Creating JS directory: $dir_js"
+        mkdir -p "$dir_js"
+    fi
+
+    for jsfile in $dir_project/*/static/js/*.js
+    do
+        build_js_file "$jsfile"
+    done
+}
+
+function build_js_file {
+    # Build a single js file, passed in as an arg.
+    local jsfile="$1"
+    if [[ ! -e "$jsfile" ]]; then
+        echo "File does not exist: $jsfile"
+        return 1
+    fi
+
+    local relname="${jsfile##*..}"
+    local relshortname="${relname##*/}"
+    if is_ignored_js "$relshortname"; then
+        debug "    Skipping ignored: $relshortname"
+        return 0
+    fi
+    local outname="${relshortname%.*}.min.js"
+    local outpath="$dir_out/js/$outname"
+    local outpathshort="${outpath##*..}"
+    if ! is_modified "$jsfile" "$outpath" && [[ $forced_mode == false ]]; then
+        debug "    Skipping non-modified file: $relshortname"
+        return 0
+    fi
+    if [[ $debug_mode == true ]]; then
+        debug "Would've built js file: $relshortname -> $outpathshort"
+        return 0
+    fi
+
+    printf "Building JS file: %-25s -> %s\n" "$relshortname" "$outpathshort"
+    java -jar "$closure_path" "${js_args[@]}" --js "$jsfile" --js_output_file "$outpath"
+}
+
+
+function build_sass {
+
+    if [[ ! -d "$dir_css" ]]; then
+        echo "Creating CSS directory: $dir_css"
+        mkdir -p "$dir_css"
+    fi
+
+    for sassfile in $dir_project/*/static/sass/*.scss
+    do
+        build_sass_file "$sassfile"
+    done
+}
+
+
+function build_sass_file {
+    # Build a single sass file, passed in as an arg.
+    local sassfile="$1"
+    if [[ ! -e "$sassfile" ]]; then
+        echo "File does not exist: $sassfile"
+        return 1
+    fi
+
+    local relname="${sassfile##*..}"
+    local relshortname="${relname##*/}"
+    if is_ignored_sass "$relshortname"; then
+        debug "    Skipping ignored: $relshortname"
+        return 0
+    fi
+    local outname="${relshortname%.*}.min.css"
+    local outpath="$dir_out/css/$outname"
+    local outpathshort="${outpath##*..}"
+    if ! is_modified "$sassfile" "$outpath" && [[ $forced_mode == false ]]; then
+        debug "    Skipping non-modified file: $relshortname"
+        return 0
+    fi
+
+    if [[ $debug_mode == true ]]; then
+        debug "Would've built sass file: $relshortname -> $outpathshort"
+        return 0
+    fi
+
+    printf "Building SASS file: %-25s -> %s\n" "$relshortname" "$outpathshort"
+    sass "${sass_args[@]}" "${sass_include_args[@]}" "$sassfile" "$outpath"
+}
 
 
 function debug {
@@ -59,25 +175,32 @@ function debug {
     fi
 }
 
-function file_build {
-    # Build a single file. File extension determines the builder.
-    if [[ "$1" =~ \.js$ ]]; then
-        js_build_file "$1"
-    elif [[ "$1" =~ \.scss$ ]]; then
-        sass_build_file "$1"
-    else
-        echo "Unknown file type: $1"
-        return 1
-    fi
+
+function is_ignored_js {
+    # Check to see if this is an ignored js file.
+    local ignored
+    for ignored in "${js_ignore[@]}"
+    do
+        if [[ "$1" =~ $ignored ]]; then
+            return 0
+        fi
+    done
+    return 1
 }
 
-function files_build {
-    # Use file extension to build all files passed in.
-    for filename in "${@}"
+
+function is_ignored_sass {
+    # Check to see if this is an ignored sass file.
+    local ignored
+    for ignored in "${sass_ignore[@]}"
     do
-        file_build "$filename"
+        if [[ "$1" =~ $ignored ]]; then
+            return 0
+        fi
     done
+    return 1
 }
+
 
 function is_modified {
     # Compare two files to see if the old one has been modified.
@@ -94,63 +217,6 @@ function is_modified {
     return 1
 }
 
-function js_build {
-    if [[ ! -e "$closure_path" ]]; then
-        echo "Unable to locate closure: $closure_path"
-        return 1
-    fi
-
-    if [[ ! -d "$dir_js" ]]; then
-        echo "Creating JS directory: $dir_js"
-        mkdir -p "$dir_js"
-    fi
-
-    for jsfile in $dir_project/*/static/js/*.js
-    do
-        js_build_file "$jsfile"
-    done
-}
-
-function js_build_file {
-    # Build a single js file, passed in as an arg.
-    local jsfile="$1"
-    if [[ ! -e "$jsfile" ]]; then
-        echo "File does not exist: $jsfile"
-        return 1
-    fi
-
-    local relname="${jsfile##*..}"
-    local relshortname="${relname##*/}"
-    if js_is_ignored "$relshortname"; then
-        debug "    Skipping ignored: $relshortname"
-        return 0
-    fi
-    local outname="${relshortname%.*}.min.js"
-    local outpath="$dir_out/js/$outname"
-    if ! is_modified "$jsfile" "$outpath" && [[ $forced_mode == false ]]; then
-        debug "    Skipping non-modified file: $relshortname"
-        return 0
-    fi
-    if [[ $debug_mode == true ]]; then
-        debug "Would've built js file: $relshortname -> $outpath"
-        return 0
-    fi
-
-    printf "Building JS file: %-25s -> %s\n" "$relshortname" "$outpath"
-    java -jar "$closure_path" "${js_args[@]}" --js "$jsfile" --js_output_file "$outpath"
-}
-
-function js_is_ignored {
-    # Check to see if this is an ignored js file.
-    local ignored
-    for ignored in "${js_ignore[@]}"
-    do
-        if [[ "$1" =~ $ignored ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
 
 
 # shellcheck disable=SC2120
@@ -176,61 +242,6 @@ $appname v. $appversion
 "
 }
 
-
-function sass_build {
-
-    if [[ ! -d "$dir_css" ]]; then
-        echo "Creating CSS directory: $dir_css"
-        mkdir -p "$dir_css"
-    fi
-
-    for sassfile in $dir_project/*/static/sass/*.scss
-    do
-        sass_build_file "$sassfile"
-    done
-}
-
-function sass_build_file {
-    # Build a single sass file, passed in as an arg.
-    local sassfile="$1"
-    if [[ ! -e "$sassfile" ]]; then
-        echo "File does not exist: $sassfile"
-        return 1
-    fi
-
-    local relname="${sassfile##*..}"
-    local relshortname="${relname##*/}"
-    if sass_is_ignored "$relshortname"; then
-        debug "    Skipping ignored: $relshortname"
-        return 0
-    fi
-    local outname="${relshortname%.*}.min.css"
-    local outpath="$dir_out/css/$outname"
-    if ! is_modified "$sassfile" "$outpath" && [[ $forced_mode == false ]]; then
-        debug "    Skipping non-modified file: $relshortname"
-        return 0
-    fi
-
-    if [[ $debug_mode == true ]]; then
-        debug "Would've built sass file: $relshortname -> $outpath"
-        return 0
-    fi
-
-    printf "Building SASS file: %-25s -> %s\n" "$relshortname" "$outpath"
-    sass "${sass_args[@]}" "${sass_include_args[@]}" "$sassfile" "$outpath"
-}
-
-function sass_is_ignored {
-    # Check to see if this is an ignored sass file.
-    local ignored
-    for ignored in "${sass_ignore[@]}"
-    do
-        if [[ "$1" =~ $ignored ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
 
 # Parse args
 do_js=false
@@ -259,24 +270,26 @@ do
     fi
 done
 
+# Build individual files.
 let infilelen=${#infiles[@]}
 if [[ $infilelen -gt 0 ]]; then
-    files_build "${infiles[@]}"
+    build_files "${infiles[@]}"
     exit
 fi
 
+# Build all files (default behavior).
 if [[ $do_js == false ]] && [[ $do_sass == false ]]; then
-    js_build
-    sass_build
+    build_js
+    build_sass
     exit
 fi
 
-
+# Selective builds.
 if [[ $do_js == true ]]; then
-    js_build
+    build_js
 fi
 
 if [[ $do_sass == true ]]; then
-    sass_build
+    build_sass
 fi
 
