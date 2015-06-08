@@ -46,7 +46,7 @@ from django.conf import settings
 _FILE = sys.argv[0]
 _SCRIPT = os.path.split(_FILE)[1]
 _NAME = 'Builder'
-_VERSION = '1.0.1'
+_VERSION = '1.0.2'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 DEBUG = False
 # These strings will always be filtered.
@@ -214,7 +214,7 @@ def build_css_files(**kwargs):
     """ Builds all css files. see walk_files_byext() for keyword arguments """
 
     # TODO: This is the same as build_js_files except closure is used!
-    # TODO: Combine them!
+    # TODO: Sass can minify CSS, use it instead.
 
     print('\nBuilding CSS...')
     # Get walker (Generator) for these files/filters
@@ -374,13 +374,12 @@ def build_js_file(filename):
     # Build command args:
     relpath = filename.split('static/')[1].replace('.js', '.min.js')
     outfile = os.path.join(settings.STATIC_ROOT, relpath)
-    # outfile = filename.replace('.js', '.min.js')
 
     cmdargs = [
         'java',
         '-jar', closure,
         '--compilation_level', 'SIMPLE',
-        # '--warning_level', 'QUIET',
+        '--warning_level', 'QUIET',
         '--language_in', 'ECMASCRIPT5',
         # '--language_out', 'ES5_STRICT',
         '--js', filename,
