@@ -8,7 +8,7 @@
 #       no building on production.
 appname="WpBuild"
 appversion="0.0.1"
-apppath="$(realpath "${BASH_SOURCE[0]}")"
+apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
 

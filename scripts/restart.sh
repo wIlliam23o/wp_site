@@ -6,7 +6,7 @@
 # -Christopher Welborn 06-08-2015
 appname="WpRefresh"
 appversion="0.0.1"
-apppath="$(realpath "${BASH_SOURCE[0]}")"
+apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
 
