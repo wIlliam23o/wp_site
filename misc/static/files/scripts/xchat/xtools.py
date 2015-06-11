@@ -17,7 +17,7 @@
 
     -Christopher Welborn
 
-    Version: 0.3.5-3
+    Version: 0.3.5-4
         Fixed encoding errors when printing unicode.
 """
 
@@ -30,7 +30,7 @@ import sys
 from threading import Thread
 # XChat style version info.
 __module_name__ = 'xtools'
-__module_version__ = '0.3.5-3'
+__module_version__ = '0.3.5-4'
 __module_description__ = 'Various tools/commands for extending XChat...'
 # Convenience version str for help commands.
 VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
@@ -924,10 +924,10 @@ def indentlines(s, padding=8, maxlength=40):
         else:
             lines.append(currentlinestr)
             currentline = [word]
-    else:
-        # Append the last line we built.
-        if currentline:
-            lines.append(' '.join(currentline))
+
+    # Append the last line we built.
+    if currentline:
+        lines.append(' '.join(currentline))
 
     if lines:
         spc = ' ' * padding
