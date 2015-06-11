@@ -201,7 +201,7 @@ def exceeds_max(value, max_):
             try:
                 imax = int(max_)
                 return (val_ > imax)
-            except:
+            except (TypeError, ValueError):
                 pass
     return False
 
