@@ -469,7 +469,7 @@ def bool_mode(modestr):
     try:
         intmode = int(modestr)
         return bool(intmode)
-    except:
+    except (TypeError, ValueError):
         pass
     # Try string val..
     modestr = modestr.lower()
@@ -594,13 +594,13 @@ def color_code(color):
 
     try:
         code = xtools.colors[color]['code']
-    except:
+    except KeyError:
         # Try number.
         try:
             codeval = int(color)
             start = ''
             code = '{}{}'.format(start, str(codeval))
-        except:
+        except (TypeError, ValueError):
             code = None
 
     if code:
@@ -838,7 +838,7 @@ def get_flag_args(word, arglist):
         for i in items:
             try:
                 lst.remove(i)
-            except:
+            except ValueError:
                 # Item was not in the list.
                 pass
 
@@ -1642,7 +1642,7 @@ def remove_catcher(catcherstr):
             # Try by index.
             try:
                 intval = int(kstr)
-            except:
+            except (TypeError, ValueError):
                 return None
             for msg in xtools.msg_catchers.keys():
                 msgindex = xtools.msg_catchers[msg]['index']
@@ -1684,7 +1684,7 @@ def remove_filter(filterstr, fornick=False):
             # Try by index.
             try:
                 intval = int(kstr)
-            except:
+            except (TypeError, ValueError):
                 return None
             for msg in xtools.msg_filters[filtertype].keys():
                 msgindex = xtools.msg_filters[filtertype][msg]['index']
@@ -1725,7 +1725,7 @@ def remove_ignored_nick(nickstr):
             # Try by index.
             try:
                 intval = int(kstr)
-            except:
+            except (TypeError, ValueError):
                 return None
             for nick in xtools.ignored_nicks.keys():
                 nickindex = xtools.ignored_nicks[nick]['index']
@@ -1858,7 +1858,7 @@ def validate_int_str(intstr, minval=5, maxval=60):
 
     try:
         intval = int(intstr)
-    except:
+    except (TypeError, ValueError):
         return None
 
     if intval < minval:

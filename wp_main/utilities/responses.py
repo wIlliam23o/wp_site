@@ -428,7 +428,7 @@ def get_request_arg(request, arg_names, **kwargs):
                     int_val = max_val
                 # return float instead of string
                 val = int_val
-            except:
+            except (TypeError, ValueError):
                 pass
         else:
             # try float, check min/max if needed.
@@ -440,7 +440,7 @@ def get_request_arg(request, arg_names, **kwargs):
                     float_val = max_val
                 # return float instead of string
                 val = float_val
-            except:
+            except (TypeError, ValueError):
                 pass
     else:
         # Get desired type from defaults type.
@@ -601,7 +601,9 @@ def render_response(template_name, context):
     try:
         rendered = htmltools.render_clean(template_name, context)
         return HttpResponse(rendered)
-    except:
+    except Exception as ex:
+        log.error(
+            'Error rendering template \'{}\': {}'.format(template_name, ex))
         return alert_message(request,
                              'Sorry, there was an error loading this page.')
 

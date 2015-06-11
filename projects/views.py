@@ -189,11 +189,12 @@ def get_withmatches(_identifier):
     # Try id.
     try:
         _id = int(identifiers[0])
+    except (TypeError, ValueError):
+        pass
+    else:
         proj = get_byid(_id)
         if proj and not proj.disabled:
             return proj
-    except:
-        pass
 
     # Search for matches
     return search_projects(identifiers)
@@ -218,22 +219,27 @@ def search_projects(identifiers):
         Looks at name, alias, description, and id.
         All .lower() and trimmed of spaces.
 
-        Returns list of project matches, or [] on no matches.
+        Returns set of project matches, or empty set when nothing matches.
     """
-    matches = []
+    matches = set()
     # Try all words in identifier seperately
-    for word in identifiers:
-        # look for close matches...
-        getprojects = lambda o: o.filter(disabled=False).order_by('name')
-        for project in getprojects(wp_project.objects):
+    projects = wp_project.objects.filter(disabled=False).order_by('name')
+    # A map of project -> searchable strings
+    searchable = {
+        p: (
+            p.name.lower().replace(' ', ''),
+            p.alias.lower(),
+            p.description.lower().replace(' ', ''),
+            str(p.id)
+        )
+        for p in projects
+    }
+
+    for project in searchable:
+        for word in identifiers:
+            searchword = str(word).lower()
             # Attributes to search, lowered and trimmed when applicable.
-            queryitems = (project.name.lower().replace(' ', ''),
-                          project.alias.lower(),
-                          project.description.lower().replace(' ', ''),
-                          str(project.id),
-                          )
             # try matching in various ways
-            if match_items(str(word).lower(), queryitems):
-                if project not in matches:
-                    matches.append(project)
+            if match_items(searchword, searchable[project]):
+                matches.add(project)
     return matches

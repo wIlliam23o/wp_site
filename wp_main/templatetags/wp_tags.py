@@ -168,7 +168,7 @@ def dict_value(dict_object, dictkey):
 
     try:
         val = dict_object[dictkey]
-    except:  # Exception as ex:
+    except (AttributeError, KeyError):
         val = ''
     return val
 
@@ -191,7 +191,7 @@ def exceeds_max(value, max_):
     else:
         try:
             val_ = int(value)
-        except:
+        except (TypeError, ValueError):
             val_ = value
 
     if isinstance(max_, (float, int)):
@@ -215,7 +215,7 @@ def exceeds_min(value, min_):
     else:
         try:
             val_ = int(value)
-        except:
+        except (TypeError, ValueError):
             val_ = value
     if isinstance(min_, (float, int)):
         return (val_ < min_)
@@ -224,7 +224,7 @@ def exceeds_min(value, min_):
             try:
                 imin = int(min_)
                 return (val_ < imin)
-            except:
+            except (TypeError, ValueError):
                 pass
 
     return False
@@ -513,7 +513,7 @@ def meta_value(request_object, dictkey):
 
     try:
         val = request_object.META[dictkey]
-    except:  # Exception as ex:
+    except (AttributeError, KeyError):
         val = ''
     return val
 
