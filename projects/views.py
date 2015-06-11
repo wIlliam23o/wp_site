@@ -67,7 +67,7 @@ def view_project(request, project, requested_page, source=None):
             body_message=notfound_msg)
 
     # possible matches passed?
-    matches = project if isinstance(project, (list, tuple)) else None
+    matches = project if isinstance(project, set) else None
     if matches:
         project = None
 

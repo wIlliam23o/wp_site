@@ -297,7 +297,7 @@ def search_app(searchmod, queries, request=None):
             targets = searchmod.get_targets(obj, content=content, desc=desc)
             if search_targets(queries, targets):
                 resultargs = searchmod.result_args(obj, desc=desc)
-                # Highlight queries for the description.
+                # Highlight the queries.
                 resultargs['desc'] = highlight_queries(queries, desc)
                 results.append(WpResult(**resultargs))
     except Exception as ex:
