@@ -8,18 +8,8 @@ import sys
 
 from docopt import docopt
 
-# py2 compatibility.
-try:
-    if sys.version[0] == '3':
-        input_ = input
-    else:
-        input_ = raw_input  # noqa
-except SyntaxError:
-    input_ = input
-
-
 NAME = 'WpSendmail'
-VERSION = '1.2.0'
+VERSION = '1.3.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[1]
 
@@ -35,10 +25,11 @@ USAGESTR = """{verstr}
 
     Usage:
         {script} -h | -v
-        {script} TO MSG [-d] [-D] [-f from_address] [-s subject] [-u user]
+        {script} TO [MSG] [-d] [-D] [-f from_address] [-s subject] [-u user]
 
     Options:
         MSG                     : Message text, or file to read text from.
+                                  Uses stdin when not given.
         TO                      : One or many 'to' addresses.
                                   Separated by a comma.
         -d,--dryrun             : Just show what would've been sent.
@@ -50,10 +41,11 @@ USAGESTR = """{verstr}
                                   Defaults to: {defaultsubject}
         -u user,--user user     : Username for login.
         -v,--version            : Show version.
-""".format(verstr=VERSIONSTR,
-           script=SCRIPT,
-           defaultfrom=DEFAULTFROM[1],
-           defaultsubject=DEFAULTSUBJECT)
+""".format(
+    verstr=VERSIONSTR,
+    script=SCRIPT,
+    defaultfrom=DEFAULTFROM[1],
+    defaultsubject=DEFAULTSUBJECT)
 
 
 def main(argd):
@@ -72,14 +64,14 @@ def main(argd):
         print('\nYou must provide a To address.')
         return 1
 
-    # Parse message
-    msgarg = argd['MSG']
-    if os.path.exists(msgarg):
+    # Parse message from user arg, file name, or stdin.
+    msgarg = argd['MSG'] or read_stdin()
+    if len(msgarg) < 256 and os.path.exists(msgarg):
         # Get msg from file.
         try:
             with open(msgarg, encoding='utf-8') as fread:
                 msg = fread.read()
-        except (IOError, OSError) as exio:
+        except EnvironmentError as exio:
             print('\nUnable to open msg file: {}\n{}'.format(msgarg, exio))
             return 1
     else:
@@ -91,49 +83,58 @@ def main(argd):
 
     if argd['--dryrun']:
         # Dry run.
-        print('Would\'ve sent:')
-        print('        To: {}'.format(', '.join(to_addrs)))
-        print('      From: {}'.format(from_addr))
-        print('   Subject: {}'.format(subject))
-        print('       Msg:')
-        print(msg)
-        print('\nNo mail sent.')
+        print('\n'.join((
+            'Would\'ve sent:',
+            '        To: {to}',
+            '      From: {frm}',
+            '   Subject: {subj}',
+            '       Msg:\n\n{msg}',
+            '\nNo mail sent.'
+        )).format(
+            to=', '.join(to_addrs),
+            frm=from_addr,
+            subj=subject,
+            msg=msg
+        )
+        )
+        return 0
+
+    # Get login info for the server.
+    # User
+    if argd['--user']:
+        user = argd['--user']
     else:
-        # Get login infor for the server.
-        # User
-        if argd['--user']:
-            user = argd['--user']
+        print('Enter login information for: {}'.format(SERVER))
+        user = get_input('UserName')
+    if not user:
+        return 1
+
+    # Pass
+    passwd = get_pass()
+    if not passwd:
+        return 1
+
+    # Build args for send_mail function.
+    sendkwargs = {
+        'subject': subject,
+        'debug': argd['--debug'],
+        'username': user,
+        'passwd': passwd,
+    }
+
+    # Try sending the mail.
+    try:
+        if send_mail_with_header(from_addr, to_addrs, msg, **sendkwargs):
+            print('\nMail sent to:\n    '
+                  '{}'.format('\n    '.join(to_addrs)))
         else:
-            print('Enter login information for: {}'.format(SERVER))
-            user = get_input('UserName')
-        if not user:
-            return 1
-
-        # Pass
-        passwd = get_pass()
-        if not passwd:
-            return 1
-
-        # Build args for send_mail function.
-        sendkwargs = {'subject': subject,
-                      'debug': argd['--debug'],
-                      'username': user,
-                      'passwd': passwd,
-                      }
-
-        # Try sending the mail.
-        try:
-            if send_mail_with_header(from_addr, to_addrs, msg, **sendkwargs):
-                print('\nMail sent to:\n    '
-                      '{}'.format('\n    '.join(to_addrs)))
-            else:
-                print('\nUnable to send mail.')
-        except Exception as ex:
-            print('\n{}'.format(ex))
-            return 1
-        else:
-            # success
-            return 0
+            print('\nUnable to send mail.')
+    except Exception as ex:
+        print('\n{}'.format(ex))
+        return 1
+    else:
+        # success
+        return 0
 
 
 def get_input(query):
@@ -141,7 +142,7 @@ def get_input(query):
 
     if not query.endswith((':', ': ')):
         query = '{}: '.format(query)
-    answer = input_(query)
+    answer = input(query)
     if not answer.strip():
         return None
 
@@ -161,8 +162,15 @@ def get_pass():
     return pw
 
 
+def read_stdin():
+    """ Read from stdin, but print a helpful message when stdin is a tty. """
+    if sys.stdin.isatty():
+        print('\nReading from stdin until EOF (Ctrl + D)\n')
+    return sys.stdin.read()
+
+
 def send_mail_with_header(sender, receivers, message, **kwargs):
-    """ automatically builds the headers needed.
+    """ Automatically builds the headers needed, sends an email.
         Arguments:
             sender      : email for the From: portion
             receivers   : single address to send to, or list of addresses.
@@ -181,30 +189,39 @@ def send_mail_with_header(sender, receivers, message, **kwargs):
     subject = kwargs.get('subject', '(no subject given)')
     debug = kwargs.get('debug', False)
 
-    build_header = not (("To:" in message) and ("From:" in message))
     if not isinstance(receivers, (list, tuple)):
         receivers = [receivers]
     if subject is None:
-        subject = "(no subject given)"
+        subject = 'No subject'
 
-    if build_header:
+    if (('To:' in message) and ('From:' in message)):
+        # This message already contains headers.
+        final_msg = message
+    else:
+        # Build proper email headers.
         if not sender.strip('\n').endswith('>'):
             sender = '<{}>'.format(sender)
-        header = ('To:  <{}>\n'.format('>, <'.join(receivers)) +
-                  'From: {}\n'.format(sender) +
-                  'Subject: {}\n\n'.format(subject))
-    else:
-        header = ''
-    actual_msg = ''.join([header, message])
-    if debug:
-        print('trying to send:\n{}'.format(actual_msg))
+        header = '\n'.join((
+            'To:  <{recv}>',
+            'From: {snd}',
+            'Subject: {subj}'
+        )).format(
+            recv='>, <'.join(receivers),
+            snd=sender,
+            subj=subject)
 
-    return send_mail(sender,
-                     receivers,
-                     actual_msg,
-                     username=username,
-                     passwd=passwd,
-                     debug=debug)
+        final_msg = '\n\n'.join((header, message))
+
+    if debug:
+        print('Trying to send:\n{}'.format(final_msg))
+
+    return send_mail(
+        sender,
+        receivers,
+        final_msg,
+        username=username,
+        passwd=passwd,
+        debug=debug)
 
 
 def send_mail(sender, to, message, username=None, passwd=None, debug=False):
@@ -221,21 +238,19 @@ def send_mail(sender, to, message, username=None, passwd=None, debug=False):
     # login and send mail.
     try:
 
-        smtp_ = smtplib.SMTP(SERVER, port=PORT)
-        smtp_.set_debuglevel(debug_level)
-        smtp_.login(user=username, password=passwd)
+        mailer = smtplib.SMTP(SERVER, port=PORT)
+        mailer.set_debuglevel(debug_level)
+        mailer.login(user=username, password=passwd)
     except Exception as ex:
-        print('Can\'t login:\n{}'.format(ex))
-        raise Exception('Unable to login!')
+        raise Exception('Unable to login!: {}'.format(ex))
     else:
         try:
-            smtp_.sendmail(sender, to, message)
-            smtp_.quit()
+            mailer.sendmail(sender, to, message)
+            mailer.quit()
         except Exception as ex:
-            print('Can\'t send mail:\n{}'.format(ex))
-            if (smtp_ is not None) and (hasattr(smtp_, 'quit')):
-                smtp_.quit()
-            raise Exception('Cannot send mail!')
+            if (mailer is not None) and (hasattr(mailer, 'quit')):
+                mailer.quit()
+            raise Exception('Cannot send mail!: {}'.format(ex))
     return True
 
 # START OF SCRIPT -------------
