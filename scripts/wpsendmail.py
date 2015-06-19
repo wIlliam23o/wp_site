@@ -81,24 +81,6 @@ def main(argd):
     # Parse subject
     subject = argd['--subject'] or DEFAULTSUBJECT
 
-    if argd['--dryrun']:
-        # Dry run.
-        print('\n'.join((
-            'Would\'ve sent:',
-            '        To: {to}',
-            '      From: {frm}',
-            '   Subject: {subj}',
-            '       Msg:\n\n{msg}',
-            '\nNo mail sent.'
-        )).format(
-            to=', '.join(to_addrs),
-            frm=from_addr,
-            subj=subject,
-            msg=msg
-        )
-        )
-        return 0
-
     # Get login info for the server.
     # User
     if argd['--user']:
@@ -118,6 +100,7 @@ def main(argd):
     sendkwargs = {
         'subject': subject,
         'debug': argd['--debug'],
+        'dryrun': argd['--dryrun'],
         'username': user,
         'passwd': passwd,
     }
@@ -125,16 +108,17 @@ def main(argd):
     # Try sending the mail.
     try:
         if send_mail_with_header(from_addr, to_addrs, msg, **sendkwargs):
-            print('\nMail sent to:\n    '
-                  '{}'.format('\n    '.join(to_addrs)))
+            if not argd['--dryrun']:
+                addresses = '\n    '.join(to_addrs)
+                print('\nMail sent to:\n    {}'.format(addresses))
         else:
             print('\nUnable to send mail.')
+            return 1
     except Exception as ex:
         print('\n{}'.format(ex))
         return 1
-    else:
-        # success
-        return 0
+
+    return 0
 
 
 def get_input(query):
@@ -178,6 +162,7 @@ def send_mail_with_header(sender, receivers, message, **kwargs):
 
         Keyword Arguments:
             debug       : tell send_mail() to use debug mode.
+            dryrun      : print the final message, do not send anything.
             passwd      : password for login.
             username    : user name for login.
             subject     : optional subject to be used.
@@ -188,6 +173,7 @@ def send_mail_with_header(sender, receivers, message, **kwargs):
     passwd = kwargs.get('passwd', None)
     subject = kwargs.get('subject', '(no subject given)')
     debug = kwargs.get('debug', False)
+    dryrun = kwargs.get('dryrun', False)
 
     if not isinstance(receivers, (list, tuple)):
         receivers = [receivers]
@@ -212,8 +198,11 @@ def send_mail_with_header(sender, receivers, message, **kwargs):
 
         final_msg = '\n\n'.join((header, message))
 
-    if debug:
-        print('Trying to send:\n{}'.format(final_msg))
+    if dryrun:
+        print('\nWould\'ve sent:\n\n{}'.format(final_msg))
+        return True
+    elif debug:
+        print('Sending:\n\n{}\n'.format(final_msg))
 
     return send_mail(
         sender,
