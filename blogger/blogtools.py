@@ -44,7 +44,6 @@ def fix_post_list(blog_posts, **kwargs):
         trims body length to fit maximum allowed for listing.
         trim settings can be disabled by setting to 0. (max_posts=0)
 
-        runs prepare_content on all post.body's for highlighting and whatnot.
         returns list of blog_posts.
 
         Keyword Arguments:
@@ -366,16 +365,6 @@ def get_tags_fontsizes(tags_dict=None):
             tag_sizes[tag_name] = sizemap_max
     # Return the map of {tag_name: css_size}
     return tag_sizes
-
-
-def prepare_content(body_content):
-    """ runs various functions on the content, like source-highlighting """
-
-    # do auto source highlighting
-    # if "<pre class=" in body_content:
-    #    body_content = highlighter.highlight_inline(body_content)
-    # body_content = highlighter.highlight_codes(body_content)
-    return body_content
 
 
 class WpTag():

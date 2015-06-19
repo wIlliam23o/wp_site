@@ -8,6 +8,10 @@ from django.utils.safestring import mark_for_escaping
 # authentication
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
+
+# disable cache for ip/useragent pages.
+from django.views.decorators.cache import never_cache
+
 # various welbornprod tools
 from wp_main.utilities import (
     utilities,
@@ -44,7 +48,6 @@ def index(request):
         'featured_app': hometools.get_featured_app(homeconfig),
         'welcome_message': homeconfig.welcome_message,
         'latest_tweet': latest_tweet,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('home/index.html', context)
 
@@ -70,14 +73,13 @@ def view_about(request):
     # Pass link list for the about page
     context = {
         'request': request,
-        'extra_style_link_list': [
-            '/static/css/about.min.css',
-            utilities.get_browser_style(request)],
     }
-    return responses.clean_response('home/about.html', context,
-                                    link_list=htmltools.auto_link_list,
-                                    auto_link_args={'target': '_blank'}
-                                    )
+    return responses.clean_response(
+        'home/about.html',
+        context,
+        link_list=htmltools.auto_link_list,
+        auto_link_args={'target': '_blank'}
+    )
 
 
 def view_badlogin(request):
@@ -85,7 +87,6 @@ def view_badlogin(request):
 
     context = {
         'request': request,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('home/badlogin.html', context)
 
@@ -99,9 +100,6 @@ def view_debug(request):
         'sysversion': getattr(settings, 'SYSVERSION', ''),
         'siteversion': getattr(settings, 'SITE_VERSION', ''),
         'siteversionnum': getattr(settings, 'WPVERSION', ''),
-        'extra_style_link_list': [
-            utilities.get_browser_style(request),
-            '/static/css/highlighter.min.css'],
     }
     return responses.clean_response('home/debug.html', context)
 
@@ -121,22 +119,22 @@ def view_error(request, error_number):
     context = {
         'request': request,
         'request_path': mark_for_escaping(request_path),
-        'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response_req('home/{}.html'.format(serror),
                                         context,
                                         request=request)
 
 
+@never_cache
 def view_ip(request):
     """  returns the remote ip page. """
     context = {
         'request': request,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('home/ip.html', context)
 
 
+@never_cache
 def view_ip_simple(request):
     """ returns the remote ip in plain text. """
     ip = '{}\n'.format(utilities.get_remote_ip(request))
@@ -206,9 +204,6 @@ def view_scriptkids(request):
 
     context = {
         'request': request,
-        'extra_style_link_list': [
-            utilities.get_browser_style(request),
-            '/static/css/highlighter.min.css'],
         'use_img': use_img,
         'scriptkid_img': scriptkid_img,
         'use_ip': use_ip,
@@ -229,3 +224,20 @@ def view_raiseerror(request):
     else:
         msgs = None
     return responses.error500(request, msgs=msgs)
+
+
+@never_cache
+def view_useragent(request):
+    """  returns the user agent page. """
+    context = {
+        'request': request,
+    }
+    return responses.clean_response('home/useragent.html', context)
+
+
+@never_cache
+def view_useragent_simple(request):
+    """ returns the user agent string in plain text. """
+    ua = utilities.get_user_agent(request)
+    uastr = getattr(ua, 'ua_string', 'Unknown')
+    return responses.text_response('{}\n'.format(uastr))

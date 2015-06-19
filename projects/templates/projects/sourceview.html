@@ -1,4 +1,4 @@
-<!-- Template for injecting "Source View" code on project pages -->
+<!-- Template for injecting 'Source View' code on project pages -->
 <!-- Expects:  project object: 'project'    -->
 <!--           file path: 'file_path'       -->
 <!--           optional: 'link_text' string -->
@@ -7,11 +7,11 @@
 	<!-- SourceView link container -->
 	<div class='source-view'>
 		<!-- Form to submit to viewer -->
-		<form id="file-viewer" method="post" action="/view/">{% csrf_token %}
-			<input name="file" type="hidden" value="{{ file_path }}">
+		<form id='file-viewer' method='post' action='/view/'>{% csrf_token %}
+			<input name='file' type='hidden' value='{{ file_path }}'>
 		</form>
 		<!-- Link URL and Text -->
-		<a class='source-view-link' href='javascript: void(0);' onclick="javascript: $('#file-viewer').submit();">
+		<a class='source-view-link' href='javascript: void(0);' onclick='javascript: $("#file-viewer").submit();'>
 			{% if link_text %}
 				{{ link_text }}
 			{% else %}

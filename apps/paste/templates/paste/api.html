@@ -3,11 +3,12 @@
 {% block title %}- Paste - API{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="A simple paste bin api for retrieving pastes from welborn productions.">
+    <meta name='description' content='A simple paste bin api for retrieving pastes from welborn productions.'>
 {% endblock %}
 
-{% block extrastyle %}
+{% block extrastylelink %}
     <link type='text/css' rel='stylesheet' href='/static/css/paste.min.css'/>
+    {{ block.super }}
 {% endblock %}
 
 {% block content %}

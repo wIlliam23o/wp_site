@@ -3,7 +3,12 @@
    - Christopher Welborn 2013 -desc added in 2014 :)
 */
 
-/*global ace, wptools, wp_content, wp_modelist */
+/*  JSHint/JSLint options:
+    `ace` and `wptools` are read-only.
+
+    global ace:false, wptools:false
+    global wp_content:true, wp_modelist:true
+*/
 
 // Store current relative filename here. The template sends it on the first
 // page load, and then it is set with JS when doing ajax calls.
@@ -27,6 +32,8 @@ var wpviewer = {
             console.log('can\'t find href for element: ' + linkelem);
             return false;
         }
+        // TODO: Just use event handlers. Set elem.click() to the proper
+        //       function when enabled, and to a dummy when disabled.
         if (enabled) {
             // ensure this link is 'enabled'
             if (menutarget.indexOf('false') < 0) {
@@ -154,8 +161,11 @@ var wpviewer = {
         if (!disabledval) { disabledval = 'false'; }
 
         var menulink = document.createElement('a');
+        // Silence jslint.
+        var jslink = 'javascript';
+        jslink = jslink + ':';
 
-        $(menulink).attr('href', 'javascript: void(0);');
+        $(menulink).attr('href', jslink + ' void(0);');
         $(menulink).attr('class', 'vertical-menu-link');
         // add child list element/name
         var menuitem = document.createElement('li');
@@ -171,8 +181,10 @@ var wpviewer = {
         $(menuitem).append(menutext);
         $(menulink).append(menuitem);
 
-        $(menulink).attr('onclick',
-            'javascript: wpviewer.view_file(\'' + menufilename + '\', ' + disabledval + ');');
+        $(menulink).attr(
+            'onclick',
+            jslink + ' wpviewer.view_file(\'' + menufilename + '\', ' + disabledval + ');'
+        );
 
         // needs disabled class?
         if (disabledval === 'true') {
@@ -198,6 +210,9 @@ var wpviewer = {
 
     setup_ace: function (initial_filename) {
         wp_content = ace.edit('file-content');
+        // Disabled ace scrolling to new selected text.
+        wp_content.$blockScrolling = Infinity;
+
         // highlight style
         wp_content.setTheme('ace/theme/solarized_dark');
         // various settings for ace
@@ -240,9 +255,8 @@ var wpviewer = {
         var displayname = wpviewer.current_file || filename;
         wpviewer.update_loading_msg('<span>Loading file: ' + displayname + '...</span>');
 
-        //$('#project-info').fadeOut();
         $('#file-info').fadeOut();
-
+        /*jslint unparam:true*/
         $.ajax({
             type: 'post',
             contentType: 'application/json',

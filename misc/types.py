@@ -142,7 +142,7 @@ def misctype_byname(s):
     #   storing simple string values, everything has been converted
     #   over to this smarter MiscType (except for the database.)
     #   When the model/database can handle actual MiscType objects
-    #   this can be removed.
+    #   all of this can be refactored and removed.
 
     try:
         misctype = types_info[s]
@@ -155,8 +155,8 @@ def misctype_byname(s):
 
 class MiscTypes:
 
-    """ Various MiscTypes, setup directly after init
-        of this class. Holds attributes that refer to an actual MiscType.
+    """ Various MiscTypes, setup directly after this class is evaluated.
+        Holds attributes that refer to an actual MiscType.
         This allows you to do things like:
             thistype = misctype_byname(mymiscobj.filetype)
             if thistype.viewable:
@@ -210,22 +210,20 @@ class Lang:
     @staticmethod
     def split(langstring):
         """ The reverse of combine. """
-        if ',' in langstring:
-            return [l.strip() for l in langstring.split(',')]
-        else:
-            return [langstring.strip()]
+        return [l.strip() for l in langstring.split(',')]
 
     # Choices for misc.models.wp_misc.language admin fieldchoices.
     # Sort these manually here, by description. Django doesn't do it for you.
-    fieldchoices = [('Bash', 'Bash'),
-                    ('C', 'C'),
-                    ('C++', 'C++'),
-                    ('None', 'None'),
-                    ('Perl', 'Perl'),
-                    ('PyPy', 'PyPy'),
-                    ('Python', 'Python (any)'),
-                    ('Python 2', 'Python 2+'),
-                    ('Python 3', 'Python 3+'),
-                    ('Stackless Python', 'Stackless Python'),
-                    ('Visual Basic', 'Visual Basic'),
-                    ]
+    fieldchoices = [
+        ('Bash', 'Bash'),
+        ('C', 'C'),
+        ('C++', 'C++'),
+        ('None', 'None'),
+        ('Perl', 'Perl'),
+        ('PyPy', 'PyPy'),
+        ('Python', 'Python (any)'),
+        ('Python 2', 'Python 2+'),
+        ('Python 3', 'Python 3+'),
+        ('Stackless Python', 'Stackless Python'),
+        ('Visual Basic', 'Visual Basic'),
+    ]

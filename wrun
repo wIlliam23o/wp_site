@@ -4,8 +4,8 @@
 # Searches ./scripts/ directories for pattern matches, and runs the file.
 # I made this instead of creating symlinks or aliases for all of the scripts.
 # Example:
-#            Instead of: ./scripts/wprefresh.py [args]...
-#             ..do this: ./wrun refresh [args]...
+#            Instead of: ./scripts/restart.sh [args]...
+#             ..do this: ./wrun restart [args]...
 # as of right now, even: ./wrun re [args]...
 #
 # The main reason for this:
@@ -13,7 +13,7 @@
 # -Christopher Welborn (rewrite: 1-27-15)
 
 appname="WRun"
-appversion="0.2.0"
+appversion="0.2.1"
 # script directories to use (relative to cwd)
 scriptdirs=("scripts" "apps/paste/scripts")
 
@@ -25,11 +25,11 @@ function indent_text () {
     local let length=$1
     local i
     local spaces=""
-    for ((i=0; i<$length; i++))
+    for ((i=0; i<length; i++))
     do
         spaces=" $spaces"
     done
-    printf "$spaces$2"
+    printf "%s%s" "$spaces" "$2"
 }
 
 function find_script () {
@@ -39,7 +39,7 @@ function find_script () {
 
     # Skip tests unless explicitly called.
     local skiptest=1
-    [[ $1 =~ "test" ]] && skiptest=""
+    [[ $1 =~ test ]] && skiptest=""
 
     for scriptdir in "${scriptdirs[@]}"
     do
@@ -52,9 +52,9 @@ function find_script () {
             elif [[ $skiptest ]] && [[ $scriptname =~ test_ ]]; then
                 # So are tests unless explicitly called.
                 continue
-            elif [[ ${scriptname%.*} =~ $1 ]]; then
-                # Found a match.
-                printf "$scriptpath"
+            elif [[ ${scriptname%.*} =~ $1 ]] || [[ "$scriptname" == "$1" ]]; then
+                # Found a regex match, or an exact match.
+                printf "%s" "$scriptpath"
                 return 0
             fi
         done
@@ -79,7 +79,7 @@ function list_script_type () {
                 # Non-executable scripts are skipped.
                 continue
             fi
-            if [[ $scriptdir == $lastdir ]]; then
+            if [[ "$scriptdir" == "$lastdir" ]]; then
                 # print without directory.
                 scriptname="${scriptname#$scriptdir*/}"
                 fmtname="$(indent_text $indent "$scriptname")"
@@ -134,6 +134,7 @@ function print_status () {
     # Print status that clearly shows the msg coming from wrun.
     if [[ -n $2 ]]; then
         # Use custom format.
+        # shellcheck disable=SC2059
         printf "[wrun] $1" "$2"
     else
         printf "[wrun] %s\n" "$1"
@@ -142,7 +143,7 @@ function print_status () {
 
 
 function print_full_usage () {
-    printf "
+    echo "
 $appname v. $appversion
 
     Runs executable scripts without typing their full name or path.
@@ -154,7 +155,7 @@ $appname v. $appversion
 
 
 function print_usage () {
-    printf "
+    echo "
     Usage: $0 <scriptname> [arguments]...
 
     Options:
@@ -180,18 +181,18 @@ function valid_scriptdirs () {
 valid_scriptdirs
 
 # Test for wrun args.
-parse_args $@
+parse_args "$@"
 
 # Locate the script by pattern/name.
 scriptname="$1"
-scriptpath="$(find_script $scriptname)"
-if [[ -z $scriptpath ]]; then
+scriptpath="$(find_script "$scriptname")"
+if [[ -z "$scriptpath" ]]; then
     print_fail "Script not found: $scriptname"
 fi
 
 # Grab arguments for the script.
 scriptargs=("${@:2}")
-scriptcmd="$scriptpath ${scriptargs[@]}"
+scriptcmd="$scriptpath ${scriptargs[*]}"
 # Run it.
 print_status "%s\n\n" "Running: ./$scriptcmd"
-./$scriptpath "${scriptargs[@]}"
+./"$scriptpath" "${scriptargs[@]}"

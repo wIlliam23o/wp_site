@@ -364,19 +364,20 @@ def run_process(cmdlist):
 
 
 def parse_commands(args):
-    """ Parse the arg list, run any commands before looking up a script name """
+    """ Parse the arg list, run any commands before looking up a script name
+    """
 
     # command flags, mapped to their function.
     commands = {
         '-l': {
-        'aliases': ['--list'],
-        'func': do_list,
-        'kwargs': None,
+            'aliases': ['--list'],
+            'func': do_list,
+            'kwargs': None,
         },
         '-h': {
-        'aliases': ['--help'],
-        'func': print_usage,
-        'kwargs': {'retcode': 0},
+            'aliases': ['--help'],
+            'func': print_usage,
+            'kwargs': {'retcode': 0},
         },
     }
 
@@ -441,14 +442,14 @@ def print_debug(obj):
         # list/tuple, format it...
         header = 'Debug: '
         spaces = (' ' * len(header))
-        if len(obj):
+        if obj:
             print('{}{}'.format(header, obj[0]))
         if len(obj) > 1:
             otherlines = '\n{}'.format(spaces).join(obj[1:])
             print('\n{}{}'.format(spaces, otherlines))
     else:
         # different type of object
-        print('Debug: {}'.format(repr(obj)))
+        print('Debug: {!r}'.format(obj))
 
     return True
 

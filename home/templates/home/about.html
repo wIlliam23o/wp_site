@@ -2,14 +2,24 @@
 {% block title %}- About{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="Information about Christopher Welborn and Welborn Productions.">
+    <meta name='description' content='Information about Christopher Welborn and Welborn Productions.'>
+{% endblock %}
+
+{% block extrastylelink %}
+    <link type='text/css' rel='stylesheet' href='/static/css/about.min.css' />
+    <link type='text/css' rel='stylesheet' href='http://cdn.jsdelivr.net/octobadge.github/0.0.1/badge.min.css'/>
+    {{ block.super }}
+{% endblock %}
+
+{% block javascript %}
+    <script type='text/javascript' src='/static/js/github-badge.min.js'></script>
 {% endblock %}
 
 {% block content %}
     <div class='about-box'>
         <!-- Image -->
         <div id='about-pic-box'>
-            <img id='about-img' src="/static/images/self-portrait.png" border="0" alt="Christopher Welborn"/>
+            <img id='about-img' src='/static/images/self-portrait.png' border='0' alt='Christopher Welborn'/>
             <div id='about-contact'>
                 <address>
                     <span>Christopher Welborn</span><br/>
@@ -44,11 +54,20 @@
                 Biography
             </h3>
             <p>
-                My name is Christopher Welborn, I am a 32 year old programmer from Jasper, Al.
-                I have been working with computers and code since childhood. I started out with Q-BASIC
-                in Windows 3.1 and have progressed significantly over the years as the technology has also
-                progressed. I spent most of my years focusing on Windows, however lately I do most of my work
-                in different variations of the Linux operating system.
+                My name is Christopher Welborn, I am a 32 year old programmer
+                from Jasper, Al.
+                I have been working with computers and code since childhood.
+                I started out with Q-BASIC in Windows 3.1 and have progressed
+                significantly over the years as the technology has also
+                progressed.
+                I spent most of my years focusing on Windows, however lately I
+                work in different variations of the Linux operating system.
+                My favorite programming languages include Python, Rust,
+                JavaScript, Haskell, and Visual Basic .Net
+                (I tought myself to code with VB), and anything from the C language
+                family. I also enjoy working with microcontrollers and
+                single-board computers such as the Arduino, ATTiny, and
+                Raspberry Pi.
             </p>
             <!-- Projects -->
             <br/>
@@ -82,7 +101,7 @@
             <h3 class='title'>
                 Specialties
             </h3>
-            <ul class="checkmark">
+            <ul class='checkmark'>
                 <li>Software Design</li>
                 <li>Web Design</li>
                 <li>PC Repair/Optimization</li>
@@ -92,30 +111,30 @@
         </div>
 
         <div id='about-contrib'>
-            <h3 class="title">
+            <h3 class='title'>
                 additional info:
             </h3>
-            <div id="about-contrib-box">
+            <div id='about-contrib-box'>
+                <!-- Github -->
+                <div id='github-badge-wrapper' class='about-contrib-item'>
+                    <github-badge user="welbornprod" show_repos="true" show_languages="true" />
+                </div>
                 <!-- Daniweb -->
-                <div class="about-contrib-item">
-                    <a href="http://www.daniweb.com/members/572777/chriswelborn" target="_blank">
-                        <img src="http://www.daniweb.com/stats/badge/572777/solved.jpg" width="120" height="90" alt="chriswelborn Contributes to DaniWeb" border="0" target="_blank" />
+                <div class='about-contrib-item'>
+                    <a href='http://www.daniweb.com/members/572777/chriswelborn' target='_blank'>
+                        <img src='http://www.daniweb.com/stats/badge/572777/solved.jpg' width='120' height='90' alt='chriswelborn Contributes to DaniWeb' border='0' target='_blank' />
                     </a>
                 </div>
-                <!-- Github -->
-                <div class="about-contrib-item">
-                    <iframe id="iframe-github" src="http://githubbadge.appspot.com/badge/welbornprod?a=0" style="border: 0;height: 142px;width: 200px;overflow: hidden;" frameBorder=0></iframe>
-                </div>
                 <!-- Django Powered -->
-                <div class="about-contrib-item">
-                    <a href="http://www.djangoproject.com/" target="_blank">
-                        <img src="/static/images/badges/djangopowered_grey.gif" border="0" alt="Powered by Django." title="Powered by Django." />
+                <div class='about-contrib-item'>
+                    <a href='http://www.djangoproject.com/' target='_blank'>
+                        <img src='/static/images/badges/djangopowered_grey.gif' border='0' alt='Powered by Django.' title='Powered by Django.' />
                     </a>
                 </div>
                 <!-- Python Powered -->
-                <div class="about-contrib-item">
-                    <a href="http://www.python.org" target="_blank">
-                        <img src="/static/images/badges/python-powered-anim.gif" style="border-radius: 15px;-moz-border-radius: 15px;-webkit-border-radius: 15px;width: 256px;height: 64px;" alt="Python Powered" title="Python Powered" border="0"/>
+                <div class='about-contrib-item'>
+                    <a href='http://www.python.org' target='_blank'>
+                        <img src='/static/images/badges/python-powered-anim.gif' style='border-radius: 15px;-moz-border-radius: 15px;-webkit-border-radius: 15px;width: 256px;height: 64px;' alt='Python Powered' title='Python Powered' border='0'/>
                     </a>
                 </div>
             </div>
@@ -125,3 +144,10 @@
     <!-- END div:about -->
 {% endblock %}
 
+{% block bodyend %}
+        {# Load the github octo badge #}
+        {# Old method #}
+        {# <script type='text/javascript' src='http://cdn.jsdelivr.net/octobadge.github/0.0.1/badge.min.js'></script> #}
+        <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script>
+
+{% endblock %}

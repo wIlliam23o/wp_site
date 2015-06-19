@@ -91,7 +91,6 @@ def view_index(request):
         'request': request,
         'images': images,
         'album': album,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
         'alert_message': alert_msg,
         'alert_class': alert_class
     }
@@ -125,7 +124,6 @@ def view_image_id(request, imageid):
         'image': image,
         'images': (image,),
         'album': None,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
         'alert_message': alert_msg,
         'alert_class': alert_class
     }

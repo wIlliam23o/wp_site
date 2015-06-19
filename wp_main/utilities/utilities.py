@@ -19,7 +19,7 @@ from django.conf import settings
 from django.utils.module_loading import import_module
 
 # User-Agent helper...
-from wp_user_agents.utils import get_user_agent  # @UnresolvedImport
+from wp_user_agents.utils import get_user_agent
 
 log = logging.getLogger('wp.utilities')
 
@@ -146,9 +146,9 @@ def get_apps(
                           the parent apps.
                           Example: (grab all apps with a 'search' module)
                               # Import all <app_name>.search
-                              apps = search_apps(child='search')
+                              apps = get_apps(child='search')
                           Default: None
-            no_django   : True/False. Whether or not to include modules
+            no_django   : True/False. Whether to exclude modules
                           starting with 'django'.
                           Default: True
     """
@@ -232,22 +232,18 @@ def get_browser_name(request):
 
 
 def get_browser_style(request):
-    """ return browser-specific css file (or False if not needed) """
+    """ return browser-specific css file (or None if not needed) """
 
     browser_name = get_browser_name(request)
     # get browser css to use...
-    if browser_name.startswith("ie"):
-        return "/static/css/main-ie.min.css"
-    elif "firefox" in browser_name:
-        return "/static/css/main-gecko.min.css"
-    elif "chrome" in browser_name:
-        return "/static/css/main-webkit.min.css"
-    else:
-        return False
+    if browser_name.startswith('ie'):
+        return '/static/css/main-ie.min.css'
+
+    return None
 
 
 def get_date(date=None, shortdate=False):
-    """ Return date string.
+    """ Return a string from a datetime object, or now() when `date` is empty.
         Arguments:
             date       : Existing datetime object to format.
                          Default: datetime.now()

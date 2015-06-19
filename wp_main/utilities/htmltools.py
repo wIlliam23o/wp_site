@@ -420,32 +420,34 @@ class html_content(object):  # noqa
 # These are used on the About page,
 # they are used to create links out of certain words.
 auto_link_list = (
-    ("Windows", "http://www.windows.com"),
-    ("Mint", "http://linuxmint.com"),
-    ("Linux", "http://linux.org"),
-    ("Python", "http://www.python.org"),
-    ("Django", "http://djangoproject.com"),
-    ("Visual Basic .Net", "http://msdn.microsoft.com/en-us/vstudio/"),
-    ("VB", "http://msdn.microsoft.com/en-us/vstudio/"),
-    ("Ubuntu", "http://ubuntu.com"),
-    ("Arduino", "http://arduino.cc"),
-    ("RaspberryPi", "http://raspberrypi.org"),
-    ("Raspberry Pi", "http://raspberrypi.org"),
-    ("HTML", "http://en.wikipedia.org/wiki/HTML"),
-    ("JavaScript", "http://en.wikipedia.org/wiki/JavaScript"),
-    ("PostgreSQL", "http://www.postgresql.org"),
-    ("Puppy", "http://puppylinux.org"),
-    ("BASIC", "http://en.wikipedia.org/wiki/BASIC"),
-    ("ATTiny",
-        "http://www.atmel.com/products/microcontrollers/avr/tinyavr.aspx"),
-    ("(?P<CGROUP>C language)",
-        "http://en.wikipedia.org/wiki/C_(programming_language)"),
+    ('Arduino', 'http://arduino.cc'),
+    ('BASIC', 'http://en.wikipedia.org/wiki/BASIC'),
+    ('Django', 'http://djangoproject.com'),
+    ('Haskell', 'https://www.haskell.org/'),
+    ('HTML', 'http://en.wikipedia.org/wiki/HTML'),
+    ('JavaScript', 'http://en.wikipedia.org/wiki/JavaScript'),
+    ('Linux', 'http://linux.org'),
+    ('Mint', 'http://linuxmint.com'),
+    ('PostgreSQL', 'http://www.postgresql.org'),
+    ('Puppy', 'http://puppylinux.org'),
+    ('Python', 'http://www.python.org'),
+    ('RaspberryPi', 'http://raspberrypi.org'),
+    ('Raspberry Pi', 'http://raspberrypi.org'),
+    ('Rust', 'http://www.rust-lang.org/'),
+    ('Ubuntu', 'http://ubuntu.com'),
+    ('VB', 'http://msdn.microsoft.com/en-us/vstudio/'),
+    ('Visual Basic', 'http://msdn.microsoft.com/en-us/vstudio/'),
+    ('Windows', 'http://www.windows.com'),
+    ('ATTiny',
+        'http://www.atmel.com/products/microcontrollers/avr/tinyavr.aspx'),
+    ('(?P<CGROUP> C )',
+        'http://en.wikipedia.org/wiki/C_(programming_language)'),
 )
 
 # Module Functions (not everything can be an html_content(), or should be.)
 
 
-def auto_link(str_, link_list, **kwargs):
+def auto_link(content, link_list, **kwargs):
     """ Grabs words from HTML content and makes them links.
         see: auto_link_line()
         Only replaces lines inside certain tags.
@@ -460,21 +462,21 @@ def auto_link(str_, link_list, **kwargs):
                 auto_link(mycontent, my_link_list, **my_attrs)s
     """
 
-    if hasattr(str_, 'encode'):
-        lines = str_.split('\n')
+    if isinstance(content, str):
+        lines = content.split('\n')
         joiner = '\n'
-    else:
+    elif isinstance(content, (list, tuple)):
         joiner = None
-        lines = str_
+        lines = content
     inside_p = False
     inside_span = False
     new_lines = []
     for line in iter(lines):
         linetrim = line.replace(' ', '').replace('\t', '')
         # start of tags
-        if "<p" in linetrim:
+        if '<p' in linetrim:
             inside_p = True
-        if "<span" in linetrim:
+        if '<span' in linetrim:
             inside_span = True
 
         # deal with good tags
@@ -483,9 +485,9 @@ def auto_link(str_, link_list, **kwargs):
         new_lines.append(line)
 
         # end of tags
-        if "</p>" in linetrim:
+        if '</p>' in linetrim:
             inside_p = False
-        if "</span>" in linetrim:
+        if '</span>' in linetrim:
             inside_span = False
     # end of content
     if joiner is None:
@@ -494,7 +496,7 @@ def auto_link(str_, link_list, **kwargs):
         return joiner.join(new_lines)
 
 
-def auto_link_line(str_, link_list, **kwargs):
+def auto_link_line(line, link_list, **kwargs):
     """ Grabs words from HTML content and makes them links.
         Pass in a list of 2-tuples with [("Word", "Link Target"),]
         ex: (with auto_link())
@@ -513,23 +515,18 @@ def auto_link_line(str_, link_list, **kwargs):
         * becomes a 'class' attribute.
     """
 
+    if not link_list:
+        return line
     try:
-        if len(link_list) == 0:
-            return str_
         if len(link_list[0]) < 2:
-            return str_
-    except Exception:
+            return line
+    except (IndexError, TypeError):
         log.error('Invalid input to auto_link()!, '
                   'expecting a list/tuple of 2-tuple/lists')
-        return str_
-    # build attributes
+        return line
 
-    def parse_key(k):
-        # for passing keys like "class", you can do "_class"
-        return k.strip('_')
-
-    def make_attrstr(k, v):
-        return ' {}="{}"'.format(parse_key(k), v)
+    # build attributes, accepts '_class' as a 'class' attribute.
+    make_attrstr = lambda k, v: ' {}="{}"'.format(k.strip('_'), v)
 
     attr_strings = [make_attrstr(k, v) for k, v in kwargs.items()]
     attr_string = ''.join(attr_strings) if len(attr_strings) > 0 else ''
@@ -538,32 +535,38 @@ def auto_link_line(str_, link_list, **kwargs):
         try:
             link_pat = r'[^\>]' + link_pat + r'[^\<]'
             re_pat = re.compile(link_pat)
-            re_match = re_pat.search(str_)
-            if re_match:
-                if len(re_match.groups()) == 0:
-                    # use only 1 group
-                    link_text = strip_all(re_match.group(),
-                                          ' .,\'";:?/\\`~!@#$%^&*()_+-={}[]|')
+            re_match = re_pat.search(line)
+            if re_match is None:
+                continue
+
+            if not re_match.groups():
+                # use only 1 group
+                link_text = strip_all(
+                    re_match.group(),
+                    ' .,\'";:?/\\`~!@#$%^&*()_+-={}[]|')
+            else:
+                matchgroupdict = re_match.groupdict()
+                # use first group dict key if found
+                if matchgroupdict:
+                    first_key = list(matchgroupdict)[0]
+                    link_text = matchgroupdict[first_key]
                 else:
-                    # use first group dict key if found
-                    if len(re_match.groupdict().keys()) > 0:
-                        first_key = list(re_match.groupdict().keys())[0]
-                        link_text = re_match.groupdict()[first_key]
-                    else:
-                        # use first non-named group
-                        link_text = re_match.groups()[0]
-                # Replace the text with a link
-                new_link = ''.join(['<a href="{}" '.format(link_href),
-                                    'title="{}" '.format(link_text),
-                                    '{}>'.format(attr_string),
-                                    '{}</a>'.format(link_text),
-                                    ])
-                str_ = str_.replace(link_text, new_link)
+                    # use first non-named group
+                    link_text = re_match.groups()[0]
+
+            # Replace the text with a link
+            new_link = ''.join([
+                '<a href="{}" '.format(link_href),
+                'title="{}" '.format(link_text),
+                '{}>'.format(attr_string),
+                '{}</a>'.format(link_text),
+            ])
+            line = line.replace(link_text, new_link)
         except Exception as ex:
             log.error('Error in auto_link_line(): {}\n{}'.format(link_pat,
                                                                  ex))
-            return str_
-    return str_
+            return line
+    return line
 
 
 def check_replacement(source_string, target_replacement):
@@ -1086,8 +1089,8 @@ def render_html(template_name, **kwargs):
                            Default: {}
     """
     context = kwargs.get('context', kwargs.get('context_dict', {}))
-    request = kwargs.get('request', False)
-    link_list = kwargs.get('link_list', False)
+    request = kwargs.get('request', None)
+    link_list = kwargs.get('link_list', None)
     auto_link_args = kwargs.get('auto_link_args', {})
 
     try:

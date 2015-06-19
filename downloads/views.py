@@ -65,8 +65,6 @@ def download(request, file_path):
             'request': request,
             'main_content': mark_safe(main_content),
             'alert_message': mark_safe(alert_message),
-            'extra_style_link_list':
-            [utilities.get_browser_style(request)]
         }
         response = responses.clean_response('home/main.html', context)
     else:

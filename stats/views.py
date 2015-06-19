@@ -15,10 +15,7 @@ from misc.models import wp_misc
 from projects.models import wp_project
 
 from stats import tools
-from wp_main.utilities import (
-    responses,
-    utilities
-)
+from wp_main.utilities import responses
 log = logging.getLogger('wp.stats')
 
 
@@ -31,7 +28,6 @@ def view_index(request):
         # Not authenticated, return the bad login page. No stats for you!
         context = {
             'request': request,
-            'extra_style_link_list': [utilities.get_browser_style(request)],
         }
         return responses.clean_response('home/badlogin.html', context)
 
@@ -72,6 +68,5 @@ def view_index(request):
         'request': request,
         'label': 'all models',
         'stats': tools.get_models_info(modelinf),
-        'extra_style_link_list': [utilities.get_browser_style(request)]
     }
     return responses.clean_response('stats/index.html', context)

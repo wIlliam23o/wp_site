@@ -13,8 +13,7 @@ def get_content(post, request=None):
 
 def get_desc(post):
     """ Get description to search and display. """
-    body = blogtools.get_post_body_short(post, max_text_lines=16)
-    return blogtools.prepare_content(body)
+    return blogtools.get_post_body_short(post, max_text_lines=16)
 
 
 def get_objects():

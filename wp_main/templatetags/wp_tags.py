@@ -168,7 +168,7 @@ def dict_value(dict_object, dictkey):
 
     try:
         val = dict_object[dictkey]
-    except:  # Exception as ex:
+    except (AttributeError, KeyError):
         val = ''
     return val
 
@@ -191,7 +191,7 @@ def exceeds_max(value, max_):
     else:
         try:
             val_ = int(value)
-        except:
+        except (TypeError, ValueError):
             val_ = value
 
     if isinstance(max_, (float, int)):
@@ -201,7 +201,7 @@ def exceeds_max(value, max_):
             try:
                 imax = int(max_)
                 return (val_ > imax)
-            except:
+            except (TypeError, ValueError):
                 pass
     return False
 
@@ -215,7 +215,7 @@ def exceeds_min(value, min_):
     else:
         try:
             val_ = int(value)
-        except:
+        except (TypeError, ValueError):
             val_ = value
     if isinstance(min_, (float, int)):
         return (val_ < min_)
@@ -224,14 +224,28 @@ def exceeds_min(value, min_):
             try:
                 imin = int(min_)
                 return (val_ < imin)
-            except:
+            except (TypeError, ValueError):
                 pass
 
     return False
 
 
 @register.filter
-def getlength(lennable):
+def get_browser_style(request):
+    """ Get specific browser style based on the user agent. """
+    try:
+        cssfile = utilities.get_browser_style(request)
+    except Exception as ex:
+        # Not a valid request object.
+        log.error(
+            'Unable to get browser style with: {!r}\n  {}'.format(request, ex)
+        )
+        return None
+    return cssfile
+
+
+@register.filter
+def get_length(lennable):
     """ Tag for len() """
     if not lennable:
         return 0
@@ -273,6 +287,12 @@ def get_time_since(date):
         return date
     since = utilities.get_time_since(date, limit=True)
     return since if ':' in since else '{} ago'.format(since)
+
+
+@register.filter
+def get_user_agent(request):
+    """ Get the user agent string from a request. """
+    return utilities.get_user_agent(request)
 
 
 @register.filter
@@ -493,7 +513,7 @@ def meta_value(request_object, dictkey):
 
     try:
         val = request_object.META[dictkey]
-    except:  # Exception as ex:
+    except (AttributeError, KeyError):
         val = ''
     return val
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from django.conf.urls import patterns, include, url
+# simple redirect urls.
+from django.views.generic.base import RedirectView
 # login url is set in settings
 from django.conf import settings
 # main views
@@ -54,6 +56,14 @@ urlpatterns = patterns(
     # sitemap server
     url(r'^sitemap\.xml$',
         sitemaps.view_byserver),
+    # useragent simple
+    url(r'^useragent$',
+        homeviews.view_useragent_simple),
+    url(r'^ua$',
+        homeviews.view_useragent_simple),
+    # useragent html
+    url(r'^useragent\.html?$',
+        homeviews.view_useragent),
     # home (index)
     url(r'^$',
         homeviews.index),
@@ -168,6 +178,13 @@ urlpatterns += patterns(
         homeviews.view_scriptkids),
     url(r'^admin\.php$',
         homeviews.view_scriptkids),
+)
+
+# Simple redirects
+urlpatterns += patterns(
+    '',
+    url(r'^favicon\.ico$',
+        RedirectView.as_view(url='/static/images/favicons/favicon.ico')),
 )
 
 # Debug toolbar explicit setup (per new debug_toolbar version)

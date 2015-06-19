@@ -3,7 +3,7 @@ from django.http import Http404
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import cache_page
 
-from wp_main.utilities import responses, utilities
+from wp_main.utilities import responses
 
 from misc import tools as misctools
 
@@ -18,11 +18,7 @@ def view_index(request):
     miscobjs = misctools.get_visible_objects()
     context = {
         'request': request,
-        'extra_style_link_list': [
-            utilities.get_browser_style(request),
-            '/static/css/misc.min.css',
-            '/static/css/highlighter.min.css'],
-        'miscobjects': miscobjs,
+        'miscobjects': miscobjs
     }
     return responses.clean_response_req("misc/index.html",
                                         context,
@@ -38,12 +34,10 @@ def view_misc_any(request, identifier):
     if not misc:
         # No misc item found by that identifier
         raise Http404()
-    context = {'request': request,
-               'extra_style_link_list': [utilities.get_browser_style(request),
-                                         '/static/css/misc.min.css',
-                                         '/static/css/highlighter.min.css'],
-               'misc': misc,
-               }
+    context = {
+        'request': request,
+        'misc': misc,
+    }
     return responses.clean_response_req('misc/misc.html',
                                         context,
                                         request=request)

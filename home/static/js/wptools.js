@@ -15,8 +15,23 @@
     Debug button/box toggle added.
         shows/hides the django debug info box (for use with test site)
 
+
+    Version: 0.2.0 (added safe native css selection, for future development)
+             TODO: Use browserify to split some of this up, and rebundle it.
+                   (easier development, pretty much the same deployment)
+
 */
 
+/*  Some JSHint options:
+    Allow browser globals, including console, and $ for jQuery.
+    Allow a global 'use strict'.
+*/
+/* jshint browser:true, devel: true, jquery:true, globalstrict:true */
+
+// Base64 is not linted, but is used in wptools. It should be read-only.
+/* global Base64:false */
+
+'use strict';
 var wptools = {
     alert : function (msg, smallmsg) {
         /*  Show an alert message using #floater if available,
@@ -50,7 +65,7 @@ var wptools = {
                 useouter     : (bool)
                                use window's outerHeight for vertical position.
         */
-        'use strict';
+
         var screen_width = $(document).width(),
             elem = $(selector),
             elempos = $(elem).css('position'),
@@ -82,8 +97,8 @@ var wptools = {
     },
 
     csrf_safe_method : function (method) {
+        /* Return true if this HTTP method name required csrf protection. */
         // these HTTP methods do not require CSRF protection
-        'use strict';
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     },
 
@@ -187,14 +202,36 @@ var wptools = {
         }
     },
 
+    select : function (selector, container) {
+        /*  Native css selector that returns the first element found, or null.
+            Arguments:
+                selector       : CSS selector.
+                container  : Node to start from. Default: document
+        */
+        if (typeof selector !== 'string') {
+            return null;
+        }
+        return (container || document).querySelector(selector);
+    },
+
+    select_all : function (selector, container) {
+        /*  Native css selector that returns an array of all matching elements.
+            Returns an empty array on failure.
+            Arguments:
+                selector       : (string) CSS selector.
+                container  : Node to start from. Default: document
+        */
+        if (typeof selector !== 'string') {
+            return [];
+        }
+        return (container || document).querySelectorAll(selector);
+    },
+
     show_debug : function () {
         /* Displays the debug box and changes it's label text. */
         $('.debug-box').show();
         $('.debug-button-text').text('hide debug');
     },
-
-    // Whether or not the window has been squeezed (< 800px) yet.
-    squeezed: false,
 
     strdup : function (char_, count_) {
         var s = '',
@@ -281,6 +318,8 @@ var wptools = {
 
 };
 
+/* ------------------------------------------------------------------------- */
+
 /* Various tools for Misc section
     ..instead of adding yet another file for this small amount of code.
       it is kept here in the 'global' utilities. If the code ever grows
@@ -312,6 +351,8 @@ var misctools = {
 };
 
 
+/* ------------------------------------------------------------------------- */
+
 /**
 *
 *  Base64 encode / decode
@@ -319,7 +360,7 @@ var misctools = {
 *
 **/
 
-/*ignore jslint start*/
+/* jshint ignore:start */
 var Base64 = {
 
     // private property
@@ -443,8 +484,9 @@ var Base64 = {
     }
 };
 
-/*ignore jslint end*/
+/* jshint ignore:end */
 
+/* ------------------------------------------------------------------------- */
 
 /* Rotator settings specific to welbornprod.... */
 var wprotator_settings = {

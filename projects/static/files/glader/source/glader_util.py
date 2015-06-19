@@ -4,7 +4,7 @@
     -Christopher Welborn 09-14-14
 """
 NAME = 'Glader'
-__version__ = '0.0.1'
+__version__ = '0.0.1-4'
 VERSIONSTR = '{} v. {}'.format(NAME, __version__)
 
 
@@ -20,6 +20,7 @@ def import_fail(err):
     sys.exit(1)
 
 import os.path
+import stat
 import sys
 from datetime import datetime
 
@@ -229,6 +230,13 @@ if __name__ == '__main__':
             spacing,
             joiner(initcodes))
 
+    def make_executable(self, filename=None):
+        """ Make a file executable, by setting mode 774. """
+        filename = filename or self.filename
+        # chmod 774
+        mode774 = stat.S_IRWXU | stat.S_IRWXG | stat.S_IROTH
+        os.chmod(filename, mode774)
+
     def names(self):
         """ Return a list of all object names. """
         return sorted([o.name for o in self.objects])
@@ -252,8 +260,10 @@ if __name__ == '__main__':
         signaldefs = []
         for objname in self.names():
             o = self.get_object(objname)
-            signaldefs.append(o.signal_defs(indent=indent))
-        return '\n'.join(signaldefs).strip('\n')
+            signaldef = o.signal_defs(indent=indent)
+            if signaldef.strip():
+                signaldefs.append(signaldef)
+        return '\n\n'.join(signaldefs)
 
     def write_file(self, filename=None):
         """ Write parsed info to a file. """
@@ -261,6 +271,8 @@ if __name__ == '__main__':
         content = self.get_content()
         with open(filename, 'w') as f:
             f.write(content)
+
+        self.make_executable(filename)
         return filename
 
 
@@ -333,9 +345,10 @@ class ObjectInfo(object):
         signaldefs = []
         for handlername in self.signal_handlers():
             signal = self.get_signal(handlername)
-            signaldefs.append(
-                signal.signal_def(indent=indent))
-        return '\n'.join(signaldefs)
+            signaldef = signal.signal_def(indent=indent)
+            if signaldef.strip():
+                signaldefs.append(signaldef)
+        return '\n\n'.join(signaldefs)
 
     def signal_handlers(self):
         """ Return a sorted list of signal handler names. """
@@ -419,14 +432,13 @@ class SignalHandler(object):
                 indent : Amount of space before the definition.
         """
         template = '\n'.join((
-            '\n{space}def {handler}({eventargs}):',
+            '{space}def {handler}({eventargs}):',
             '{space2}{docs}',
             '{space2}{content}'))
         doctemplate = '""" Handler for {widgetname}.{eventname}. """'
         # Use the user's widget name, the intial Gtk widgetname, or 'widget'.
         widgetname = self.widget or (self.widgettype or 'widget')
         docs = doctemplate.format(widgetname=widgetname, eventname=self.name)
-        spacing = ' ' * indent
         # Get known arguments for this handler/widget combo.
         eventargs = ', '.join(self.get_args())
 
@@ -437,6 +449,8 @@ class SignalHandler(object):
             content = 'Gtk.main_quit()'
         else:
             content = 'pass'
+
+        spacing = ' ' * indent
         return template.format(
             space=spacing,
             space2=spacing * 2,

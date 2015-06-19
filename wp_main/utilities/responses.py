@@ -14,7 +14,6 @@ from collections import defaultdict
 # Local tools
 from wp_main.utilities import htmltools
 from wp_main.utilities.utilities import (
-    get_browser_style,
     get_server,
     get_remote_ip,
     logtraceback
@@ -182,23 +181,12 @@ def clean_response_req(template_name, context, **kwargs):
 
 def default_dict(request=None, extradict=None):
     """ Use default context contents for rendering templates,
-        This dict will return with at least:
-        {
-            'request': request,
-            'extra_style_link_list': utilities.get_browser_style(request),
-        }
+        This dict will return with at least: {'request': request}
         Request must be passed to use this.
         Any extra dict items in the extradict override the defaults.
     """
-    if request is None:
-        defaults = {}
-    else:
-        # Items guaranteed to be present in the context dict.
-        defaults = {
-            'request': request,
-            'extra_style_link_list': [get_browser_style(request)],
-        }
-
+    # Items guaranteed to be present in the context dict.
+    defaults = {'request': request} if request is not None else {}
     if extradict:
         defaults.update(extradict)
 
@@ -440,7 +428,7 @@ def get_request_arg(request, arg_names, **kwargs):
                     int_val = max_val
                 # return float instead of string
                 val = int_val
-            except:
+            except (TypeError, ValueError):
                 pass
         else:
             # try float, check min/max if needed.
@@ -452,7 +440,7 @@ def get_request_arg(request, arg_names, **kwargs):
                     float_val = max_val
                 # return float instead of string
                 val = float_val
-            except:
+            except (TypeError, ValueError):
                 pass
     else:
         # Get desired type from defaults type.
@@ -613,7 +601,9 @@ def render_response(template_name, context):
     try:
         rendered = htmltools.render_clean(template_name, context)
         return HttpResponse(rendered)
-    except:
+    except Exception as ex:
+        log.error(
+            'Error rendering template \'{}\': {}'.format(template_name, ex))
         return alert_message(request,
                              'Sorry, there was an error loading this page.')
 

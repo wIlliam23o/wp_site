@@ -1,7 +1,11 @@
-/*global wptools*/
 /* Welborn Productions - img - Javascript
     Provides tools on the client-side for the img app.
     -Christopher Welborn 2-2-15
+*/
+
+/*  JSHint/JSLint options:
+    `wptools` is a read-only global.
+    global wptools:false
 */
 
 var imgtools = {

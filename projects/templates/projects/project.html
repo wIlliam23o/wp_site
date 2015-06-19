@@ -5,18 +5,18 @@
 {% block title %}{% if project %}- {{ project.name }}{% endif %}{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="A welborn productions project{% if project %}: {{ project.name }} v. {{ project.version }}{% if project.description %}, {{ project.description }}{% endif %}{% else %}.{% endif %}">
+    <meta name='description' content='A welborn productions project{% if project %}: {{ project.name }} v. {{ project.version }}{% if project.description %}, {{ project.description }}{% endif %}{% else %}.{% endif %}'>
 {% endblock %}
 
 <!-- Screenshots Javascript -->
 {% block extrahead %}
 	{% if use_screenshots %}
-		<script type="text/javascript">
+		<script type='text/javascript'>
 			$(document).ready(
 					function() {
-						$(".screenshots_box").wtRotator(wprotator_settings);
-						$(".wt-rotator").width("100%");
-						$(".screen").width("100%");
+						$('.screenshots_box').wtRotator(wprotator_settings);
+						$('.wt-rotator').width('100%');
+						$('.screen').width('100%');
 					}
 				);
 		</script>
@@ -26,13 +26,13 @@
 <!-- Main Projects Page -->
 {% block content %}
 	{% if project %}
-		<div class="project-container">
+		<div class='project-container'>
 			<!-- Project Header -->
-			<div class="project-title">
-				<h1 class="project-header">{{ project.name }}</h1>
+			<div class='project-title'>
+				<h1 class='project-header'>{{ project.name }}</h1>
 			</div>
 			<!-- Project Body -->
-			<div class="project-content">
+			<div class='project-content'>
 				{% if project|has_project_html %}
 					<!-- Process project content and display it. -->
 					{{ project|process_project_html:request }}
@@ -44,7 +44,7 @@
 		</div>
 	{% elif matches %}
 		<!-- Possible Project Matches -->
-		<div class="project-matches-box">
+		<div class='project-matches-box'>
 			<p>
 				{% if requested_page %}
 					Sorry, I can't find a project at: <span class='B'>{{ requested_page }}</span>
@@ -54,19 +54,19 @@
 			</p>
 			<br/>
 			<p>
-				Maybe try <a href="/search{% if requested_page %}?q={{ requested_page }}{% endif %}">searching</a>,
+				Maybe try <a href='/search{% if requested_page %}?q={{ requested_page }}{% endif %}'>searching</a>,
 				<br/>
 				Or try one of these possible matches:
 			</p>
 			<!-- Matches -->
-			<div class="project-matches">
+			<div class='project-matches'>
 				{% for project in matches %}
-					<div class="project-match">
+					<div class='project-match'>
 						<!-- single matched project -->
-						<a href="/projects/{{ project.alias }}">
-							<span class="project-match-name">{{ project.name }}</span>&nbsp;
+						<a href='/projects/{{ project.alias }}'>
+							<span class='project-match-name'>{{ project.name }}</span>&nbsp;
 						</a>
-						<span class="version">version {{ project.version }}</span>
+						<span class='version'>version {{ project.version }}</span>
 					</div>
 				{% endfor %}
 			</div>

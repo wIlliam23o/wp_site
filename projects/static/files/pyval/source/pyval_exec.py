@@ -3,7 +3,7 @@
 
 """ pyval_exec.py
     A safer exec/eval container for pyval bot or anything else that
-    might require.
+    might require it.
     Supports a limited subset of python, mostly hiding the nasty parts
     that aren't really needed for basic teaching purposes anyway.
 
@@ -19,7 +19,7 @@
         Known to crash python or cause problems, ignore the '# noqa'.
 
         eval() will fail with these strings in a normal interpreter:
-        
+
         SegFault (crashes python/pypy):
             (lambda fc=(lambda n: [c for c in ().__class__.__bases__[0].__subclasses__() if c.__name__ == n][0]):fc("function")(fc("code")(0,0,0,0,"KABOOM",(),(),(),"","",0,""),{})())() # noqa
 
@@ -29,21 +29,55 @@
     Even though these errors might occur, it doesn't mean the bot will die.
     Code is evaluated in a subprocess and is timed. It will fail gracefully.
 """
-
+from __future__ import print_function
 from tempfile import SpooledTemporaryFile
 import multiprocessing
 import os
 import subprocess
 import sys
 
-from pyval_util import __file__ as PYVAL_FILE
+from pyval_util import __file__ as PYVAL_FILE  # noqa
 from pyval_util import VERSION
 
 NAME = 'PyValExec'
 SCRIPTNAME = os.path.split(sys.argv[0])[-1]
-# Location for pypy-sandbox,
-# TODO: needs to look for it in other locations as well.
-PYPYSANDBOX_EXE = os.path.join('/usr', 'bin', 'pypy-sandbox')
+
+# Allow debug early.
+
+
+def print_debug(*args, **kwargs):
+    return None
+DEBUG = False
+
+if __name__ == '__main__':
+    # This -d conflicts with pyvalbot. Only use it when executed directly.
+    DEBUG = ('-d' in sys.argv) or ('--debug' in sys.argv)
+    if DEBUG:
+        print_debug = print  # noqa
+
+
+# Location for pypy-sandbox.
+PYPYSANDBOX_EXE = None
+PATH = os.environ.get('PATH').split(':')
+if not PATH:
+    print_debug('No $PATH variable set!')
+    PATH = (
+        os.path.expanduser('~/bin'),
+        os.path.expanduser('~/.local/bin'),
+        os.path.expanduser('~/local/bin'),
+        '/usr/bin',
+        '/usr/local/bin'
+    )
+for dirname in PATH:
+    pypypath = os.path.join(dirname, 'pypy-sandbox')
+    if os.path.exists(pypypath):
+        print_debug('Found pypy-sandbox: {}'.format(pypypath))
+        PYPYSANDBOX_EXE = pypypath
+        break
+else:
+    print('\nUnable to find pypy-sandbox.')
+    print('Looked in:\n    {}'.format('\n    '.join(PATH)))
+    sys.exit(1)
 
 
 class ExecBox(object):
@@ -69,13 +103,13 @@ class ExecBox(object):
         # Disabled if < 1.
         self.maxlines = 0
         self.maxlength = 0
-        
+
     def __str__(self):
         return self.output
 
     def __repr__(self):
         return self.output
-    
+
     def _dir(self, *args):
         """ Fake attributes for dir() NO LONGER USED """
         return [aname for aname in self._globals().keys()]
@@ -137,7 +171,7 @@ class ExecBox(object):
 
     def _exec(self, pipesend=None, stringmode=True):
         """ Execute actual code using pypy-sandbox/pyval_sandbox combo.
-            This method does not blacklist anything. 
+            This method does not blacklist anything.
             It runs whatever self.inputstr is set to.
 
             Arguments:
@@ -148,7 +182,7 @@ class ExecBox(object):
         """
         if not self.inputstr:
             self.error_return('No source.')
-        
+
         self.parsed = self.parse_input(self.inputstr, stringmode=stringmode)
 
         # Get locations for pypy-sandbox, sandbox dir, pyval_sandbox.
@@ -257,7 +291,7 @@ class ExecBox(object):
         s = s.replace('?(', 'print(')
         if ('\n' in s) and (not s.endswith('\n')):
                 # Make sure code ends with \n.
-                s = '{}\n'.format(s)
+            s = '{}\n'.format(s)
 
         return s
 
@@ -319,7 +353,7 @@ class ExecBox(object):
 
     def safe_output(self, maxlines=None, maxlength=None):
         """ Retrieves output safe for irc. """
-        
+
         maxlines = maxlines if maxlines is not None else self.maxlines
         maxlength = maxlength if maxlength is not None else self.maxlength
         if self.lasterror:
@@ -376,8 +410,10 @@ class ExecBox(object):
 
                 result = timed_call(myfunc, args=[25])
                 # result is now: 25
+
             Arguments:
                 func     : Function to call in a timed thread.
+
             Keyword Arguments:
                 args     : List of args for the function.
                 kwargs   : Dict of keyword args for the function.
@@ -417,7 +453,7 @@ class TempInput(object):
         self.tempfile.write(self.inputstr)
         self.tempfile.seek(0)
         return self.tempfile
-    
+
     def __exit__(self, type_, value, traceback):
         self.tempfile.close()
         return False
@@ -443,17 +479,21 @@ def parse_args(args, argset):
 
     # Set default False values
     argdict = {o[1]: False for o in argset}
-    argcopy = args[:]
+    args = args[1:]
+    if not args:
+        # No args, everything will be set to False.
+        return [], argdict
+    trimmedargs = args[:]
     # Set True for found args.
     for shortopt, longopt in argset:
         if (shortopt in args) or (longopt in args):
             argdict[longopt] = True
-            while shortopt in argcopy:
-                argcopy.remove(shortopt)
-            while longopt in argcopy:
-                argcopy.remove(longopt)
+            while shortopt in trimmedargs:
+                trimmedargs.remove(shortopt)
+            while longopt in trimmedargs:
+                trimmedargs.remove(longopt)
 
-    return argcopy, argdict
+    return trimmedargs, argdict
 
 
 def print_blacklist():
@@ -468,37 +508,49 @@ def print_blacklist():
 def print_help(reason=None, show_options=True):
     """ Prints a little help message for cmdline options. """
 
-    usage_str = str.format(('{name} v. {ver}\n\n'
-                            '    Usage:\n'
-                            '        {script} -h | -p | -v\n'
-                            '        {script} [-b] [-d] [-r] evalcode\n'),
-                           name=NAME,
-                           ver=VERSION,
-                           script=SCRIPTNAME)
-    optionstr = ('    Options:\n'
-                 '        evalcode            : Code to evaluate/execute,\n'
-                 '                              or a file to read code from.\n'
-                 '        -b,--blacklist      : Use blacklist (testing).\n'
-                 '        -d,--debug          : Prints extra info before,\n'
-                 '                              during, and after execution.\n'
-                 '        -h,--help           : Show this message.\n'
-                 '        -p,--printblacklist : Print blacklisted strings.\n'
-                 '        -r,--raw            : Show unsafe, raw output.\n\n'
-                 '    Notes:\n'
-                 '        If a filename is passed, the name __main__ is not \n'
-                 '        set. So it may not run as expected.\n\n'
-                 '        It will run each statement in the file, but:\n'
-                 '            if __name__ == \'__main__\' will be False.\n\n'
-                 '        You can explicitly bypass this, but it may be\n'
-                 '        better to write a specific sandbox-friendly\n'
-                 '        script to test things out.\n'
-                 )
+    usage_str = '\n'.join((
+        '{name} v. {ver}\n'
+        '    Usage:'
+        '        {script} -h | -p | -v'
+        '        {script} [-b] [-d] [-q] [-r] [evalcode]\n'
+    )).format(name=NAME, ver=VERSION, script=SCRIPTNAME)
+
+    optionstr = '\n'.join((
+        '    Options:',
+        '        evalcode            : Code to evaluate/execute,',
+        '                              or a file to read code from.',
+        '                              stdin is used when not given.',
+        '        -b,--blacklist      : Use blacklist (testing).',
+        '        -d,--debug          : Prints extra info before,',
+        '                              during, and after execution.',
+        '        -h,--help           : Show this message.',
+        '        -p,--printblacklist : Print blacklisted strings and exit.',
+        '        -q,--quiet          : Print output only.',
+        '        -r,--raw            : Show unsafe, raw output.',
+        '        -v,--version        : Show version and exit.\n',
+        '    Notes:',
+        '        You can pipe output from another program.',
+        '        When no \'evalcode\' is given, stdin is used.\n',
+        '        If a filename is passed, the name __main__ is not',
+        '        set. So it may not run as expected.\n',
+        '        It will run each statement in the file, but:',
+        '            if __name__ == \'__main__\' will be False.',
+        '            if __name__ == \'__pyval__\' will be True.\n',
+        '        You can explicitly bypass this, but it may be',
+        '        better to write a specific sandbox-friendly',
+        '        script to test things out.\n'
+    ))
 
     if reason:
         print('\n{}\n'.format(reason))
     print(usage_str)
     if show_options:
         print(optionstr)
+
+
+def print_status(*args, **kwargs):
+    """ Just a wrapper for print(). Can be overridden when --quiet is used. """
+    return print(*args, **kwargs)
 
 
 def remove_items(lst, items):
@@ -512,13 +564,17 @@ def remove_items(lst, items):
 def main(args):
     """ Main entry point, expects args from sys. """
     # Parse args to return an arg dict like docopt.
-    args, argd = parse_args(args, (('-b', '--blacklist'),
-                                   ('-h', '--help'),
-                                   ('-d', '--debug'),
-                                   ('-p', '--printblacklist'),
-                                   ('-r', '--raw'),
-                                   ('-v', '--version'),
-                                   ))
+    args, argd = parse_args(
+        args, (
+            ('-b', '--blacklist'),
+            ('-h', '--help'),
+            ('-d', '--debug'),
+            ('-p', '--printblacklist'),
+            ('-r', '--raw'),
+            ('-q', '--quiet'),
+            ('-v', '--version'),
+        )
+    )
     if argd['--help']:
         # Catch help arg.
         print_help()
@@ -534,35 +590,45 @@ def main(args):
         print_blacklist()
         return 0
 
+    if argd['--quiet']:
+        # All status prints are ignored.
+        global print_status
+        print_status = lambda s: None
+
     if args:
         # Set eval string.
         evalstr = ' '.join(args)
-        # Filename will be set if evalstr is a valid filename, before executing
-        filename = None
     else:
-        print_help('No string to evaluate!', show_options=False)
-        return 1
+        # Read from stdin instead.
+        print_status('\nReading from stdin, use EOF to run (Ctrl + D).\n')
+        evalstr = sys.stdin.read()
 
-    # Get pyval_exec.debug setting from cmdline.
-    debug = argd['--debug']
-
-    if os.path.isfile(evalstr):
+    if (len(evalstr) < 256) and os.path.isfile(evalstr):
         # This is a filename, load the contents from it.
         filename = evalstr
         try:
             with open(filename, 'r') as fread:
                 evalstr = fread.read()
-            stringmode = False
         except (IOError, OSError) as exio:
             print('\nError reading from file: {}\n{}'.format(filename, exio))
             return 1
-        print('Loaded contents from file: {}\n'.format(filename))
+        print_status('Loaded contents from file: {}\n'.format(filename))
+        stringmode = False
     else:
         stringmode = True
-        print('Content: {}\n'.format(evalstr))
+        evallines = evalstr.split('\n')
+        evalpreview = evallines[0]
+        evallen = len(evallines)
+        if evallen > 1:
+            morecount = evallen - 1
+            plural = 'line' if morecount == 1 else 'lines'
+            plusmsg = '...plus {} more {}.'.format(morecount, plural)
+            evalpreview = ' '.join((evalpreview, plusmsg))
+
+        print_status('Content: {}\n'.format(evalpreview))
 
     e = ExecBox(evalstr)
-    e.debug = debug
+    e.debug = DEBUG
     try:
         output = e.execute(raw_output=argd['--raw'],
                            stringmode=stringmode,
@@ -574,8 +640,9 @@ def main(args):
     else:
         # Success
         outmethod = 'raw output' if argd['--raw'] else 'safe_output()'
-        print('Results ({}):\n{}'.format(outmethod, output))
+        print_status('Results ({}):'.format(outmethod))
+        print(output)
     return 0
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv))

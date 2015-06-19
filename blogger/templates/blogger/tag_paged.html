@@ -7,10 +7,6 @@
 	{{ block.super }}
 {% endblock %}
 
-{% block extrastylelink %}
-	{{ block.super }}
-{% endblock %}
-
 {% block contentabove %}
 	<div class="blog-header">
 		<div class="blog-header-title">
@@ -18,7 +14,7 @@
 				<h3 class='header'>Blog</h3>
 			</a>
 		</div>
-		
+
 		<div class="blog-header-text">
 		{% block blogcontentabove %}
 			<div class="blog-header">
@@ -40,7 +36,7 @@
 					<div class="readmore-box" style="margin-left: 5px; position: absolute; right: 10px; top: 10px;">
 						<span class="readmore-text">view all tags</span>
 					</div>
-				</a>	
+				</a>
 			</div>
 			{% if blog_posts %}
 				{% if post_count|exceeds_max:25 %}

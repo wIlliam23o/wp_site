@@ -89,7 +89,7 @@ class wp_misc(models.Model):  # noqa
         max_length=100,
         choices=Lang.fieldchoices,
         help_text=(
-            'Code language for this misc object '
+            'Programming language for this misc object '
             '(None, Python, C, Bash, etc.)'))
 
     # disables project (instead of deleting it, it simply won't be viewed)
@@ -135,5 +135,5 @@ class wp_misc(models.Model):  # noqa
     class Meta:
         get_latest_by = 'publish_date'
         ordering = ['name']
-        verbose_name = "Misc. Object"
-        verbose_name_plural = "Misc. Objects"
+        verbose_name = 'Misc. Object'
+        verbose_name_plural = 'Misc. Objects'

@@ -90,9 +90,11 @@ def get_by_identifier(ident):
             return i
 
     #  Methods to try with utilities.get_object_safe
-    tryargs = ({'id': safe_int(ident)},
-               {'name': ident},
-               {'alias': ident})
+    tryargs = (
+        {'id': safe_int(ident)},
+        {'name': ident},
+        {'alias': ident}
+    )
 
     for argset in tryargs:
         obj = utilities.get_object_safe(wp_misc, **argset)

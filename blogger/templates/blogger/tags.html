@@ -3,38 +3,38 @@
 {% block title %}- Blog Tags{% endblock %}
 
 {% block metainfo %}
-    <meta name="description" content="All tags found in welborn productions blog posts.">
+    <meta name='description' content='All tags found in welborn productions blog posts.'>
 {% endblock %}
 
 {% block extrastylelink %}
 	{{ block.super }}
-	<link type="text/css" rel="stylesheet" href="/static/css/blogger.min.css"/>
-	<link type="text/css" rel="stylesheet" href="/static/css/tags.min.css"/>
+	<link type='text/css' rel='stylesheet' href='/static/css/blogger.min.css'/>
+	<link type='text/css' rel='stylesheet' href='/static/css/tags.min.css'/>
 {% endblock %}
 
 {% block contentabove %}
-	<div class="blog-header">
-		<div class="blog-header-title">
+	<div class='blog-header'>
+		<div class='blog-header-title'>
 			<a href='/blog/tags'>
 				<h3 class='header'>Blog Tags</h3>
 			</a>
 		</div>
 
-		<div class="blog-header-text">
-				<span class="blog-header-text">Viewing all </span>
-					<span class="blog-header-count">{{ tag_count }}</span>
-						<span class="blog-header-text"> tags.</span>
+		<div class='blog-header-text'>
+				<span class='blog-header-text'>Viewing all </span>
+					<span class='blog-header-count'>{{ tag_count }}</span>
+						<span class='blog-header-text'> tags.</span>
 		</div>
 	</div>
 {% endblock %}
 
 {% block content %}
 	{% if tag_list %}
-		<div class="blog-tag-list">
+		<div class='blog-tag-list'>
 			{% for tag_ in tag_list %}
-				<div class="blog-tag-list-item">
-					<a href="/blog/tag/page/{{ tag_.name }}?start_id=0">
-						<span class="blog-tag-list-text" style="font-size: {{ tag_.size }}">
+				<div class='blog-tag-list-item'>
+					<a href='/blog/tag/page/{{ tag_.name }}?start_id=0'>
+						<span class='blog-tag-list-text' style='font-size: {{ tag_.size }}'>
 							{{ tag_.name }}
 						</span>
 					</a>
@@ -42,8 +42,8 @@
 				{% endfor %}
 		</div>
 	{% else %}
-		<span style="font-style: italic;">Sorry, no tags were found.</span>
+		<span style='font-style: italic;'>Sorry, no tags were found.</span>
 		<br/>
-		<a href="/blog/page"><span>Click here to go back to the blog.</span></a>
+		<a href='/blog/page'><span>Click here to go back to the blog.</span></a>
 	{% endif %}
 {% endblock %}

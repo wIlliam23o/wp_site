@@ -32,9 +32,9 @@ def view_sitemap(request):
     """ delivers sitemap for current domain using sitemap.xml template """
 
     # return xml sitemap response
-    return responses.xml_response("sitemaps/sitemap.xml",
-                                  {"url_list": get_urls(request),
-                                   })
+    return responses.xml_response(
+        'sitemaps/sitemap.xml',
+        {'url_list': get_urls(request)})
 
 
 @never_cache
@@ -43,7 +43,7 @@ def view_blank_sitemap(request):
         (for servers that don't need a sitemap like the test-server).
     """
 
-    return responses.text_response("", content_type='application/xml')
+    return responses.text_response('', content_type='application/xml')
 
 
 @never_cache
@@ -82,9 +82,11 @@ def get_urls(request):
         return []
 
     # Find server name (.com or .info)
-    serverattrs = ('HTTP_X_FORWARDED_HOST',
-                   'HTTP_X_FORWARDED_SERVER',
-                   'HTTP_HOST')
+    serverattrs = (
+        'HTTP_X_FORWARDED_HOST',
+        'HTTP_X_FORWARDED_SERVER',
+        'HTTP_HOST'
+    )
     domain = None
     for serverattr in serverattrs:
         if serverattr in request.META.keys():

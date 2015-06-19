@@ -29,7 +29,6 @@ def index(request):
         'request': request,
         'blog_posts': blog_posts,
         'post_count': post_count,
-        'extra_style_link_list': [utilities.get_browser_style(request)]
     }
     return responses.clean_response('blogger/index.html', context)
 
@@ -79,7 +78,6 @@ def index_page(request):
         'next_page': nextpage,
         'has_prev': hasprv,
         'has_next': hasnxt,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
     }
     return responses.clean_response('blogger/index_paged.html', context)
 
@@ -132,7 +130,6 @@ def view_post(request, identifier):
     # Build clean HttpResponse with post template...
     context = {
         'request': request,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
         'post_title_short': post_title_short,
         'enable_comments': post.enable_comments,
         'blog_post': post,
@@ -158,7 +155,6 @@ def view_tags(request):
     tag_list = [make_tag(tname) for tname in tag_count]
     context = {
         'request': request,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
         'tag_list': tag_list,
         'tag_count': len(tag_list),
     }
@@ -178,7 +174,6 @@ def view_tag(request, tag):
 
     context = {
         'request': request,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
         'tag_name': tag_name,
         'post_count': post_count,
         'item_count': len(found_posts),
@@ -226,7 +221,6 @@ def tag_page(request, tag):
         'post_count': post_count,
         'prev_page': prevpage,
         'next_page': nextpage,
-        'extra_style_link_list': [utilities.get_browser_style(request)],
         'has_prev': hasprv,
         'has_next': hasnxt,
     }
