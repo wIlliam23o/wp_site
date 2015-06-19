@@ -7,7 +7,7 @@
 # TODO: Modify /static/ dirs and builder.py so that a "git pull" requires
 #       no building on production.
 appname="WpBuild"
-appversion="0.0.1"
+appversion="0.1.0"
 apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
@@ -85,8 +85,12 @@ function build_js {
         echo "Creating JS directory: $dir_js"
         mkdir -p "$dir_js"
     fi
-
+    local jsfile
     for jsfile in $dir_project/*/static/js/*.js
+    do
+        build_js_file "$jsfile"
+    done
+    for jsfile in $dir_project/*/*/static/js/*.js
     do
         build_js_file "$jsfile"
     done
@@ -129,11 +133,16 @@ function build_sass {
         echo "Creating CSS directory: $dir_css"
         mkdir -p "$dir_css"
     fi
-
+    local sassfile
     for sassfile in $dir_project/*/static/sass/*.scss
     do
         build_sass_file "$sassfile"
     done
+    for sassfile in $dir_project/*/*/static/sass/*.scss
+    do
+        build_sass_file "$sassfile"
+    done
+
 }
 
 
