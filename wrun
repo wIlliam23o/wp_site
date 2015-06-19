@@ -52,8 +52,8 @@ function find_script () {
             elif [[ $skiptest ]] && [[ $scriptname =~ test_ ]]; then
                 # So are tests unless explicitly called.
                 continue
-            elif [[ ${scriptname%.*} =~ $1 ]]; then
-                # Found a match.
+            elif [[ ${scriptname%.*} =~ $1 ]] || [[ "$scriptname" == "$1" ]]; then
+                # Found a regex match, or an exact match.
                 printf "%s" "$scriptpath"
                 return 0
             fi
