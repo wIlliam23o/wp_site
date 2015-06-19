@@ -7,7 +7,7 @@
 # TODO: Modify /static/ dirs and builder.py so that a "git pull" requires
 #       no building on production.
 appname="WpBuild"
-appversion="0.1.0"
+appversion="0.1.1"
 apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
@@ -24,12 +24,12 @@ if [[ ! -e "$dir_out" ]]; then
     echo "Output directory is missing: $dir_out"
     exit 1
 fi
+# Sub directories for each type of minified file.
 dir_css="$dir_out/css"
 dir_js="$dir_out/js"
 
 # Path to closure.jar.
-# TODO: Use this newer version always, no building will take place on the server.
-closure_path="$dir_project/scripts/external/closure-v20150505.jar"
+closure_path="$dir_project/scripts/external/closure.jar"
 
 # Build sass include paths
 sass_includes=("$dir_project/wp_main/static/sass")
@@ -86,11 +86,8 @@ function build_js {
         mkdir -p "$dir_js"
     fi
     local jsfile
-    for jsfile in $dir_project/*/static/js/*.js
-    do
-        build_js_file "$jsfile"
-    done
-    for jsfile in $dir_project/*/*/static/js/*.js
+    # Allow only files in project/static, or project/subdir/static.
+    for jsfile in $dir_project/*/static/js/*.js $dir_project/*/*/static/js/*.js
     do
         build_js_file "$jsfile"
     done
@@ -134,15 +131,11 @@ function build_sass {
         mkdir -p "$dir_css"
     fi
     local sassfile
-    for sassfile in $dir_project/*/static/sass/*.scss
+    # Allow only files in project/static, or project/subdir/static.
+    for sassfile in $dir_project/*/static/sass/*.scss $dir_project/*/*/static/sass/*.scss
     do
         build_sass_file "$sassfile"
     done
-    for sassfile in $dir_project/*/*/static/sass/*.scss
-    do
-        build_sass_file "$sassfile"
-    done
-
 }
 
 
