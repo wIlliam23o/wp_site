@@ -21,7 +21,7 @@
         <!-- Fill it with the badge on document.ready -->
         <script type='text/javascript'>
             $(document).ready(function () {
-                github_badge.build_badge(
+                github_badge.build(
                     'myusername',
                     function success(div) {
                         // div is an element containing the badge.
