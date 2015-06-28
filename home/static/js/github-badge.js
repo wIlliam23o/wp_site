@@ -44,7 +44,7 @@
 
 'use strict';
 var github_badge = {
-    version: '0.0.2',
+    version: '0.0.3',
     // Github user info.
     username: null,
     userinfo: null,
@@ -55,7 +55,7 @@ var github_badge = {
     stars: 0,
     followers: 0,
 
-    build: function (username, cbsuccess, cberror) {
+    build: function build(username, cbsuccess, cberror) {
         github_badge.get_info(
             username,
             function success() {
@@ -67,7 +67,7 @@ var github_badge = {
 
     },
 
-    get_info: function (username, cbsuccess, cberror) {
+    get_info: function get_info(username, cbsuccess, cberror) {
         github_badge.username = username;
 
         /*jslint unparam:true*/
@@ -84,7 +84,7 @@ var github_badge = {
         });
     },
 
-    parse_info: function (data, cbsuccess, cberror) {
+    parse_info: function parse_info(data, cbsuccess, cberror) {
         var force_int = function force_int(value, fallback) {
             /* Parse a string as an integer. Use the default on failure. */
             var val = parseInt(value, 10);
@@ -134,7 +134,7 @@ var github_badge = {
         });
     },
 
-    render_template: function (obj) {
+    render_template: function render_template(obj) {
         /*  Return an element containing the formatted badge.
             Expects an object with these attributes:
                 forks, stars, followers, repos, username, name, avatar_url
@@ -205,7 +205,39 @@ var github_badge = {
         ].join('\n');
     },
 
-    url_info: function (options) {
+    replace_deviant: function replace_deviant(selector, username, precall) {
+        /* Replace a misbehaved deviant.io badge with this one.
+           If the deviant.io badge is already built then nothing is done.
+           If everything fails, the `selector` element is removed.
+
+           Arguments:
+                selector  : Element selector to be filled with the badge.
+                username  : Github user name to get info for.
+                precall   : A function to call before building the badge.
+        */
+        var badge = document.getElementsByTagName('github-badge');
+        var shadow = badge.length ? badge[0].shadowRoot : null;
+        if (!shadow) {
+            // The github-badge element is no longer needed, it failed.
+            $('github-badge').remove();
+            if (typeof precall === 'function') {
+                precall();
+            }
+            // Fallback to
+            github_badge.build(
+                username,
+                function success (div) {
+                    $(selector).append(div);
+                },
+                function error (msg) {
+                    console.warn('Unable to build/replace github badge: ' + msg);
+                    $(selector).remove();
+                }
+            );
+        }
+    },
+
+    url_info: function url_info(options) {
         /*global window, document*/
         /*  Gathers info and parameters from a url (window.location.href).
 

@@ -33,7 +33,7 @@
 
 'use strict';
 var wptools = {
-    alert : function (msg, smallmsg) {
+    alert : function alert(msg, smallmsg) {
         /*  Show an alert message using #floater if available,
             otherwise use window.alert().
         */
@@ -56,7 +56,7 @@ var wptools = {
             window.alert($('<div>' + msg + '</div>').text());
         }
     },
-    center: function (selector, usevertical, useouter) {
+    center: function center(selector, usevertical, useouter) {
         /*  Centers an element on screen.
             Arguments:
                 selector     : jquery selector for elem.
@@ -96,26 +96,26 @@ var wptools = {
         return {'x': newx, 'y': newy};
     },
 
-    csrf_safe_method : function (method) {
+    csrf_safe_method : function csrf_safe_method(method) {
         /* Return true if this HTTP method name required csrf protection. */
         // these HTTP methods do not require CSRF protection
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     },
 
-    is_hidden : function (selector_) {
+    is_hidden : function is_hidden(selector_) {
         /* determines if element is hidden
          * by checking the display property */
         var box_display = $(selector_).css('display');
         return (box_display === '' || box_display === 'none');
     },
 
-    is_address : function (input_) {
+    is_address : function is_address(input_) {
         /* checks for email address */
         var regex_ = /^[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
         return input_.search(regex_) > -1;
     },
 
-    is_emptystr : function (s) {
+    is_emptystr : function is_emptystr(s) {
         if (s) {
             // we have a string or something. Try replacing whitespace.
             if (s.replace && (s.replace(/\s/g, '') === '')) {
@@ -132,13 +132,13 @@ var wptools = {
         return false;
     },
 
-    is_mailto : function (input_) {
+    is_mailto : function is_mailto(input_) {
         /* checks for mailto: email address */
         var regex_ = /^mailto:[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
         return input_.search(regex_) > -1;
     },
 
-    has_localstorage : function () {
+    has_localstorage : function has_localstorage() {
         /* Determine if the current browser supports localStorage. */
         try {
             return window.hasOwnProperty('localStorage') && (window.localStorage !== null);
@@ -147,17 +147,27 @@ var wptools = {
         }
     },
 
-    hide_debug : function () {
+    hide_debug : function hide_debug() {
         /* Hides the debug box and changes it's label text. */
         $('.debug-box').hide();
         $('.debug-button-text').text('show debug');
     },
 
-    navigateto : function (url) {
+    load_css : function load_css(href) {
+        /* Dynamically load a css file. */
+        var link = document.createElement('link');
+        link.href = href;
+        link.type = 'text/css';
+        link.rel = 'stylesheet';
+        var head = document.getElementsByTagName('head')[0];
+        head.appendChild(link);
+    },
+
+    navigateto : function navigateto(url) {
         window.location.href = url;
     },
 
-    pre_ajax : function () {
+    pre_ajax : function pre_ajax() {
         /*  Set global options for jQuery.ajax using $.ajaxSetup
             Django needs it's csrftoken cookie for all requests.
         */
@@ -177,7 +187,7 @@ var wptools = {
         $.ajaxSetup(settings);
     },
 
-    scroll_element : function (selector, toppos) {
+    scroll_element : function scroll_element(selector, toppos) {
         if (!toppos) { toppos = 0; }
         var el = $(selector),
             elpos = el.offset().top;
@@ -193,7 +203,7 @@ var wptools = {
         });
     },
 
-    scroll_to_anchor: function (selector, animatespeed) {
+    scroll_to_anchor: function scroll_to_anchor(selector, animatespeed) {
         /* Scroll down/up to a specific anchor. */
         var elem = $(selector);
         if (elem) {
@@ -202,7 +212,7 @@ var wptools = {
         }
     },
 
-    select : function (selector, container) {
+    select : function select(selector, container) {
         /*  Native css selector that returns the first element found, or null.
             Arguments:
                 selector       : CSS selector.
@@ -214,7 +224,7 @@ var wptools = {
         return (container || document).querySelector(selector);
     },
 
-    select_all : function (selector, container) {
+    select_all : function select_all(selector, container) {
         /*  Native css selector that returns an array of all matching elements.
             Returns an empty array on failure.
             Arguments:
@@ -227,13 +237,13 @@ var wptools = {
         return (container || document).querySelectorAll(selector);
     },
 
-    show_debug : function () {
+    show_debug : function show_debug() {
         /* Displays the debug box and changes it's label text. */
         $('.debug-box').show();
         $('.debug-button-text').text('hide debug');
     },
 
-    strdup : function (char_, count_) {
+    strdup : function strdup(char_, count_) {
         var s = '',
             i = 0;
         if (count_ && count_ > 0) {
@@ -244,7 +254,7 @@ var wptools = {
         return s;
     },
 
-    toggle_debug : function () {
+    toggle_debug : function toggle_debug() {
         /*  Toggles debug-box between shown and hidden.
             This also changes the label text for it through
             show_debug() and hide_debug().
@@ -258,7 +268,7 @@ var wptools = {
 
     },
 
-    trim_whitespace : function (s) {
+    trim_whitespace : function trim_whitespace(s) {
         /* Trim all whitespace from a string. */
         if (s.replace) {
             return s.replace(/\s/g, '');
@@ -267,7 +277,7 @@ var wptools = {
         return s;
     },
 
-    vertical_element : function (selector, toppos) {
+    vertical_element : function vertical_element(selector, toppos) {
         if (!toppos) { toppos = 0; }
         var elem = $(selector),
             y = $(this).scrollTop();
@@ -277,7 +287,7 @@ var wptools = {
         elem.css({'top': y + toppos + 'px' });
     },
 
-    wpaddress : function (input_) {
+    wpaddress : function wpaddress(input_) {
         /* decodes base64 email and mailto if base64 is present,
          * otherwise returns original string */
         var decoded_ = Base64.decode(input_).replace('\n', '');
@@ -287,7 +297,7 @@ var wptools = {
         return input_;
     },
 
-    wpreveal : function (selector) {
+    wpreveal : function wpreveal(selector) {
         /* Reveals all base64 encoded mailto: and
          * email addresses with selector */
         // use default welbornprod address class if no selector is passed.
@@ -326,7 +336,7 @@ var wptools = {
       beyond these few things it may be moved to its own file in misc/static/js
 */
 var misctools = {
-    fixLongDescBtn: function (alias) {
+    fixLongDescBtn: function fixLongDescBtn(alias) {
         var miscbtnid = '#misclongdescbtn-' + alias;
         var longdescbtn = $(miscbtnid);
 
@@ -338,12 +348,12 @@ var misctools = {
         }
     },
 
-    submitMisc: function (f) {
+    submitMisc: function submitMisc(f) {
         $('#viewer-filename').val(f);
         $('#file-viewer').submit();
     },
 
-    toggleLongDesc: function (alias) {
+    toggleLongDesc: function toggleLongDesc(alias) {
         $('#misclongdesc-' + alias).slideToggle();
         $('#miscusage-' + alias).slideToggle();
         this.fixLongDescBtn(alias);

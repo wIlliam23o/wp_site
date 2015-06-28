@@ -19,8 +19,8 @@
 {% endblock %}
 
 {% block javascript %}
-    {# This is the local welbornprod github badge, disabled. (will be removed)  #}
-    {# <script type='text/javascript' src='/static/js/github-badge.min.js'></script> #}
+    {# This is the local welbornprod github badge, enabled when deviant.io fails  #}
+    <script type='text/javascript' src='/static/js/github-badge.min.js'></script>
 {% endblock %}
 
 {% block content %}
@@ -126,7 +126,9 @@
                 <!-- Github -->
                 <div id='github-badge-wrapper' class='about-contrib-item'>
                     {# deviant.io badge. #}
-                    <github-badge class='github-badge' user="welbornprod" show_repos="true" show_languages="true" />
+                    <github-badge class='github-badge' user="welbornprod" show_repos="true" show_languages="true">
+                        Loading github badge...
+                    </github-badge>
                 </div>
                 <!-- Daniweb -->
                 <div class='about-contrib-item'>
@@ -156,4 +158,23 @@
 {% block bodyend %}
     {# deviant.io badge. #}
     <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script>
+    {# Make sure deviant badge loaded in time. Replace the blank element if needed. #}
+    <script type='text/javascript'>
+        /* jshint ignore:start */
+        $(document).ready(function () {
+            {# If deviant.io misbehaves, kill it. (presence of shadowRoot will tell) #}
+            setTimeout(
+                function () {
+                    github_badge.replace_deviant(
+                        '#github-badge-wrapper',
+                        'welbornprod',
+                        function precall() {
+                            wptools.load_css('/static/css/github-badge.min.css');
+                        }
+                    );
+                },
+                3000);
+        });
+    /* jshint ignore:end */
+    </script>
 {% endblock %}
