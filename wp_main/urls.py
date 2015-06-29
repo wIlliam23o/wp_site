@@ -180,6 +180,15 @@ urlpatterns += patterns(
         homeviews.view_scriptkids),
 )
 
+# URL Junk (from base64 encoded links)
+# These don't get decoded for bots without javascript, so they end up here.
+urlpatterns += patterns(
+    '',
+    # mailto: cjwelborn
+    url(r'^bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQ==',
+        homeviews.view_no_javascript),
+)
+
 # Simple redirects
 urlpatterns += patterns(
     '',

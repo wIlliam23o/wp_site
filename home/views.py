@@ -179,6 +179,15 @@ def view_login(request):
     return response
 
 
+def view_no_javascript(request):
+    """ Return a page for bots trying to visit base64 or other links that
+        are supposed to be decoded with javascript.
+    """
+    return responses.basic_response(
+        'Sorry, you must have javascript enabled to follow that link.'
+    )
+
+
 def view_scriptkids(request):
     """ return my script kiddie view
         for people trying to access wordpress-login pages and stuff like that.
