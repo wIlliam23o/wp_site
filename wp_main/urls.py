@@ -184,7 +184,7 @@ urlpatterns += patterns(
 # These don't get decoded for bots without javascript, so they end up here.
 urlpatterns += patterns(
     '',
-    # mailto: cjwelborn
+    # mailto: cj...
     url(r'^bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQ==',
         homeviews.view_no_javascript),
 )
