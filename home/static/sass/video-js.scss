@@ -1,69 +1,70 @@
 @import 'welbornprod';
 
-/*!
-Video.js Default Styles (http://videojs.com)
-Version 4.4.2
-Create your own skin at http://designer.videojs.com
-*/
-/* SKIN
-================================================================================
-The main class name for all skin-specific styles. To make your own skin,
-replace all occurances of 'vjs-default-skin' with a new name. Then add your new
-skin name to your video tag instead of the default skin.
-e.g. <video class="video-js my-skin-name">
-*/
+//
+// Video.js Default Styles (http://videojs.com)
+// Version 4.4.2
+// Create your own skin at http://designer.videojs.co
+// SKIN
+// ================================================================================
+// The main class name for all skin-specific styles. To make your own skin,
+// replace all occurances of 'vjs-default-skin' with a new name. Then add your new
+// skin name to your video tag instead of the default skin.
+// e.g. <video class="video-js my-skin-name"
 .vjs-default-skin {
-  color: #cccccc;
+  color: #ccc;
 }
-/* Custom Icon Font
---------------------------------------------------------------------------------
-The control icons are from a custom font. Each icon corresponds to a character
-(e.g. "\e001"). Font icons allow for easy scaling and coloring of icons.
-*/
+
+// Custom Icon Font
+// --------------------------------------------------------------------------------
+// The control icons are from a custom font. Each icon corresponds to a character
+// (e.g. "\e001"). Font icons allow for easy scaling and coloring of icons.
+
 @font-face {
   font-family: 'VideoJS';
+  font-style: normal;
+  font-weight: normal;
   src: url('/static/fonts/videojs.eot');
   src: url('/static/fonts/videojs.eot?#iefix') format('embedded-opentype'), url('/static/fonts/videojs.woff') format('woff'), url('/static/fonts/videojs.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
 }
-/* Base UI Component Classes
---------------------------------------------------------------------------------
-*/
-/* Slider - used for Volume bar and Seek bar */
+//  Base UI Component Classes
+// -----------------------------------------------------------------------------
+//  Slider - used for Volume bar and Seek bar */
 .vjs-default-skin .vjs-slider {
-  /* Replace browser focus hightlight with handle highlight */
-  outline: 0;
-  position: relative;
-  cursor: pointer;
-  padding: 0;
-  /* background-color-with-alpha */
+  // Replace browser focus hightlight with handle highlight
+  // background-color-with-alph
   background-color: #333333;
   background-color: rgba(51, 51, 51, 0.9);
+  cursor: pointer;
+  outline: 0;
+  padding: 0;
+  position: relative;
 }
+
 .vjs-default-skin .vjs-slider:focus {
-  /* box-shadow */
-  @include box-shadow(0 0 2em #ffffff);
+  // box-shadow
+  @include box-shadow(0 0 2em #fff);
 }
+
 .vjs-default-skin .vjs-slider-handle {
-  position: absolute;
-  /* Needed for IE6 */
+  // Needed for IE6
   left: 0;
+  position: absolute;
   top: 0;
 }
+
 .vjs-default-skin .vjs-slider-handle:before {
-  position: absolute;
-  content: "\e009";
+  // Rotate the square icon to make a diamond
+  // transform
+  @include transform(rotate(-45deg));  content: '\e009';
   font-family: VideoJS;
   font-size: 1em;
+  left: 0;
   line-height: 1;
+  position: absolute;
   text-align: center;
   text-shadow: 0em 0em 1em #fff;
   top: 0;
-  left: 0;
-  /* Rotate the square icon to make a diamond */
-  /* transform */
-  @include transform(rotate(-45deg));
+
 }
 /* Control Bar
 --------------------------------------------------------------------------------
