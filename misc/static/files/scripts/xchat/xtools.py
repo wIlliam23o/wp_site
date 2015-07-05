@@ -16,11 +16,12 @@
     their own home.
 
     -Christopher Welborn
-
+    Version: 0.3.6
+        More encoding errors,
     Version: 0.3.5-4
         Fixed encoding errors when printing unicode.
 """
-
+from __future__ import print_function
 from code import InteractiveInterpreter
 from collections import deque
 from datetime import datetime
@@ -30,7 +31,7 @@ import sys
 from threading import Thread
 # XChat style version info.
 __module_name__ = 'xtools'
-__module_version__ = '0.3.5-4'
+__module_version__ = '0.3.6'
 __module_description__ = 'Various tools/commands for extending XChat...'
 # Convenience version str for help commands.
 VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
@@ -804,7 +805,7 @@ def get_eval_comment(s):
         return None
 
 
-def get_flag_args(word, arglist):
+def get_flag_args(word, arglist):  # noqa
     """ Retrieves flag args from a command,
         returns a tuple with:
             (cleaned_word, {'--longopt': True/False, ...})
@@ -1113,18 +1114,6 @@ def parse_scrollback_line(line):
         text = None
 
     return timedate, nick, text
-
-
-def print_safe(s, newtab=False, focus=True):
-    """ Just a wrapper for print, to ensure it is a function (py 2)
-        and help with utf8 encoding.
-    """
-    if newtab:
-        return print_xtools(s, focus=focus)
-    if xtools.settings.get('enable_utf8', False):
-        print(s.encode('utf-8'))
-    else:
-        print(s)
 
 
 def print_catchers(newtab=False):
@@ -1507,6 +1496,18 @@ def print_ignored_nicks(newtab=False):
     return True
 
 
+def print_safe(s, newtab=False, focus=True):
+    """ Just a wrapper for print, to ensure it is a function (py 2)
+        and help with utf8 encoding.
+    """
+    if newtab:
+        return print_xtools(s, focus=focus)
+    if xtools.settings.get('enable_utf8', False):
+        print(s.encode('utf-8'))
+    else:
+        print(s)
+
+
 def print_saved_msg(msg, chanspace=16, nickspace=16,
                     newtab=False, focus=True, redirect=False):
     """ Print a single saved msg from xtools.ignored_msgs,
@@ -1626,10 +1627,12 @@ def print_xtools(s, focus=True):
         print_safe(s)
     else:
         # print to xtools tab.
-        if xtools.settings.get('enable_utf8', False):
-            context.prnt(s.encode('utf-8'))
-        else:
+        try:
             context.prnt(s)
+        except UnicodeDecodeError as ex:
+            print_error(
+                'Error printing this string: {!r}'.format(s),
+                exc=ex)
 
 
 def remove_catcher(catcherstr):
@@ -1871,7 +1874,7 @@ def validate_int_str(intstr, minval=5, maxval=60):
 
 # Commands -------------------------------------------------------------------
 
-def cmd_catch(word, word_eol, userdata=None):
+def cmd_catch(word, word_eol, userdata=None):   # noqa
     """ Handles the /CATCH command to add/remove or list caught msgs. """
 
     cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-c', '--clear'),
@@ -1985,7 +1988,7 @@ def cmd_catchfilter(word, word_eol, userdata=None):
     return xchat.EAT_ALL
 
 
-def cmd_eval(word, word_eol, userdata=None):
+def cmd_eval(word, word_eol, userdata=None):  # noqa
     """ Evaluates your own python code, prints query and result
         to the screen or sends the code and output directly to the channel
         as a msg from you.
@@ -2097,7 +2100,7 @@ def cmd_eval(word, word_eol, userdata=None):
     return xchat.EAT_ALL
 
 
-def cmd_findtext(word, word_eol, userdata=None):
+def cmd_findtext(word, word_eol, userdata=None):  # noqa
     """ Finds text, and who said it
         Current chat window, or all chat windows.
     """
@@ -2284,7 +2287,7 @@ def cmd_listusers(word, word_eol, userdata=None):
     return xchat.EAT_ALL
 
 
-def cmd_searchuser(word, word_eol, userdata=None):
+def cmd_searchuser(word, word_eol, userdata=None):  # noqa
     """ Searches for a user nick,
         expects: word = /searchuser [-a] usernickregex
     """
@@ -2496,7 +2499,7 @@ def cmd_whitewash(word, word_eol, userdata=None):
     return xchat.EAT_ALL
 
 
-def cmd_xignore(word, word_eol, userdata=None):
+def cmd_xignore(word, word_eol, userdata=None):  # noqa
     """ Handles the /XIGNORE command to add/remove or list ignored nicks. """
 
     cmdname, cmdargs, argd = get_cmd_args(word_eol, (('-c', '--clear'),
