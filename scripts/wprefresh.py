@@ -22,7 +22,7 @@ from docopt import docopt
 
 # Script info...
 NAME = 'WpRefresh'
-VERSION = '2.0.0'
+VERSION = '2.0.1'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
 
@@ -37,10 +37,6 @@ except ImportError as eximp:
 except Exception as ex:
     print('\nError initializing django environment!:\n{}'.format(ex))
     sys.exit(1)
-
-# Fix raw_input..
-if sys.version < '3':
-    input = raw_input  # noqa
 
 # Get Django Settings and Cache to work with..
 from django.conf import settings
@@ -116,11 +112,9 @@ def apache_restart():
     if os.path.isdir(remote_apache_path):
         # Remote: `../apache2/bin/restart`
         apachecmd = ''.join(['. ', remote_apache_path]) + '/'
-        use_elevation = False
     else:
         # Local: `apache2 restart`
-        apachecmd = os.path.join('/etc', 'init.d', 'apache2') + ' '
-        use_elevation = True
+        apachecmd = '/etc/init.d/apache2 '
 
     print('\nRestarting apache... ({}restart)'.format(apachecmd))
     if not (
@@ -130,8 +124,6 @@ def apache_restart():
         return False
 
     try:
-        if use_elevation:
-            apachecmd = 'sudo ' + apachecmd
         callret = os.system(apachecmd + 'restart')
         ret = (callret == 0)
     except Exception as ex:
@@ -139,26 +131,6 @@ def apache_restart():
         ret = False
 
     return ret
-
-
-def build_files(wponly=False):
-    """ Build css/js files """
-    builder_py = os.path.join(settings.BASE_DIR, 'scripts', 'builder.py')
-    if not os.path.isfile(builder_py):
-        print('\nbuilder.py not found!: {}'.format(builder_py))
-        return False
-
-    print('\nRunning builder...')
-    build_cmd = ['python3', builder_py]
-    if settings.SITE_VERSION.lower().startswith('local'):
-        build_cmd.insert(0, 'sudo')
-
-    if wponly:
-        # only build wp*.js files. not external stuff. (takes too long)
-        build_cmd = build_cmd + ['-i', 'wp', '-f', '-wp']
-    print('running: {}'.format(' '.join(build_cmd)))
-    callret = os.system(' '.join(build_cmd))
-    return (callret == 0)
 
 
 def check_args(argd, arglist, unless=None):
@@ -224,16 +196,14 @@ def clear_cache():
 
 def collect_static():
     """ Run manage.py collectstatic """
-    manage_py = os.path.join(settings.BASE_DIR, "manage.py")
-    use_elevation = 'workspace/' in settings.BASE_DIR
+    manage_py = os.path.join(settings.BASE_DIR, 'manage.py')
 
     if not os.path.isfile(manage_py):
         print("\nmanage.py not found!: " + manage_py + '\n')
         return False
 
     print("\nRunning collectstatic...")
-    collect_cmd = ['sudo'] if use_elevation else []
-    collect_cmd.extend(['python3', manage_py, 'collectstatic', '--noinput'])
+    collect_cmd = ['python3', manage_py, 'collectstatic', '--noinput']
 
     cmdstr = ' '.join(collect_cmd)
     print('running: {}'.format(cmdstr))
@@ -306,7 +276,7 @@ def collect_admin_templates(printskipped=False):
     for filename in srcfiles:
         srcfile = os.path.join(admin_src, filename)
         dstfile = os.path.join(admin_dest, filename)
-        if copy_file(srcfile, dstfile, nosudo=True):
+        if copy_file(srcfile, dstfile):
             print('    Copied to: {}'.format(dstfile))
             if filename in change_files:
                 print('               ** {} **'.format(change_msg))
@@ -316,12 +286,11 @@ def collect_admin_templates(printskipped=False):
     return True
 
 
-def copy_file(srcfile, dstfile, nosudo=False):
+def copy_file(srcfile, dstfile):
     """ Copies a single file. """
-    use_elevation = ('workspace/' in settings.BASE_DIR) and (not nosudo)
+
     if is_modified(srcfile, dstfile):
-        cp_cmd = ['sudo'] if use_elevation else []
-        cp_cmd += ['cp', '-r', srcfile, dstfile]
+        cp_cmd = ['cp', '-r', srcfile, dstfile]
         callret = os.system(' '.join(cp_cmd))
         return (callret == 0)
     return False
@@ -357,6 +326,9 @@ def is_modified(srcfile, dstfile):
 
 
 def warn_live():
+    """ Print a helpful warning if the live site may be interrupted.
+        Offer the user a chance to cancel the operation.
+    """
     print('\nYou are working on the ** LIVE SITE ** !')
     print('Continuing will restart the server...')
     warn_response = input('\n    Continue anyway? (y|n): ')
