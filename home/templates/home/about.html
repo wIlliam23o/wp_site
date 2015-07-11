@@ -62,8 +62,8 @@
                 Biography
             </h3>
             <p>
-                My name is Christopher Welborn, I am a 32 year old programmer
-                from Jasper, Al.
+                My name is Christopher Welborn, I am a <span id='age'>32</span>
+                year old programmer from Jasper, Al.
                 I have been working with computers and code since childhood.
                 I started out with Q-BASIC in Windows 3.1 and have progressed
                 significantly over the years as the technology has also
@@ -160,9 +160,8 @@
     <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script>
     {# Make sure deviant badge loaded in time. Replace the blank element if needed. #}
     <script type='text/javascript'>
-        /* jshint ignore:start */
         $(document).ready(function () {
-            {# If deviant.io misbehaves, kill it. (presence of shadowRoot will tell) #}
+            /* If deviant.io misbehaves, kill it. (presence of shadowRoot will tell) */
             setTimeout(
                 function () {
                     github_badge.replace_deviant(
@@ -174,7 +173,11 @@
                     );
                 },
                 3000);
+
+            /* No more yearly edits :) */
+            var now = new Date();
+            $('#age').text(now.getYear() - (now.getMonth() > 8 ? 82 : 83));
         });
-    /* jshint ignore:end */
+
     </script>
 {% endblock %}
