@@ -97,6 +97,9 @@
 	{# Javascript: Local Tools (email protection) #}
 	<script type='text/javascript' src='/static/js/wptools.min.js'></script>
 
+	{# Google Tracking - Universal Analytics code #}
+	{% tracking_google %}
+
 	{# Extra JavaScript (per page) #}
 	{% block javascript %}
 	{% endblock %}
@@ -372,9 +375,6 @@
 	{# For views inserting JS that should run before the body closes. #}
 	{% block bodyend %}
 	{% endblock %}
-
-	{# Google Tracking - Universal Analytics code #}
-	{% tracking_google %}
 
 </body>
 </html>
