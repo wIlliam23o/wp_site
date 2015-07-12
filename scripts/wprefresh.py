@@ -22,7 +22,7 @@ from docopt import docopt
 
 # Script info...
 NAME = 'WpRefresh'
-VERSION = '2.0.1'
+VERSION = '2.0.2'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
 
@@ -111,12 +111,17 @@ def apache_restart():
     remote_apache_path = os.path.join(settings.BASE_PARENT, 'apache2', 'bin')
     if os.path.isdir(remote_apache_path):
         # Remote: `../apache2/bin/restart`
+        elevcmd = ''
         apachecmd = ''.join(['. ', remote_apache_path]) + '/'
+        apacheargs = 'restart'
     else:
-        # Local: `apache2 restart`
+        # Local: `sudo apache2 restart`
+        elevcmd = 'sudo '
         apachecmd = '/etc/init.d/apache2 '
+        apacheargs = ' restart'
 
-    print('\nRestarting apache... ({}restart)'.format(apachecmd))
+    restartcmd = ''.join((elevcmd, apachecmd, apacheargs))
+    print('\nRestarting apache... ({})'.format(restartcmd))
     if not (
             os.path.isfile(apachecmd.strip(' ')) or
             os.path.isdir(apachecmd.strip('/').strip('. '))):
@@ -124,7 +129,7 @@ def apache_restart():
         return False
 
     try:
-        callret = os.system(apachecmd + 'restart')
+        callret = os.system(restartcmd)
         ret = (callret == 0)
     except Exception as ex:
         print('\nunable to restart apache:\n' + str(ex))
