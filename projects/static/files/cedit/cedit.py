@@ -64,8 +64,8 @@
 
     Christopher Welborn <cj@welbornprod.com>
 """
-# Python2 future print function, Python3 current print function.
 from __future__ import print_function
+import json
 import os
 import re
 import sys
@@ -81,10 +81,8 @@ if not PYTHON3:
 
 # Name, also used in creating symlinks in cmd_install()
 NAME = 'cedit'
-# Current version
-VERSION = '1.4.0'
-VERSIONX = '1'
-VERSIONSTR = '{} v. {}-{}'.format(NAME, VERSION, VERSIONX)
+VERSION = '1.4.0-5'
+VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[1]
 
 # looks better in help to have the real user name,
@@ -108,55 +106,63 @@ usage_args = {
 usage_str = """{verstr} (running on Python {pyversion})
 
     Usage:
-        {script} -h | -a | -v
         {script} <filename>... [options]
-        {script} -d directories [-o]
-        {script} -e path_to_editor | -c path_to_elevcmd
-        {script} -i [-u | -p dir]
-        {script} -l
-        {script} -r
+        {script} -a <alias_name> <alias_value> [-D]
+        {script} [-A | -h | -v]
+        {script} -d directories [-o] [-D]
+        {script} (-e path_to_editor | -c path_to_elevcmd) [-D]
+        {script} -i [-u | -p dir] [-D]
+        {script} -l [-D]
+        {script} -r [-D]
 
     Options:
-        -A,--about              : show message about {name}.
-        -c file,--elevcmd file  : set favorite elevation command, where
-                                  filepath is the path to your
-                                  elevation command.
-        -D,--debug              : for development, prints random msgs.
-        -d dirs,--dirs dirs     : comma-separated list of directories to
-                                  search for files.
-                                  current dir or an existing full path always
-                                  has priority. dirs are searched when those
-                                  fail.
-                                  you can pass 'none' or '-' to clear dirs,
-                                  or just edit the config file.
-        -e file,--editor file   : set favorite editor, where filepath
-                                  is the path to your editor.
-        -h,--help               : show this help message.
-        -i,--install            : install {name}, creates symlink in
-                                  /usr/local/bin, /usr/bin, or home
-                                  (see -u and -p)
-                                  if /usr/local/bin is found in $PATH,
-                                  it is used. otherwise /usr/bin is used.
-                                  if -u or -p is passed also, the install path
-                                  is determined by the flag.
-                                  cedit will ask for confirmation before
-                                  installing.
-        -l,--list               : list current {name} settings.
-        -o,--overwrite          : when setting dirs with -d, overwrite the
-                                  current settings.
-        -p dir,--path dir       : when installing, install to specified
-                                  directory.
-        -q,--quiet              : Don't warn about non-existing files.
-        -r,--remove             : remove the installed symlink for {name} if
-                                  installed. (may require permissions)
-        -s,--shellall           : shell one process per file, instead of
-                                  sending all file names at once.
-        -u,--user               : when installing, only install for user.
-                                  $PATH is searched for dirs like
-                                  /home/{user}/bin.
-                                  without $PATH, common dirs are looked for.
-        -v,--version            : show version.
-        filename                : file to open.
+        -a,--alias                      : Set an alias. This is useful for
+                                          calling your editor with certain
+                                          arguments (using only a simple name).
+        -A,--about                      : show message about {name}.
+        -c file,--elevcmd file          : set favorite elevation command, where
+                                          filepath is the path to your
+                                          elevation command.
+        -D,--debug                      : for development, prints random msgs.
+        -d dirs,--dirs dirs             : comma-separated list of directories
+                                          to search for files.
+                                          current dir or an existing full path
+                                          always has priority.
+                                          dirs are searched when those fail.
+                                          you can pass 'none' or '-' to clear
+                                          dirs, or just edit the config file.
+        -e file,--editor file           : set favorite editor, where filepath
+                                          is the path to your editor.
+        -h,--help                       : show this help message.
+        -i,--install                    : install {name}, creates symlink in
+                                          /usr/local/bin, /usr/bin, or home
+                                          (see -u and -p)
+                                          /usr/local/bin is used if found in
+                                          $PATH, otherwise /usr/bin is used.
+                                          if -u or -p is passed also, the
+                                          install path is determined by the
+                                          flag. cedit will ask for confirmation
+                                          before installing.
+        -l,--list                       : list current {name} settings.
+        -o,--overwrite                  : when setting dirs with -d, overwrite
+                                          the current settings.
+        -p dir,--path dir               : when installing, install to specified
+                                          directory.
+        -q,--quiet                      : Don't warn about non-existing files.
+        -r,--remove                     : remove the installed symlink for
+                                          {name} if installed.
+                                          (may require permissions)
+        -s,--shellall                   : shell one process per file, instead
+                                          of sending all file names at once.
+        -u,--user                       : when installing, only install for
+                                          user. $PATH is searched for dirs like
+                                          /home/{user}/bin.
+                                          without $PATH, common dirs are looked
+                                          for.
+        -v,--version                    : show version.
+        alias_name                      : alias name to create or change.
+        alias_value                     : file name or {name} args to save.
+        filename                        : file to open, or an alias to use.
 
     Notes:
         You can pass arguments on to the editor using the '--' option.
@@ -265,7 +271,7 @@ def warn_pip(importname):
         (return isn't used right now)
     """
 
-     # Check pip info
+    # Check pip info
     pipname = get_pip_name()
     pipsuggested = 'pip3' if PYTHON3 else 'pip'
     pypkg = 'python-{}'.format(pipsuggested)
@@ -312,7 +318,7 @@ except ImportError as ex_es:
     sys.exit(1)
 # Try importing Docopt, some people still prefer the old ways.
 try:
-    from docopt import docopt
+    import docopt
 except ImportError as ex_es:
     warn_pip('Docopt')
     sys.exit(1)
@@ -330,6 +336,10 @@ def check_file(filename):
     """
 
     if os.path.isfile(filename):
+        return True
+    elif os.path.exists(filename):
+        # Directory, just pass it through. Some editors can handle this.
+        print('Trying to open a directory: {}'.format(find_dir(filename)))
         return True
     else:
         print('File does not exist!: ' + filename)
@@ -378,6 +388,40 @@ def clear_cedit_paths():
     # No paths set  yet.
     print('\nNo cedit search directories set yet.\n'
           'use {} -d /my/dir to set some.'.format(SCRIPT))
+    return 1
+
+
+def cmd_alias_add(name, args):
+    """ Save an alias to config.
+        Arguments:
+            name  : Name for the alias (overwrites existing names)
+            args  : List/Tuple of arguments for this alias.
+    """
+    if not args:
+        print('\nAn alias needs arguments.\n')
+        return 1
+
+    aliases = load_aliases()
+    if name in aliases:
+        msg = '\n'.join((
+            'This alias already exists: {}\n'.format(name),
+            'Would you like to overwrite it?'))
+        if not confirm(msg):
+            print('\nUser cancelled.\n')
+            return 1
+    aliases[name] = args
+    try:
+        aliasjson = json.dumps(aliases)
+    except (TypeError, ValueError) as ex:
+        print('\nError converting aliases to json: {}'.format(ex))
+        return 1
+
+    if settings.setsave('aliases', aliasjson):
+        print('\nSaved alias: {}'.format(name))
+        print('      value: {}'.format(' '.join(args)))
+        return 0
+
+    print('\nUnable to save alias: {}'.format(name))
     return 1
 
 
@@ -530,6 +574,17 @@ def cmd_remove():
     return 0
 
 
+def confirm(question):
+    """ Confirm a question using input.
+        Returns True for yes, False for no.
+    """
+    if not question.endswith('?'):
+        question = ''.join((question, '?'))
+    question = '\n{} (y/N): '.format(question)
+    answer = input(question).lower().strip()
+    return answer.startswith('y')
+
+
 def find_dir(s):
     """ Uses os.path.expanduser and os.path.abspath to get actual dir names
         from paths like: "~/cedit/.."
@@ -666,8 +721,8 @@ def get_editor():
         # no editor set
         print('Be sure to set your favorite editor with: '
               '{} --editor path_to_editor'.format(SCRIPT))
-        # look for common editor
-        lst_editors = ['kate', 'gedit', 'leafpad', 'kwrite']
+        # look for common editor (current only uses /usr/bin)
+        lst_editors = ('subl', 'kate', 'gedit', 'leafpad', 'kwrite')
         for editor in lst_editors:
             spath = os.path.join('/usr/bin/', editor)
             if os.path.isfile(spath) or os.path.islink(spath):
@@ -729,6 +784,74 @@ def good_return(returnvalue):
     return goodret
 
 
+def init_args(args):
+    """ Initialize editor args, and parse cedit args with docopt.
+        Sets ceditargs, editorargs (through init_editor_args())
+        Returns a docopt arg dict.
+    """
+    # Handle editor args.
+    init_editor_args(args)
+    # Handle cedit args.
+    return docopt.docopt(usage_str, argv=ceditargs, version=VERSIONSTR)
+
+
+def init_editor_args(args):
+    """ Grabs extra editor args to hack around docopt.
+        Sets global editorargs if any are found.
+        Sets global ceditargs if any are found.
+    """
+    global editorargs, ceditargs, DEBUG
+    if ('-a' in args) or ('--alias' in args):
+        # Handle adding aliases (docopt sucks when aliases have args in them)
+        # TODO: Rewrite arg parsing, remove docopt (since it can't do what
+        #       I need it to do), it will make the code much cleaner and
+        #       and easier to read. This is getting out of hand. It started
+        #       with '--' and 'editorargs', and now this 'alias' stuff.
+        args = args[1:]
+        try:
+            args.remove('-a')
+        except ValueError:
+            args.remove('--alias')
+        # Allow debug mode when adding an alias.
+        if ('-D' in args) or ('--debug' in args):
+            DEBUG = True
+            try:
+                args.remove('-D')
+            except ValueError:
+                args.remove('--debug')
+        if len(args) < 2:
+            # Not enough arguments for -a,--alias
+            usage = docopt.printable_usage(usage_str)
+            print(usage)
+            sys.exit(1)
+
+        exitcode = cmd_alias_add(args[0], args[1:])
+        sys.exit(exitcode)
+    elif '--' in args:
+        # Hack around docopt to pass args onto the actual editor app.
+        ceditargs = args[1:args.index('--')]
+        if not ceditargs:
+            ceditargs = ['!ARGPASS']
+        editorargs = args[args.index('--') + 1:]
+    else:
+        # Normal cedit args.
+        ceditargs = args[1:]
+        editorargs = []
+
+
+def load_aliases():
+    """ Load aliases from config. """
+    aliasjson = settings.get('aliases', '')
+    if not aliasjson:
+        return {}
+    try:
+        aliases = json.loads(aliasjson)
+    except ValueError as ex:
+        print('\nAlias config is invalid json!: {}'.format(ex))
+        return {}
+    return aliases
+
+
 def needs_root(sfilename):
     # already root user
     if os.getuid() == 0:
@@ -783,11 +906,20 @@ def printdict(d, indention=0):
         print('{}{}'.format((' ' * indention), d))
 
 
+def run_alias_args(aliasargs, extra_args=None):
+    """ Run cedit with a new set of args (from an alias). """
+    # Re-initialize all user args based on this alias.
+    args = aliasargs or []
+    if extra_args:
+        args.extend(extra_args)
+    args.insert(0, SCRIPT)
+    argd = init_args(args)
+    # Re-run with these alias args.
+    return main(argd)
+
+
 def run_exec(cmdlist):
-    # runs a command with arguments.
-    if hasattr(cmdlist, 'lower'):
-        # string was passed? but why?
-        cmdlist = cmdlist.split(' ')
+    """ runs a command with arguments. """
 
     try:
         # use subprocess so cedit can return control to the user.
@@ -905,21 +1037,22 @@ def shell_file(filenames):
     # Start building command args.
     finalcmd = [editor]
     if filenames:
-        # See if it needs root.
+        # See if any of the files need root.
         for filename in filenames:
             if needs_root(filename):
                 # root style.
                 elevcmd = get_elevcmd()
                 finalcmd.insert(0, elevcmd)
-                print('\n'.join(['Using elevation command: {}'.format(elevcmd),
-                                 'File needs root: {}\n'.format(filename)]))
+                print('\n'.join([
+                    'Using elevation command: {}'.format(elevcmd),
+                    'File needs root: {}\n'.format(filename)]))
                 break
         # Append list of filenames.
-        finalcmd = finalcmd + filenames
+        finalcmd.extend(filenames)
 
     # Append editor args (from -- cmdline switch)
     if editorargs:
-        finalcmd = finalcmd + editorargs
+        finalcmd.extend(editorargs)
     cmdstr = ' '.join(finalcmd)
     try:
         # try running
@@ -976,11 +1109,18 @@ def main(argd):
     # get filenames, check existence
     filenames = argd['<filename>']
     # Hack around docopt to pass args on to the editor.
-    # editorargs has already been set, now we need to remove this ARGPASS flag.
+    # editorargs has already been set, now remove this ARGPASS flag.
     if '!ARGPASS' in filenames:
         filenames.pop(filenames.index('!ARGPASS'))
 
     if filenames:
+        # Check for aliases.
+        aliases = load_aliases()
+        alias_args = aliases.get(filenames[0], '')
+        if alias_args:
+            extra_args = filenames[1:] if len(filenames) > 1 else None
+            return run_alias_args(alias_args, extra_args=extra_args)
+
         # Use cedit search paths to locate some files. Others are left alone.
         filenames = [find_filename(f) for f in filenames]
         # Open files separately
@@ -998,31 +1138,19 @@ def main(argd):
         if argd['--quiet'] or check_files(filenames):
             return shell_file(filenames)
     else:
-        # No cedit args, possibly editor args though.
-        if editorargs:
-            # Just pass editors args on, and execute it.
-            return shell_file(None)
-        else:
-            print('Missing arguments, see: {} --help'.format(SCRIPT))
-            return 1
+        # No cedit args, run editor (possibly with editorargs)
+        return shell_file(None)
 
 if __name__ == '__main__':
-    if '--' in sys.argv:
-        # Hack around docopt to pass args onto the actual editor app.
-        ceditargs = sys.argv[1:sys.argv.index('--')]
-        if not ceditargs:
-            ceditargs = ['!ARGPASS']
-        editorargs = sys.argv[sys.argv.index('--') + 1:]
-    else:
-        # Normal cedit args.
-        ceditargs = sys.argv[1:]
-        editorargs = []
-
-    mainargd = docopt(usage_str, argv=ceditargs, version=VERSIONSTR)
     # Initialize config
     configfile = os.path.join(sys.path[0], '{}.conf'.format(NAME))
     settings = EasySettings(configfile)
     settings.name = NAME
     settings.version = VERSION
+    # Initialize editor args and cedit args.
+    ceditargs = None
+    editorargs = None
+    mainargd = init_args(sys.argv)
+
     mainret = main(mainargd)
     sys.exit(mainret)
