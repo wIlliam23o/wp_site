@@ -121,13 +121,17 @@ class DownloadLink(template.Node):
             or returns empty string if we can't find it anywhere.
         """
         if not self.project.download_url:
+            log.debug('Project has no download_url: {!r} -> {!r}'.format(
+                self.project,
+                self.project.download_url
+            ))
             return ''
         if utilities.is_file_or_dir(self.project.download_url):
             # already absolute
             return self.project.download_url
-        else:
-            # try absolute_path
-            return utilities.get_absolute_path(self.project.download_url)
+
+        # try absolute_path
+        return utilities.get_absolute_path(self.project.download_url)
 
     def get_download_file(self):
         """ Return relative download path, only if it's valid.
@@ -136,6 +140,7 @@ class DownloadLink(template.Node):
         absolute = self.get_download_file_abs()
         if absolute:
             return utilities.get_relative_path(absolute)
+        log.debug('Bad file name passed: {}'.format(absolute))
         return ''
 
     def get_download_link(self):

@@ -13,6 +13,10 @@
 		[python]list[/python], as well as normal [python]str[/python] settings. No sections needed,
 		just [python]es.set()[/python], [python]es.get()[/python], and [python]es.save()[/python].
 	</p>
+	<p>
+		A JSONSettings object is also included to allow easily saving/retrieving
+		settings in JSON format.
+	</p>
 </div>
 <!-- Article Ad -->
 {% ad_article %}
@@ -132,6 +136,43 @@
 		<h3 class="title">Updates</h3>
 	</div>
     <div class='update-box'>
+		<!-- 2.0.3 -->
+		<span class='update-title'>Update: Version 2.0.3</span>
+		<ul class='circle blue'>
+			<li>
+				Added [code]JSONSettings[?code] and [code]JSONMixin[?code].
+			</li>
+			<div class='listdesc'>
+				[code]JSONSettings[?code] is a [code]UserDict[?code] that uses
+				[code]JSONMixin[?code] to easily save and retrieve settings in
+				JSON format. Example use:
+				<pre class='python'>
+from easysettings import JSONSettings
+settings = JSONSettings.from_file('myfile.json')
+settings['option1'] = 'value'
+settings.save()
+				</pre>
+			</div>
+			<li>
+				Several documentation changes were made, cleaning up a bit really.
+			</li>
+			<li>
+				Main modules were restructured, but it should have no affect on
+				existing code.
+			</li>
+			<li>
+				A couple of undocumented features were added.
+			</li>
+			<div class='listdesc'>
+				The [code]EasySettings.copy()[?code] method will provide a new
+				copy of an [code]EasySettings[?code] instance.
+				<br>
+				[code]__getitem__()[?code] is implemented now.
+				It acts like [code]get()[?code] but a [code]KeyError[?code] is raised
+				when the option cannot be found.
+			</div>
+		</ul>
+
     	<!-- 1.9.3 -->
     	<span class='update-title'>Update: Version 1.9.3</span>
     	<ul class='circle blue'>

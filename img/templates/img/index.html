@@ -161,7 +161,8 @@
                                 </a>
                             </div>
                         </div>
-                        {# Include the view count. #}
+                        {# Include the view count (downloads count as views). #}
+                        {# ..because accessing the images static url is downloading AND viewing. #}
                         <div class='img-image-attribute'>
                             <div class='img-image-label'>
                                 views:
@@ -170,7 +171,6 @@
                                 {{ image.download_count }}
                             </div>
                         </div>
-                        {# TODO: Possibly include the download count #}
 
                         {# The actual image view. #}
                         <div class='img-image-preview'>
