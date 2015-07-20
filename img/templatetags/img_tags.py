@@ -4,6 +4,7 @@
 """
 
 from django import template
+
 register = template.Library()
 
 
@@ -12,4 +13,4 @@ def download_url(img):
     """ Returns the /dl url needed to track the download of this image. """
     if not img:
         return ''
-    return '/dl/{}'.format(img.image.name)
+    return '/dl/static/media/{}'.format(img.image.name)
