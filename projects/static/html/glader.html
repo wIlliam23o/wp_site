@@ -1,7 +1,7 @@
 {% load wp_nodes %}
 {% load projects_tags %}
 
-<div class='wp-block feature-list'>
+<div class='wp-block feature-list' id='about'>
     {# Description #}
     <div class='paragraph'>
         Generates skeleton code from a glade file. The generated signal handler
@@ -36,15 +36,15 @@
 
 {# Download #}
 <div class='wp-block feature-list'>
-    <div class='title-box'>
+    <div class='title-box' id='download'>
         <h3 class='title'>Download</h3>
     </div>
     {% downloads project %}
 </div>
 
 {# Source #}
-<div class='wp-block feature-list' id='source'>
-    <div class='title-box'>
+<div class='wp-block feature-list'>
+    <div class='title-box' id='source'>
         <h3 class='title'>Source Code</h3>
     </div>
     <div class='paragraph'>
@@ -59,7 +59,7 @@
 
 <div class='wp-block feature-list'>
     {# Command Line #}
-    <div class='title-box'>
+    <div class='title-box' id='command_line_usage'>
         <h3 class='title'>Command Line</h3>
     </div>
     <div class='paragraph'>
@@ -94,7 +94,7 @@
 
 <div class='wp-block feature-list'>
     {# GUI Mode #}
-    <div class='title-box'>
+    <div class='title-box' id='gui_mode'>
         <h3 class='title'>GUI Mode</h3>
     </div>
     <div class='paragraph'>
@@ -119,7 +119,7 @@
 
 <div class='wp-block feature-list'>
     {# Dependencies #}
-    <div class='title-box'>
+    <div class='title-box' id='dependencies'>
         <h3 class='title'>Dependencies</h3>
     </div>
 
@@ -163,7 +163,7 @@
 
 <div class='wp-block feature-list'>
     {# Compatibility #}
-    <div class='title-box'>
+    <div class='title-box' id='compatibility'>
         <h3 class='title'>Compatibility</h3>
     </div>
     <div class='paragraph'>
@@ -188,8 +188,8 @@
 
 {# Screenshots #}
 <div class='wp-block feature-list'>
-    <div class='title-box'>
-        <h3 class='title' id='screenshots'>Screenshots</h3>
+    <div class='title-box' id='screenshots'>
+        <h3 class='title'>Screenshots</h3>
     </div>
     {% image_viewer project.screenshot_dir %}
 </div>

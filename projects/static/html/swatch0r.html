@@ -1,7 +1,7 @@
 {% load wp_nodes %}
 {% load projects_tags %}
 
-<div class='wp-block feature-list'>
+<div class='wp-block feature-list' id='about'>
 	<p>
 		A small utility I wrote to look up color codes. It's very basic, and handy at the same time.
 		Basically, you build your color by mixing the Red, Green, &amp; Blue values (and Alpha if looking for
@@ -29,16 +29,16 @@
 
 <!-- Download -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
-		<h3 class='title' id='download'>Download</h3>
+	<div class='title-box' id='download'>
+		<h3 class='title'>Download</h3>
 	</div>
 	{% downloads project %}
 </div>
 
 <!-- Screenshots -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
-		<h3 class='title' id='screenshots'>Screenshots</h3>
+	<div class='title-box' id='screenshots'>
+		<h3 class='title'>Screenshots</h3>
 	</div>
 	{% image_viewer project.screenshot_dir %}
 </div>

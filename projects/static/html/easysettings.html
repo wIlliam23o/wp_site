@@ -1,7 +1,7 @@
 {% load wp_nodes %}
 {% load projects_tags %}
 
-<div class='wp-block feature-list'>
+<div class='wp-block feature-list' id='about'>
 	<!-- Description -->
 	<p>
 		Python module for easily setting, getting, saving, &amp; retrieving python
@@ -22,37 +22,37 @@
 {% ad_article %}
 
 <!-- Download -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Download</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='download'>
+		<h3 class='title'>Download</h3>
 	</div>
 	{% downloads project %}
 </div>
 
 <!-- Source View -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Source Code</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='source'>
+		<h3 class='title'>Source Code</h3>
 	</div>
 	<span>
-		<a href="http://github.com/welbornprod/easysettings.git" target="_blank">
+		<a href='http://github.com/welbornprod/easysettings.git' target='_blank'>
 			EasySettings (github)
 		</a>
-		&nbsp;- Source code hosted at <a href="http://github.com" target="_blank">github.</a>
+		&nbsp;- Source code hosted at <a href='http://github.com' target='_blank'>github.</a>
 	</span>
 	{% source_view project request %}
 </div>
 
 <!-- Installation -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Installation</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='installation'>
+		<h3 class='title'>Installation</h3>
 	</div>
 	<p>
 		Once the package is downloaded and extracted, open a terminal and [code]cd[?code] to
 		the directory containing [code]setup.py[?code]. Type:
 	</p>
-	<div class="sampwrap">
+	<div class='sampwrap'>
 			sudo python setup.py install<br/>
 	</div>
 	<br/>
@@ -60,7 +60,7 @@
 	<p>
 		For Python 3+ installation you may need to specify the [code]python3[?code] command:
 	</p>
-	<div class="sampwrap">
+	<div class='sampwrap'>
 			sudo python3 setup.py install
 	</div>
 	<br/>
@@ -69,7 +69,7 @@
 		This should install the EasySettings package into the appropriate directory, and
 		allow you to import it into your projects using:
 	</p>
-	<div class="codewrap">
+	<div class='codewrap'>
 			from easysettings import EasySettings<br/>
 			mysettings = EasySettings('myconfigfile.conf')<br/>
 	</div>
@@ -77,10 +77,10 @@
 </div>
 
 <!-- PYPI Package -->
-<div class="wp-block feature-list">
+<div class='wp-block feature-list'>
 
-	<div class="title-box">
-		<h3 class="title">PyPi Package</h3>
+	<div class='title-box' id='pypi_package'>
+		<h3 class='title'>PyPi Package</h3>
 	</div>
 	<p>
 		PyPi package available at:<br/>
@@ -91,7 +91,7 @@
 	<p>
 		Ubuntu instructions to install pip:
 	</p>
-	<div class="sampwrap">
+	<div class='sampwrap'>
 			sudo apt-get install python-pip
 	</div>
 	<br/>
@@ -99,7 +99,7 @@
 	<p>
 		For Python 3 pip installation:
 	</p>
-	<div class="sampwrap">
+	<div class='sampwrap'>
 			sudo apt-get install python3-pip
 	</div>
 	<br/>
@@ -107,7 +107,7 @@
 	<p>
 		After that you should be able to install Easy Settings by typing:
 	</p>
-	<div class="sampwrap">
+	<div class='sampwrap'>
 			sudo pip install easysettings
 	</div>
 	<br/>
@@ -118,7 +118,7 @@
 	<p>
 		# 3.2 should be substituted with whatever version you use. (3.2, 3.3, etc.)<br/>
 	</p>
-	<div class="sampwrap">
+	<div class='sampwrap'>
 			sudo pip-3.2 install easysettings<br/>
 	</div>
 	<div>
@@ -131,9 +131,9 @@
 </div>
 
 <!-- Updates -->
-<div class="wp-block feature-list">
-	<div id='updates' class="title-box">
-		<h3 class="title">Updates</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='updates'>
+		<h3 class='title'>Updates</h3>
 	</div>
     <div class='update-box'>
 		<!-- 2.0.3 -->
@@ -266,9 +266,9 @@ print settings.get('mytext')
 </div>
 
 <!-- Example Usage -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Example Usage</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='usage'>
+		<h3 class='title'>Example Usage</h3>
 	</div>
 
 	<h2 class='title'>
@@ -311,7 +311,7 @@ settings.setsave("homedir", "/myuserdir")
  	</pre>
 
 
-	<h2 class="title">
+	<h2 class='title'>
 		Other Features
 	</h2>
     <pre class='python'>
@@ -335,7 +335,7 @@ settings.clear_values()
 	</pre>
 
 
-	<h2 class="title">
+	<h2 class='title'>
 		Comparison
 	</h2>
 	<pre class='python'>
@@ -360,7 +360,7 @@ if settings > settings2:
 	</pre>
 
 
-	<h2 class="title">
+	<h2 class='title'>
 		Features
 	</h2>
 

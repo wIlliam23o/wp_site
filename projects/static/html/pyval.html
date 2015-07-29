@@ -1,33 +1,39 @@
 {% load wp_nodes %}
 {% load projects_tags %}
 
-<div class='wp-block feature-list' style='padding-top: 20px;'>
-    <!-- Description -->
-    Python evaluation bot for IRC. PyVal was made to evaluate python code
-    safely (without compromising your own system), and depends on
-    [l]pypy-sandbox | http://pypy.org[?l]
-    to block certain system calls.
-    <br><br>
-    Within the PyVal directory, there is also a handy little tool called
-    'PyValExec', which is used by 'PyValBot', but can be used as a standalone
-    sandbox for testing purposes.
-    <br>
-    <br>
-    The sandbox uses a 'fake' file system, that contains two directories:
-    [bash]/bin[?bash] and [bash]/tmp[?bash]
-    <br><br>
-    The [bash]/tmp[?bash] directory contains a helper script called
-    [bash]pyval_sandbox.py[/bash] which by itself does not offer any security.
-    It's main job is to take python code from [bash]stdin[/bash], and compile/run it.
-    The security comes from running this 'helper script' inside the sandbox.
-    <br><br>
-    The [bash]/bin[?bash] directory contains several libraries/modules needed to
-    run [l]pypy-sandbox | http://pypy.org[?l]
-    <br><br>
-    Read access is allowed in these two directories, but any [python]write()[/python]
-    calls are automatically blocked. The sandbox allows you to [python]import[/python]
-    many python modules, but will fail for certain 'critical' modules that are known
-    to be insecure for sandbox purposes.
+<div class='wp-block feature-list' id='about'>
+    {# Description #}
+    <div class='paragraph'>
+        Python evaluation bot for IRC. PyVal was made to evaluate python code
+        safely (without compromising your own system), and depends on
+        <a href='http://pypy.org'>pypy-sandbox</a>
+        to block certain system calls.
+    </div>
+    <div class='paragraph'>
+        Within the PyVal directory, there is also a handy little tool called
+        'PyValExec', which is used by 'PyValBot', but can be used as a standalone
+        sandbox for testing purposes.
+    </div>
+    <div class='paragraph'>
+        The sandbox uses a 'fake' file system, that contains two directories:
+        [bash]/bin[?bash] and [bash]/tmp[?bash]
+    </div>
+    <div class='paragraph'>
+        The [bash]/tmp[?bash] directory contains a helper script called
+        [bash]pyval_sandbox.py[/bash] which by itself does not offer any security.
+        It's main job is to take python code from [bash]stdin[/bash], and compile/run it.
+        The security comes from running this 'helper script' inside the sandbox.
+    </div>
+    <div class='paragraph'>
+        The [bash]/bin[?bash] directory contains several libraries/modules needed to
+        run <a href='http://pypy.org'>pypy-sandbox</a>.
+    </div>
+    <div class='paragraph'>
+        Read access is allowed in these two directories, but any [python]write()[/python]
+        calls are automatically blocked. The sandbox allows you to [python]import[/python]
+        many python modules, but will fail for certain 'critical' modules that are known
+        to be insecure for sandbox purposes.
+    </div>
 </div>
 
 <!-- Article Ad -->
@@ -35,7 +41,7 @@
 
 <div class='wp-block feature-list'>
     <!-- Requirements -->
-    <div id='requirements' class='title-box'>
+    <div class='title-box' id='requirements'>
         <h3 class='title'>Requirements</h3>
     </div>
     <ul class='circle blue'>
@@ -58,8 +64,10 @@
             <a class='B' href='http://python.org' target='_blank'>Python 2.7</a>
         </li>
         <div class='listdesc'>
-            When [l]Twisted | http://twistedmatrix.com[?l] fully supports
-            [l]Python 3 | http://python.org/download/releases/[?l], this project
+            When <a href='http://twistedmatrix.com'>Twisted</a>
+            fully supports
+            <a href='http://python.org/download/releases/'>Python 3</a>
+            , this project
             may be ported over.
         </div>
 
@@ -68,7 +76,7 @@
 
 <!-- Download -->
 <div class='wp-block feature-list'>
-    <div id='download' class='title-box'>
+    <div class='title-box' id='download'>
         <h3 class='title'>Download</h3>
     </div>
     {% downloads project %}
@@ -76,7 +84,7 @@
 
 <!-- Source -->
 <div class='wp-block feature-list' id='source'>
-    <div id='source-code' class='title-box'>
+    <div class='title-box' id='source'>
         <h3 class='title'>Source Code</h3>
     </div>
     <p>
@@ -84,14 +92,14 @@
             PyVal (github)
         </a>
         &nbsp;- current <strong>PyVal</strong> source code at
-        <a href='http://github.com' target="_blank">github</a>.
+        <a href='http://github.com' target='_blank'>github</a>.
     </p>
     {% source_view project request %}
 </div>
 
 <div class='wp-block feature-list'>
     <!-- Notes -->
-    <div id='notes' class='title-box'>
+    <div class='title-box' id='notes'>
         <h3 class='title'>Notes</h3>
     </div>
     <div>
@@ -120,7 +128,7 @@
 
 <div class='wp-block feature-list'>
     <!-- Bot Usage -->
-    <div id='pyvalbot-usage' class='title-box'>
+    <div class='title-box' id='pyvalbot_usage'>
         <h3 class='title'>PyValBot Usage</h3>
     </div>
     <div>
@@ -138,7 +146,7 @@
 
 <div class='wp-block feature-list'>
     <!-- Chat Usage Example -->
-    <div id='chat-usage' class='title-box'>
+    <div class='title-box' id='chat_usage'>
         <h3 class='title'>Chat Usage</h3>
     </div>
     <div>
@@ -177,7 +185,7 @@ PyValUser: !py modules()
 
 <div class='wp-block feature-list'>
     <!-- Advanced Chat Usage Example -->
-    <div id='advanced-chat-usage' class='title-box'>
+    <div class='title-box' id='advanced_chat_usage'>
         <h3 class='title'>Advanced Chat Usage</h3>
     </div>
     <div>
@@ -224,7 +232,7 @@ PyValUser: !py for i in range(65):\n    print('test' * 55)
 </div>
 
 <div class='wp-block feature-list'>
-    <div id='admin-chat-usage' class='title-box'>
+    <div class='title-box' id='admin_chat_usage'>
         <h3 class='title'>Admin Chat Usage</h3>
     </div>
     <div>
@@ -291,7 +299,7 @@ PyValAdmin: !adminhelp
                 [copt]channels[/copt]
                 [cval]List all current channels pyval is in.[/cval]
             </div>
-            <div class="cmditem">
+            <div class='cmditem'>
                 [copt]chanmsg &lt;msg&gt;[/copt]
                 [cval]Send msg to all channels pyval is in.[/cval]
             </div>
@@ -394,7 +402,7 @@ PyValAdmin: !adminhelp
 
 <div class='wp-block feature-list'>
     <!-- PyValExec Usage -->
-    <div id='pyvalexec-usage' class='title-box'>
+    <div class='title-box' id='pyvalexec_usage'>
         <h3 class='title'>PyValExec Usage</h3>
     </div>
     <div>
@@ -504,7 +512,7 @@ if __name__ != '__pyval__':
 
 <!-- Updates -->
 <div class='wp-block feature-list'>
-    <div id='updates' class='title-box'>
+    <div class='title-box' id='updates'>
         <h3 class='title'>
             Updates
         </h3>
@@ -669,7 +677,7 @@ if __name__ != '__pyval__':
 
 <!-- Demo Video -->
 <div class='wp-block feature-list'>
-    <div id='demo' class='title-box'>
+    <div class='title-box' id='demo'>
         <h3 class='title'>demo</h3>
     </div>
     <div class='video-box'>

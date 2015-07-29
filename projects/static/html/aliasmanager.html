@@ -1,7 +1,7 @@
 {% load wp_nodes %}
 {% load projects_tags %}
 
-<div class='wp-block feature-list'>
+<div class='wp-block feature-list' id='about'>
 	<!-- Description -->
 	<p>
 	Manage your BASH aliases and functions using a GUI. Integrate one or more scripts into bashrc
@@ -22,7 +22,7 @@
 
 <div class='wp-block feature-list'>
 	<!-- New Features -->
-	<div class='title-box'>
+	<div class='title-box' id='updates'>
 		<h3 class='title'>New Features</h3>
 	</div>
 	<div class='update-box'>
@@ -86,15 +86,15 @@
 
 <!-- Download -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='download'>
 		<h3 class='title'>Download</h3>
 	</div>
 	{% downloads project %}
 </div>
 
 <!-- Source -->
-<div class='wp-block feature-list' id='source'>
-	<div class='title-box'>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='source'>
 		<h3 class='title'>Source Code</h3>
 	</div>
 	<p>
@@ -102,15 +102,15 @@
 	    Alias Manager (github)
 	    </a>
 	    &nbsp;- current <strong>Alias Manager</strong> source code at
-	    <a href='http://github.com' target="_blank">github</a>.
+	    <a href='http://github.com' target='_blank'>github</a>.
 	</p>
 	{% source_view project request %}
 </div>
 
 <!-- Screenshots -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
-		<h3 class='title' id='screenshots'>Screenshots</h3>
+	<div class='title-box' id='screenshots'>
+		<h3 class='title'>Screenshots</h3>
 	</div>
 	{% image_viewer project.screenshot_dir %}
 </div>

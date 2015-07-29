@@ -1,7 +1,7 @@
 {% load wp_nodes %}
 {% load projects_tags %}
 
-<div class='wp-block feature-list'>
+<div class='wp-block feature-list' id='about'>
 	<!-- Description -->
 	<p>
 		Linux command-line tool that opens files with your favorite editor,
@@ -22,15 +22,15 @@
 
 <!-- Download -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='download'>
 		<h3 class='title'>Download</h3>
 	</div>
 	{% downloads project %}
 </div>
 
 <!-- Source -->
-<div class='wp-block feature-list' id='source'>
-	<div class='title-box'>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='source'>
 		<h3 class='title'>Source Code</h3>
 	</div>
 	<p>
@@ -45,7 +45,7 @@
 
 <!-- Usage -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='usage'>
 		<h3 class='title'>Usage</h3>
 	</div>
 
@@ -72,7 +72,7 @@ cedit -e /my/path/to/myeditor
 
 <!-- Installation -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='installation'>
 		<h3 class='title'>Installation</h3>
 	</div>
 	<p>
@@ -144,7 +144,7 @@ cedit <filename>
 
 <!-- Updates -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='updates'>
 		<h3 class='title'>Updates</h3>
 	</div>
 	<div class='update-box'>
@@ -189,7 +189,7 @@ cedit <filename>
 
 <!-- Future -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='future'>
 		<h3 class='title'>Future</h3>
 	</div>
 	<p>
