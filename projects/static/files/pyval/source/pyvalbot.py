@@ -2,20 +2,29 @@
 # -*- coding: utf-8 -*-
 """
     PyVal (Sandboxed python evaluation and IRC bot.)
-    Copyright (C) 2015  Christopher Welborn
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    The MIT License (MIT)
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    Copyright (c) 2015 Christopher Welborn
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
 
     About:
 
@@ -164,6 +173,16 @@ class PyValIRCProtocol(irc.IRCClient):
         self.admin.ctcpMakeQuery = self.ctcpMakeQuery
         self.admin.do_action = self.me
         self.admin.handlinglock = defer.DeferredLock()
+        # For setting the topic for our own channel if possible.
+        self.admin.topicfmt = ''.join([
+            'Python Evaluation Bot (pyval) | ',
+            'Type {cc}py <code> or {cc}help [cmd] if {nick} is around. | ',
+            'Use \\n for actual newlines (Enter), or \\\\n for '
+            'escaped newlines.'
+        ])
+        self.admin.topicmsg = self.admin.topicfmt.format(
+            cc=self.admin.cmdchar,
+            nick=self.admin.nickname)
 
         # parse username/password config where 'user:password' is used.
         pw = self.get_config('loginpw', None)
@@ -201,16 +220,6 @@ class PyValIRCProtocol(irc.IRCClient):
                                              reactor_=reactor,
                                              task_=task,
                                              adminhandler=self.admin)
-        # For setting the topic for our own channel if possible.
-        self.topicfmt = ''.join([
-            'Python Evaluation Bot (pyval) | ',
-            'Type {cc}py <code> or {cc}help [cmd] if {nick} is around. | ',
-            'Use \\n for actual newlines (Enter), or \\\\n for '
-            'escaped newlines.'
-        ])
-        self.topicmsg = self.topicfmt.format(
-            cc=self.admin.cmdchar,
-            nick=self.admin.nickname)
 
         # Save cmdline args to config.
         if self.get_config('autosave'):
@@ -296,17 +305,14 @@ class PyValIRCProtocol(irc.IRCClient):
         # Reset the delay counts on the global factory.
         factory.resetDelay()
 
-    def connectionLost(self, reason):
+    def connectionLost(self, reason=protocol.connectionDone):
         """ Connection to the server was lost.
             Log it, and fire the main deferred with an errback().
+            Arguments:
+                reason  : A Failure() instance
         """
-        logmsgs = ['Connection Lost']
-        if reason:
-            # Log with reason.
-            logmsgs.append(': {}'.format(reason))
-        else:
-            logmsgs.append('.')
-        log.msg(''.join(logmsgs))
+        reasonmsg = ': {}'.format(reason.getErrorMessage()) if reason else '.'
+        log.msg('Connection Lost{}'.format(reasonmsg))
 
         # Fire the main deferred with an error (the disconnect reason).
         self.deferred.errback(reason)
@@ -371,8 +377,8 @@ class PyValIRCProtocol(irc.IRCClient):
         log.msg('Joined: {}'.format(channel))
         self.admin.channels.append(channel)
 
-        if channel.strip('#') == self.nickname:
-            self.topic(channel, self.topicmsg)
+        if channel.strip('#') == self.admin.nickname:
+            self.admin.set_topic()
 
     def kickedFrom(self, channel, kicker, message):
         """ Call when the bot is kicked from a channel. """
@@ -451,19 +457,22 @@ class PyValIRCProtocol(irc.IRCClient):
 
             if channel == self.nickname:
                 # server mode, no channel.
-                log.msg('Mode changed by {}: {}{}'.format(username,
-                                                          modestr,
-                                                          argstr))
+                log.msg(
+                    'Mode changed by {}: {}{}'.format(
+                        username,
+                        modestr,
+                        argstr))
             else:
-                log.msg('Mode changed by {} in {}: {}{}'.format(username,
-                                                                channel,
-                                                                modestr,
-                                                                argstr))
+                log.msg(
+                    'Mode changed by {} in {}: {}{}'.format(
+                        username,
+                        channel,
+                        modestr,
+                        argstr))
 
     def nickChanged(self, nick):
-        """ Called when the bots nick changes. """
-        self.admin.nickname = nick
-        self.nickname = nick
+        """ Called when the bot's nick changes. """
+        self.admin.nickname = self.nickname = nick
 
     def notice(self, user, message):
         """ Send a "notice" to a channel or user. """
@@ -738,7 +747,7 @@ class PyValIRCProtocol(irc.IRCClient):
                           nick)
 
     def _showError(self, failureobj):
-        return failureobj.getErrorMessage()
+        return 'PyVal Error: {}'.format(failureobj.getErrorMessage())
 
 
 class PyValIRCFactory(protocol.ReconnectingClientFactory):

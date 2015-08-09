@@ -252,110 +252,246 @@ PyValAdmin: !adminhelp
         Admin command help:<br>
         <div class='cmdhelp-box'>
             <div class='cmditem'>
-                [copt]adminadd &lt;nick&gt;[/copt]
-                [cval]Add an administrator by nick.[/cval]
+                <div class='cmdoption'>
+                    adminadd &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Add an administrator by nick.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminhelp &#91;cmd&#93;[/copt]
-                [cval]List admin commands, or show description for a command.[/cval]
+                <div class='cmdoption'>
+                    adminhelp &#91;cmd&#93;
+                </div>
+                <div class='cmdvalue'>
+                    List admin commands, or show description for a command.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminlist[/copt]
-                [cval]List all admin nicks.[/cval]
+                <div class='cmdoption'>
+                    adminlist
+                </div>
+                <div class='cmdvalue'>
+                    List all admin nicks.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminmsg &lt;msg&gt;[/copt]
-                [cval]Send msg to all bot admins.[/cval]
+                <div class='cmdoption'>
+                    adminmsg &lt;msg&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Send msg to all bot admins.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminreload[/copt]
-                [cval]Reload the admin list from the pyval_admins.lst file.[/cval]
+                <div class='cmdoption'>
+                    adminreload
+                </div>
+                <div class='cmdvalue'>
+                    Reload the admin list from the pyval_admins.lst file.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminrem &lt;nick&gt;[/copt]
-                [cval]Remove an admin (shortcut for adminremove)[/cval]
+                <div class='cmdoption'>
+                    adminrem &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Remove an admin (shortcut for adminremove)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminremove &lt;nick&gt;[/copt]
-                [cval]Remove an admin by nick.[/cval]
+                <div class='cmdoption'>
+                    adminremove &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Remove an admin by nick.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]ban &lt;nick&gt;[/copt]
-                [cval]Ban a nick from sending commands. (commands will be ignored)[/cval]
+                <div class='cmdoption'>
+                    ban &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Ban a nick from sending commands. (commands will be ignored)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]banned[/copt]
-                [cval]Show currently banned nicks.[/cval]
+                <div class='cmdoption'>
+                    banned
+                </div>
+                <div class='cmdvalue'>
+                    Show currently banned nicks.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]banwarns[/copt]
-                [cval]Show ban warnings count.[/cval]
+                <div class='cmdoption'>
+                    banwarns
+                </div>
+                <div class='cmdvalue'>
+                    Show ban warnings count.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]blacklist &#91;on, off, ?&#93;[/copt]
-                [cval]Turn PyValExec's blacklist option on/off, or show its status.[?cval]
+                <div class='cmdoption'>
+                    blacklist &#91;on, off, ?&#93;
+                </div>
+                <div class='cmdvalue'>
+                    Turn PyValExec's blacklist option on/off, or show its status.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]channels[/copt]
-                [cval]List all current channels pyval is in.[/cval]
+                <div class='cmdoption'>
+                    channels
+                </div>
+                <div class='cmdvalue'>
+                    List all current channels pyval is in.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]chanmsg &lt;msg&gt;[/copt]
-                [cval]Send msg to all channels pyval is in.[/cval]
+                <div class='cmdoption'>
+                    chanmsg &lt;msg&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Send msg to all channels pyval is in.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]configget &lt;option&gt;[/copt]
-                [cval]Get a config option's value. Certain options are hidden from chat.[/cval]
+                <div class='cmdoption'>
+                    configget &lt;option&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Get a config option's value. Certain options are hidden from chat.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]configlist[/copt]
-                [cval]List current config.[/cval]
+                <div class='cmdoption'>
+                    configlist
+                </div>
+                <div class='cmdvalue'>
+                    List current config.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]configsave[/copt]
-                [cval]Save current command-line options to permanent config.[/cval]
+                <div class='cmdoption'>
+                    configsave
+                </div>
+                <div class='cmdvalue'>
+                    Save current command-line options to permanent config.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]configset &lt;option&gt; &lt;value&gt;[/copt]
+                <div class='cmdoption'>
+                    configset &lt;option&gt; &lt;value&gt;
+                </div>
                 <div class='cmdvalue'>
                     Set a config option's value. String values only for now.
                     Remove options by passing - as the value.
                 </div>
             </div>
             <div class='cmditem'>
-                [copt]getattr &lt;attribute&gt;[/copt]
-                [cval]Show the value of a CommandHandler attribute (ex: admin.blacklist)[/cval]
+                <div class='cmdoption'>
+                    deop [#channel] [nick]
+                </div>
+                <div class='cmdvalue'>
+                    Request deop from ChanServ.
+                    Default channel is ##&lt;botnick&gt;.
+                    Default nick is the bot.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]id &lt;password&gt;[/copt]
-                [cval]Shortcut to the identify command.[/cval]
+                <div class='cmdoption'>
+                    deopme [#channel]
+                </div>
+                <div class='cmdvalue'>
+                    Shortcut to 'deop [#channel] &lt;yournick&gt;'.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]identify &lt;password&gt;[/copt]
-                [cval]Identify the bot with NickServ.[/cval]
+                <div class='cmdoption'>
+                    getattr &lt;attribute&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Show the value of a CommandHandler attribute (ex: admin.blacklist)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]join &lt;#channel&gt;[/copt]
-                [cval]Make the bot join a channel, or a comma-separated list of channels.[/cval]
+                <div class='cmdoption'>
+                    id &lt;password&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Shortcut to the identify command.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]limitrate &#91;on, off, ?&#93;[/copt]
-                [cval]Turn the limit-rate option on/off, or show its status.[?cval]
+                <div class='cmdoption'>
+                    identify &lt;password&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Identify the bot with NickServ.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]me &lt;channel&gt; &lt;action&gt;[/copt]
-                [cval]Perform an irc action as pyval. (/me &lt;action&gt;)[?cval]
+                <div class='cmdoption'>
+                    join &lt;#channel&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Make the bot join a channel, or a comma-separated list of channels.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]msg &lt;target&gt; &lt;message&gt;[/copt]
-                [cval]Send a message to a channel or nick.[/cval]
+                <div class='cmdoption'>
+                    limitrate &#91;on, off, ?&#93;
+                </div>
+                <div class='cmdvalue'>
+                    Turn the limit-rate option on/off, or show its status.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]part &lt;channel&gt;[/copt]
-                [cval]Part (leave) a channel, or a comma-separated list of channels[/cval]
+                <div class='cmdoption'>
+                    me &lt;channel&gt; &lt;action&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Perform an irc action as pyval. (/me &lt;action&gt;)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]partall[/copt]
+                <div class='cmdoption'>
+                    msg &lt;target&gt; &lt;message&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Send a message to a channel or nick.
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    op [#channel] [nick]
+                </div>
+                <div class='cmdvalue'>
+                    Request ops from ChanServ.
+                    Default channel is ##&lt;botnick&gt;.
+                    Default nick is the bot.
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    opme [#channel]
+                </div>
+                <div class='cmdvalue'>
+                    Shortcut to 'op [#channel] &lt;yournick&gt;'.
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    part &lt;channel&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Part (leave) a channel, or a comma-separated list of channels
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    partall
+                </div>
                 <div class='cmdvalue'>
                     Part all channels the pyval is currently in.
                     The only way to re-join channels is to send a message to pyval
@@ -363,15 +499,25 @@ PyValAdmin: !adminhelp
                 </div>
             </div>
             <div class='cmditem'>
-                [copt]say &lt;message&gt;[/copt]
-                [cval]Make PyValBot mention you with a message (PyValUser, message)[/cval]
+                <div class='cmdoption'>
+                    say &lt;message&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Make PyValBot mention you with a message (PyValUser, message)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]sendline &lt;data&gt;[/copt]
-                [cval]Send a raw message to the irc server.[/cval]
+                <div class='cmdoption'>
+                    sendline &lt;data&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Send a raw message to the irc server.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]setattr &lt;attr&gt; &lt;value&gt;[/copt]
+                <div class='cmdoption'>
+                    setattr &lt;attr&gt; &lt;value&gt;
+                </div>
                 <div class='cmdvalue'>
                     Set an attribute of CommandHandler. (ex: admin.blacklist False)
                     PyValBot will try to parse the string value into the
@@ -382,19 +528,38 @@ PyValAdmin: !adminhelp
                 </div>
             </div>
             <div class='cmditem'>
-                [copt]shutdown[/copt]
-                [cval]Shutdown the bot cleanly and disconnect.[/cval]
+                <div class='cmdoption'>
+                    shutdown
+                </div>
+                <div class='cmdvalue'>
+                    Shutdown the bot cleanly and disconnect.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]stats[/copt]
+                <div class='cmdoption'>
+                    stats
+                </div>
                 <div class='cmdvalue'>
                     Show 'handled-count' (number of handled commands),
                     uptime (time since startup), and other counts.
                 </div>
             </div>
             <div class='cmditem'>
-                [copt]unban &lt;nick&gt;[/copt]
-                [cval]Unban (remove from banned-list) a nick.[/cval]
+                <div class='cmdoption'>
+                    topic [&lt;#channel&gt;] &lt;message&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Change the topic for a channel.
+                    Defaults to the bot's channel and default pyval topic.
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    unban &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Unban (remove from banned-list) a nick.
+                </div>
             </div>
         </div>
     </div>
@@ -516,6 +681,32 @@ if __name__ != '__pyval__':
         <h3 class='title'>
             Updates
         </h3>
+    </div>
+
+    <!-- Update: 1.1.1 -->
+    <div class='update-box'>
+        <span class='update-title'>
+            Update: version 1.1.1
+        </span>
+        <ul class='circle blue'>
+            <li>
+                New op-related commands were added ([code]op/deop[?code], [code]opme/deopme[?code]).
+            </li>
+            <div class='listdesc'>
+                If the bot has ops through chanserv, these commands can be used
+                to op/deop the bot or any other nick. The [code]opme/deopme[?code]
+                commands are just shortcuts to the [code]op/deop[?code] commands
+                without having to type your nick.
+            </div>
+            <li>
+                [code]topic[?code] command added.
+            </li>
+            <div class='listdesc'>
+                The bot can now change channel topics. The channel defaults to
+                ##&lt;botnick&gt;, and when no topic is given the default
+                message is used.
+            </div>
+        </ul>
     </div>
 
     <!-- Update: 1.0.7-7 -->
