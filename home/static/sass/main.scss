@@ -876,24 +876,25 @@ code, samp {
 
 .cmditem {
     display: block;
-    @include border-radius-thin-color(5px, $bordercode);
+    @include border-radius(5px);
     margin-bottom: 5px;
     padding: 2px;
 
+    & .cmdoption {
+        display: inline-block;
+        margin-left: 10px;
+        font-size: 1em;
+    }
+
+    & .cmdvalue {
+        display: block;
+        margin-left: 70px;
+        color: $greymain;
+        font-size: 0.9em;
+    }
+
 }
 
-.cmdoption {
-    display: inline-block;
-    margin-left: 10px;
-    font-size: 1em;
-}
-
-.cmdvalue {
-    display: block;
-    margin-left: 70px;
-    color: $greymain;
-    font-size: 0.9em;
-}
 
 // apply monospace font to any element.
 .mono { font-family: $fontsmono; }
