@@ -1,5 +1,6 @@
 from django.contrib import admin, messages
 from img.models import wp_image
+from home.admin import admin_site
 
 
 def disable_sel(modeladmin, request, queryset):
@@ -60,4 +61,4 @@ class wp_imageAdmin(admin.ModelAdmin):  # noqa
     ]
 
 
-admin.site.register(wp_image, wp_imageAdmin)
+admin_site.register(wp_image, wp_imageAdmin)

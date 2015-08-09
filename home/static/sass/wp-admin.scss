@@ -10,6 +10,15 @@
     text-align: right;
 }
 
+#branding {
+    color: $whitedull;
+
+    & h1 a:link, & h1 a:visited {
+        // Main branding.
+        color: $whitedull;
+    }
+}
+
 #site-name, #branding h1 {
     font-family: $fontsnormal;
     font-size: $fontbig2;
@@ -17,7 +26,7 @@
 }
 
 #header {
-    background: #CFCFCF;
+    background: #cfcfcf;
     color: #858585;
     overflow: hidden;
     width: 100%;
@@ -27,17 +36,17 @@
 }
 
 .breadcrumbs {
-    background: #FFF url(../img/nav-bg-reverse.gif) 0 -10px repeat-x;
-    border-radius: 10px; //
-    margin-top: 10px; //
-    margin-right: 20px; //
+    background: #fff url(../img/nav-bg-reverse.gif) 0 -10px repeat-x;
+    border-radius: 10px;
+    margin-top: 10px;
+    margin-right: 20px;
     margin-left: 20px;
-    box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5); //
+    box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.5);
     padding: 2px 8px 3px 8px;
     font-size: 11px;
     color: #999;
-    border-top: 1px solid #FFF;
-    border-bottom: 1px solid #CCC;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ccc;
     text-align: left;
 }
 /* Custom items (from wp_tags filters or other) */
@@ -70,5 +79,24 @@ a.item-private, .item-private {
 .vLargeTextField, .vXMLLargeTextField {
     // TODO: This may not override the default as needed.
     //       It was put here as a reminder to work on admin textfields.
-    font-family: $fontsmono;
+    font-family: monospace;
+    font-size: 11px;
 }
+
+input, textarea, select, .form-row p, form .button {
+    font-family: sans-serif;
+    font-size: 12px;
+}
+
+input {
+    &#id_description {
+        // Description fields should be totally visible for longer lines.
+        width: 50%;
+    }
+
+    &#id_version {
+        // Monospace version numbers.
+        font-family: monospace;
+    }
+}
+

@@ -7,6 +7,7 @@ from django.views.generic.base import RedirectView
 from django.conf import settings
 # main views
 from home import views as homeviews
+from home.admin import admin_site
 
 # get sitemaps
 from wp_main.sitemaps import sitemaps
@@ -154,7 +155,7 @@ urlpatterns += patterns(
 
     # Default admin site.
     url(r'^admin/?',
-        include(admin.site.urls)),
+        include(admin_site.urls)),
 )
 
 # Error handlers

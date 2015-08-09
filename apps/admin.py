@@ -1,6 +1,6 @@
 from django.contrib import admin
 from apps.models import wp_app
-
+from home.admin import admin_site
 # actions for admin page
 
 
@@ -22,5 +22,5 @@ class wp_appAdmin(admin.ModelAdmin):
     # enable actions above
     actions = [enable_apps,
                disable_apps]
-    
-admin.site.register(wp_app, wp_appAdmin)
+
+admin_site.register(wp_app, wp_appAdmin)

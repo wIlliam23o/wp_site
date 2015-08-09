@@ -1,6 +1,6 @@
 from django.contrib import admin
 from apps.phonewords.models import pw_result
-# actions for admin page
+from home.admin import admin_site
 
 
 def enable_results(modeladmin, request, queryset):
@@ -19,5 +19,5 @@ class pw_resultAdmin(admin.ModelAdmin):
     # enable actions above
     actions = [enable_results,
                disable_results]
-    
-admin.site.register(pw_result, pw_resultAdmin)
+
+admin_site.register(pw_result, pw_resultAdmin)
