@@ -38,19 +38,12 @@ STYLECODES = {'b': '<span class=\'B\'>{}</span>',
               'l': '<a href=\'{1}\' target=\'_blank\'>{0}</a>',
               'u': '<span style=\'text-decoration: underline;\'>{}</span>',
               'code': '<div class=\'codewrap\'>{}</div>',
-              # These are used to build cmd-help lists.
-              'cmdoption': '<div class=\'cmdoption\'>{}</div>',
-              'cmdvalue': '<div class=\'cmdvalue\'>{}</div>',
               }
 
 # Aliases for pygments lexer names. These are switched to the long name
 # before highlighting.
 STYLEALIASES = {
     'py': 'python',
-    'cmdopt': 'cmdoption',
-    'cmdval': 'cmdvalue',
-    'copt': 'cmdoption',
-    'cval': 'cmdvalue',
 }
 STYLENAMES = list(STYLECODES.keys())
 
