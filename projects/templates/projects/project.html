@@ -27,6 +27,14 @@
 {% block content %}
 	{% if project %}
 		<div class='project-container'>
+			<!-- Admin edit button -->
+			{% if request.user.is_staff %}
+				<a href='/adminprojects/wp_project/{{ project.id }}'>
+					<div class='wpbutton project-edit-button'>
+						<span>edit</span>
+					</div>
+				</a>
+			{% endif %}
 			<!-- Project Header -->
 			<div class='project-title'>
 				<h1 class='project-header'>{{ project.name }}</h1>
