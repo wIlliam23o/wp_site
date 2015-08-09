@@ -7,7 +7,7 @@
 # TODO: Modify /static/ dirs and builder.py so that a "git pull" requires
 #       no building on production.
 appname="WpBuild"
-appversion="0.1.1"
+appversion="0.1.2"
 apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
@@ -28,8 +28,6 @@ fi
 dir_css="$dir_out/css"
 dir_js="$dir_out/js"
 
-# Path to closure.jar.
-closure_path="$dir_project/scripts/external/closure.jar"
 
 # Build sass include paths
 sass_includes=("$dir_project/wp_main/static/sass")
@@ -45,6 +43,15 @@ sass_ignore=("_welbornprod.scss")
 # Default sass args.
 sass_args=("--style" "compressed")
 
+# Path to closure.jar.
+closure_path="$dir_project/scripts/external/closure.jar"
+if [[ ! -e "$closure_path" ]]; then
+    echo "Unable to locate closure compiler: $closure_path"
+    has_closure=false
+else
+    has_closure=true
+fi
+
 # These js files will not be minified.
 js_ignore=('\.min\.' '-min\.' 'js/ace')
 # Default closure args.
@@ -57,14 +64,18 @@ js_args=(
 
 function build_file {
     # Build a single file. File extension determines the builder.
-    if [[ "$1" =~ \.js$ ]]; then
-        build_js_file "$1"
-    elif [[ "$1" =~ \.scss$ ]]; then
-        build_sass_file "$1"
-    else
-        echo "Unknown file type: $1"
-        return 1
-    fi
+    case "$1" in
+        *.js)
+            build_js_file "$1"
+            ;;
+        *.scss)
+            build_sass_file "$1"
+            ;;
+        *)
+            echo "Unknown file type: $1"
+            return 1
+            ;;
+    esac
 }
 
 function build_files {
@@ -76,17 +87,14 @@ function build_files {
 }
 
 function build_js {
-    if [[ ! -e "$closure_path" ]]; then
-        echo "Unable to locate closure: $closure_path"
-        return 1
-    fi
+    [[ $has_closure == true ]] || return 1
 
     if [[ ! -d "$dir_js" ]]; then
         echo "Creating JS directory: $dir_js"
         mkdir -p "$dir_js"
     fi
     local jsfile
-    # Allow only files in project/static, or project/subdir/static.
+    # Allow only files in app/static, or app/subdir/static.
     for jsfile in $dir_project/*/static/js/*.js $dir_project/*/*/static/js/*.js
     do
         build_js_file "$jsfile"
@@ -95,6 +103,8 @@ function build_js {
 
 function build_js_file {
     # Build a single js file, passed in as an arg.
+    [[ $has_closure == true ]] || return 1
+
     local jsfile="$1"
     if [[ ! -e "$jsfile" ]]; then
         echo "File does not exist: $jsfile"
@@ -131,7 +141,7 @@ function build_sass {
         mkdir -p "$dir_css"
     fi
     local sassfile
-    # Allow only files in project/static, or project/subdir/static.
+    # Allow only files in app/static, or app/subdir/static.
     for sassfile in $dir_project/*/static/sass/*.scss $dir_project/*/*/static/sass/*.scss
     do
         build_sass_file "$sassfile"
@@ -273,8 +283,7 @@ do
 done
 
 # Build individual files.
-let infilelen=${#infiles[@]}
-if [[ $infilelen -gt 0 ]]; then
+if (( ${#infiles[@]} > 0 )); then
     build_files "${infiles[@]}"
     exit
 fi
