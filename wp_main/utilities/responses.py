@@ -127,7 +127,7 @@ def clean_response(template_name, context, **kwargs):
             rendered = htmltools.fatal_error_page('<br>\n'.join(msgs))
 
         # Return final page response.
-        return HttpResponse(rendered)
+        return HttpResponse(rendered, status=kwargs.get('status', 200))
 
 
 def clean_response_req(template_name, context, **kwargs):
@@ -176,7 +176,7 @@ def clean_response_req(template_name, context, **kwargs):
             rendered = htmltools.fatal_error_page('<br>\n'.join(msgs))
 
         # Return final page
-        return HttpResponse(rendered)
+        return HttpResponse(rendered, status=kwargs.get('status', 200))
 
 
 def default_dict(request=None, extradict=None):
