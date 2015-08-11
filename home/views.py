@@ -111,18 +111,20 @@ def view_error(request, error_number):
     if request_path.startswith('/'):
         request_path = request_path[1:]
 
-    serror = str(error_number)
     # if its not one of these I don't have a template for it,
     # so it really would be a file-not-found error.
-    if serror not in ('403', '404', '500'):
-        serror = '404'
+    if error_number not in (403, 404, 500):
+        error_number = 404
+
     context = {
         'request': request,
         'request_path': mark_for_escaping(request_path),
     }
-    return responses.clean_response_req('home/{}.html'.format(serror),
-                                        context,
-                                        request=request)
+    return responses.clean_response_req(
+        'home/{}.html'.format(error_number),
+        context,
+        request=request,
+        status=error_number)
 
 
 @never_cache
