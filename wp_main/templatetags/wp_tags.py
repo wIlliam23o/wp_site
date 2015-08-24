@@ -58,7 +58,7 @@ def b64encode(s):
     return base64.encodebytes(s.encode('utf-8')).decode('utf-8').strip()
 
 
-@register.filter
+@register.filter  # noqa
 def colorize_admin_css(item):
     """ applies class='item-disabled' to admin change_list.results.item
         if the object has .disabled attribute and it is set to True.
@@ -517,6 +517,10 @@ def meta_value(request_object, dictkey):
         val = ''
     return val
 
+@register.filter
+def replace(s, replacestr, replacement):
+    """ Replace occurrences of `replacestr` with `replacement`. """
+    return str(s).replace(str(replacestr), str(replacement))
 
 @register.filter
 def repr_(object_):

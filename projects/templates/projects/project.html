@@ -8,7 +8,13 @@
     <meta name='description' content='A welborn productions project{% if project %}: {{ project.name }} v. {{ project.version }}{% if project.description %}, {{ project.description }}{% endif %}{% else %}.{% endif %}'>
 {% endblock %}
 
-<!-- Screenshots Javascript -->
+{# Ace editor for code snippets #}
+{% block javascript %}
+    <script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
+    <script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
+{% endblock %}
+
+{# Screenshots Javascript #}
 {% block extrahead %}
 	{% if use_screenshots %}
 		<script type='text/javascript'>

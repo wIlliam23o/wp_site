@@ -26,10 +26,10 @@
     Allow browser globals, including console, and $ for jQuery.
     Allow a global 'use strict'.
 */
-/* jshint browser:true, devel: true, jquery:true, globalstrict:true */
+/* jshint browser:true, devel: true, jquery:true,globalstrict:true */
 
 // Base64 is not linted, but is used in wptools. It should be read-only.
-/* global Base64:false */
+/* global Base64:false, ace:true */
 
 'use strict';
 var wptools = {
@@ -235,6 +235,53 @@ var wptools = {
             return [];
         }
         return (container || document).querySelectorAll(selector);
+    },
+
+    setup_ace_snippet: function (elementid, fileext) {
+        // Grab initial text from element, before building ace.
+        var aceelem = document.getElementById(elementid);
+        var snippetencoded = $(aceelem).text();
+        var snippettext = '';
+        if (snippetencoded) {
+            snippettext = Base64.decode($(aceelem).text());
+        }
+        var acesnippet = ace.edit(elementid);
+        // Disabled ace scrolling to new selected text.
+        acesnippet.$blockScrolling = Infinity;
+
+        // highlight style
+        acesnippet.setTheme('ace/theme/solarized_dark');
+        // various settings for ace
+        acesnippet.setHighlightActiveLine(true);
+        acesnippet.setAnimatedScroll(true);
+        acesnippet.setFontSize(14);
+        // ensure read-only access to content
+        acesnippet.setReadOnly(true);
+        var acemodelist = ace.require('ace/ext/modelist');
+
+        // get file mode for ace based on filename.
+        var ace_mode = acemodelist.getModeForPath(fileext || '.txt');
+
+        var ace_session = acesnippet.getSession();
+        ace_session.setMode(ace_mode.mode || 'ace/mode/text');
+        // Set text from initial element text.
+        acesnippet.setValue(snippettext);
+
+        // Fix height for this snippet.
+        // Keep small snippets small, but cap the height at whatever css is
+        // set already.
+        var doc = ace_session.getDocument();
+        var lineheight = $(aceelem).find('.ace_gutter-cell').css('height');
+        if (doc && lineheight) {
+            var lineactual = parseInt(lineheight.replace(/px/, ''), 10);
+            if (!isNaN(lineactual)) {
+                var newheight = doc.getLength() * lineactual;
+                if (newheight && (!isNaN(newheight)) && (newheight < 298)) {
+                    aceelem.style.height = newheight + 2 + 'px';
+                }
+            }
+        }
+        $(aceelem).animate({'opacity': 1});
     },
 
     show_debug : function show_debug() {

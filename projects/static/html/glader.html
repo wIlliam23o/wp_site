@@ -74,22 +74,22 @@
     {# Command Line Help #}
     <h2 class='title'>Command Line Help</h3>
 
-    <pre class='codewrap'>
-    Usage:
-        glader.py -h | -v
-        glader.py [FILE] [OUTFILE] [-d] [-g]
+    {% acesnippet "glader-usage" ".txt" %}
+Usage:
+    glader.py -h | -v
+    glader.py [FILE] [OUTFILE] [-d] [-g]
 
-    Options:
-        FILE           : Glade file to parse.
-        OUTFILE        : File name for output.
-                         If - is given, output will be printed to stdout.
-        -d,--dynamic   : Use dynamic object initialization method.
-        -g,--gui       : Force use of a GUI, even when an output file is given.
-                         You still have to use the 'Save' button to apply
-                         changes.
-        -h,--help      : Show this help message.
-        -v,--version   : Show version.
-    </pre>
+Options:
+    FILE           : Glade file to parse.
+    OUTFILE        : File name for output.
+                     If - is given, output will be printed to stdout.
+    -d,--dynamic   : Use dynamic object initialization method.
+    -g,--gui       : Force use of a GUI, even when an output file is given.
+                     You still have to use the 'Save' button to apply
+                     changes.
+    -h,--help      : Show this help message.
+    -v,--version   : Show version.
+    {% endacesnippet %}
 </div>
 
 <div class='wp-block feature-list'>
