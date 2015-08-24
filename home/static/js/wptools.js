@@ -33,6 +33,9 @@
 
 'use strict';
 var wptools = {
+    // Default settings.
+    default_ace_theme: 'ace/theme/solarized_dark',
+
     alert : function alert(msg, smallmsg) {
         /*  Show an alert message using #floater if available,
             otherwise use window.alert().
@@ -242,6 +245,7 @@ var wptools = {
         var aceelem = document.getElementById(elementid);
         var snippetencoded = $(aceelem).text();
         var snippettext = '';
+        // The initial text is Base64 encoded, to save formatting.
         if (snippetencoded) {
             snippettext = Base64.decode($(aceelem).text());
         }
@@ -250,7 +254,7 @@ var wptools = {
         acesnippet.$blockScrolling = Infinity;
 
         // highlight style
-        acesnippet.setTheme('ace/theme/solarized_dark');
+        acesnippet.setTheme(wptools.default_ace_theme);
         // various settings for ace
         acesnippet.setHighlightActiveLine(true);
         acesnippet.setAnimatedScroll(true);
