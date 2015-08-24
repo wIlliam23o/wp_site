@@ -1,12 +1,21 @@
 {% load wp_tags %}
+
 {# Produce an embedded Ace editor snippet. #}
-{# The contents will be grabbed from this element before #}
-{# being replaced by Ace. #}
+{# The contents will be grabbed from this element before being replaced by Ace. #}
 {% if elementid and fileext and text %}
     <div id='{{ elementid }}' class='ace-snippet' style='opacity: 0;'>
         {{ text }}
     </div>
     <script type='text/javascript'>
-        wptools.setup_ace_snippet('{{ elementid }}', '{{ fileext }}');
+        $(document).ready(function () {
+            wptools.setup_ace_snippet('{{ elementid }}', '{{ fileext }}');
+        });
     </script>
+{% else %}
+    {% filter log_debug %}
+    Missing arguments in acesnippet.html.
+      elementid: {{ elementid }}
+        fileext: {{ fileext }}
+    text length: {{ text|length }}
+    {% endfilter %}
 {% endif %}

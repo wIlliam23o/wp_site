@@ -416,7 +416,7 @@ def is_expired(paste_obj):
 
 @register.filter
 def is_false(value):
-    """ checks python value for false """
+    """ Whether a value is False, not just falsey. """
 
     return (value is False)
 
@@ -486,26 +486,36 @@ def is_test_site(request):
 
 @register.filter
 def is_true(value):
-    """ checks python value for true """
+    """ Whether a value is actually True, not just truthy. """
 
     return (value is True)
 
 
 @register.filter
 def log_debug(data):
-    """ writes something to the log. str(data) is used on objects,
-        returns original object.
+    """ Writes something to the debug log. str(data) is used on objects,
+        returns an empty string.
     """
+    log.debug(log_safe(data))
+    return ''
 
-    if hasattr(data, 'encode'):
-        s = data
-    elif isinstance(data, (list, tuple)):
-        s = '\n'.join(data)
-    else:
-        s = str(data)
-    log.debug(s)
-    return data
 
+@register.filter
+def log_error(data):
+    """ Writes something to the error log. str(data) is used on objects,
+        returns and empty string.
+    """
+    log.error(log_safe(data))
+    return ''
+
+
+def log_safe(data):
+    """ Ensure an object is stringified for log output.
+        Lists/Tuples are separated by a newline.
+    """
+    if isinstance(data, (list, tuple)):
+        return '\n'.join(data)
+    return str(data).lstrip()
 
 @register.filter
 def meta_value(request_object, dictkey):

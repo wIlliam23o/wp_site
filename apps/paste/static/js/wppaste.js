@@ -170,14 +170,14 @@ var wppaste = {
         /* Load user's paste settings from cookie. */
         var cookieraw = $.cookie('pastesettings');
         var author = '';
-        var userlang = 'Python';
-        var usertheme = 'Solarized Dark';
+        var userlang = wptools.default_ace_langname || 'Python';
+        var usertheme = wptools.default_ace_themename || 'Solarized Dark';
         var opts = options || {'nolangset': false};
         if (cookieraw) {
             var cookieinfo = JSON.parse(cookieraw);
             author = cookieinfo.author || '';
-            userlang = cookieinfo.lang || 'Python';
-            usertheme = cookieinfo.theme || 'Solarized Dark';
+            userlang = cookieinfo.lang || userlang;
+            usertheme = cookieinfo.theme || usertheme;
         }
         if (!opts.nolangset) {
             // set language from cookie

@@ -214,7 +214,7 @@ var wpviewer = {
         wp_content.$blockScrolling = Infinity;
 
         // highlight style
-        wp_content.setTheme('ace/theme/solarized_dark');
+        wp_content.setTheme(wptools.default_ace_theme || 'ace/theme/solarized_dark');
         // various settings for ace
         wp_content.setHighlightActiveLine(true);
         wp_content.setAnimatedScroll(true);
@@ -288,10 +288,3 @@ var wpviewer = {
             });
     }
 };
-
-
-
-
-
-
-

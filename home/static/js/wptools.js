@@ -33,8 +33,11 @@
 
 'use strict';
 var wptools = {
-    // Default settings.
+    // Default settings for code snippets, and when cookies are unavailable
+    // for the Paste app.
+    default_ace_langname: 'Python',
     default_ace_theme: 'ace/theme/solarized_dark',
+    default_ace_themename: 'Solarized Dark',
 
     alert : function alert(msg, smallmsg) {
         /*  Show an alert message using #floater if available,
@@ -249,37 +252,46 @@ var wptools = {
         if (snippetencoded) {
             snippettext = Base64.decode($(aceelem).text());
         }
-        var acesnippet = ace.edit(elementid);
+
+        // Initialize the editor.
+        var aceeditor = ace.edit(elementid);
         // Disabled ace scrolling to new selected text.
-        acesnippet.$blockScrolling = Infinity;
+        aceeditor.$blockScrolling = Infinity;
 
         // highlight style
-        acesnippet.setTheme(wptools.default_ace_theme);
+        aceeditor.setTheme(wptools.default_ace_theme);
         // various settings for ace
-        acesnippet.setHighlightActiveLine(true);
-        acesnippet.setAnimatedScroll(true);
-        acesnippet.setFontSize(14);
+        aceeditor.setAnimatedScroll(true);
+        aceeditor.setFontSize(14);
         // ensure read-only access to content
-        acesnippet.setReadOnly(true);
-        var acemodelist = ace.require('ace/ext/modelist');
+        aceeditor.setReadOnly(true);
 
         // get file mode for ace based on filename.
+        var acemodelist = ace.require('ace/ext/modelist');
         var ace_mode = acemodelist.getModeForPath(fileext || '.txt');
-
-        var ace_session = acesnippet.getSession();
+        var ace_session = aceeditor.getSession();
         ace_session.setMode(ace_mode.mode || 'ace/mode/text');
         // Set text from initial element text.
-        acesnippet.setValue(snippettext);
+        aceeditor.setValue(snippettext);
+
+        // Move selection to start.
+        ace_session.getSelection().selectFileStart();
+
+        // Used to determine multiline options and height.
+        var doclength = ace_session.getDocument().getLength();
+
+        // Options depending on single line or multiline.
+        var multilineopts = (doclength !== 1);
+        aceeditor.renderer.setShowGutter(multilineopts);
 
         // Fix height for this snippet.
         // Keep small snippets small, but cap the height at whatever css is
         // set already.
-        var doc = ace_session.getDocument();
         var lineheight = $(aceelem).find('.ace_gutter-cell').css('height');
-        if (doc && lineheight) {
+        if (doclength && lineheight) {
             var lineactual = parseInt(lineheight.replace(/px/, ''), 10);
             if (!isNaN(lineactual)) {
-                var newheight = doc.getLength() * lineactual;
+                var newheight = doclength * lineactual;
                 if (newheight && (!isNaN(newheight)) && (newheight < 298)) {
                     aceelem.style.height = newheight + 2 + 'px';
                 }
