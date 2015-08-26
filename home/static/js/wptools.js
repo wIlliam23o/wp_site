@@ -43,15 +43,15 @@ var wptools = {
         /*  Show an alert message using #floater if available,
             otherwise use window.alert().
         */
-        var floater = $('#floater');
-        if (floater.length) {
+        var $floater = $('#floater');
+        if ($floater.length) {
             $('#floater-msg').html(msg);
             if (smallmsg) {
                 $('#floater-smalltext').html(smallmsg);
             }
-            $(floater).fadeIn();
-            wptools.center(floater, true);
-            setTimeout(function () { $(floater).fadeOut(); }, 5000);
+            $floater.fadeIn();
+            wptools.center($floater, true);
+            setTimeout(function () { $floater.fadeOut(); }, 5000);
 
         } else {
             // Fall-back to alert.
@@ -73,8 +73,8 @@ var wptools = {
         */
 
         var screen_width = $(document).width(),
-            elem = $(selector),
-            elempos = $(elem).css('position'),
+            $elem = selector instanceof jQuery ? selector : $(selector),
+            elempos = $elem.css('position'),
             elemy = -1,
             newx = -1,
             newy = -1,
@@ -83,28 +83,29 @@ var wptools = {
         if (!((elempos === 'fixed') || (elempos === 'absolute'))) {
             // Force the element to allow centering. If you have to do this
             // then something is wrong.
-            elem.css({'position': 'absolute'});
-            console.log('Forced position:absolute on ' + elem);
+            $elem.css({'position': 'absolute'});
+            console.log('Forced position:absolute on ' + $elem);
         }
 
-        if (elem && elempos) {
+        if ($elem && elempos) {
             // Horizontally
-            newx = (screen_width - elem.outerWidth()) / 2;
-            elem.css({'right': newx + 'px'});
+            newx = (screen_width - $elem.outerWidth()) / 2;
+            $elem.css({'right': newx + 'px'});
             if (usevertical) {
                 // Vertically
-                elemy = elem.outerHeight();
+                elemy = $elem.outerHeight();
                 winheight = useouter ? window.outerHeight : window.innerHeight;
                 newy = (winheight - elemy) / 2;
-                elem.css({'top': newy + 'px'});
+                $elem.css({'top': newy + 'px'});
             }
         }
         return {'x': newx, 'y': newy};
     },
 
     csrf_safe_method : function csrf_safe_method(method) {
-        /* Return true if this HTTP method name required csrf protection. */
-        // these HTTP methods do not require CSRF protection
+        /* Return true if this HTTP method name requires csrf protection. */
+        // these HTTP methods do not require CSRF protection,
+        // if it isn't one of these, it's okay.
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     },
 
@@ -138,10 +139,10 @@ var wptools = {
         return false;
     },
 
-    is_mailto : function is_mailto(input_) {
+    is_mailto : function is_mailto(s) {
         /* checks for mailto: email address */
-        var regex_ = /^mailto:[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
-        return input_.search(regex_) > -1;
+        var mailtopat = /^mailto:[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
+        return s.search(mailtopat) > -1;
     },
 
     has_localstorage : function has_localstorage() {
@@ -195,15 +196,15 @@ var wptools = {
 
     scroll_element : function scroll_element(selector, toppos) {
         if (!toppos) { toppos = 0; }
-        var el = $(selector),
-            elpos = el.offset().top;
+        var $elem = selector instanceof jQuery ? selector : $(selector),
+            elpos = $elem.offset().top;
         $(window).scroll(function () {
             if (!wptools.element_is_hidden(selector)) {
                 var y = $(this).scrollTop();
                 if (y < elpos) {
-                    el.stop().animate({'top': toppos}, 500);
+                    $elem.stop().animate({'top': toppos}, 500);
                 } else {
-                    el.stop().animate({'top': y - elpos}, 500);
+                    $elem.stop().animate({'top': y - elpos}, 500);
                 }
             }
         });
@@ -211,17 +212,17 @@ var wptools = {
 
     scroll_to_anchor: function scroll_to_anchor(selector, animatespeed) {
         /* Scroll down/up to a specific anchor. */
-        var elem = $(selector);
-        if (elem) {
+        var $elem = selector instanceof jQuery ? selector : $(selector);
+        if ($elem) {
             var animspeed = animatespeed || 'slow';
-            $('html,body').animate({scrollTop: elem.offset().top}, animspeed);
+            $('html,body').animate({scrollTop: $elem.offset().top}, animspeed);
         }
     },
 
     select : function select(selector, container) {
         /*  Native css selector that returns the first element found, or null.
             Arguments:
-                selector       : CSS selector.
+                selector   : CSS selector.
                 container  : Node to start from. Default: document
         */
         if (typeof selector !== 'string') {
@@ -245,12 +246,15 @@ var wptools = {
 
     setup_ace_snippet: function (elementid, fileext) {
         // Grab initial text from element, before building ace.
-        var aceelem = document.getElementById(elementid);
-        var snippetencoded = $(aceelem).text();
+        var $aceelem = $(document.getElementById(elementid));
+        if (!$aceelem.length) {
+            return;
+        }
+        var snippetencoded = $aceelem.text();
         var snippettext = '';
         // The initial text is Base64 encoded, to save formatting.
         if (snippetencoded) {
-            snippettext = Base64.decode($(aceelem).text());
+            snippettext = Base64.decode($aceelem.text());
         }
 
         // Initialize the editor.
@@ -287,17 +291,17 @@ var wptools = {
         // Fix height for this snippet.
         // Keep small snippets small, but cap the height at whatever css is
         // set already.
-        var lineheight = $(aceelem).find('.ace_gutter-cell').css('height');
+        var lineheight = $aceelem.find('.ace_gutter-cell').css('height');
         if (doclength && lineheight) {
             var lineactual = parseInt(lineheight.replace(/px/, ''), 10);
             if (!isNaN(lineactual)) {
                 var newheight = doclength * lineactual;
-                if (newheight && (!isNaN(newheight)) && (newheight < 298)) {
-                    aceelem.style.height = newheight + 2 + 'px';
+                if (newheight && (!isNaN(newheight)) && (newheight < 340)) {
+                    $aceelem.css({'height': newheight + 2 + 'px'});
                 }
             }
         }
-        $(aceelem).animate({'opacity': 1});
+        $aceelem.animate({'opacity': 1});
     },
 
     show_debug : function show_debug() {
@@ -322,8 +326,8 @@ var wptools = {
             This also changes the label text for it through
             show_debug() and hide_debug().
         */
-        var debugbox = $('.debug-box');
-        if (wptools.is_hidden(debugbox)) {
+        var $debugbox = $('.debug-box');
+        if (wptools.is_hidden($debugbox)) {
             wptools.show_debug();
         } else {
             wptools.hide_debug();
@@ -342,29 +346,30 @@ var wptools = {
 
     vertical_element : function vertical_element(selector, toppos) {
         if (!toppos) { toppos = 0; }
-        var elem = $(selector),
+        var $elem = selector instanceof jQuery ? selector : $(selector),
             y = $(this).scrollTop();
-        if (elem.length > 1) {
-            elem = elem[0];
+        if ($elem.length > 1) {
+            $elem = $elem.get(0);
         }
-        elem.css({'top': y + toppos + 'px' });
+        $elem.css({'top': y + toppos + 'px' });
     },
 
-    wpaddress : function wpaddress(input_) {
+    wpaddress : function wpaddress(s) {
         /* decodes base64 email and mailto if base64 is present,
          * otherwise returns original string */
-        var decoded_ = Base64.decode(input_).replace('\n', '');
-        if (this.is_address(decoded_) || this.is_mailto(decoded_)) {
-            return decoded_;
+        var decoded = Base64.decode(s).replace('\n', '');
+        if (this.is_address(decoded) || this.is_mailto(decoded)) {
+            return decoded;
         }
-        return input_;
+        return s;
     },
 
     wpreveal : function wpreveal(selector) {
-        /* Reveals all base64 encoded mailto: and
-         * email addresses with selector */
+        /*  Reveals all base64 encoded mailto: and
+            email addresses with selector
+        */
         // use default welbornprod address class if no selector is passed.
-        if (!selector) { selector = '.wp-address'; }
+        selector = selector || '.wp-address';
         var elems = document.querySelectorAll(selector);
         var length = elems.length;
         var i = 0;
@@ -382,7 +387,8 @@ var wptools = {
                 }
                 // fix inner html..
                 //elems[i].innerHTML = this.wpaddress(elems[i].innerHTML);
-                $(elems[i]).html(this.wpaddress($(elems[i]).html()));
+                var $e = $(elems[i]);
+                $e.html(this.wpaddress($e.html()));
             }
         }
         return true;
@@ -401,13 +407,13 @@ var wptools = {
 var misctools = {
     fixLongDescBtn: function fixLongDescBtn(alias) {
         var miscbtnid = '#misclongdescbtn-' + alias;
-        var longdescbtn = $(miscbtnid);
+        var $longdescbtn = $(miscbtnid);
 
-        if (longdescbtn.text() === 'Show Less') {
+        if ($longdescbtn.text() === 'Show Less') {
             // element is hidden
-            longdescbtn.text('Show More');
+            $longdescbtn.text('Show More');
         } else {
-            longdescbtn.text('Show Less');
+            $longdescbtn.text('Show Less');
         }
     },
 

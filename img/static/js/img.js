@@ -22,11 +22,11 @@ var imgtools = {
     init_upload_floater : function () {
         /* Initialize the upload form for admins. */
         $(document).ready(function () {
-            var floater = $('#img-upload-form-floater');
-            wptools.center(floater, true);
-            $(floater).draggable({'scroll': true, 'axis': 'y'});
-            $(floater).dblclick(function () {
-                wptools.center(floater, true);
+            var $floater = $('#img-upload-form-floater');
+            wptools.center($floater, true);
+            $floater.draggable({'scroll': true, 'axis': 'y'});
+            $floater.dblclick(function () {
+                wptools.center($floater, true);
             });
 
             $('#upload-file').required = true;
@@ -34,11 +34,11 @@ var imgtools = {
     },
 
     toggle_upload_form : function () {
-        var uploadfloater = $('#img-upload-form-floater');
-        if ($(uploadfloater).css('display') === 'none') {
+        var $uploadfloater = $('#img-upload-form-floater');
+        if ($uploadfloater.css('display') === 'none') {
             // Only center when showing the form.
-            wptools.center(uploadfloater, true);
+            wptools.center($uploadfloater, true);
         }
-        $(uploadfloater).fadeToggle();
+        $uploadfloater.fadeToggle();
     }
 };

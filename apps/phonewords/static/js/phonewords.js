@@ -24,8 +24,9 @@ var phonewords = {
 
     do_valid: function (querystr) {
         // Show wait msg for query string.
-        $('#floater-msg').text('Generating results for: ' + querystr);
-        $('#floater-msg').css({'color': '#4D4D4D'});
+        var $floatermsg = $('#floater-msg');
+        $floatermsg.text('Generating results for: ' + querystr);
+        $floatermsg.css({'color': '#4D4D4D'});
         $('#floater-smalltext').text('This may take 2-10 seconds');
         $('#floater').fadeIn();
         phonewords.waitmsg_anim();
@@ -33,8 +34,9 @@ var phonewords = {
     },
 
     insert_result: function (combo, word) {
-        var oldtext = $('#pw_results').val();
-        $('#pw_results').val(oldtext + '\n' + combo + ' : ' + word);
+        var $pwresults = $('#pw_results');
+        var oldtext = $pwresults.val();
+        $pwresults.val(oldtext + '\n' + combo + ' : ' + word);
     },
 
     is_number: function (s) {
@@ -94,18 +96,14 @@ var phonewords = {
     },
 
     waitmsg_change : function () {
-        var current = $('#floater-smalltext').text().replace(/\n/g, '');
+        var $floatersmall = $('#floater-smalltext');
+        var current = $floatersmall.text().replace(/\n/g, '');
         if (current && current.substr(-3) == '...') {
             // Back to original
-            $('#floater-smalltext').text(current.substr(0, current.length - 3));
+            $floatersmall.text(current.substr(0, current.length - 3));
         } else {
             // just add a .
-            $('#floater-smalltext').text(current + '.');
+            $floatersmall.text(current + '.');
         }
-    },
-
-    waitmsg_fade : function () {
-        // Not used.
-        $('#floater-smalltext').fadeOut(1000).fadeIn(1000);
     }
 };

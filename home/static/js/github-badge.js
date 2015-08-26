@@ -205,7 +205,7 @@ var github_badge = {
         ].join('\n');
     },
 
-    replace_deviant: function replace_deviant(selector, username, precall) {
+    replace_deviant: function replace_deviant(selector, username, precall, force) {
         /* Replace a misbehaved deviant.io badge with this one.
            If the deviant.io badge is already built then nothing is done.
            If everything fails, the `selector` element is removed.
@@ -214,24 +214,27 @@ var github_badge = {
                 selector  : Element selector to be filled with the badge.
                 username  : Github user name to get info for.
                 precall   : A function to call before building the badge.
+                force     : Force replacement, even if the other badge behaved.
+                            (..for testing)
         */
         var badge = document.getElementsByTagName('github-badge');
         var shadow = badge.length ? badge[0].shadowRoot : null;
-        if (!shadow) {
+        if (force || !shadow) {
             // The github-badge element is no longer needed, it failed.
             $('github-badge').remove();
             if (typeof precall === 'function') {
                 precall();
             }
-            // Fallback to
+            // Fallback to local github badge.
+            var $selelem = selector instanceof jQuery ? selector : $(selector);
             github_badge.build(
                 username,
                 function success (div) {
-                    $(selector).append(div);
+                    $selelem.append(div);
                 },
                 function error (msg) {
                     console.warn('Unable to build/replace github badge: ' + msg);
-                    $(selector).remove();
+                    $selelem.remove();
                 }
             );
         }

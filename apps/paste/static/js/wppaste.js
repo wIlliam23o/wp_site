@@ -12,77 +12,74 @@
 var wppaste = {
     build_lang_menu : function () {
         /* Build language options. */
-        var modes = wp_modelist.modes;
-        modes.sort(function (a, b) {
-            // Sort modes by 'caption' text
-            if (a.caption < b.caption) {
+        $('#langselect').append(
+            wppaste.build_menu(
+                wp_modelist.modes,
+                'mode',
+                'caption'
+            )
+        );
+    },
+
+    build_menu : function (items, value, text) {
+        /*  Build a select menu from an array of objects.
+            Returns a jQuery object containing the built doc fragment.
+            Arguments:
+                items   : Array of objects to build from.
+                value   : Object attribute for option value.
+                text    : Object attribute for option text.
+                          The list is sorted by this attribute.
+        */
+
+        items.sort(function (a, b) {
+            // Sort items by 'caption' text
+            if (a[text] < b[text]) {
                 return -1;
             }
-            if (a.caption > b.caption) {
+            if (a[text] > b[text]) {
                 return 1;
             }
             return 0;
 
         });
+
         // create a doc fragment to build on.
-        var menufrag = document.createDocumentFragment();
+        var $menufrag = $(document.createDocumentFragment());
 
         // create a None mode, should be at the top.
-        var nonemode = document.createElement('option');
-        $(nonemode).attr({'val': ''});
-        $(nonemode).text('[none]');
-        $(menufrag).append(nonemode);
+        var $noneitem = $(document.createElement('option'));
+        $noneitem.attr({'val': ''});
+        $noneitem.text('[none]');
+        $menufrag.append($noneitem);
 
-        // iterate over all known modes.
-        var modecur,
-            modeopt;
+        // iterate over all known items.
+        var objcurrent,
+            $opt;
         var i = 0;
-        for (i; i < modes.length; i++) {
+        for (i; i < items.length; i++) {
             // get mode info.
-            modecur = modes[i];
+            objcurrent = items[i];
             // create an <option> element.
-            modeopt = document.createElement('option');
-            $(modeopt).attr({'val': modecur.mode});
-            $(modeopt).text(modecur.caption);
+            $opt = $(document.createElement('option'));
+            $opt.attr({'val': objcurrent[value]});
+            $opt.text(objcurrent[text]);
             // add the new option to doc fragment.
-            $(menufrag).append(modeopt);
+            $menufrag.append($opt);
         }
-        // Add whole menu fragment to the <select> tag.
-        $('#langselect').append(menufrag);
+        // Return whole menu fragment.
+        return $menufrag;
     },
 
     build_theme_menu : function () {
         /* Build theme options */
         // Grab the list of themes and sort them by caption.
-        var themes = wp_themelist.themes;
-        themes.sort(function (a, b) {
-            // sort the themes by 'caption' text.
-            if (a.caption < b.caption) {
-                return -1;
-            }
-            if (a.caption > b.caption) {
-                return 1;
-            }
-            return 0;
-        });
-        // Doc frag to build on.
-        var themefrag = document.createDocumentFragment();
-        // iterate over all known themes.
-        var themecur,
-            themeopt;
-        var i = 0;
-        for (i; i < themes.length; i++) {
-            // get theme info.
-            themecur = wp_themelist.themes[i];
-            // create an <option>
-            themeopt = document.createElement('option');
-            $(themeopt).attr({'val': themecur.theme});
-            $(themeopt).text(themecur.caption);
-            // add option to the doc frag.
-            $(themefrag).append(themeopt);
-        }
-        // Add whole theme-menu fragment to the <select> tag.
-        $('#themeselect').append(themefrag);
+        $('#themeselect').append(
+            wppaste.build_menu(
+                wp_themelist.themes,
+                'theme',
+                'caption'
+            )
+        )
     },
 
     fix_line_breaks : function (size) {
@@ -112,15 +109,15 @@ var wppaste = {
     get_selected_lang : function () {
         /* Get selected language name */
         var langselect = document.getElementById('langselect');
-        var selected = langselect.options[langselect.selectedIndex];
-        return $(selected).text();
+        var $selected = $(langselect.options[langselect.selectedIndex]);
+        return $selected.text();
     },
 
     get_selected_mode : function () {
         /* Get selected ace-editor mode. ('ace/mode/python') */
         var langselect = document.getElementById('langselect');
-        var selected = langselect.options[langselect.selectedIndex];
-        return $(selected).attr('val');
+        var $selected = $(langselect.options[langselect.selectedIndex]);
+        return $selected.attr('val');
     },
 
     get_selected_onhold : function () {
@@ -133,22 +130,22 @@ var wppaste = {
 
     get_selected_private : function () {
         /* Get 'private' option selection. */
-        var chk = $('#paste-private-opt');
-        return $(chk).prop('checked');
+        var $chk = $('#paste-private-opt');
+        return $chk.prop('checked');
     },
 
     get_selected_theme : function () {
         /* Get selected ace-editor theme ('ace/theme/themename'). */
         var themeselect = document.getElementById('themeselect');
-        var selected = themeselect.options[themeselect.selectedIndex];
-        return $(selected).attr('val');
+        var $selected = $(themeselect.options[themeselect.selectedIndex]);
+        return $selected.attr('val');
     },
 
     get_selected_theme_name : function () {
         /* Get selected ace-editor theme name ('Theme Name'). */
         var themeselect = document.getElementById('themeselect');
-        var selected = themeselect.options[themeselect.selectedIndex];
-        return $(selected).text();
+        var $selected = $(themeselect.options[themeselect.selectedIndex]);
+        return $selected.text();
     },
 
     kill_message: function () {
