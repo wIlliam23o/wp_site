@@ -8,13 +8,13 @@
 {% block extrastylelink %}
     <link type='text/css' rel='stylesheet' href='/static/css/about.min.css' />
     {# Local github badge, disabled (will be removed) #}
-    {# <link type='text/css' rel='stylesheet' href='/static/css/github-badge.min.css' /> #}
+    <link type='text/css' rel='stylesheet' href='/static/css/github-badge.min.css' />
     {# Font-Awesome for octobadge. #}
     <link type='text/css' rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css'/>
     {# Octicons for octobadge #}
     <link type='text/css' rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/octicons/2.4.1/octicons.min.css'/>
     {# deviant.io badge css, disabled until bug fix. #}
-    <link type='text/css' rel='stylesheet' href='https://deviant.io/badge/badge.min.css'/>
+    {# <link type='text/css' rel='stylesheet' href='https://deviant.io/badge/badge.min.css'/> #}
     {{ block.super }}
 {% endblock %}
 
@@ -126,25 +126,26 @@
                 <!-- Github -->
                 <div id='github-badge-wrapper' class='about-contrib-item'>
                     {# deviant.io badge. #}
-                    <github-badge class='github-badge' user='welbornprod' show_repos='true' show_languages='true'>
-                        Loading github badge...
-                    </github-badge>
+                    {# Ditched for welbornprod until they straighten out. #}
+                    {# <github-badge class='github-badge' user='welbornprod' show_repos='true' show_languages='true'> #}
+                    {#     Loading github badge... #}
+                    {# </github-badge> #}
                 </div>
                 <!-- Daniweb -->
                 <div class='about-contrib-item'>
-                    <a href='http://www.daniweb.com/members/572777/chriswelborn' target='_blank'>
+                    <a href='https://www.daniweb.com/members/572777/chriswelborn' target='_blank'>
                         <img src='http://www.daniweb.com/stats/badge/572777/solved.jpg' width='120' height='90' alt='chriswelborn Contributes to DaniWeb' border='0' target='_blank' />
                     </a>
                 </div>
                 <!-- Django Powered -->
                 <div class='about-contrib-item'>
-                    <a href='http://www.djangoproject.com/' target='_blank'>
+                    <a href='https://www.djangoproject.com/' target='_blank'>
                         <img src='/static/images/badges/djangopowered_grey.gif' border='0' alt='Powered by Django.' title='Powered by Django.' />
                     </a>
                 </div>
                 <!-- Python Powered -->
                 <div class='about-contrib-item'>
-                    <a href='http://www.python.org' target='_blank'>
+                    <a href='https://www.python.org' target='_blank'>
                         <img src='/static/images/badges/python-powered-anim.gif' style='border-radius: 15px;-moz-border-radius: 15px;-webkit-border-radius: 15px;width: 256px;height: 64px;' alt='Python Powered' title='Python Powered' border='0'/>
                     </a>
                 </div>
@@ -157,22 +158,18 @@
 
 {% block bodyend %}
     {# deviant.io badge. #}
-    <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script>
-    {# Make sure deviant badge loaded in time. Replace the blank element if needed. #}
+    {# <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script> #}
     <script type='text/javascript'>
         $(document).ready(function () {
-            /* If deviant.io misbehaves, kill it. (presence of shadowRoot will tell) */
-            setTimeout(
-                function () {
-                    github_badge.replace_deviant(
-                        '#github-badge-wrapper',
-                        'welbornprod',
-                        function precall() {
-                            wptools.load_css('/static/css/github-badge.min.css');
-                        }
-                    );
+            github_badge.build(
+                'welbornprod',
+                function success(div) {
+                    $('#github-badge-wrapper').html(div);
                 },
-                3000);
+                function error(error_message) {
+                    $('#github-badge-wrapper').css({display: 'none'});
+                }
+            );
 
             /* No more yearly edits :) */
             var now = new Date();
