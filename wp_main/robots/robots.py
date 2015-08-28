@@ -13,19 +13,27 @@
 from django.views.decorators.cache import never_cache
 from wp_main.utilities import responses
 
+robots_any = """
+User-agent: *
+Allow: /
+""".lstrip()
+
+robots_block = """
+User-agent: *
+Disallow: /
+""".lstrip()
+
 
 @never_cache
 def view_robots_blockall(request):
-    """ block all pages """
-
-    return responses.text_response('User-agent: *\nDisallow: /')
+    """ Block all pages """
+    return responses.text_response(robots_block)
 
 
 @never_cache
 def view_robots_any(request):
-    """ allow any page """
-
-    return responses.text_response('User-agent: *\nAllow: /')
+    """ Allow any page """
+    return responses.text_response(robots_any)
 
 
 @never_cache
