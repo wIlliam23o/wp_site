@@ -10,22 +10,24 @@
 
    start date: Apr 3, 2013
 '''
+
 import logging
+log = logging.getLogger('wp.sitemaps')
+
+# For today's date
+from datetime import date
+
 # django cache stuff
 from django.views.decorators.cache import never_cache
 
-log = logging.getLogger('wp.sitemaps')
 # xml_response.
 from wp_main.utilities import responses
-# Blog/Project info
+# Local models to build urls.
 from apps.models import wp_app
 from blogger.models import wp_blog
 from img.models import wp_image
 from misc.models import wp_misc
 from projects.models import wp_project
-
-# Today's date
-from datetime import date
 
 
 @never_cache
@@ -174,8 +176,8 @@ def build_urls(request):
         # get protocol
         protocol = 'https' if request.is_secure() else 'http'
     except Exception as ex:
-        errmsg = 'build_urls: unable to determine request.is_secure():'
-        log.error('{}\n  {}'.format(errmsg, ex))
+        errfmt = 'build_urls: unable to determine request.is_secure():\n  {}'
+        log.error(errfmt.format(ex))
     else:
         # Find server name (.com or .info)
         serverattrs = (
@@ -207,7 +209,7 @@ def build_urls(request):
 
 class SitemapUrl(object):  # noqa
 
-    """ provides info for individual sitemap urls """
+    """ Provides info for individual sitemap urls. """
 
     def __init__(self, location='', rel_location='',
                  changefreq='', lastmod='',
@@ -222,62 +224,22 @@ class SitemapUrl(object):  # noqa
         self.rel_location = rel_location
         self.protocol = protocol
         self.domain = domain
-        # build complete location if needed.
-        if location == '':
-            self.location = self.complete_url()
-        else:
-            self.location = location
-
-    def get_by_name(self, attribute_name):
-        """ retrieves url info by name string.
-            uses getattr().
-            returns value of attribute on success.
-            returns empty string on failure.
-        """
-
-        try:
-            if hasattr(self, attribute_name):
-                return getattr(self, attribute_name)
-            else:
-                return ''
-        except:
-            log.error('SitemapUrl: get_by_name: error getting attribute: '
-                      '{}'.format(attribute_name))
-            return ''
-
-    def get_info_dict(self):
-        """ retrieves url info as a dict. """
-
-        info_dict = {}
-        for attr_name in dir(self):
-            # filter builtins and private attributes
-            if not attr_name.startswith('_'):
-                attr_ = getattr(self, attr_name)
-                # filter functions, we only want info not functions.
-                if not callable(attr_):
-                    info_dict[attr_name] = attr_
-
-        return info_dict
-
-    def get_info_list(self):
-        """ retrieves url info as a list of [attribute, value].
-            list item[0][0] = attribute 1, item[0][1] = value 1.
-        """
-        info_list = []
-        info_dict = self.get_info_dict()
-        for skey in info_dict.keys():
-            info_list.append([skey, info_dict[skey]])
-        return info_list
+        # build complete location on demand if needed.
+        self.location = location or self.complete_url()
 
     def complete_url(self):
         """ builds complete url for this item if all info is present.
              ex:
-                url = SitemapUrl(location_="/projects",
-                                  protocol_="http",
-                                  domain_="mysite.com")
+                url = SitemapUrl(
+                    rel_location_='/projects',
+                    protocol='http',
+                    domain='mysite.com')
                 loc = url.complete_url()
                 # will return:
                 #     http://mysite.com/projects
+            This is used to build .location when it isn't set, so
+                loc = url.location
+            ..will do the same thing.
         """
 
         if (not self.domain) or (not self.protocol):
