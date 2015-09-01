@@ -22,7 +22,7 @@ from docopt import docopt
 
 # Script info...
 NAME = 'WpRefresh'
-VERSION = '2.0.2'
+VERSION = '2.0.3'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
 
@@ -63,7 +63,10 @@ USAGESTR = """{version}
 
 def main(argd):
     # if test is passed no warning is given before restarting the server.
-    test = ('wp_test' in django_init.project_dir)
+    test = (
+        settings.SERVER_LOCATION == 'local' or
+        settings.SITE_VERSION.lower() != 'main site'
+    )
     warn = False if test else (not (argd['--live'] or argd['--norestart']))
 
     # Check for mismatched args (rather than write a complicated USAGESTR)..
