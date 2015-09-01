@@ -67,6 +67,9 @@ def debug_allowed(request):
     # If user is admin/authenticated we're okay.
     if request.user.is_authenticated() and request.user.is_staff:
         return True
+    else:
+        if 'test' in settings.SITE_VERSION.lower():
+            return False
 
     # Non-authenticated users:
     # Get ip for this user
