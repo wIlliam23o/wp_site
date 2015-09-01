@@ -199,7 +199,10 @@ urlpatterns += patterns(
 urlpatterns += patterns(
     '',
     url(r'^favicon\.ico$',
-        RedirectView.as_view(url='/static/images/favicons/favicon.ico')),
+        RedirectView.as_view(
+            url='/static/images/favicons/favicon.ico',
+            permanent=True
+        )),
 )
 
 # Debug toolbar explicit setup (per new debug_toolbar version)
