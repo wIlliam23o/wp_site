@@ -6,7 +6,9 @@
     <div id='{{ elementid }}' class='ace-snippet' style='opacity: 0;'>
         {% if request|is_textmode %}
             {# Textmode browsers don't run javascript, so we will help them. #}
-            {{ text | b64decode }}
+            <pre>
+{{ text | b64decode }}
+            </pre>
         {% else %}
             {{ text }}
         {% endif %}
