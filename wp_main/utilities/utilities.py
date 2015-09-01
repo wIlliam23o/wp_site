@@ -60,6 +60,10 @@ def debug_allowed(request):
     if getattr(settings, 'TEST', False):
         return False
 
+    # If this is local development, we allow it.
+    if settings.SERVER_LOCATION.lower() == 'local':
+        return True
+
     # If user is admin/authenticated we're okay.
     if request.user.is_authenticated() and request.user.is_staff:
         return True
@@ -510,6 +514,7 @@ def is_textmode(request):
         return False
     ua = getattr(get_user_agent(request), 'ua_string', '').lower()
     return (
+        ('curl' in ua) or
         ('textmode' in ua) or
         ('elinks' in ua) or
         ('lynx' in ua)
