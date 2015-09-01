@@ -119,7 +119,7 @@
 
    	{# Debug box #}
 	{% block debug-box %}
-	   	{% if request|debug_allowed and request|is_test_site and request.user.is_staff and not request|is_textmode %}
+	   	{% if request|debug_allowed and request|is_test_site and not request|is_textmode %}
 	   		{# show/hide debug btn (top button) #}
 	   		<div class='debug-button' id='debug-button-top'>
 	   			<a href='#' onclick='javascript: wptools.toggle_debug();'>
