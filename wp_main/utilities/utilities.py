@@ -405,7 +405,7 @@ def get_time(time=None, shorttime=False,):
     return time.strftime('%I:%M:%S %p')
 
 
-def get_time_since(date, humanform=True, limit=False):
+def get_time_since(date, humanform=True, limit=False):  # noqa
     """ Parse a datetime object,
         return human-readable time-elapsed.
         Arguments:
@@ -491,7 +491,7 @@ def is_file_or_dir(spath):
 
 
 def is_mobile(request):
-    """ determine if the client is a mobile phone/tablet
+    """ Determine if the client is a mobile phone/tablet
         actually, determine if its not a pc.
     """
 
@@ -501,6 +501,19 @@ def is_mobile(request):
         return False
 
     return (not get_user_agent(request).is_pc)
+
+
+def is_textmode(request):
+    """ Return True if the User Agent is a known text mode browser. """
+    if request is None:
+        # An error would cause this.
+        return False
+    ua = getattr(get_user_agent(request), 'ua_string', '').lower()
+    return (
+        ('textmode' in ua) or
+        ('elinks' in ua) or
+        ('lynx' in ua)
+    )
 
 
 def logtraceback(log=None, message=None):

@@ -485,6 +485,12 @@ def is_test_site(request):
 
 
 @register.filter
+def is_textmode(request):
+    """ Return True if the User Agent is from a known text mode browser. """
+    return utilities.is_textmode(request)
+
+
+@register.filter
 def is_true(value):
     """ Whether a value is actually True, not just truthy. """
 
@@ -517,6 +523,7 @@ def log_safe(data):
         return '\n'.join(data)
     return str(data).lstrip()
 
+
 @register.filter
 def meta_value(request_object, dictkey):
     """ returns .META dict value from request """
@@ -527,10 +534,12 @@ def meta_value(request_object, dictkey):
         val = ''
     return val
 
+
 @register.filter
 def replace(s, replacestr, replacement):
     """ Replace occurrences of `replacestr` with `replacement`. """
     return str(s).replace(str(replacestr), str(replacement))
+
 
 @register.filter
 def repr_(object_):

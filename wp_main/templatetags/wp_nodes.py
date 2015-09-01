@@ -150,14 +150,14 @@ class AceSnippet(template.Node):
         fileext = parse_arg(self.fileext, context)
         text = self.nodelist.render(context).strip()
 
-        return htmltools.render_clean(
-            'home/acesnippet.html',
-            context={
-                'elementid': elementid,
-                'fileext': fileext,
-                'text': b64encode(text) if text else ''
-            }
-        )
+        context = context or {}
+        context.update({
+            'elementid': elementid,
+            'fileext': fileext,
+            'text': b64encode(text) if text else ''
+        })
+
+        return htmltools.render_clean('home/acesnippet.html', context=context)
 
 
 class AdArticle(template.Node):

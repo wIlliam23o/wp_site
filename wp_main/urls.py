@@ -57,6 +57,11 @@ urlpatterns = patterns(
     # sitemap server
     url(r'^sitemap\.xml$',
         sitemaps.view_byserver),
+    # textmode test
+    url(r'^textmode$',
+        homeviews.view_textmode_simple),
+    url(r'^textmode\.html?$',
+        homeviews.view_textmode),
     # useragent simple
     url(r'^useragent$',
         homeviews.view_useragent_simple),
