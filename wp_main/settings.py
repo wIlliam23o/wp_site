@@ -163,9 +163,9 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     # django debug tools
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+
     # special user-agent middleware...
     'wp_user_agents.middleware.UserAgentMiddleware',
 
@@ -269,10 +269,8 @@ if SERVER_LOCATION == 'remote':
 
     }
 
-# Disable redirect panel (per new debug_toolbar method.)
 DEBUG_TOOLBAR_CONFIG = {
-    'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'},
-    'SHOW_TOOLBAR_CALLBACK': 'wp_main.utilities.utilities.debug_allowed'
+    'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'}
 }
 # Don't automatically adjust project settings based on DEBUG!
 DEBUG_TOOLBAR_PATCH_SETTINGS = False

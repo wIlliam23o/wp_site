@@ -16,9 +16,9 @@ from wp_main.robots import robots
 # get custom admin
 # from wp_main.admin import admin_site
 # Used for django.contrib.admin.site.urls
-from django.contrib import admin
+# from django.contrib import admin
 # Django 1.7 doesn't need this.
-admin.autodiscover()
+# admin.autodiscover()
 
 # Main Site (home)
 urlpatterns = patterns(

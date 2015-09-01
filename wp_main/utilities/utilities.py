@@ -62,7 +62,7 @@ def debug_allowed(request):
 
     # If this is local development, we allow it.
     if settings.SERVER_LOCATION.lower() == 'local':
-        return True
+        return bool(settings.DEBUG)
 
     # If user is admin/authenticated we're okay.
     if request.user.is_authenticated() and request.user.is_staff:
