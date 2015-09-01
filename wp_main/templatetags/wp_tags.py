@@ -422,6 +422,11 @@ def is_false(value):
 
 
 @register.filter
+def is_localdev(request):
+    """ Return True if the site is running locally. """
+    return settings.SERVER_LOCATION.lower() == 'local'
+
+@register.filter
 def is_mobile(request_object):
     """ determines whether or not the client is mobile/tablet.
         requires a request object.
@@ -496,6 +501,21 @@ def is_true(value):
 
     return (value is True)
 
+
+@register.filter
+def is_viewable(request):
+    """ Returns True for the production site and local development.
+        Returns False if:
+            This is a test site and the user is not authenticated.
+    """
+    if is_localdev(request):
+        # Local dev is always allowed.
+        return True
+    if is_test_site(request):
+        # Staff only for test site.
+        return is_staff(request)
+    # Production requires no login.
+    return True
 
 @register.filter
 def log_debug(data):

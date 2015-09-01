@@ -145,7 +145,7 @@
 	   	{% endif %}
 	{% endblock %}
 
-	{% if request|is_test_site and not request.user.is_staff %}
+	{% if not request|is_viewable %}
 		{# Build alert_message for test site. #}
 		<div id='alert-box' class='alert'>
 			<div id='alert-title'>
@@ -181,8 +181,7 @@
 		</div>
 
 		{# Content based on live/test site and access. #}
-		{#{% if false %} {# <-- TESTING PURPOSES #}
-		{% if request|is_test_site and not request.user.is_staff %}
+		{% if not request|is_viewable %}
 		    {# Show no access msg for non-admins on test site. #}
 			<div id='page-surround'>
 				<div class='error-noaccess-message'>
