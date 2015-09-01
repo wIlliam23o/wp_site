@@ -1186,15 +1186,19 @@ code, samp {
     font-size: 0.85em;
 }
 
-/* User agent page styles */
-.useragent-info-box {
+/* User agent, Text mode test, and other basic info page styles */
+.info-box {
     text-align: center;
     @include border-radius-thin(5px);
     background: $whitedull;
     padding: 10px;
 }
 
-.useragent-value {
+.info-label {
+    margin-top: 10px;
+}
+
+.info-value {
     display: inline-block;
     margin-top: 5px;
     @include border-radius-thin(5px);

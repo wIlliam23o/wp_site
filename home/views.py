@@ -238,6 +238,30 @@ def view_raiseerror(request):
 
 
 @never_cache
+def view_textmode(request):
+    """ Return the text mode test page in html (for testing). """
+    context = {
+        'request': request,
+    }
+    return responses.clean_response('home/textmode.html', context)
+
+
+@never_cache
+def view_textmode_simple(request):
+    """ Return textmode test page in plain text (for testing). """
+    ua = utilities.get_user_agent(request)
+    return responses.text_response(
+        '\n'.join((
+            'User-Agent: {useragent}',
+            'Textmode: {textmode}\n'
+        )).format(
+            useragent=getattr(ua, 'ua_string', '?'),
+            textmode=utilities.is_textmode(request)
+        )
+    )
+
+
+@never_cache
 def view_useragent(request):
     """  returns the user agent page. """
     context = {

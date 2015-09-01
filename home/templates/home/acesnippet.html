@@ -4,7 +4,12 @@
 {# The contents will be grabbed from this element before being replaced by Ace. #}
 {% if elementid and fileext and text %}
     <div id='{{ elementid }}' class='ace-snippet' style='opacity: 0;'>
-        {{ text }}
+        {% if request|is_textmode %}
+            {# Textmode browsers don't run javascript, so we will help them. #}
+            {{ text | b64decode }}
+        {% else %}
+            {{ text }}
+        {% endif %}
     </div>
     <script type='text/javascript'>
         $(document).ready(function () {
