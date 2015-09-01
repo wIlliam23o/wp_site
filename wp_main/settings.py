@@ -271,7 +271,8 @@ if SERVER_LOCATION == 'remote':
 
 # Disable redirect panel (per new debug_toolbar method.)
 DEBUG_TOOLBAR_CONFIG = {
-    'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'}
+    'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'},
+    'SHOW_TOOLBAR_CALLBACK': 'wp_main.utilities.utilities.debug_allowed'
 }
 # Don't automatically adjust project settings based on DEBUG!
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
