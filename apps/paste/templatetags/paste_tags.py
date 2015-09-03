@@ -21,6 +21,14 @@ def child_count(paste):
 
 
 @register.filter
+def is_expired(paste):
+    """ Return true if this paste is expired. """
+    if hasattr(paste, 'is_expired'):
+        return paste.is_expired()
+    log.error('Not a paste, missing is_expired method: {!r}'.format(paste))
+    return False
+
+@register.filter
 def needs_line_breaks(paste):
     """ Return true if this pastes content is long and has no line breaks. """
     if (not paste) or (not paste.content):

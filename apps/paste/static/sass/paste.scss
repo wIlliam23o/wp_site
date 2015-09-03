@@ -6,12 +6,11 @@
     border-radius: 5px;
 }
 
-
 #langselect {
     @include border-radius-thick(3px);
-    padding: 3px;
     background-color: $whitedull;
     color: $greymain;
+    padding: 3px;
 
 }
 
@@ -21,14 +20,14 @@
 }
 
 .paste-header-box {
-    background-color: $whitedull;
     @include border-radius-thick(5px);
-    padding: 5px;
+    background-color: $whitedull;
     margin-bottom: 5px;
+    padding: 5px;
     position: relative;
 }
 
-.paste-header { }// Paste info, above lang and buttons.
+// .paste-header { }// Paste info, above lang and buttons.
 
 .paste-page-header {
     margin-bottom: 10px;
@@ -39,21 +38,21 @@
 }
 
 .paste-page-header-text {
-    margin-top: 10px;
-    margin-left: 10px;
     color: greylight;
+    margin-left: 10px;
+    margin-top: 10px;
 }
 
 .paste-button-box {
-    position: relative;
     display: inline-block;
     margin-left: 15px;
+    position: relative;
 }
 
 .paste-bottom-button-box {
-    position: relative;
     display: block;
     margin-top: 10px;
+    position: relative;
     text-align: right;
 }
 
@@ -73,10 +72,10 @@
     background-color: $whitedull;
     display: inline-block;
     font-size: $fontnormal;
-    text-transform: lowercase;
+    padding-bottom: 3px;
     padding-left: 3px;
     padding-right: 3px;
-    padding-bottom: 3px;
+    text-transform: lowercase;
 }
 
 .replies-button-box {
@@ -89,14 +88,14 @@
 }
 
 .paste-lang-label {
-    font-size: $fontsmaller;
-    display: inline-block;
-    vertical-align: top;
-    text-align: right;
-    width: 70px;
-    padding-top: 5px;
-    margin-right: 5px;
     color: $greylight;
+    display: inline-block;
+    font-size: $fontsmaller;
+    margin-right: 5px;
+    padding-top: 5px;
+    text-align: right;
+    vertical-align: top;
+    width: 70px;
 }
 
 .paste-title {
@@ -115,19 +114,19 @@
 .paste-title-date {
     // groups the title and date in one box.
     // each one still has it's own, but they need to be aligned.
-    position: relative;
     display: inline-block;
+    position: relative;
 }
 
 
-.paste-author-box {}
+// .paste-author-box {}
 
 .paste-author {
     // Author for an existing paste (if available)
+    color: $greymain;
     display: inline-block;
     font-size: $fontnormal;
     font-weight: bold;
-    color: $greymain;
     padding-top: 2px;
 }
 
@@ -144,20 +143,20 @@
 }
 
 #paste-private-opt {
-    width: 15px;
     height: 15px;
-    margin-left: 0px;
+    margin-left: 0;
     vertical-align: middle;
+    width: 15px;
 }
 
 .paste-private-verbose {
-    display: inline-block;
     color: $greylight;
+    display: inline-block;
     font-family: $fontssmall;
     font-size: $fontsmall;
     font-weight: bold;
-    vertical-align: top;
     padding-top: 5px;
+    vertical-align: top;
 
 }
 
@@ -178,10 +177,10 @@
 }
 
 .paste-date {
+    color: $greylight;
     font-family: $fontssmall;
     font-size: $fontsmall;
     font-weight: bold;
-    color: $greylight;
 }
 
 .paste-date-label {
@@ -197,12 +196,11 @@
 }
 
 .paste-replyto-title {
-
+    color: $bluemain;
     display: inline-block;
     font-size: $fontbigger;
     text-shadow: $shadowtextmedium;
     text-transform: lowercase;
-    color: $bluemain;
 
     &:hover {
         color: $bluelink;
@@ -210,20 +208,20 @@
 }
 
 .paste-theme-box {
-    display: inline-block;
-    background-color: $whitedull;
     @include border-radius-thin(7px);
+    background-color: $whitedull;
+    display: inline-block;
     padding: 1px 1px 1px 5px;
 }
 
 .paste-theme-label {
     @extend .paste-lang-label;
-    width: auto;
     color: $greymain;
+    width: auto;
 }
 
 
-/* Replies menu styles */
+// * Replies menu styles */
 .vertical-menu-reply-date {
     @extend .paste-date;
     font-weight: normal;
@@ -246,13 +244,13 @@
     font-family: $fontsmono;
 }
 
-/* Styles for replies.html */
+// * Styles for replies.html */
 .paste-listing-surround {
-    margin: 15px;
-    padding: 10px;
     background-color: $whitedull;
     border-radius: 5px;
     box-shadow: $shadowmedium;
+    margin: 15px;
+    padding: 10px;
     text-align: left;
 }
 
@@ -261,22 +259,22 @@
 }
 
 .replies-title-label {
+    color: $greymain;
     display: inline-block;
     margin-left: 10px;
     text-transform: lowercase;
-    color: $greymain;
 }
 
 .replies-title-count {
+    color: $bluemain;
     display: inline-block;
     font-family: $fontsmono;
     font-weight: bold;
-    color: $bluemain;
 }
 
 .replies-title {
-    display: inline-block;
     color: $bluemain;
+    display: inline-block;
     font-size: $fontmedium;
     text-shadow: $shadowtextmedium;
 }
@@ -297,24 +295,36 @@
     font-weight: bold;
 }
 
-/* Styles for listing individual pastes. */
+// * Styles for listing individual pastes. */
 .paste-item {
     // Container for single reply item.
-    display: block;
-    position: relative;
     @include border-radius-thick(5px);
     @include box-shadow($shadowbox);
     background-color: $whitedull;
-    padding: 5px;
+    display: block;
     margin-bottom: 5px;
+    padding: 5px;
+    position: relative;
+}
+
+.paste-item-expired {
+    color: $redmain;
+
+    a & {
+        color: $redmain;
+
+        &:hover {
+            color: $redhover;
+        }
+    }
 }
 
 .paste-item-title {
     // Title for single reply item.
-    display: block;
+    color: $bluemain;
+    display: inline-block;
     font-size: $fontnormal;
     font-weight: bold;
-    color: $bluemain;
     text-transform: lowercase;
 
     &:hover {
@@ -331,11 +341,11 @@
 }
 
 .paste-item-replyto-label {
-    display: inline-block;
-    margin-left: 10px;
-    margin-bottom: 5px;
-    font-size: $fontsmaller;
     color: $greylight;
+    display: inline-block;
+    font-size: $fontsmaller;
+    margin-bottom: 5px;
+    margin-left: 10px;
 }
 
 .paste-item-replyto {
@@ -346,15 +356,15 @@
 }
 
 .paste-item-lang-label {
+    color: $greylight;
     display: block;
     font-size: $fontsmaller;
-    color: $greylight;
 }
 
 .paste-item-lang {
+    color: $bluemain;
     display: inline;
     font-size: $fontsmall;
-    color: $bluemain;
 }
 
 .paste-item-date {
@@ -365,17 +375,14 @@
 
 .paste-item-replies-btn {
     // Text for if a reply has replies of its own.
-    display: inline-block;
-    margin-left: 5px;
     @include border-radius-thin(5px);
-    padding: 1px;
-
-
-    font-family: $fontsnormal;
-    font-weight: bold;
-    font-size: $fontsmaller;
-
     color: $bluemain;
+    display: inline-block;
+    font-family: $fontsnormal;
+    font-size: $fontsmaller;
+    font-weight: bold;
+    margin-left: 5px;
+    padding: 1px;
 
     a {
         color: $bluemain;
@@ -383,36 +390,36 @@
     }
 
     a:hover {
-        color: $bluelink;
         border-color: $bordermain;
+        color: $bluelink;
     }
 }
 
 .paste-item-replies-box {
     // Holds all reply pastes for a paste
-    display: block;
     @include border-radius-thin(5px);
-    padding: 5px;
+    display: block;
     margin-top: 5px;
+    padding: 5px;
 }
 
 .paste-item-reply-label {
     // Label and reply count.
+    color: $greylight;
     display: inline-block;
     font-size: $fontsmall;
     font-weight: bold;
-    color: $greylight;
     text-transform: lowercase;
 }
 
 
 .paste-item-reply {
     // Single reply paste item.
-    display: block;
     @include border-radius(5px);
+    border-color: $bordermain;
+    display: block;
     // border-width: 1px;
     // border-style: solid;
-    border-color: $bordermain;
     padding: 5px;
 }
 
@@ -436,27 +443,27 @@
 }
 
 .paste-item-views {
-    display: inline-block;
-    //margin-left: 5px;
     @include border-radius-thin(5px);
-    padding: 1px;
+    color: $bluemain;
+    display: inline-block;
 
     font-family: $fontsnormal;
-    font-weight: bold;
     font-size: $fontsmaller;
-    color: $bluemain;
+    font-weight: bold;
+    //margin-left: 5px;
+    padding: 1px;
 }
 
-/* API landing page styles */
+// * API landing page styles */
 .paste-api-section {
-    display: block;
     background: $whitedull;
+    display: block;
 }
 
 .paste-api-header {
     display: block;
-    margin-bottom: 10px;
     font-size: $fontbig;
+    margin-bottom: 10px;
     text-shadow: $shadowtextbig;
 
 }
@@ -465,54 +472,55 @@
     // The content for this section of api help.
     @include border-radius-thin(5px);
     background: $whitedull;
-    padding: 10px;
     margin-bottom: 10px;
+    padding: 10px;
 }
 
 .paste-api-section-paragraph {
-    font-size: $fontbigger;
-    margin-top: 10px;
-    margin-left: 10px;
     color: $bluemain;
+    font-size: $fontbigger;
+    margin-left: 10px;
+    margin-top: 10px;
 }
+
 a .paste-api-section-paragraph {
     display: inline-block;
     margin-left: 10px;
+
     &:hover {
         color: $bluelink;
     }
 }
 
 .paste-api-section-text {
-    font-size: $fontnormal;
     color: $greydark;
-    margin-top: 10px;
+    font-size: $fontnormal;
     margin-bottom: 5px;
     margin-left: 15px;
+    margin-top: 10px;
 }
 
 .paste-api-section-text-note {
-    margin-top: 10px;
-    margin-bottom: 5px;
     font-size: $fontsmall;
+    margin-bottom: 5px;
+    margin-top: 10px;
 }
 
 .paste-api-section-codelabel {
-    font-size: $fontsmaller;
-    margin-top: 10px;
-    margin-left: 10px;
     color: $greymain;
+    font-size: $fontsmaller;
+    margin-left: 10px;
+    margin-top: 10px;
 }
 
 .paste-api-section-json {
-    font-size: $fontnormal;
     color: $greymain;
+    font-size: $fontnormal;
 }
 
 .paste-edit-button {
     // edit button for admins.
     position: absolute;
     right: 10px;
-    top: 0px;
+    top: 0;
 }
-

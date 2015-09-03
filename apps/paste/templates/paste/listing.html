@@ -64,7 +64,7 @@
                 {% for paste in pastes %}
                     <div class='paste-item'>
                         <a href='/paste/?id={{ paste.paste_id }}'>
-                            <div class='paste-item-title'>
+                            <div class='paste-item-title{% if paste|is_expired %} paste-item-expired{% endif %}'>
                                 {{ paste.title }}
                             </div>
                         </a>

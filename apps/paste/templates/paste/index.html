@@ -104,6 +104,8 @@
             {% else %}
                 {% if paste.onhold %}
                     This paste is on hold.
+                {% elif paste|is_expired %}
+                    This paste is expired, and will be deleted very soon.
                 {% else %}
                     This paste will be deleted in about one day.
                 {% endif %}
@@ -128,7 +130,7 @@
                             Title:
                         </span>
                         <div class='paste-title-date'>
-                            <span class='header paste-title'>
+                            <span class='header paste-title  {% if paste|is_expired %}paste-item-expired{% endif %}'>
                                 {% if paste.title %}
                                     {{ paste.title }}
                                 {% else %}
