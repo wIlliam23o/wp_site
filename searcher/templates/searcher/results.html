@@ -50,7 +50,7 @@
 				{% endif %}
 					<span class='search-header-count'>{{ results_count }}</span>
 						<span class='search-header-text'> results for: </span>
-						  <span class='search-header-query'> {{ query_text }}</span>
+						  <span class='search-header-query'> {{ query_safe }}</span>
 			{% endif %}
 		</div>
 		{% if results_count|exceeds_max:25 %}
@@ -90,7 +90,7 @@
 						<span class='search-listing-date'>{{ result.posted }}</span>
 					</div>
 					<div class='search-listing-body'>
-						{{ result.description|highlight_desc }}
+						{{ result.description|highlight_desc|mark_safe }}
 					</div>
 				</div>
 			{% endfor %}

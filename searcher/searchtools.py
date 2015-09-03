@@ -7,16 +7,10 @@
     -Christopher Welborn Mar 28, 2013
 '''
 import logging
-# Global settings
-from django.conf import settings
-# For getting searchable apps.
-from django.utils.module_loading import import_module
-# Safe to view generated html
-from django.utils.safestring import mark_safe
+log = logging.getLogger('wp.search.tools')
 
 from wp_main.utilities import utilities
-
-log = logging.getLogger('wp.search.tools')
+from .result import WpResult
 
 # Apps must have a search.py module that implements these functions:
 must_implement = (
@@ -40,6 +34,7 @@ must_implement = (
     # Ex: get_targets = lambda post: (post.title, post.body, post.author)
     'get_targets',
 
+    # TODO: Just have the function return a SearchResult instead.
     # Desc: Returns dict of {
     #       'title': Title for the result (str),
     #       'desc': Description for the result (str),
@@ -51,52 +46,8 @@ must_implement = (
     'result_args'
 )
 
-
-class WpResult(object):
-
-    """ holds search result information """
-
-    def __init__(self, title='', link='', desc='', posted='', restype=''):
-        # Title for the link that is generated in this result.
-        self.title = title
-        # Link href for this result.
-        self.link = link
-        # Small description for this result.
-        self.description = mark_safe(desc)
-        # Publish date for this result.
-        self.posted = posted
-        # Type of result (project, blog post, misc, etc.)
-        if not restype:
-            self.restype = 'Unknown'
-        else:
-            self.restype = str(restype).title()
-
-    def __str__(self):
-        """ String version, for debugging. """
-        fmtlines = [
-            'WpResult:',
-            '  restype: {}',
-            '  title  : {}',
-            '  link   : {}',
-            '  desc   : {}',
-            '  posted : {}'
-        ]
-        return '\n'.join(fmtlines).format(
-            self.restype,
-            self.title,
-            self.link,
-            self.description,
-            self.posted)
-
-    def __repr__(self):
-        """ repr() for debugging. """
-        fmt = 'WpResult(\'{t}\', \'{l}\', \'{d}\', \'{p})\', \'{r}\')'
-        return fmt.format(
-            t=self.title,
-            l=self.link,
-            d=self.description,
-            p=self.posted,
-            r=self.restype)
+# Set at end of init. (See bottom.)
+SEARCHABLE_APPS = None
 
 
 def fix_query_string(querystr):
@@ -119,37 +70,14 @@ def force_query_list(querystr):
         ...basically forces the use of a list.
     """
 
-    if not hasattr(querystr, 'encode'):
-        querystr = str(querystr)
-
-    # string with ' '
-    if ' ' in querystr:
-        return [q for q in querystr.split(' ') if len(q.replace(' ', '')) > 2]
-    # string, no spaces
-    return [querystr]
-
-
-def get_apps():
-    """ Returns all installed apps modules.
-        ...not used right now.
-    """
-    apps = []
-    for appname in settings.INSTALLED_APPS:
-        if not appname.startswith('django'):
-            try:
-                app = import_module(appname)
-                apps.append(app)
-            except ImportError as ex:
-                log.error('Error importing app: {}\n{}'.format(appname, ex))
-    return apps
+    return [q for q in str(querystr).split(' ') if len(q) > 2]
 
 
 def get_searchable():
     """ Returns only apps that are searchable by the searcher app. """
-    searchable = utilities.get_apps(
+    return utilities.get_apps(
         include=is_searchable,
         child='search')
-    return searchable
 
 
 def has_illegal_chars(querystr):
@@ -166,68 +94,13 @@ def has_illegal_chars(querystr):
     return False
 
 
-def highlight_queries(querystr, scontent):
-    """ makes all query words found in the content bold
-        by wrapping them in a <strong> tag.
-    """
-
-    word_list = scontent.split(' ')
-    if isinstance(querystr, (list, tuple)):
-        queries = querystr
-    else:
-        if ',' in querystr:
-            querystr = querystr.replace(',', ' ')
-        if ' ' in querystr:
-            queries = querystr.split(' ')
-        else:
-            queries = [querystr]
-    # fix queries.
-    queries_lower = [q.lower() for q in queries]
-    # regex was not working for me. i'll look into it later.
-    puncuation = ['.', ',', '!', '?', '+', '=', '-']
-    for qcopy in [qc for qc in queries_lower]:
-        for punc in puncuation:
-            queries_lower.append(qcopy + punc)
-            queries_lower.append(punc + qcopy)
-
-    fixed_words = []
-    for i in range(0, len(word_list)):
-        word_ = word_list[i]
-        word_lower = word_.lower()
-        # Remove certain characters from the word and save to word_trim.
-        word_trim = word_lower
-        for c in ',.;:"\'':
-            word_trim = word_trim.replace(c, '')
-
-        fixed_word = word_
-        for query in queries_lower:
-            if len(query.replace(' ', '')) > 1:
-                # contains query
-                if ((query in word_lower) and
-                        # not words that are already bold
-                        ('<strong>' not in word_) and
-                        ('</strong>' not in word_) and
-                        # not words that may be html tags
-                        (not (word_.count('=') and word_.count('>')))):
-
-                    # stops highlighting 'a' and 'apple' in 'applebaum'
-                    # when queries are: 'a', 'apple', 'applebaum'
-                    boldword = '<strong>{}</strong>'.format(word_trim)
-                    possible_fix = word_.replace(word_trim, boldword)
-                    if len(possible_fix) > len(fixed_word):
-                        fixed_word = possible_fix
-                        # log.debug("set possible: " + fixed_word)
-
-        fixed_words.append(fixed_word)
-    return ' '.join(fixed_words)
-
-
 def is_empty_query(querystring):
     """ returns True if querystring == '', or len(querystring) < 3 """
-
-    if not hasattr(querystring, 'encode'):
-        querystring = str(querystring)
-    return (querystring == '') or (len(querystring) < 3)
+    if not querystring:
+        # Any falsey values are kicked right away (None, False, '')
+        return True
+    q = str(querystring)
+    return (str(q) == '') or (len(q) < 3)
 
 
 def is_searchable(searchmod):
@@ -264,15 +137,14 @@ def search_all(querystr, request=None):
     if is_empty_query(querystr):
         return []
 
-    queries = force_query_list(querystr)
+    queries = force_query_list(fix_query_string(querystr))
     if not queries:
         return []
 
-    searchmods = get_searchable()
     # TODO: if search_app() returned (relevance_number, item) this could be
     #       ..reworked to sort items based on relevance.
     results = []
-    for searchmod in searchmods:
+    for searchmod in SEARCHABLE_APPS:
         appresults = search_app(searchmod, queries, request=request)
         if appresults:
             results.extend(appresults)
@@ -297,8 +169,8 @@ def search_app(searchmod, queries, request=None):
             targets = searchmod.get_targets(obj, content=content, desc=desc)
             if search_targets(queries, targets):
                 resultargs = searchmod.result_args(obj, desc=desc)
-                # Highlight the queries.
-                resultargs['desc'] = highlight_queries(queries, desc)
+                # Not highlighting queries until it can be done right.
+                resultargs['desc'] = desc
                 results.append(WpResult(**resultargs))
     except Exception as ex:
         logfmt = 'Error searching app: {}\n{}'
@@ -337,23 +209,22 @@ def valid_query(querystr):
 
     search_warning = ''
     # Gotcha checkers: 3 character minimum, too many spaces, etc.
-    if len(querystr.replace(' ', '')) < 3:
-        # check a single term.
-        search_warning = '3 character minimum, try again.'
-    elif ' ' in querystr:
-        # check all terms when seperated by a space.
-        queries = querystr.split(' ')
-        for query_len in [len(q.replace(' ', '')) for q in queries]:
-            if query_len == 0:
-                search_warning = 'Too many spaces, try again.'
-                break
-            elif query_len < 3:
-                search_warning = (
-                    '3 character minimum for all terms, try again.')
-                break
+    # check all terms when seperated by a space.
+    queries = querystr.split(' ')
+    for query_len in [len(q.replace(' ', '')) for q in queries]:
+        if query_len == 0:
+            search_warning = 'Too many spaces, try again.'
+            break
+        elif query_len < 3:
+            search_warning = (
+                '3 character minimum for all terms, try again.')
+            break
     # final illegal char check
     if has_illegal_chars(querystr):
         log.debug('illegal chars in query: {}'.format(querystr))
-        search_warning = 'Illegal characters in search term, try again.'
+        search_warning = 'Weird characters in search term, try again.'
 
     return search_warning
+
+# Load searchables once.
+SEARCHABLE_APPS = get_searchable()

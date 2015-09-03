@@ -104,7 +104,6 @@ def view_paged(request):
         'request': request,
         'search_warning': search_warning,
         'results_list': results_slice,
-        'query_text': query,
         'query_safe': query_safe,
         'start_id': (page_args['start_id'] + 1),
         'end_id': end_id,
