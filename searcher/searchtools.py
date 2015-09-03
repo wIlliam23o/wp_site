@@ -60,7 +60,7 @@ def fix_query_string(querystr):
     while '++' in querystr:
         querystr = querystr.replace('++', '+')
 
-    return querystr
+    return querystr.lower()
 
 
 def force_query_list(querystr):
@@ -191,12 +191,13 @@ def search_targets(queries, targets):
         return False
 
     for target in targets:
-        if target:
-            target = target.lower()
-            for query in queries:
-                if query in target:
-                    # Return True on first match
-                    return True
+        if not target:
+            continue
+        target = target.lower()
+        for query in queries:
+            if query in target:
+                # Return True on first match
+                return True
     return False
 
 
