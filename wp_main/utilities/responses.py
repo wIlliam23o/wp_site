@@ -179,6 +179,49 @@ def clean_response_req(template_name, context, **kwargs):
         return HttpResponse(rendered, status=kwargs.get('status', 200))
 
 
+def clamp_num(i, min_val=None, max_val=None):
+    """ Ensure a number is between min and max. Alter if needed. """
+    if (min_val is not None) and (i < min_val):
+        return min_val
+    if (max_val is not None) and (i > max_val):
+        return max_val
+    return i
+
+
+def convert_arg_type(s, default=None, min_val=None, max_val=None):
+    """ Convert a REQUEST argument to it's required type.
+        If no default is given, int and float will be tried in that order.
+        If all fail, default value will be returned (None when not set).
+    """
+    # Do automatic type conversion if wanted.
+    if (default is not None):
+        # Convert value to desired type from defaults type.
+        desiredtype = type(default)
+        try:
+            desiredval = desiredtype(s)
+            # If an error isn't raised, we converted successfully.
+            return desiredval
+        except Exception as ex:
+            log.error('Unable to determine type from: {}\n{}'.format(
+                s,
+                ex))
+            return default
+
+    # No default type was passed, try int/float.
+    # check min/max for int values
+    try:
+        int_val = int(s)
+        return clamp_num(int_val, min_val=min_val, max_val=max_val)
+    except (TypeError, ValueError):
+        # try float, check min/max if needed.
+        try:
+            float_val = float(s)
+            return clamp_num(float_val, min_val=min_val, max_val=max_val)
+        except (TypeError, ValueError):
+            # Not an int or a float.
+            return default
+
+
 def default_dict(request=None, extradict=None):
     """ Use default context contents for rendering templates,
         This dict will return with at least: {'request': request}
@@ -408,56 +451,21 @@ def get_request_arg(request, arg_names, **kwargs):
     if isinstance(arg_names, (list, tuple)):
         # list of arg aliases was passed, try them all.
         for arg_ in arg_names:
-            if arg_ in request.REQUEST.keys():
-                val = request.REQUEST[arg_]
+            val = request.REQUEST.get(arg_, '')
+            if val != '':
                 break
     else:
         # single arg_name was passed.
-        if arg_names in request.REQUEST.keys():
-            val = request.REQUEST[arg_names]
+        val = request.REQUEST.get(arg_names, '')
 
-    # Default wasn't available, try some different types..
-    if default is None:
-        if val.isalnum():
-            # check min/max for int values
-            try:
-                int_val = int(val)
-                if (int_val < min_val):
-                    int_val = min_val
-                if (int_val > max_val):
-                    int_val = max_val
-                # return float instead of string
-                val = int_val
-            except (TypeError, ValueError):
-                pass
-        else:
-            # try float, check min/max if needed.
-            try:
-                float_val = float(val)
-                if (float_val < min_val):
-                    float_val = min_val
-                if (float_val > max_val):
-                    float_val = max_val
-                # return float instead of string
-                val = float_val
-            except (TypeError, ValueError):
-                pass
-    else:
-        # Get desired type from defaults type.
-        desiredtype = type(default)
-        try:
-            if val != '':
-                desiredval = desiredtype(val)
-                # If an error isn't trigured, we converted successfully.
-                val = desiredval
-        except Exception as ex:
-            log.error('Unable to determine type from: {}\n{}'.format(val, ex))
+    if val:
+        return convert_arg_type(
+            val,
+            default=default,
+            min_val=min_val,
+            max_val=max_val)
 
-    # final return after processing,
-    # will goto default value if val is empty.
-    if val == "":
-        val = default
-    return val
+    return default
 
 
 def get_request_args(request, requesttype=None, default=None):
