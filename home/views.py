@@ -150,8 +150,8 @@ def view_login(request):
     # I am using Django's auth.views with modified css right now.
     # maybe in the future I can do this right.
 
-    username = request.REQUEST.get('user', None)
-    pw = request.REQUEST.get('pw', None)
+    username = request.POST.get('user', request.GET.get('user', None))
+    pw = request.POST.get('pw', request.GET.get('pw', None))
 
     # log.debug("username: " + str(username) + ", pw: " + str(pw))
 

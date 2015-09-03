@@ -100,9 +100,9 @@ def view_loader(request):
         with the help of wpviewer.js.
         raises 404 on error or file not found..
     """
-
-    if request.REQUEST.get('file', False):
-        file_path = request.REQUEST['file'].strip("'").strip('"')
+    rawpath = request.POST.get('file', request.GET.get('file', ''))
+    if rawpath:
+        file_path = utilities.strip_chars(rawpath, ('"', "'"))
         context = {
             'file': file_path,
         }
@@ -110,8 +110,11 @@ def view_loader(request):
         return responses.clean_response_req('viewer/loader.html',
                                             context=context,
                                             request=request)
-    else:
-        raise Http404('No file passed to request.')
+
+    log.error('Empty file name given: {}'.format(
+        utilities.get_remote_ip(request))
+    )
+    raise Http404('No file name given.')
 
 
 def get_source_files(project):

@@ -21,10 +21,10 @@ def handle_files(request):
         try:
             newimage = wp_image(
                 image=f,
-                title=request.REQUEST.get('title', ''),
-                description=request.REQUEST.get('description', ''),
-                album=request.REQUEST.get('album', ''),
-                private=request.REQUEST.get('private', False)
+                title=request.POST.get('title', ''),
+                description=request.POST.get('description', ''),
+                album=request.POST.get('album', ''),
+                private=request.POST.get('private', False)
             )
             newimage.save()
         except Exception as ex:
