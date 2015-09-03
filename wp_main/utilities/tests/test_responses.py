@@ -8,16 +8,25 @@ class ResponsesTest(TestCase):
     def test_get_request_arg(self):
         """ get_request_arg retrieves and converts the proper types. """
         req = FakeRequestArgs(
-            request={
+            get={
                 'id': '5',
                 'start': '99999998',
                 'end': '-1'
-                })
+                },
+            post={
+                'pasteid': 'latest',
+            })
 
         self.assertEqual(
             type(5),
             type(resp.get_request_arg(req, 'id')),
             msg='Types are mismatched for get_request_arg!'
+        )
+
+        self.assertEqual(
+            'latest',
+            resp.get_request_arg(req, 'pasteid', method='post'),
+            msg='Failed to get arg using custom method.'
         )
 
         self.assertEqual(
@@ -55,6 +64,11 @@ class FakeRequestArgs(object):
         Ensured to have at least an empty REQUEST, GET, and POST attribute.
     """
     def __init__(self, request=None, get=None, post=None):
-        self.REQUEST = request or {}
-        self.GET = get or {}
-        self.POST = post or {}
+        if not request and (post or get):
+            self.REQUEST = get or {}
+            self.REQUEST.update(post or {})
+        else:
+            self.REQUEST = request or {}
+
+        self.GET = get or (request or {})
+        self.POST = post or (request or {})

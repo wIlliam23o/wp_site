@@ -189,7 +189,7 @@ def clamp_num(i, min_val=None, max_val=None):
 
 
 def convert_arg_type(s, default=None, min_val=None, max_val=None):
-    """ Convert a REQUEST argument to it's required type.
+    """ Convert a request argument (get/post) to it's required type.
         If no default is given, int and float will be tried in that order.
         If all fail, default value will be returned (None when not set).
     """
@@ -218,8 +218,8 @@ def convert_arg_type(s, default=None, min_val=None, max_val=None):
             float_val = float(s)
             return clamp_num(float_val, min_val=min_val, max_val=max_val)
         except (TypeError, ValueError):
-            # Not an int or a float.
-            return default
+            # Not an int or a float, no default type was given.
+            return s
 
 
 def default_dict(request=None, extradict=None):
@@ -438,12 +438,27 @@ def get_request_arg(request, arg_names, **kwargs):
         Keyword Arguments:
             default    : default value for argument if it's not found.
                          Default: None
+            method     : 'get' or 'post'. If not given, both are used.
+                         POST args override GET arguments.
             min_val    : minimum value for int args.
             max_val    : maximum vlaue for int args.
                          Default: 999999
+
     """
 
+    reqmethod = kwargs.get('method', None)
+    if reqmethod is None:
+        # Stack post args on get args (like the old REQUEST).
+        requestargs = request.GET.copy() or {}
+        requestargs.update(request.POST or {})
+    else:
+        # Use desired method only.
+        requestargs = getattr(request, reqmethod.upper(), {})
+
     default = kwargs.get('default', None)
+    if not requestargs:
+        return default
+
     min_val = kwargs.get('min_val', 0)
     max_val = kwargs.get('max_val', 999999)
     # blank value to start with. (until we confirm it exists)
@@ -451,12 +466,12 @@ def get_request_arg(request, arg_names, **kwargs):
     if isinstance(arg_names, (list, tuple)):
         # list of arg aliases was passed, try them all.
         for arg_ in arg_names:
-            val = request.REQUEST.get(arg_, '')
+            val = requestargs.get(arg_, '')
             if val != '':
                 break
     else:
         # single arg_name was passed.
-        val = request.REQUEST.get(arg_names, '')
+        val = requestargs.get(arg_names, '')
 
     if val:
         return convert_arg_type(
@@ -479,8 +494,7 @@ def get_request_args(request, requesttype=None, default=None):
             default      : What to return for missing keys.
 
             requesttype  : 'post', 'get', or None.
-                           If None is given, it retrieves request.REQUEST
-                           (which is both POST and GET)
+                           If None is given, it retrieves both POST and GET.
 
         Example of missing key:
             myargs = get_request_args(request)
@@ -503,12 +517,15 @@ def get_request_args(request, requesttype=None, default=None):
         try:
             reqargs = getattr(request, requesttype.upper())
         except Exception as ex:
-            log.error('Invalid request arg type!: {}\n{}'.format(requesttype,
-                                                                 ex))
+            log.error('Invalid request arg type!: {}\n{}'.format(
+                requesttype,
+                ex))
             return defaultargs
     else:
         # Default request type is REQUEST (both GET and POST)
-        reqargs = request.REQUEST
+        # REQUEST is deprecated, but this will simulate it.
+        reqargs = request.GET or {}
+        reqargs.update(request.POST or {})
 
     # Put the request args in the default dict.
     defaultargs.update(reqargs)
