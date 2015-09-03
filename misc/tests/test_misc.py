@@ -12,11 +12,12 @@ class MiscTestCase(TestCase):
     def setUp(self):  # noqa
         """ Setup tests, create a basic misc object. """
 
-        wp_misc.objects.create(type=MiscTypes.script,
-                               language=Lang.python2,
-                               name='testmiscscript',
-                               file='/static/files/misc/testscript.py',
-                               description='Test script for misc objects.')
+        wp_misc.objects.create(
+            filetype=MiscTypes.script,
+            language=Lang.python2,
+            name='testmiscscript',
+            filename='/static/files/misc/testscript.py',
+            description='Test script for misc objects.')
 
     def test_basic_load(self):
         """ Test that a misc object can be loaded """
