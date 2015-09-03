@@ -132,7 +132,7 @@ def get_absolute_path(relative_file_path):
 
 def get_apps(
         exclude=None, include=None, name_filter=None,
-        child=None, no_django=True):
+        child=None, no_django=True, debug=False):
     """ Returns a list of modules (apps) from INSTALLED_APPS.
         Arguments:
             exclude     : A function to exclude modules from being added.
@@ -158,6 +158,9 @@ def get_apps(
             no_django   : True/False. Whether to exclude modules
                           starting with 'django'.
                           Default: True
+
+            debug       : Print ImportErrors to the log.
+                          (some are usually expected)
     """
     apps = []
     for appname in settings.INSTALLED_APPS:
@@ -176,8 +179,10 @@ def get_apps(
             elif include and include(app):
                 apps.append(app)
         except ImportError as ex:
-            log.debug('Module wasn\'t imported: {}\n  {}'.format(
-                childname, ex))
+            if debug:
+                log.debug('Module wasn\'t imported: {}\n  {}'.format(
+                    childname,
+                    ex))
 
     return apps
 
@@ -616,6 +621,22 @@ def slice_list(lst, start=0, max_items=-1):
     if max_items > 0:
         return lst[start: start + max_items]
     return lst[start:]
+
+
+def strip_chars(s, chars):
+    """ Like .strip(), but removes all occurrences no matter the order.
+        Example:
+            '$$%%$%$test$%%$%$'.strip('$') == '%%$%$test$%%$%'
+            strip_chars('$$%%$%$test$%%$%$', '$%') == 'test'
+        Arguments:
+            s      : String to strip characters from.
+            chars  : Iterable of characters or strings to remove.
+    """
+    chars = tuple(chars)
+    while s.startswith(chars) or s.endswith(chars):
+        for c in chars:
+            s = s.strip(c)
+    return s
 
 
 def trim_special(source):
