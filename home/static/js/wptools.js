@@ -195,6 +195,12 @@ var wptools = {
     },
 
     scroll_element : function scroll_element(selector, toppos) {
+        /*  Simulate {position: fixed} for an element.
+            Arguments:
+                selector  : jQuery object or selector.
+                toppos    : Position in pixels from the top of the viewport.
+
+        */
         if (!toppos) { toppos = 0; }
         var $elem = selector instanceof jQuery ? selector : $(selector),
             elpos = $elem.offset().top;
