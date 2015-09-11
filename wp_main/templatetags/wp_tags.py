@@ -24,6 +24,7 @@ from django.utils.safestring import mark_safe
 
 # Local tools
 from wp_main.utilities import utilities
+from wp_main.utilities.responses import get_request_arg
 from wp_main.utilities.highlighter import WpHighlighter, highlight_codes
 
 # for admin site filtering
@@ -231,6 +232,16 @@ def exceeds_min(value, min_):
 
 
 @register.filter
+def feature(request, featurename):
+    """ Check for feature enabled by request arg.
+        These features are available to all users!
+    """
+    return utilities.parse_bool(
+        get_request_arg(request, featurename, default='')
+    )
+
+
+@register.filter
 def get_browser_style(request):
     """ Get specific browser style based on the user agent. """
     try:
@@ -426,6 +437,7 @@ def is_localdev(request):
     """ Return True if the site is running locally. """
     return settings.SERVER_LOCATION.lower() == 'local'
 
+
 @register.filter
 def is_mobile(request_object):
     """ determines whether or not the client is mobile/tablet.
@@ -516,6 +528,7 @@ def is_viewable(request):
         return is_staff(request)
     # Production requires no login.
     return True
+
 
 @register.filter
 def log_debug(data):

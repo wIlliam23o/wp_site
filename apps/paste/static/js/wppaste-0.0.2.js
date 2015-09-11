@@ -10,6 +10,8 @@
 */
 
 var wppaste = {
+    // Modules and file names are versioned to "break" the cache on updates.
+    version: '0.0.2',
     build_lang_menu : function () {
         /* Build language options. */
         $('#langselect').append(

@@ -33,6 +33,8 @@
 
 'use strict';
 var wptools = {
+    // Modules and file names are versioned to "break" the cache on updates.
+    version: '0.2.1',
     // Default settings for code snippets, and when cookies are unavailable
     // for the Paste app.
     default_ace_langname: 'Python',

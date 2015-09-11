@@ -9,6 +9,8 @@
 */
 
 var imgtools = {
+    // Modules and file names are versioned to "break" the cache on updates.
+    version: '0.0.2',
     do_upload : function () {
         if (!$('#upload-image').val()) {
             wptools.alert('You must select a file first.');

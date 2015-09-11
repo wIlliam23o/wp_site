@@ -13,6 +13,8 @@
 // Store current relative filename here. The template sends it on the first
 // page load, and then it is set with JS when doing ajax calls.
 var wpviewer = {
+    // Modules and file names are versioned to "break" the cache on updates.
+    version: '0.0.2',
     // current relative path for file. (/static/file.py)
     current_file : '',
     // current short name (file.py)

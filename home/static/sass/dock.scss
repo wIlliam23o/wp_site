@@ -12,6 +12,20 @@ a.dock-item {
     text-decoration: none;
     text-shadow: $shadowtext;
     width: 50px;
+
+    &.noscript {
+        float: left;
+        margin-right: 30px;
+        position: relative;
+    }
+
+    &.noscript:hover, &.noscript:active {
+        color: $greymain;
+    }
+}
+
+.dock-item.noscript span {
+    display: block;
 }
 
 .dock-item span {
@@ -30,4 +44,8 @@ a.dock-item {
     display: inline-block;
     margin-top: 110px;
     position: relative;
+
+    &.noscript {
+        margin-top: 0;
+    }
 }

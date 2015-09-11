@@ -1,5 +1,6 @@
 var phonewords = {
-
+    // Modules and file names are versioned to "break" the cache on updates.
+    version: '0.0.2',
     do_lookup: function () {
         if (phonewords.validate_submit()) {
             wptools.pre_ajax();

@@ -575,9 +575,7 @@ def parse_bool(s):
         Values for True: '1', 'T[rue]', 't[rue]', 'Y[es]', 'y[es]'
         Values for False: ..everything else.
     """
-    if s:
-        return s.lower().startswith(('1', 't', 'y'))
-    return False
+    return s and s.lower().startswith(('1', 't', 'y'))
 
 
 def remove_list_dupes(lst, max_allowed=1):
