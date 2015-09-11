@@ -86,6 +86,82 @@ auto_link_list = (
 # Module Functions (not everything can be an html_content(), or should be.)
 
 
+def apply_link_line(link_pat, link_href, attr_string, line):
+    """ Try applying an auto-link pattern and href to a single line.
+        If the link_pat matches, apply the auto-link and return it.
+        If the pattern does not match, return None.
+        On errors, log the error and return None.
+        Arguments:
+            link_pat     : Non-compiled regex pattern to match with.
+                           Example:
+            link_href    : Link href for the auto-link.
+                           Example: "https://welbornprod.com"
+            attr_string  : Fully formed attribute string for the link element.
+                           Example: 'target="_blank"'
+            line         : Line to test and auto-link.
+    """
+    link_pat = r'[^\>]' + link_pat + r'[^\<]'
+    try:
+        re_pat = re.compile(link_pat)
+    except re.error as exre:
+        log.error(
+            'Invalid auto-link pattern: {}\n{}'.format(link_pat, exre)
+        )
+        return None
+
+    try:
+        re_match = re_pat.search(line)
+        if re_match is None:
+            return None
+
+        if not re_match.groups():
+            # use only 1 group
+            link_text = strip_all(
+                re_match.group(),
+                ' .,\'";:?/\\`~!@#$%^&*()_+-={}[]|')
+        else:
+            matchgroupdict = re_match.groupdict()
+            # use first group dict key if found
+            if matchgroupdict:
+                first_key = list(matchgroupdict)[0]
+                link_text = matchgroupdict[first_key]
+            else:
+                # use first non-named group
+                link_text = re_match.groups()[0]
+
+        # Replace the text with a link
+        new_link = ''.join([
+            '<a href="{}" '.format(link_href),
+            'title="{}" '.format(link_text),
+            '{}>'.format(attr_string),
+            '{}</a>'.format(link_text),
+        ])
+        newline = line.replace(link_text, new_link)
+        return newline
+    except Exception as ex:
+        log.error(
+            'Error in apply_link_line(): {}\n{}'.format(link_pat, ex))
+        return None
+
+
+def attrstr_from_dict(d):
+    """ Return a string of element attributes from dict keys and values.
+        Example:
+            s = attrstr_from_dict({'class': 'test', 'target': '_blank'})
+            # Returns: 'class="test" target="blank"'
+        Leading underscores (_) are trimmed from key names to make this
+        possible:
+            def func(**kwargs):
+                print(attrstr_from_dict(kwargs))
+            func(_class='test', target='_blank')
+            # ..where 'class' is a reserved word, and can't be used like this.
+    """
+    # If used in case None is passed in.
+    if d:
+        return ''.join((' {}="{}"'.format(k.lstrip('_'), d[k]) for k in d))
+    return ''
+
+
 def auto_link(content, link_list, **kwargs):
     """ Grabs words from HTML content and makes them links.
         see: auto_link_line()
@@ -165,46 +241,13 @@ def auto_link_line(line, link_list, **kwargs):
         return line
 
     # build attributes, accepts '_class' as a 'class' attribute.
-    make_attrstr = lambda k, v: ' {}="{}"'.format(k.strip('_'), v)
-
-    attr_strings = [make_attrstr(k, v) for k, v in kwargs.items()]
-    attr_string = ''.join(attr_strings) if len(attr_strings) > 0 else ''
+    attr_string = attrstr_from_dict(kwargs)
     # replace text with links
     for link_pat, link_href in link_list:
-        try:
-            link_pat = r'[^\>]' + link_pat + r'[^\<]'
-            re_pat = re.compile(link_pat)
-            re_match = re_pat.search(line)
-            if re_match is None:
-                continue
-
-            if not re_match.groups():
-                # use only 1 group
-                link_text = strip_all(
-                    re_match.group(),
-                    ' .,\'";:?/\\`~!@#$%^&*()_+-={}[]|')
-            else:
-                matchgroupdict = re_match.groupdict()
-                # use first group dict key if found
-                if matchgroupdict:
-                    first_key = list(matchgroupdict)[0]
-                    link_text = matchgroupdict[first_key]
-                else:
-                    # use first non-named group
-                    link_text = re_match.groups()[0]
-
-            # Replace the text with a link
-            new_link = ''.join([
-                '<a href="{}" '.format(link_href),
-                'title="{}" '.format(link_text),
-                '{}>'.format(attr_string),
-                '{}</a>'.format(link_text),
-            ])
-            line = line.replace(link_text, new_link)
-        except Exception as ex:
-            log.error('Error in auto_link_line(): {}\n{}'.format(link_pat,
-                                                                 ex))
-            return line
+        newline = apply_link_line(link_pat, link_href, attr_string, line)
+        if newline is not None:
+            return newline
+    # No matches, the line is untouched.
     return line
 
 
@@ -244,6 +287,9 @@ def clean_html(source_string):
     if source_string is None:
         log.debug('Final HTML for page was None!')
         return ''
+    elif not source_string:
+        log.debug('Final HTML for page was empty!')
+        return ''
 
     return remove_whitespace(
         remove_comments(
@@ -258,19 +304,18 @@ def fatal_error_page(message=None):
         Arguments:
             message  : Optional extra message for response.
     """
-    s = ('<html><head><title>Welborn Prod. - Fatal Error</title>',
-         '<style>body {{font-family: Arial, sans-serif}}'
-         '.header {{font-size:3em; color: blue;}}'
-         '.msg {{font-size:1em; color: darkgrey;}}</style>'
-         '<body><div class="header">',
-         'Welborn Productions',
-         '</div>',
-         '<div class="msg">',
-         '{}',
-         '</div>')
-    if message is None:
-        message = 'Something has gone horribly wrong with the site.'
-    return '\n'.join(s).format(message)
+    return '\n'.join((
+        '<html><head><title>Welborn Prod. - Fatal Error</title>',
+        '<style>body {{font-family: Arial, sans-serif}}'
+        '.header {{font-size:3em; color: blue;}}'
+        '.msg {{font-size:1em; color: darkgrey;}}</style>'
+        '<body><div class="header">',
+        'Welborn Productions',
+        '</div>',
+        '<div class="msg">',
+        '{}',
+        '</div>')).format(
+            message or 'Something has gone horribly wrong with the site.')
 
 
 def filter_tidylib_errors(errortext):
@@ -323,11 +368,12 @@ def find_mailtos(source_string):
 
     # regex pattern for finding href tag with 'mailto:??????'
     # and a wp-address class
-    s_mailto = ''.join([r'<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]wp-address',
-                        r'[\'"][ ]href[ ]?\=[ ]?["\']((mailto:)?',
-                        re_email_address,
-                        ')',
-                        ])
+    s_mailto = ''.join([
+        r'<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]wp-address',
+        r'[\'"][ ]href[ ]?\=[ ]?["\']((mailto:)?',
+        re_email_address,
+        ')',
+    ])
     re_pattern = re.compile(s_mailto)
     raw_matches = re.findall(re_pattern, source_string)
     mailtos_ = []
@@ -361,9 +407,7 @@ def fix_p_spaces(source_string):
     # no nones allowed
     if source_string is None:
         return source_string
-    # fix for html_content()
-    if isinstance(source_string, html_content):
-        source_string = source_string.content
+
     # get lines
     if '\n' in source_string:
         slines = source_string.split('\n')
@@ -400,6 +444,38 @@ def fix_p_spaces(source_string):
 
     # finished
     return '\n'.join(modified_lines)
+
+
+def get_context(context, request=None):
+    """ Return a Context() object from a dict.
+        If request is passed in, a RequestContext() is used.
+        On errors, log the error and return None.
+    """
+    # Try creating a request context.
+    try:
+        if not context:
+            # Blank context object, with or without a request.
+            if request is not None:
+                return RequestContext(request, {})
+            return Context({})
+
+        if not request:
+            # Context with content, no Request.
+            return Context(context)
+
+        # RequestContext with content.
+        return RequestContext(request, context)
+    except Exception as ex:
+        log.error('\n'.join((
+            'Error creating request context!',
+            '  Context: {c}',
+            '  Request: {r}',
+            '    Error: {e}'
+        )).format(
+            c=context,
+            r=request,
+            e=ex))
+        return None
 
 
 def get_html_file(wpobj):
@@ -545,47 +621,16 @@ def load_html_file(sfile, request=None, context=None, template=None):
         returns string with html content.
 
         This can all be short-circuited by passing in a pre-loaded template
-        with: template=load.get_template(templatename)
+        with: template=loader.get_template(templatename)
     """
 
-    if template is None:
-        try:
-            template = loader.get_template(sfile)
-        except TemplateDoesNotExist:
-            # It wasn't a template name.
-            log.debug('Not a template: {}'.format(sfile))
-
     if template:
-        # Found template for this file, use it.
-        if context:
-            if request:
-                # Try creating a request context.
-                try:
-                    contextobj = RequestContext(request, context)
-                except Exception as ex:
-                    log.error((
-                        'Error creating request context from: {}\n{}'
-                    ).format(request, ex))
-                    return ''
-            else:
-                # No request, use normal context.
-                contextobj = Context(context)
-        else:
-            # No context dict given, use empty context.
-            contextobj = Context({})
-
-        # Have context, try rendering.
-        try:
-            content = template.render(contextobj)
-            # Good content, return it.
-            return content
-        except Exception as ex:
-            log.error(''.join([
-                'Error rendering template: {} '.format(sfile),
-                'Context: {}'.format(context),
-                '\n{}'.format(ex),
-            ]))
-            return ''
+        # A template was already passed in.
+        return render_template(template, context=context, request=request)
+    # Try rendering file as a template.
+    content = load_html_template(sfile, request=request, context=context)
+    if content:
+        return content
 
     # no template, probably a filename. check it:
     log.debug('No template, falling back to HTML: {}'.format(sfile))
@@ -612,6 +657,21 @@ def load_html_file(sfile, request=None, context=None, template=None):
     except Exception as ex:
         log.error('General error opening file: {}\n{}'.format(sfile, ex))
     return ''
+
+
+def load_html_template(sfile, request=None, context=None):
+    """ Try rendering an html file as a Template.
+        Return the content on success, or '' on failure.
+    """
+
+    try:
+        template = loader.get_template(sfile)
+    except TemplateDoesNotExist:
+        # It wasn't a template name.
+        log.debug('Not a template: {}'.format(sfile))
+        return ''
+    else:
+        return render_template(template, context=context, request=request)
 
 
 def remove_comments(source_string):
@@ -708,7 +768,7 @@ def render_html(template_name, **kwargs):
     """ renders template by name and context dict,
         returns the resulting html.
         Keyword arguments are:
-            context      : Context or RequestContext dict to be used
+                 context : Context or RequestContext dict to be used
                            RequestContext is used if a request is passed in
                            with 'request' kwarg.
                            Default: {}
@@ -734,14 +794,14 @@ def render_html(template_name, **kwargs):
 
     try:
         tmplate = loader.get_template(template_name)
-        if isinstance(context, dict):
-            if request:
-                contextobj = RequestContext(request, context)
-            else:
-                contextobj = Context(context)
-        else:
-            # whole Context was passed
+    except TemplateDoesNotExist:
+        log.error('Unknown template name: {}'.format(template_name))
+        return None
+    try:
+        if isinstance(context, (Context, RequestContext)):
             contextobj = context
+        else:
+            contextobj = get_context(context, request=request) or Context({})
 
         rendered = tmplate.render(contextobj)
         if link_list:
@@ -755,6 +815,37 @@ def render_html(template_name, **kwargs):
         utilities.logtraceback(log.error, message=message)
 
         return None
+
+
+def render_template(template, context=None, request=None):
+    """ Render a Template object with a context.
+        If a request is passed in, a RequestContext is used.
+        On errors, log the error and return an empty string.
+    """
+    contextobj = get_context(context, request=request)
+    if contextobj is None:
+        # There was an error grabbing a Context, bail out.
+        return ''
+    # Have context, try rendering.
+    try:
+        content = template.render(contextobj)
+    except Exception as ex:
+        log.error(
+            ''.join((
+                'Error rendering template: {name} ',
+                '  Context: {context}',
+                '  Request: {request}'
+                '    Error: {err}'
+            )).format(
+                name=template.origin.name,
+                context=context,
+                request=request,
+                err=ex
+            ))
+        return ''
+    else:
+        # Good content, return it.
+        return content
 
 
 def strip_all(s, strip_chars):
