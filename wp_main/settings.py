@@ -63,6 +63,7 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
+
 # Set which cache to use.
 if 'webapps' in BASE_PARENT and ('test' not in BASE_PARENT):
     # Use db cache for live site.
@@ -70,6 +71,8 @@ if 'webapps' in BASE_PARENT and ('test' not in BASE_PARENT):
 else:
     # Use dummy cache for local development, and test site.
     CACHES['default'] = CACHES['cache_dummy']
+# Tell django_user_agents which cache to use.
+USER_AGENTS_CACHE = 'default'
 
 # main app (location of settings.py)
 MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
@@ -167,7 +170,7 @@ MIDDLEWARE_CLASSES = (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 
     # special user-agent middleware...
-    'wp_user_agents.middleware.UserAgentMiddleware',
+    'django_user_agents.middleware.UserAgentMiddleware',
 
 )
 
@@ -195,7 +198,7 @@ INSTALLED_APPS = (
     'solo',
 
     # for making get_user_agent(request) available.
-    'wp_user_agents',
+    'django_user_agents',
     # local apps
     'wp_main',  # contains global template tags (wp_tags)
     'apps',  # handles urls for all sub-apps.

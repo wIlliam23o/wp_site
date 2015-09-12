@@ -19,7 +19,7 @@ from django.conf import settings
 from django.utils.module_loading import import_module
 
 # User-Agent helper...
-from wp_user_agents.utils import get_user_agent
+from django_user_agents.utils import get_user_agent
 
 log = logging.getLogger('wp.utilities')
 
