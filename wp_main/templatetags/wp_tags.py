@@ -343,6 +343,8 @@ def insert_video(videourl, posterimg=None, id_=None):
         the project, blog, etc. pages use template-rendering to load.
         see: htmltools.load_html_file()
     """
+    # TODO: This is not used anywhere, and probably shouldn't be.
+    # TODO: Use a Node instead of a Filter, test with PyVal page.
     if not videourl:
         return ''
     # Build arg dict for basehtml.format()
