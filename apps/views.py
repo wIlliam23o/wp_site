@@ -4,10 +4,11 @@ from apps import tools as apptools
 
 
 def view_index(request):
-    apps = apptools.get_apps()
+    """ Landing page for wp apps listing. """
     context = {
-        'request': request,
-        'apps': apps,
+        'apps': apptools.get_apps(),
     }
-
-    return responses.clean_response('apps/index.html', context)
+    return responses.clean_response(
+        'apps/index.html',
+        context=context,
+        request=request)

@@ -107,9 +107,10 @@ def view_loader(request):
             'file': file_path,
         }
 
-        return responses.clean_response_req('viewer/loader.html',
-                                            context=context,
-                                            request=request)
+        return responses.clean_response(
+            'viewer/loader.html',
+            context=context,
+            request=request)
 
     log.error('Empty file name given: {}'.format(
         utilities.get_remote_ip(request))
@@ -200,9 +201,10 @@ def get_file_info(file_path):
     # Directory was passed, get files to use. (based on project, dir listing)
     if os.path.isdir(absolute_path):
         if project:
-            static_path, absolute_path = get_using_paths(static_path,
-                                                         absolute_path,
-                                                         project)
+            static_path, absolute_path = get_using_paths(
+                static_path,
+                absolute_path,
+                project)
             if static_path is None or absolute_path is None:
                 # Raise error which will display a 404.
                 raise Http404('Sorry, there was an error viewing that file.')
@@ -240,7 +242,6 @@ def get_file_info(file_path):
             filetracker.save()
 
     # Get file content
-    file_content = ""
     try:
         with open(absolute_path) as fread:
             file_content = fread.read()

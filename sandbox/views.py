@@ -13,8 +13,10 @@ sandboxmsg = [
 @responses.staff_required(user_error=sandboxmsg)
 def view_index(request):
     """ Landing page for the sandbox. Nothing important. """
-    context = None
-    return responses.clean_response('sandbox/index.html', context)
+    return responses.clean_response(
+        'sandbox/index.html',
+        context=None,
+        request=request)
 
 
 @responses.staff_required(user_error=sandboxmsg)
@@ -31,7 +33,10 @@ def view_alert(request):
         'alert_title': 'Major Error',
         'alert_content': link
     }
-    return responses.clean_response('sandbox/index.html', context)
+    return responses.clean_response(
+        'sandbox/index.html',
+        context=context,
+        request=request)
 
 
 @responses.staff_required(user_error=sandboxmsg)
@@ -41,4 +46,7 @@ def view_notice(request):
         'alert_message': 'Your karma has been updated.',
         'alert_class': 'notice',
     }
-    return responses.clean_response('sandbox/index.html', context)
+    return responses.clean_response(
+        'sandbox/index.html',
+        context=context,
+        request=request)

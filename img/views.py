@@ -88,13 +88,12 @@ def view_index(request):
             images = images.order_by('album')
 
     context = {
-        'request': request,
         'images': images,
         'album': album,
         'alert_message': alert_msg,
         'alert_class': alert_class
     }
-    return responses.clean_response_req(
+    return responses.clean_response(
         template_name='img/index.html',
         context=context,
         request=request)
@@ -120,14 +119,13 @@ def view_image_id(request, imageid):
     # Reusing part of the index view template.
     # Needs to be more refined, in it's own template.
     context = {
-        'request': request,
         'image': image,
         'images': (image,),
         'album': None,
         'alert_message': alert_msg,
         'alert_class': alert_class
     }
-    return responses.clean_response_req(
+    return responses.clean_response(
         template_name='img/image.html',
         context=context,
         request=request)

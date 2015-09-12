@@ -164,11 +164,13 @@ def list_view(request, title=None, filterkw=None, orderby=None):
         p = p[:LISTINGMAX]
 
     context = {
-        'request': request,
         'pastes': p,
         'listing_title': title,
     }
-    return responses.clean_response('paste/listing.html', context)
+    return responses.clean_response(
+        'paste/listing.html',
+        context=context,
+        request=request)
 
 
 def paste_err_data(msg=None):
@@ -366,9 +368,10 @@ def submit_public(request):
 
 def view_api(request):
     """ Landing page for api help. """
-
-    context = {'request': request}
-    return responses.clean_response('paste/api.html', context)
+    return responses.clean_response(
+        'paste/api.html',
+        context=None,
+        request=request)
 
 
 @csrf_protect
@@ -387,14 +390,16 @@ def view_index(request):
 
     # New Paste.
     context = {
-        'request': request,
         'paste': None,
         'replyto': None,
         'replies': None,
         'replycount': None,
         'replymax': REPLYMAX,
     }
-    return responses.clean_response('paste/index.html', context)
+    return responses.clean_response(
+        'paste/index.html',
+        context=context,
+        request=request)
 
 
 @never_cache
@@ -504,7 +509,6 @@ def view_paste(request):
             replies = replies[:REPLYMAX]
 
     context = {
-        'request': request,
         'paste': pasteobj,
         'replyto': replytoobj,
         'replylast': replylast,
@@ -512,7 +516,10 @@ def view_paste(request):
         'replycount': replycount,
         'replymax': REPLYMAX,
     }
-    return responses.clean_response('paste/index.html', context)
+    return responses.clean_response(
+        'paste/index.html',
+        context=context,
+        request=request)
 
 
 def view_paste_raw(request):
@@ -571,12 +578,14 @@ def view_replies(request):
 
     replies = pasteobj.children.order_by('-publish_date')
     context = {
-        'request': request,
         'paste': pasteobj,
         'replies': replies,
     }
 
-    return responses.clean_response('paste/replies.html', context)
+    return responses.clean_response(
+        'paste/replies.html',
+        context=context,
+        request=request)
 
 
 @never_cache

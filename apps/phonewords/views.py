@@ -36,13 +36,12 @@ def view_index(request):
     else:
         # Basic index view.
         context = {
-            'request': request,
             'version': app_version,
             'hasargs': False,
         }
-        return responses.clean_response_req(
+        return responses.clean_response(
             'phonewords/index.html',
-            context,
+            context=context,
             request=request)
 
 
@@ -106,7 +105,6 @@ def view_results(request, args=None):
 
     # Return response.
     context = {
-        'request': request,
         'version': app_version,
         'hasargs': True,
         'query': args['query'],
@@ -115,9 +113,9 @@ def view_results(request, args=None):
         'total': total,
     }
 
-    return responses.clean_response_req(
+    return responses.clean_response(
         'phonewords/index.html',
-        context,
+        context=context,
         request=request)
 
 

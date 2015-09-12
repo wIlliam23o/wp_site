@@ -26,11 +26,13 @@ def index(request):
         post_count = 0
 
     context = {
-        'request': request,
         'blog_posts': blog_posts,
         'post_count': post_count,
     }
-    return responses.clean_response('blogger/index.html', context)
+    return responses.clean_response(
+        'blogger/index.html',
+        context=context,
+        request=request)
 
 
 def index_page(request):
@@ -69,7 +71,6 @@ def index_page(request):
 
     # Template values.
     context = {
-        'request': request,
         'blog_posts': blog_posts,
         'start_id': (startid + 1),
         'end_id': end_id,
@@ -79,7 +80,10 @@ def index_page(request):
         'has_prev': hasprv,
         'has_next': hasnxt,
     }
-    return responses.clean_response('blogger/index_paged.html', context)
+    return responses.clean_response(
+        'blogger/index_paged.html',
+        context=context,
+        request=request)
 
 
 def view_post(request, identifier):
@@ -129,13 +133,15 @@ def view_post(request, identifier):
 
     # Build clean HttpResponse with post template...
     context = {
-        'request': request,
         'post_title_short': post_title_short,
         'enable_comments': post.enable_comments,
         'blog_post': post,
         'related_projects': post.get_projects(),
     }
-    return responses.clean_response('blogger/post.html', context)
+    return responses.clean_response(
+        'blogger/post.html',
+        context=context,
+        request=request)
 
 
 def view_tags(request):
@@ -154,11 +160,13 @@ def view_tags(request):
     # build list of tags and info for tags.html template
     tag_list = [make_tag(tname) for tname in tag_count]
     context = {
-        'request': request,
         'tag_list': tag_list,
         'tag_count': len(tag_list),
     }
-    return responses.clean_response('blogger/tags.html', context)
+    return responses.clean_response(
+        'blogger/tags.html',
+        context=context,
+        request=request)
 
 
 def view_tag(request, tag):
@@ -173,13 +181,15 @@ def view_tag(request, tag):
     found_posts = blogtools.fix_post_list(found_posts)
 
     context = {
-        'request': request,
         'tag_name': tag_name,
         'post_count': post_count,
         'item_count': len(found_posts),
         'blog_posts': found_posts
     }
-    return responses.clean_response('blogger/tag.html', context)
+    return responses.clean_response(
+        'blogger/tag.html',
+        context=context,
+        request=request)
 
 
 def tag_page(request, tag):
@@ -200,10 +210,11 @@ def tag_page(request, tag):
     prevpage = page_args.get('prev_page', None)
     nextpage = page_args.get('next_page', None)
     # retrieve blog posts slice
-    post_slice = blogtools.get_posts_by_tag(tag_name,
-                                            starting_index=startid,
-                                            max_posts=maxitems,
-                                            order_by=orderby)
+    post_slice = blogtools.get_posts_by_tag(
+        tag_name,
+        starting_index=startid,
+        max_posts=maxitems,
+        order_by=orderby)
 
     # fix posts for listing.
     blog_posts = blogtools.fix_post_list(post_slice)
@@ -213,7 +224,6 @@ def tag_page(request, tag):
     hasnxt = startid < (post_count < maxitems)
     # build page.
     context = {
-        'request': request,
         'blog_posts': blog_posts,
         'tag_name': tag_name,
         'start_id': (startid + 1),
@@ -224,7 +234,10 @@ def tag_page(request, tag):
         'has_prev': hasprv,
         'has_next': hasnxt,
     }
-    return responses.clean_response('blogger/tag_paged.html', context)
+    return responses.clean_response(
+        'blogger/tag_paged.html',
+        context=context,
+        request=request)
 
 
 def no_identifier(request):

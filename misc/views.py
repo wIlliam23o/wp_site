@@ -14,15 +14,13 @@ log = logging.getLogger('wp.misc')
 @csrf_protect
 def view_index(request):
     """ Main index for Misc objects. """
-
-    miscobjs = misctools.get_visible_objects()
     context = {
-        'request': request,
-        'miscobjects': miscobjs
+        'miscobjects': misctools.get_visible_objects()
     }
-    return responses.clean_response_req("misc/index.html",
-                                        context,
-                                        request=request)
+    return responses.clean_response(
+        'misc/index.html',
+        context=context,
+        request=request)
 
 
 @cache_page(15 * 60)
@@ -35,9 +33,9 @@ def view_misc_any(request, identifier):
         # No misc item found by that identifier
         raise Http404()
     context = {
-        'request': request,
         'misc': misc,
     }
-    return responses.clean_response_req('misc/misc.html',
-                                        context,
-                                        request=request)
+    return responses.clean_response(
+        'misc/misc.html',
+        context=context,
+        request=request)

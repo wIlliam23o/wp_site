@@ -31,10 +31,12 @@ def view_index(request):
         response = responses.alert_message(request, alert_msg=alertmsg)
     else:
         context = {
-            'request': request,
             'projects': all_projects,
         }
-        response = responses.clean_response('projects/index.html', context)
+        response = responses.clean_response(
+            'projects/index.html',
+            context=context,
+            request=request)
 
     return response
 
@@ -82,16 +84,15 @@ def view_project(request, project, requested_page, source=None):
     # Grab projects list for vertical menu
     all_projects = wp_project.objects.filter(disabled=False).order_by('name')
     context = {
-        'request': request,
         'requested_page': requested_page,
         'projects': all_projects,
         'project': project,
         'matches': matches,
         'use_screenshots': use_screenshots,
     }
-    return responses.clean_response_req(
+    return responses.clean_response(
         'projects/project.html',
-        context,
+        context=context,
         request=request)
 
 
