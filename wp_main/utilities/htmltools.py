@@ -451,16 +451,24 @@ def get_context(context, request=None):
         If request is passed in, a RequestContext() is used.
         On errors, log the error and return None.
     """
+    # This is already a Context or RequestContext?
+    # It wouldn't hurt to return a Context(Context(context)),
+    # but there is no reason for all of this processing if that's the case.
+    if isinstance(context, (Context, RequestContext)):
+        return context
+
     # Try creating a request context.
     try:
         if not context:
             # Blank context object, with or without a request.
             if request is not None:
                 return RequestContext(request, {})
-            return Context({})
+            return Context({'request': request})
 
         if not request:
             # Context with content, no Request.
+            if context.get('request', None) is None:
+                context['request'] = request
             return Context(context)
 
         # RequestContext with content.
@@ -570,6 +578,18 @@ def get_screenshots(images_dir, noscript_image=None):
     return screenshots
 
 
+def get_template(template_name):
+    """ Return a Template by name.
+        On errors, log the error and return None.
+    """
+    try:
+        tmplate = loader.get_template(template_name)
+    except TemplateDoesNotExist:
+        log.error('Unknown template name: {}'.format(template_name))
+        return None
+    return tmplate
+
+
 def hide_email(source_string):
     """ base64 encodes all email addresses for use with wptool.js
         reveal functions.
@@ -612,66 +632,67 @@ def highlight(content):
             content))
 
 
-def load_html_file(sfile, request=None, context=None, template=None):
-    """ Trys loading a template by name,
-        If context is passed it is used to render the template.
-        If a request was passed then RequestContext is used,
-        otherwise Context is used.
-        If no template is found, it trys loading html content from file.
-        returns string with html content.
-
+def load_html_file(filename, request=None, context=None, template=None):
+    """ Try rendering a file as a Template, if that fails return the raw
+        file content.
         This can all be short-circuited by passing in a pre-loaded template
         with: template=loader.get_template(templatename)
+        Arguments:
+            filename  : File name for template/html file.
+            request   : Request() to build RequestContext()
+            context   : Context(), RequestContext() or dict for template.
+                        If request is passed with a dict, a RequestContext()
+                        is built.
+                        If a dict is passed a Context() is built.
+            template  : Overrides all template loading and file opening.
+                        (filename is useless if template is passed)
+                        The template is rendered with context and request.
     """
 
     if template:
         # A template was already passed in.
         return render_template(template, context=context, request=request)
     # Try rendering file as a template.
-    content = load_html_template(sfile, request=request, context=context)
+    content = load_html_template(filename, request=request, context=context)
     if content:
         return content
 
     # no template, probably a filename. check it:
-    log.debug('No template, falling back to HTML: {}'.format(sfile))
-    if not os.path.isfile(sfile):
+    log.debug('No template, falling back to HTML: {}'.format(filename))
+    if not os.path.isfile(filename):
         # try getting absolute path
-        spath = utilities.get_absolute_path(sfile)
+        spath = utilities.get_absolute_path(filename)
         if os.path.isfile(spath):
-            sfile = spath
+            filename = spath
         else:
             # no file found.
-            log.debug('No file found at: {}'.format(sfile))
+            log.debug('No file found at: {}'.format(filename))
             return ''
 
     try:
-        with open(sfile) as fhtml:
+        with open(filename) as fhtml:
             # Successful file open, return the contents.
             return fhtml.read()
     except IOError as exIO:
-        log.error('Cannot open file: {}\n{}'.format(sfile, exIO))
+        log.error('Cannot open file: {}\n{}'.format(filename, exIO))
     except OSError as exOS:
         log.error((
             'Possible bad permissions opening file: {}\n{}'
-        ).format(sfile, exOS))
+        ).format(filename, exOS))
     except Exception as ex:
-        log.error('General error opening file: {}\n{}'.format(sfile, ex))
+        log.error('General error opening file: {}\n{}'.format(filename, ex))
     return ''
 
 
 def load_html_template(sfile, request=None, context=None):
     """ Try rendering an html file as a Template.
-        Return the content on success, or '' on failure.
+        Return the content on success, or None on failure.
     """
 
-    try:
-        template = loader.get_template(sfile)
-    except TemplateDoesNotExist:
-        # It wasn't a template name.
-        log.debug('Not a template: {}'.format(sfile))
-        return ''
-    else:
-        return render_template(template, context=context, request=request)
+    tmplate = get_template(sfile)
+    if tmplate is not None:
+        return render_template(tmplate, context=context, request=request)
+    return None
 
 
 def remove_comments(source_string):
@@ -746,11 +767,11 @@ def remove_whitespace(source):
 
 
 def render_clean(template_name, **kwargs):
-    """ runs render_html() through clean_html().
-        renders template by name and context dict,
-        RequestContext is used if 'request' kwarg is present.
+    """ Runs render_html() through clean_html().
+        Renders template by name and context dict,
+        RequestContext is used if 'request' kwarg is passed in.
         Keyword Arguments (same as render_html()):
-              context      : dict to be used by Context() or RequestContext()
+                   context : dict to be used by Context() or RequestContext()
                    request : HttpRequest() object passed on to RequestContext()
                  link_list : link_list to be used with htmltools.auto_link()
                              Default: False
@@ -758,15 +779,17 @@ def render_clean(template_name, **kwargs):
                              Default: {}
             For these arguments, see: htmltools.render_html()
         passes resulting html through clean_html(),
-        returns resulting html string.
+        Returns resulting html string.
     """
 
     return clean_html(render_html(template_name, **kwargs))
 
 
 def render_html(template_name, **kwargs):
-    """ renders template by name and context dict,
-        returns the resulting html.
+    """ Renders template by name and context dict,
+        Returns the resulting html.
+        This differs from load_html_file(), where render_html() must use a
+        template name, load_html_file() will fall back to raw file content.
         Keyword arguments are:
                  context : Context or RequestContext dict to be used
                            RequestContext is used if a request is passed in
@@ -780,11 +803,14 @@ def render_html(template_name, **kwargs):
                            Default: False (disables auto_link())
           auto_link_args : dict containing arguments for auto_link()
                            ex:
-                           render_html("mytemplate",
-                                       link_list=my_link_list,
-                                       auto_link_args={"target":"_blank",
-                                                       "class":"my-link-class",
-                                                       })
+                           render_html(
+                                'path/mytemplate.html',
+                                link_list=my_link_list,
+                                auto_link_args={
+                                    'target':'_blank',
+                                    'class':'my-link-class',
+                                }
+                            )
                            Default: {}
     """
     context = kwargs.get('context', kwargs.get('context_dict', {}))
@@ -792,57 +818,45 @@ def render_html(template_name, **kwargs):
     link_list = kwargs.get('link_list', None)
     auto_link_args = kwargs.get('auto_link_args', {})
 
-    try:
-        tmplate = loader.get_template(template_name)
-    except TemplateDoesNotExist:
-        log.error('Unknown template name: {}'.format(template_name))
+    tmplate = get_template(template_name)
+    if tmplate is None:
         return None
-    try:
-        if isinstance(context, (Context, RequestContext)):
-            contextobj = context
-        else:
-            contextobj = get_context(context, request=request) or Context({})
 
-        rendered = tmplate.render(contextobj)
+    content = render_template(tmplate, context=context, request=request)
+    if content:
         if link_list:
-            rendered = auto_link(rendered, link_list, **auto_link_args)
-        return rendered
-    except Exception:
-        errstr = 'Unable to render html template'
-        if request:
-            errstr = '{} with request context'.format(errstr)
-        message = '{}: {}'.format(errstr, template_name)
-        utilities.logtraceback(log.error, message=message)
+            content = auto_link(content, link_list, **auto_link_args)
+        return content
 
-        return None
+    return None
 
 
-def render_template(template, context=None, request=None):
+def render_template(tmplate, context=None, request=None):
     """ Render a Template object with a context.
         If a request is passed in, a RequestContext is used.
-        On errors, log the error and return an empty string.
+        On errors, log the error and return None.
     """
     contextobj = get_context(context, request=request)
     if contextobj is None:
         # There was an error grabbing a Context, bail out.
-        return ''
+        return None
     # Have context, try rendering.
     try:
-        content = template.render(contextobj)
+        content = tmplate.render(contextobj)
     except Exception as ex:
-        log.error(
-            ''.join((
-                'Error rendering template: {name} ',
-                '  Context: {context}',
-                '  Request: {request}'
-                '    Error: {err}'
-            )).format(
-                name=template.origin.name,
-                context=context,
-                request=request,
-                err=ex
-            ))
-        return ''
+        errmsg = '\n'.join((
+            'Error rendering template: {name} ',
+            '  Context: {context}',
+            '  Request: {request}'
+            '    Error: {err}'
+        )).format(
+            name=tmplate.origin.name,
+            context=context,
+            request=request,
+            err=ex
+        )
+        utilities.logtraceback(log.error, errmsg)
+        return None
     else:
         # Good content, return it.
         return content
@@ -855,7 +869,7 @@ def strip_all(s, strip_chars):
         strip_all('xzythisyxz', 'zyx') == 'this'
 
         # The f and d are blocking the middle o's from being removed.
-        strip_all('omnfoodnmo', 'mno') == 'food'
+        strip_all('omnfoodnmom', 'mno') == 'food'
     """
     if not s:
         return s

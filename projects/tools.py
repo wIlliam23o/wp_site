@@ -76,18 +76,18 @@ def get_html_file(project):
 def get_html_content(project, request):
     """ retrieves extra html content for project, if any """
 
-    sfile = '{}.html'.format(project.alias)
-    shtml = htmltools.load_html_file(
-        sfile,
+    filename = '{}.html'.format(project.alias)
+    content = htmltools.load_html_file(
+        filename,
+        request=request,
         context={
             'project': project,
-            'request': request
         })
 
-    if not shtml:
-        log.debug('Missing html for {}: {}'.format(project.name, sfile))
+    if not content:
+        log.debug('Missing html for {}: {}'.format(project.name, filename))
 
-    return shtml
+    return content
 
 
 def get_project_from_path(file_path):

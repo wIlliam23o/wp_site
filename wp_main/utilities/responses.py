@@ -71,112 +71,13 @@ def alert_message(request, alert_msg, **kwargs):
     context = {
         'main_content': mark_safe(main_content),
         'alert_message': mark_safe(alert_msg),
-        'request': request,
     }
-    return clean_response('home/main.html', context)
+    return clean_response('home/main.html', context=context, request=request)
 
 
 def basic_response(scontent='', *args, **kwargs):
     """ just a wrapper for the basic HttpResponse object. """
     return HttpResponse(scontent, *args, **kwargs)
-
-
-def clean_response(template_name, context, **kwargs):
-    """ same as render_response, except does code cleanup (no comments, etc.)
-        returns cleaned HttpResponse.
-
-        Keyword Args:
-            see htmltools.render_clean()...
-    """
-    if context is None:
-        context = {}
-    # Check kwargs for a request obj, then check the context if it's not there.
-    request = kwargs.get('request', context.get('request', None))
-
-    # Add request to context if available.
-    if request:
-        context.update({'request': request})
-        # Add server name, remote ip to context if not added already.
-        if not context.get('server_name', False):
-            context['server_name'] = get_server(request)
-        if not context.get('remote_ip', False):
-            context['remote_ip'] = get_remote_ip(request)
-
-    # Add new context dict to kwargs for render_clean().
-    kwargs['context'] = context
-
-    try:
-        rendered = htmltools.render_clean(template_name, **kwargs)
-    except Exception:
-        logtraceback(log.error, message='Unable to render.')
-        if request:
-            # 500 page.
-            return error500(request, msgs=('Error while building that page.',))
-        # Fallback crappy alert message page.
-        return alert_message(request,
-                             'Sorry, there was an error loading this page.')
-    else:
-        if not rendered:
-            # Something went wrong in the render chain.
-            # It catches most errors, logs them, and returns ''.
-            msgs = ['Unable to build that page right now, sorry.']
-            if request:
-                return error500(request, msgs=msgs)
-            # no request, build a really crappy error page.
-            msgs.append('The error has been logged and emailed to me.')
-            rendered = htmltools.fatal_error_page('<br>\n'.join(msgs))
-
-        # Return final page response.
-        return HttpResponse(rendered, status=kwargs.get('status', 200))
-
-
-def clean_response_req(template_name, context, **kwargs):
-    """ handles responses with RequestContext instead of Context,
-        otherwise it's the same as clean_response
-    """
-
-    if not context:
-        context = {}
-    # Check kwargs for a request obj, then check the context if it's not there.
-    request = kwargs.get('request', context.get('request', None))
-    if request:
-        # Add server name, remote ip to context if not added already.
-        if not context.get('server_name', False):
-            context['server_name'] = get_server(request)
-        if not context.get('remote_ip', False):
-            context['remote_ip'] = get_remote_ip(request)
-        # Turn this into a request context.
-        context = RequestContext(request, context)
-    else:
-        log.error('No request passed to clean_response_req!\n'
-                  'template: {}\n'.format(template_name) +
-                  'context: {}\n'.format(repr(context)))
-
-    kwargs['context'] = context
-
-    try:
-        rendered = htmltools.render_clean(template_name, **kwargs)
-    except Exception:
-        logtraceback(log.error, message='Unable to render.')
-        if request:
-            # 500 page.
-            return error500(request, msgs=('Error while building that page.',))
-        # Fallback crappy alert message page.
-        return alert_message(request,
-                             'Sorry, there was an error loading this page.')
-    else:
-        if not rendered:
-            # Something went wrong in the render chain.
-            # It catches most errors, logs them, and returns ''.
-            msgs = ['Unable to build that page right now, sorry.']
-            if request:
-                return error500(request, msgs=msgs)
-            # no request, build a really crappy error page.
-            msgs.append('The error has been logged and emailed to me.')
-            rendered = htmltools.fatal_error_page('<br>\n'.join(msgs))
-
-        # Return final page
-        return HttpResponse(rendered, status=kwargs.get('status', 200))
 
 
 def clamp_num(i, min_val=None, max_val=None):
@@ -186,6 +87,59 @@ def clamp_num(i, min_val=None, max_val=None):
     if (max_val is not None) and (i > max_val):
         return max_val
     return i
+
+
+def clean_response(
+        template_name, context=None, request=None, status=200, **kwargs):
+    """ same as render_response, except does code cleanup (no comments, etc.)
+        returns cleaned HttpResponse.
+        Arguments:
+            template_name   : Known template name to render.
+            context         : Context dict or Context()/RequestContext().
+            request         : Request() object (or None).
+            status          : Status code for the HttpResponse().
+
+        Keyword Args:
+            link_list       : Auto link list for render_html()
+            auto_link_args  : Keyword arguments dict for render_html() and
+                              auto_link()
+    """
+    context = context or {}
+    # Check kwargs for a request obj, then check the context if it's not there.
+    request = request or context.get('request', None)
+
+    # Add request to context if available.
+    if request:
+        # Add server name, remote ip to context if not added already.
+        if not context.get('server_name', False):
+            context['server_name'] = get_server(request)
+        if not context.get('remote_ip', False):
+            context['remote_ip'] = get_remote_ip(request)
+
+    try:
+        rendered = htmltools.render_clean(
+            template_name,
+            context=context,
+            request=request,
+            link_list=kwargs.get('link_list', None),
+            auto_link_args=kwargs.get('auto_link_args', None)
+        )
+    except Exception:
+        logtraceback(log.error, message='Unable to render.')
+        # 500 page.
+        return error500(request, msgs=('Error while building that page.',))
+
+    if rendered:
+        # Return final page response.
+        return HttpResponse(rendered, status=status or 200)
+
+    # Something went wrong in the render chain.
+    # It catches most errors, logs them, and returns ''.
+    msgs = [
+        'Unable to build that page right now, sorry.',
+        'The error has been logged and emailed to me.'
+    ]
+    return error500(request, msgs=msgs)
 
 
 def convert_arg_type(s, default=None, min_val=None, max_val=None):
@@ -222,21 +176,7 @@ def convert_arg_type(s, default=None, min_val=None, max_val=None):
             return s
 
 
-def default_dict(request=None, extradict=None):
-    """ Use default context contents for rendering templates,
-        This dict will return with at least: {'request': request}
-        Request must be passed to use this.
-        Any extra dict items in the extradict override the defaults.
-    """
-    # Items guaranteed to be present in the context dict.
-    defaults = {'request': request} if request is not None else {}
-    if extradict:
-        defaults.update(extradict)
-
-    return defaults
-
-
-def error_response(request, errnum, msgs=None, user_error=None):
+def error_response(request=None, errnum=500, msgs=None, user_error=None):
     """ Error Response, with optional messages through the messages framework.
         errnum can be 403, 404, or 500,
         (or any other number with a template in /home)
@@ -261,16 +201,17 @@ def error_response(request, errnum, msgs=None, user_error=None):
         for m in msgs:
             messages.error(request, m)
 
-    context = {'request': request,
-               'server_name': get_server(request),
-               'remote_ip': get_remote_ip(request),
-               'user_error': user_error,
-               }
+    context = {
+        'server_name': get_server(request),
+        'remote_ip': get_remote_ip(request),
+        'user_error': user_error,
+        }
     templatefile = 'home/{}.html'.format(errnum)
     try:
-        rendered = htmltools.render_clean(templatefile,
-                                          context=context,
-                                          request=request)
+        rendered = htmltools.render_clean(
+            templatefile,
+            context=context,
+            request=request)
     except Exception as ex:
         logmsg = 'Unable to render template: {}\n{}'.format(templatefile, ex)
         log.error(logmsg)
@@ -288,7 +229,9 @@ def error_response(request, errnum, msgs=None, user_error=None):
             errmsg = errmsgfmt.format(
                 msgfmt.format('<br>'.join((msgerrnum, msgerrtxt))))
         return HttpResponseServerError(errmsg, status=errnum)
-
+    if not rendered:
+        rendered = htmltools.fatal_error_page(
+            'Unable to build that page, sorry.')
     # Successfully rendered {errnum}.html page.
     return HttpResponse(rendered, status=errnum)
 
@@ -484,7 +427,7 @@ def get_request_arg(request, arg_names, **kwargs):
 
 
 def get_request_args(request, requesttype=None, default=None):
-    """ returns a dict of all request args.
+    """ Returns a defaultdict of all request args.
         A default dict is returned where 'default' is the default value
         for missing keys.
         Arguments:
