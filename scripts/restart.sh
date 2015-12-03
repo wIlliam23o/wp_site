@@ -10,6 +10,9 @@ apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
 
+snd_success="/usr/share/sounds/KDE-Sys-App-Positive.ogg"
+snd_failure="/usr/share/sounds/KDE-Sys-App-Negative.ogg"
+
 if [[ "$(hostname)" =~ webfaction ]]; then
     production=true
 else
@@ -52,5 +55,11 @@ if [[ $production == false ]]; then
     bash "$appdir/build.sh"
 fi
 
-python3 "$appdir/wprefresh.py" "$@"
+if python3 "$appdir/wprefresh.py" "$@"; then
+    [[ -e "$snd_success" ]] && play "$snd_success" &>/dev/null
+    exit 0
+fi
+
+[[ -e "$snd_failure" ]] && play "$snd_failure" &>/dev/null
+exit 1
 
