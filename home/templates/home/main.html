@@ -99,34 +99,6 @@
 	{# RSS Feed #}
 	{# <link href='https://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' /> #}
 
-   	{# Debug box #}
-	{% block debug-box %}
-	   	{% if request|debug_allowed and request|is_test_site and not request|is_textmode %}
-	   		{# show/hide debug btn (top button) #}
-	   		<div class='debug-button' id='debug-button-top'>
-	   			<a href='#' onclick='javascript: wptools.toggle_debug();'>
-	   				<span class='debug-button-text'>
-	   					show debug
-	   				</span>
-	   			</a>
-	   		</div>
-	   		<div class='debug-box'>
-	   			{# debug info #}
-	   			{% filter highlight_python %}
-	   				{% debug %}
-	   			{% endfilter %}
-	   			{# hide debug btn #}
-	   			<div class='debug-button' id='debug-button-bottom'>
-	   				<a href='#' onclick='javascript: wptools.toggle_debug();'>
-	   					<span class='debug-button-text'>
-	   						hide debug
-	   					</span>
-	  				</a>
-	   			</div>
-	   		</div>
-	   	{% endif %}
-	{% endblock %}
-
 	{% if not request|is_viewable %}
 		{# Build alert_message for test site. #}
 		<div id='alert-box' class='alert'>
@@ -266,6 +238,7 @@
 	 						</div>
 							{# Comments Javascript #}
 	    					<script type='text/javascript'>
+	    						/* jshint ignore: start */
 	      						var disqus_shortname = 'welbornproductions';
 								{% block disqusvariables %}
 								{% endblock %}
@@ -280,6 +253,7 @@
 	        						s.src = '//' + disqus_shortname + '.disqus.com/count.js';
 	       				 			(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
 	    							}());
+	        					/* jshint ignore: end */
 	    					</script>
 
 	    					<noscript>
@@ -328,6 +302,7 @@
 
 	{# Email protection (reveal base64 encoded addresses with the wp-address class.)#}
 	<script type='text/javascript'>
+		/* jshint ignore: start */
 		$(document).ready( function () {
 			{# Dock initialize (non-mobile clients) #}
 			{% if not request|is_mobile and not request|feature:"nofisheye" %}
@@ -379,6 +354,7 @@
 				};
 			}
 		});
+		/* jshint ignore: end */
 	</script>
 
 	{# For views inserting JS that should run before the body closes. #}
