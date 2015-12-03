@@ -25,19 +25,19 @@ urlpatterns = patterns(
     # No common prefix for these.
     '',
     # 404 tester
-    url(r'^404\.html$',
+    url(r'^404\.html?$',
         homeviews.view_404),
     # 403 tester
-    url(r'^403\.html$',
+    url(r'^403\.html?$',
         homeviews.view_403),
     # 500 tester
-    url(r'^500\.html$',
+    url(r'^500\.html?$',
         homeviews.view_500),
     # error raiser (for testing)
     url(r'^raise.html$',
         homeviews.view_raiseerror),
     # debug info
-    url(r'^debug\.html$',
+    url(r'^debug\.html?$',
         homeviews.view_debug),
     # ip simple
     url(r'^ip$',
@@ -49,7 +49,7 @@ urlpatterns = patterns(
     url(settings.LOGIN_URL_REGEX,
         'django.contrib.auth.views.login'),
     # bad login message
-    url(r'^badlogin\.html$',
+    url(r'^badlogin\.html?$',
         homeviews.view_badlogin),
     # robots.txt server
     url(r'^robots\.txt$',
