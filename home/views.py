@@ -90,6 +90,7 @@ def view_badlogin(request):
         request=request)
 
 
+@never_cache
 @login_required(login_url='/login')
 def view_debug(request):
     """ return the django debug info page. """
@@ -105,6 +106,7 @@ def view_debug(request):
         request=request)
 
 
+@never_cache
 def view_error(request, error_number):
     """  returns  appropriate error page when given the error code. """
 
@@ -112,7 +114,7 @@ def view_error(request, error_number):
     if request_path.startswith('/'):
         request_path = request_path[1:]
 
-    # if its not one of these I don't have a template for it,
+    # If its not one of these I don't have a template for it,
     # so it really would be a file-not-found error.
     if error_number not in (403, 404, 500):
         error_number = 404
