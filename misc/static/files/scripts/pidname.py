@@ -5,7 +5,7 @@
 
     gets the pid of a known process name,
     or searches all processes for part of name, returns possible pids.
-
+    ..like `pgrep`.
     Christopher Welborn
 """
 from __future__ import print_function
@@ -17,7 +17,7 @@ import sys
 from docopt import docopt
 
 NAME = 'PidName'
-__VERSION__ = '1.3.0'
+__VERSION__ = '1.3.1'
 VERSIONSTR = '{} v. {}'.format(NAME, __VERSION__)
 SCRIPT = os.path.split(sys.argv[0])[-1]
 
@@ -117,27 +117,14 @@ def main(argd):
             return 1
 
         # Print the output.
-        shortoutput = argd['--pidonly'] or argd['--short']
         returnval = print_pids(
             knownpids,
-            pidonly=shortoutput,
+            pidonly=argd['--pidonly'] or argd['--short'],
             used_args=argd['--args'],
             forceargs=argd['--ARGS'])
 
         # Print notes
-        donote = (
-            knownpids and
-            (not shortoutput) and
-            (not argd['--args']) and
-            (not argd['--ARGS'])
-        )
-        if donote:
-            print(
-                ''.join((
-                    '\nA * means the result was found in command arguments. ',
-                    'Use -a, or -A to view them.',
-                ))
-            )
+        print_arg_note(knownpids, argd)
 
     return returnval
 
@@ -176,24 +163,28 @@ def get_processes(skipthisscript=True):
     # grab info from processes
     processes = {}
     for pid in pids:
-        cmdargspath = os.path.join('/proc', pid, 'cmdline')
-        cmdnamepath = os.path.join('/proc', pid, 'comm')
         # dict to hold info about this process
         processinfo = {}
 
         # Try getting command info from /proc, skip it on failure.
         # Name
+        cmdnamepath = os.path.join('/proc', pid, 'comm')
         processinfo['name'] = try_fileread(cmdnamepath)
         if processinfo['name'] is None:
             print('Read error for /proc/comm, pid: {}'.format(pid))
 
         # Args
+        cmdargspath = os.path.join('/proc', pid, 'cmdline')
         processinfo['args'] = try_fileread(cmdargspath)
         if processinfo['args'] is None:
             print('Read error for /proc/cmdline: pid: {}'.format(pid))
         elif skipthisscript and (SCRIPT in processinfo['args']):
             # Skip this script's parent process (not caught by pid earlier).
             continue
+        else:
+            # Separate the null-delimited args.
+            processinfo['args'] = ' '.join(
+                processinfo['args'].split('\x00')).strip()
 
         # Save info for this pid, if it didn't fail completely.
         if processinfo['name'] or processinfo['args']:
@@ -271,7 +262,7 @@ def get_searchpid(pnamepat, exclude=None, firstonly=False, noargsearch=False):
             if firstonly:
                 break
 
-    return tuple(results)
+    return results
 
 
 def kill_pids(results, force=False, sigkill=False, quiet=False):
@@ -359,6 +350,41 @@ def print_allprocs(exclude=None):
     return 0
 
 
+def print_arg_note(pids, argd):
+    """ Print a message about some pids being found with arguments instead of
+        by name. Only print if not using some short-output method and only if
+        pids were found by searching args.
+        Arguments:
+            pids  : The list of Result()s after searching.
+            argd  : Command line arg dict from docopt (from main()).
+    """
+    notneeded = (
+        (argd['--pidonly'] or argd['--short']) or
+        argd['--args'] or
+        argd['--ARGS'] or
+        argd['--noargsearch'])
+    if notneeded or (not pids):
+        # Either no results, or some short-output method was used.
+        return None
+
+    usedargs = tuple(filter(lambda r: r.used_args, pids))
+    if not usedargs:
+        # There are results, but none were found by searching args.
+        return None
+
+    usedarglen = len(usedargs)
+    argmsg = ', '.join((
+        '\n{count} {plural} found by matching command arguments',
+        'marked with *.'
+    )).format(
+        count=usedarglen,
+        plural='result was' if usedarglen == 1 else 'results were')
+    # If -a or -A were not passed, give a note about displaying args.
+    if not (argd['--ARGS'] or argd['--args']):
+        argmsg = '\n'.join((argmsg, 'Use -a or -A to view them.'))
+    print(argmsg)
+
+
 def print_cancelled():
     """ Print the 'user cancelled' msg.
         (kept here for consistency and possible future development.)
@@ -401,7 +427,7 @@ def print_pids(results, pidonly=False, used_args=False, forceargs=False):
 
     if pidonly:
         # Short format.
-        print(','.join((r.format(pid=True) for r in results)))
+        print(','.join((r.fmt(pid=True) for r in results)))
         return 0
 
     print('pids found: ({})'.format(len(results)))
@@ -411,11 +437,11 @@ def print_pids(results, pidonly=False, used_args=False, forceargs=False):
     # Print'em.
     for result in sortedresults:
         if forceargs:
-            print(result.format(indent=maxpidlen))
+            print(result.fmt(indent=maxpidlen))
         elif used_args:
-            print(result.format(indent=maxpidlen, used_args=True))
+            print(result.fmt(indent=maxpidlen, used_args=True))
         else:
-            print(result.format(indent=maxpidlen, pidname=True))
+            print(result.fmt(indent=maxpidlen, pidname=True))
 
     return 0
 
@@ -447,6 +473,9 @@ class Result(object):
         self.args = args
         self.used_args = used_args
 
+    def __format__(self, fmt):
+        return str(self).__format__(fmt)
+
     def __repr__(self):
         usedargs = ' * ' if self.used_args else '   '
         return '{}:{}{} {}'.format(self.pid, usedargs, self.name, self.args)
@@ -454,7 +483,7 @@ class Result(object):
     def __str__(self):
         return self.__repr__()
 
-    def format(self, indent=None, pid=False, pidname=False, used_args=False):
+    def fmt(self, indent=None, pid=False, pidname=False, used_args=False):
         """ A formatted string representation with options.
             Arguments:
                 indent     : Integer representing the str.rjust() value.
