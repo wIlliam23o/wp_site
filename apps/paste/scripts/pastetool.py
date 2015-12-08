@@ -138,14 +138,14 @@ def iter_expired():
         pastes = wp_paste.objects.order_by('publish_date')
     except Exception as ex:
         print('\nUnable to retrieve pastes!\n{}'.format(ex))
-        raise StopIteration('Unable to retrieve pastes.')
+        return
 
     for paste in pastes:
         if paste.is_expired(never_onhold=False):
             yield paste
         else:
             # This paste is not expired, and all other pastes are newer.
-            raise StopIteration('End of expired pastes.')
+            return
 
 
 def print_all():
