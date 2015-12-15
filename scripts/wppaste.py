@@ -13,18 +13,19 @@ from urllib import request
 # from urllib import parse as urlparse
 
 from docopt import docopt
-from easysettings import EasySettings
+from easysettings import JSONSettings
 from http.client import HTTPConnection
 
-settings = EasySettings(os.path.join(sys.path[0], 'wppaste.conf'))
+settings = JSONSettings.from_file(os.path.join(sys.path[0], 'wppaste.json'))
+if not settings.get('author', None):
+    settings['author'] = os.environ.get('USER', 'Nobody')
+if not settings.get('lang', None):
+    settings['lang'] = 'Python'
 
 NAME = 'WpPaste'
 VERSION = '1.0.2'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[-1]
-
-get_lang = lambda: settings.get('lang', 'Python')
-get_author = lambda: settings.get('author', os.getenv('USER', 'Nobody'))
 
 USAGESTR = """{versionstr}
     Usage:
@@ -32,14 +33,13 @@ USAGESTR = """{versionstr}
         {script} [options] [TEXT]
 
     Options:
-        TEXT                    : Text to paste or file name to read when -f
-                                  is used.
+        TEXT                    : Text to paste.
                                   When no text is given, stdin is used.
+                                  If the text is a file name, it will be read
+                                  and it's contents will be pasted.
         -a name,--author name   : Set author for the paste.
                                   Defaults to: {author}
         -D,--debug              : Don't paste it, just show the data.
-        -f,--file               : Text is a filename, read the file and paste
-                                  it's contents.
         -h,--help               : Show this help message.
         -H,--hold               : Make this paste on hold.
         -l lang,--lang lang     : Set language for the paste.
@@ -55,8 +55,8 @@ USAGESTR = """{versionstr}
 """.format(
     script=SCRIPT,
     versionstr=VERSIONSTR,
-    author=get_author(),
-    lang=get_lang())
+    author=settings['author'],
+    lang=settings['lang'])
 
 # Default paste domain w/ protocol.
 PASTE_DOMAIN = 'https://welbornprod.com'
@@ -73,13 +73,9 @@ def main(argd):
     if argd['--local']:
         PASTE_DOMAIN = 'http://127.0.0.1'
 
-    def save_settings():
-        settings.set_list((('author', author), ('lang', lang)))
-        return settings.save()
-
     pastetxt = argd['TEXT'] or sys.stdin.read()
     # Try reading a file to get the data from.
-    if argd['--file']:
+    if (len(pastetxt) < 256) and os.path.isfile(pastetxt):
         pastetxt = read_file(pastetxt.strip())
 
     # No empty pastes allowed.
@@ -89,23 +85,24 @@ def main(argd):
 
     # Build paste data from args, settings, or defaults (in that order).
     title = argd['--title'] or '{}..'.format(pastetxt.strip()[:32])
-    author = argd['--author'] or get_author()
-    lang = argd['--lang'] or get_lang()
-    private = argd['--private']
-    onhold = argd['--hold']
+    author = argd['--author'] or settings['author']
+    lang = argd['--lang'] or settings['lang']
+
     pastedata = {
         'author': author,
         'title': title,
         'content': pastetxt,
-        'private': private,
-        'onhold': onhold,
+        'private': argd['--private'],
+        'onhold': argd['--hold'],
         'language': lang,
     }
 
     if argd['--debug']:
-        print_data(pastedata)
+        print('\nPaste Data:\n{}\n'.format(
+            json.dumps(pastedata, sort_keys=True, indent=4)))
+
         if not get_input('Debugging: Continue with paste?'):
-            return 0 if save_settings() else 1
+            return 0 if save_settings(author, lang) else 1
 
     # Submit the paste.
     url = pasteit(pastedata, debug=argd['--debug'], raw=argd['--raw'])
@@ -116,7 +113,7 @@ def main(argd):
         print(url)
 
     # Save settings and exit.
-    return 0 if save_settings() else 1
+    return 0 if save_settings(author, lang) else 1
 
 
 def get_input(s):
@@ -164,14 +161,13 @@ def pasteit(data, debug=False, raw=False):
         resp = con.read()
     except Exception as exread:
         print('\n'.join((
-            'Unable to read paste response from {}',
+            'Unable to read paste response from {}:',
             '{}')).format(pasteurl, exread))
         return None
     try:
         resp = resp.decode('utf-8')
         if raw:
-            print('Raw response:')
-            print(resp)
+            print('\nRaw response:\n{}\n'.format(resp))
         respdata = json.loads(resp)
     except Exception as exjson:
         print('Unable to decode JSON from {}\n{}'.format(pasteurl, exjson))
@@ -197,27 +193,6 @@ def pasteit(data, debug=False, raw=False):
     return None
 
 
-def print_data(d, indent=0):
-    """ Print a dict, with pretty formatting. """
-    if isinstance(d, dict):
-        for k, v in d.items():
-            print('{}{}:'.format(' ' * indent, k))
-            if isinstance(v, dict):
-                print_data(v, indent=indent + 4)
-            elif isinstance(v, (list, tuple)):
-                print_data(v, indent=indent + 4)
-            else:
-                print('{}{}'.format(' ' * (indent + 4), v))
-    elif isinstance(d, (list, tuple)):
-        for itm in d:
-            if isinstance(itm, (list, tuple)):
-                print_data(itm, indent=indent + 4)
-            else:
-                print('{}{}'.format(' ' * indent, d))
-    else:
-        print('{}{}'.format(' ' * indent, d))
-
-
 def print_err(*args, **kwargs):
     """ Wrapper for print that uses stderr by default. """
     if kwargs.get('file', None) is None:
@@ -240,6 +215,24 @@ def read_file(filename):
         return None
 
     return data
+
+
+def save_settings(author, lang):
+    settings.update({'author': author, 'lang': lang})
+    try:
+        settings.save()
+    except EnvironmentError as ex:
+        print_err('Unable to save settings: {}\n{}'.format(
+            settings.filename,
+            ex))
+        return False
+    except ValueError as ex:
+        print_err('Error writing JSON settings: {}\n{}'.format(
+            settings.filename,
+            ex))
+        return False
+    return True
+
 
 if __name__ == '__main__':
     mainret = main(docopt(USAGESTR, version=VERSIONSTR))
