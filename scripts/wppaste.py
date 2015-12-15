@@ -23,7 +23,7 @@ if not settings.get('lang', None):
     settings['lang'] = 'Python'
 
 NAME = 'WpPaste'
-VERSION = '1.0.2'
+VERSION = '1.1.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[-1]
 
