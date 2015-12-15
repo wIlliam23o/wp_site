@@ -19,7 +19,7 @@ from http.client import HTTPConnection
 settings = EasySettings(os.path.join(sys.path[0], 'wppaste.conf'))
 
 NAME = 'WpPaste'
-VERSION = '1.0.1-1'
+VERSION = '1.0.2'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[-1]
 
