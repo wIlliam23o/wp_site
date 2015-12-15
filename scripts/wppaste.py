@@ -10,10 +10,12 @@ import json
 import os
 import sys
 from urllib import request
-from urllib import parse as urlparse
+# from urllib import parse as urlparse
 
 from docopt import docopt
 from easysettings import EasySettings
+from http.client import HTTPConnection
+
 settings = EasySettings(os.path.join(sys.path[0], 'wppaste.conf'))
 
 NAME = 'WpPaste'
@@ -42,20 +44,35 @@ USAGESTR = """{versionstr}
         -H,--hold               : Make this paste on hold.
         -l lang,--lang lang     : Set language for the paste.
                                   Defaults to: {lang}
+        -L,--local              : Test local dev paste site.
         -p,--private            : Make this a private paste.
         -r,--raw                : Show raw response from the server.
         -t title,--title title  : Set title for this paste.
                                   Defaults to: (first 32 chars of paste data..)
         -v,--version            : Show version.
+        -V,--verbose            : When --debug and --verbose are used,
+                                  http client debugging is enabled.
 """.format(
     script=SCRIPT,
     versionstr=VERSIONSTR,
     author=get_author(),
     lang=get_lang())
 
+# Default paste domain w/ protocol.
+PASTE_DOMAIN = 'https://welbornprod.com'
+# Url for json-friendly pastes.
+PASTE_URL = '/paste/api/submit'
+
 
 def main(argd):
     """ Main entry point, expects doctopt arg dict as argd """
+    global PASTE_DOMAIN
+
+    if argd['--debug'] and argd['--verbose']:
+        HTTPConnection.debuglevel = 1
+    if argd['--local']:
+        PASTE_DOMAIN = 'http://127.0.0.1'
+
     def save_settings():
         settings.set_list((('author', author), ('lang', lang)))
         return settings.save()
@@ -63,20 +80,13 @@ def main(argd):
     pastetxt = argd['TEXT'] or sys.stdin.read()
     # Try reading a file to get the data from.
     if argd['--file']:
-        filename = pastetxt.strip()
-        if not os.path.isfile(filename):
-            print('\nCan\'t find that file!: {}'.format(filename))
-            return 1
-        try:
-            with open(filename) as f:
-                pastetxt = f.read()
-        except EnvironmentError as exio:
-            print('\nError reading that file: {}\n{}'.format(filename, exio))
-            return 1
+        pastetxt = read_file(pastetxt.strip())
+
     # No empty pastes allowed.
     if not pastetxt.strip():
         print('\nNo paste data.\n')
         return 1
+
     # Build paste data from args, settings, or defaults (in that order).
     title = argd['--title'] or '{}..'.format(pastetxt.strip()[:32])
     author = argd['--author'] or get_author()
@@ -111,8 +121,7 @@ def main(argd):
 
 def get_input(s):
     """ Return a boolean response from a yes/no question. """
-    ans = input('\n{} (y/n): '.format(s)).strip().lower()
-    return ans[0] == 'y'
+    return input('\n{} (y/n): '.format(s)).strip().lower().startswith('y')
 
 
 def pasteit(data, debug=False, raw=False):
@@ -129,16 +138,25 @@ def pasteit(data, debug=False, raw=False):
          'language': 'Python',
          }
     """
-    pasteurl = 'http://welbornprod.com/paste/api/submit'
     try:
-        newdata = urlparse.urlencode(data).encode('utf-8')
-        if debug:
-            print('URLEncoded:\n{}'.format(newdata))
+        newdata = json.dumps(data)
     except Exception as exenc:
         print('Unable to encode paste data: {}\n{}'.format(data, exenc))
         return None
+
+    pasteurl = ''.join((PASTE_DOMAIN, PASTE_URL))
+
+    req = request.Request(
+        pasteurl,
+        data=newdata.encode('utf-8'),
+        headers={
+            'User-Agent': VERSIONSTR,
+            'Content-Type': 'application/json; charset=utf-8',
+            'Content-Encoding': 'utf-8'
+        })
+
     try:
-        con = request.urlopen(pasteurl, data=newdata)
+        con = request.urlopen(req)
     except Exception as exopen:
         print('Unable to open paste url: {}\n{}'.format(pasteurl, exopen))
         return None
@@ -163,17 +181,19 @@ def pasteit(data, debug=False, raw=False):
     if status == 'error':
         # Server responded with json error response.
         errmsg = respdata.get('message', '<no msg>')
-        print('Paste site responded with error: {}'.format(errmsg))
+        print_err('Paste site responded with error: {}'.format(errmsg))
         # Paste site errored, no url given to the chat user.
         return None
 
     # Good response.
     suburl = respdata.get('url', None)
     if suburl:
-        finalurl = 'http://welbornprod.com{}'.format(suburl)
+        finalurl = ''.join((PASTE_DOMAIN, suburl))
         return finalurl
 
     # No url found to respond with.
+    if debug:
+        print_err('Server status was okay, but no paste url was given!')
     return None
 
 
@@ -197,6 +217,29 @@ def print_data(d, indent=0):
     else:
         print('{}{}'.format(' ' * indent, d))
 
+
+def print_err(*args, **kwargs):
+    """ Wrapper for print that uses stderr by default. """
+    if kwargs.get('file', None) is None:
+        kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+
+
+def read_file(filename):
+    """ Read data from a file. Print any errors and return None on failure.
+        Return the data on success.
+    """
+    try:
+        with open(filename) as f:
+            data = f.read()
+    except FileNotFoundError:
+        print_err('\nCan\'t find that file!: {}'.format(filename))
+        return None
+    except EnvironmentError as exio:
+        print_err('\nError reading that file: {}\n{}'.format(filename, exio))
+        return None
+
+    return data
 
 if __name__ == '__main__':
     mainret = main(docopt(USAGESTR, version=VERSIONSTR))
