@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Version for welbornprod.com
-WPVERSION = '2.2.9'
+WPVERSION = '2.3.0'
 
 # file/path (path joining)
 import os.path
