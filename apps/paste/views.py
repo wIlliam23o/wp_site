@@ -37,11 +37,23 @@ def invalidate_submit(submitdata):
         Do not allow fast, multiple, duplicate, pastes.
         Returns None (Falsey) if the ip is okay, otherwise a string
         containing the reason the paste failed (Truthy).
+        Example:
+            invalid_reason = invalidate_submit({
+                'author_ip': '127.0.0.1',
+                'content': 'Test',
+                'publish_date': datetime.today()})
+            if invalid_reason:
+                reject_the_paste('Not allowed: {}'.format(invalid_reason))
+            else:
+                save_the_paste()
+
+        Arguments:
+            submitdata  : A dict of paste data, usually from JSON.
     """
 
     ipaddr = submitdata.get('author_ip', None)
     if not ipaddr:
-        # None, or '' was passed (unable to get ip,  give the benefit of doubt)
+        # None, or '' was passed (unable to get ip,  give'em a break)
         return None
 
     userpastes = wp_paste.objects.filter(author_ip=ipaddr)
@@ -54,8 +66,9 @@ def invalidate_submit(submitdata):
     try:
         elapsed = (datetime.now() - lastpaste.publish_date).total_seconds()
     except Exception as ex:
-        log.error('Error getting elapsed paste-time for: '
-                  '{}\n{}'.format(lastpaste, ex))
+        log.error('Error getting elapsed paste-time for: {}\n{}'.format(
+            lastpaste,
+            ex))
         # Don't fault a possibly good user for our error.
         return None
 
