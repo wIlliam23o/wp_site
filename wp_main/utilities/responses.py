@@ -147,13 +147,30 @@ def clean_response(
 def convert_arg_type(s, default=None, min_val=None, max_val=None):
     """ Convert a request argument (get/post) to it's required type.
         If no default is given, int and float will be tried in that order.
-        If all fail, default value will be returned (None when not set).
+        If those conversions fail, the original value will be returned.
+        If converting to default's type fails,  the default value will be
+        returned (None when not set).
+        Examples:
+            # Convert to int:
+            convert_arg_type('1', default=0) == 1
+            convert_arg_type('1') == 1
+            # Convert to float:
+            convert_arg_type('1', default=1.0) == 1.0
+            convert_arg_type('1.0') == 1.0
+            # Can't convert to default type, return default:
+            convert_arg_type('blah', default=0) == 0
+            # Can't convert to int or float, return original:
+            convert_arg_type('blah') == 'blah'
+            # Value is less than minimum value, return minimum:
+            convert_arg_type('-1', min_val=0) == 0
+
+        Arguments:
+            s       : String to convert (coming from request args).
+            default : Default value when conversion fails, and type to use.
+            min_val : Minimum value. Numbers will be clamped if < min_val.
+            max_val : Maximum value. Numbers will be clamped if > max_val.
     """
-    log.debug('Converting type: {} to {}. min_val={}, max_val={}'.format(
-        type(s).__name__,
-        type(default).__name__,
-        min_val,
-        max_val))
+
     # Do automatic type conversion if wanted.
     if (default is not None):
         # Convert value to desired type from defaults type.
