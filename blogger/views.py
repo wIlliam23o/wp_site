@@ -46,7 +46,7 @@ def index_page(request):
     page_args = responses.get_paged_args(request, post_count)
     # Setup defaults incase of missing items/errors.
     startid = page_args.get('start_id', 0)
-    maxposts = page_args.get('max_items', blogtools.DEFAULT_MAXPOSTS),
+    maxposts = page_args.get('max_items', blogtools.DEFAULT_MAXPOSTS)
     orderby = page_args.get('order_by', None)
     prevpage = page_args.get('prev_page', None)
     nextpage = page_args.get('next_page', None)
@@ -62,7 +62,8 @@ def index_page(request):
         blog_posts = blogtools.fix_post_list(post_slice)
     except Exception as ex:
         log.debug('Error getting blog posts slice:\n{}'.format(ex))
-        blog_posts = post_slice = end_id = False
+        blog_posts = post_slice = []
+        end_id = 0
 
     # get last index, 'has next page', and 'has prev page'
     end_id = startid + len(post_slice)
@@ -73,7 +74,7 @@ def index_page(request):
     context = {
         'blog_posts': blog_posts,
         'start_id': (startid + 1),
-        'end_id': end_id,
+        'end_id': end_id if end_id >= 0 else 0,
         'post_count': post_count,
         'prev_page': prevpage,
         'next_page': nextpage,

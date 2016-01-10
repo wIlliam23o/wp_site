@@ -19,7 +19,6 @@ from wp_main.utilities.utilities import (
     logtraceback
 )
 
-log = logging.getLogger('wp.utilities.responses')
 # Template loading, and Contexts
 from django.contrib import messages
 from django.http import (
@@ -38,6 +37,8 @@ import json
 
 # regex (for get referrer view)
 import re
+
+log = logging.getLogger('wp.utilities.responses')
 
 
 def alert_message(request, alert_msg, **kwargs):
@@ -105,7 +106,8 @@ def clean_response(
                               auto_link()
     """
     context = context or {}
-    # Check kwargs for a request obj, then check the context if it's not there.
+    # Check kwargs for a request obj, then check the context if it's not
+    # there.
     request = request or context.get('request', None)
 
     # Add request to context if available.
@@ -147,6 +149,11 @@ def convert_arg_type(s, default=None, min_val=None, max_val=None):
         If no default is given, int and float will be tried in that order.
         If all fail, default value will be returned (None when not set).
     """
+    log.debug('Converting type: {} to {}. min_val={}, max_val={}'.format(
+        type(s).__name__,
+        type(default).__name__),
+        min_val,
+        max_val)
     # Do automatic type conversion if wanted.
     if (default is not None):
         # Convert value to desired type from defaults type.
@@ -205,7 +212,7 @@ def error_response(request=None, errnum=500, msgs=None, user_error=None):
         'server_name': get_server(request),
         'remote_ip': get_remote_ip(request),
         'user_error': user_error,
-        }
+    }
     templatefile = 'home/{}.html'.format(errnum)
     try:
         rendered = htmltools.render_clean(
@@ -299,20 +306,22 @@ def get_paged_args(request, total_count):
     order_by_ = get_request_arg(request, ['order_by', 'order'], default=None)
 
     # get max_posts
-    max_ = get_request_arg(request,
-                           ['max_items', 'max'],
-                           default=25,
-                           min_val=1,
-                           max_val=100)
+    max_items = get_request_arg(
+        request,
+        ('max_items', 'max'),
+        default=25,
+        min_val=1,
+        max_itemsval=100)
 
     # get start_id
-    start_id = get_request_arg(request,
-                               ['start_id', 'start'],
-                               default=0,
-                               min_val=0,
-                               max_val=total_count)
+    start_id = get_request_arg(
+        request,
+        ('start_id', 'start'),
+        default=0,
+        min_val=0,
+        max_val=total_count)
     # calculate last page based on max_posts
-    last_page = (total_count - max_) if (total_count > max_) else 0
+    last_page = (total_count - max_items) if (total_count > max_items) else 0
     # fix starting id.
     if hasattr(start_id, 'lower'):
         start_id = last_page if start_id.lower() == 'last' else 0
@@ -328,19 +337,21 @@ def get_paged_args(request, total_count):
 
     # get prev page
     # (if previous page is out of bounds, just show the first page)
-    prev_page = start_id - max_
+    prev_page = start_id - max_items
     if prev_page < 0:
         prev_page = 0
     # get next page (if next page is out of bounds, just show the last page)
-    next_page = start_id + max_
+    next_page = start_id + max_items
     if next_page > total_count:
         next_page = last_page
 
-    return {"start_id": start_id,
-            "max_items": max_,
-            "prev_page": prev_page,
-            "next_page": next_page,
-            "order_by": order_by_}
+    return {
+        'start_id': start_id,
+        'max_items': max_items,
+        'prev_page': prev_page,
+        'next_page': next_page,
+        'order_by': order_by_
+    }
 
 
 def get_referer_view(request, default=None):
@@ -408,9 +419,9 @@ def get_request_arg(request, arg_names, **kwargs):
     val = ''
     if isinstance(arg_names, (list, tuple)):
         # list of arg aliases was passed, try them all.
-        for arg_ in arg_names:
-            val = requestargs.get(arg_, '')
-            if val != '':
+        for arg in arg_names:
+            val = requestargs.get(arg, '')
+            if val:
                 break
     else:
         # single arg_name was passed.
@@ -451,8 +462,7 @@ def get_request_args(request, requesttype=None, default=None):
     """
 
     # make default dict.
-    defaultfactory = lambda: default
-    defaultargs = defaultdict(defaultfactory)
+    defaultargs = defaultdict(lambda: default)
 
     # Get original request args.
     if requesttype:
@@ -491,8 +501,9 @@ def json_get(data, suppress_errors=False):
     except TypeError as extype:
         log.debug('Wrong type passed in: {}\n{}'.format(originaltype, extype))
     except ValueError as exval:
-        # This happens when url-encoded data is sent in, but we try to get json
-        # data first. Logging a 65 line file that has been urlencoded sucks.
+        # This happens when url-encoded data is sent in, but we try to get
+        # json data first. Logging a 65 line file that has been urlencoded
+        # sucks.
         # It could be a real error, so instead of ignoring it
         # I am trimming the data to a smaller size, and logging that and the
         # error. This can be disabled completely by passing:
