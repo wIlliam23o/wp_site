@@ -14,6 +14,17 @@ from sys import version as sysversion
 
 # Fixing html fragments (from shortening blog posts and other stuff)
 from tidylib import tidy_fragment
+
+# Django template loaders
+from django.template import RequestContext, Context, loader
+from django.template.base import TemplateDoesNotExist
+from django.conf import settings
+
+# Basic utilities and highlighting
+from wp_main.utilities import (highlighter, utilities)
+
+log = logging.getLogger('wp.utilities.htmltools')
+
 TIDYLIB_IGNORE = (
     # These errors from tidylib will not be logged ever.
     # They apply mostly to whole html docs, not fragments.
@@ -30,19 +41,7 @@ TIDYLIB_IGNORE = (
     'missing <!DOCTYPE> declaration',
     'plain text isn\'t allowed in <head> elements'
 )
-# Django template loaders
-from django.template import RequestContext, Context, loader
-from django.template.base import TemplateDoesNotExist
-from django.conf import settings
 
-# Basic utilities and highlighting
-from wp_main.utilities import (highlighter, utilities)
-
-log = logging.getLogger('wp.utilities.htmltools')
-
-# Fix for python 3 in strip_()
-if sysversion[0] == '3':
-    unicode = str
 
 # RegEx for finding an email address
 # (not compiled, because it gets compiled with additional
@@ -171,7 +170,7 @@ def auto_link(content, link_list, **kwargs):
             All keyword arguments are added as attributes to the link.
             For python keywords like 'class',
             just put a _ in front or behind it.
-            So _class="my-link-class" becomes <a href="" class="my-link-class">
+            So _class="my-link-class" -> <a href="" class="my-link-class">
             You can also just pass a dict as keyword args like this:
                 my_attrs = {"target": "_blank", "class": "my-class"}
                 auto_link(mycontent, my_link_list, **my_attrs)s
@@ -258,8 +257,8 @@ def check_replacement(source_string, target_replacement):
         it fixes the target to match.
         if nothing is needed,
         it returns the original target_replacement string.
-        if the target_replacement isn't in the source_string, it returns false,
-        so use [if check_replacement()],
+        if the target_replacement isn't in the source_string,
+        it returns false, so use [if check_replacement()],
         not [if check_replacement() in source_string].
     """
 
@@ -376,11 +375,11 @@ def find_mailtos(source_string):
     ])
     re_pattern = re.compile(s_mailto)
     raw_matches = re.findall(re_pattern, source_string)
-    mailtos_ = []
+    mailtos = []
     for groups_ in raw_matches:
         # first item is the mailto: line we want.
-        mailtos_.append(groups_[0])
-    return mailtos_
+        mailtos.append(groups_[0])
+    return mailtos
 
 
 def fix_open_tags(source):
@@ -555,8 +554,11 @@ def get_screenshots(images_dir, noscript_image=None):
         return None
 
     # Help functions for building screenshots.
-    relative_img = lambda filename: os.path.join(relative_dir, filename)
-    good_format = lambda filename: (filename[-4:] in formats)
+    def relative_img(filename):
+        return os.path.join(relative_dir, filename)
+
+    def good_format(filename):
+        return filename[-4:] in formats
 
     # Build acceptable pics list
     good_pics = [relative_img(f) for f in all_files if good_format(f)]
@@ -608,17 +610,17 @@ def hide_email(source_string):
 
     final_output = []
     for sline in slines:
-        mailtos_ = find_mailtos(sline)
-        for mailto_ in mailtos_:
-            b64_mailto = encode(mailto_.encode('utf-8'))
-            sline = sline.replace(mailto_,
-                                  b64_mailto.decode('utf-8').replace('\n', ''))
+        for mailto in find_mailtos(sline):
+            b64_mailto = encode(mailto.encode('utf-8'))
+            sline = sline.replace(
+                mailto,
+                b64_mailto.decode('utf-8').replace('\n', ''))
 
-        emails_ = find_email_addresses(sline)
-        for email_ in emails_:
-            b64_addr = encode(email_.encode('utf-8'))
-            sline = sline.replace(email_,
-                                  b64_addr.decode('utf-8').replace('\n', ''))
+        for email in find_email_addresses(sline):
+            b64_addr = encode(email.encode('utf-8'))
+            sline = sline.replace(
+                email,
+                b64_addr.decode('utf-8').replace('\n', ''))
 
         # add line (encoded or not)
         final_output.append(sline)
@@ -722,10 +724,13 @@ def remove_newlines(source):
         Skips <pre> and <script> blocks.
         DEPRECATED
     """
-    is_skipstart = lambda s: ('<pre' in s) or ('<script' in s)
-    is_skipend = lambda s: ('</pre>' in s) or ('</script>' in s)
+    def is_skipstart(s):
+        return ('<pre' in s) or ('<script' in s)
+
+    def is_skipend(s):
+        return ('</pre>' in s) or ('</script>' in s)
     newline = '{}\n'.format
-    noline = lambda s: s.replace('\n', '')
+
     in_skip = False
     output = []
     for sline in source.split('\n'):
@@ -734,7 +739,7 @@ def remove_newlines(source):
         if is_skipstart(sline_lower):
             in_skip = True
         # Add with newline if its a skipped tag, otherwise no newlines.
-        output.append(newline(sline) if in_skip else noline(sline))
+        output.append(newline(sline) if in_skip else sline.replace('\n', ''))
         # end of skipped tag
         if is_skipend(sline_lower):
             in_skip = False
@@ -747,8 +752,12 @@ def remove_whitespace(source):
         and removes blank lines.
         This ignores <pre> blocks, to keep <pre> formatting.
     """
-    is_skipstart = lambda s: '<pre' in s
-    is_skipend = lambda s: '</pre>' in s
+    def is_skipstart(s):
+        return '<pre' in s
+
+    def is_skipend(s):
+        return '</pre>' in s
+
     in_skip = False
     output = []
     for line in source.split('\n'):
@@ -772,7 +781,7 @@ def render_clean(template_name, **kwargs):
         RequestContext is used if 'request' kwarg is passed in.
         Keyword Arguments (same as render_html()):
                    context : dict to be used by Context() or RequestContext()
-                   request : HttpRequest() object passed on to RequestContext()
+                   request : HttpRequest() object passed to RequestContext()
                  link_list : link_list to be used with htmltools.auto_link()
                              Default: False
             auto_link_args : A dict containing kw arguments for auto_link()
