@@ -221,7 +221,7 @@ def get_posts_by_tag(tag, starting_index=0, max_posts=-1, order_by=None):
     # get all posts with these tags.
     found = []
     for post in wp_blog.objects.filter(disabled=False).order_by(order_by):
-        post_tags = post_.tags.replace(',', ' ')
+        post_tags = post.tags.replace(',', ' ')
         # get list of post tags
         post_tag_list = post_tags.split()
 
