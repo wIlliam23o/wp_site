@@ -151,9 +151,9 @@ def convert_arg_type(s, default=None, min_val=None, max_val=None):
     """
     log.debug('Converting type: {} to {}. min_val={}, max_val={}'.format(
         type(s).__name__,
-        type(default).__name__),
+        type(default).__name__,
         min_val,
-        max_val)
+        max_val))
     # Do automatic type conversion if wanted.
     if (default is not None):
         # Convert value to desired type from defaults type.
