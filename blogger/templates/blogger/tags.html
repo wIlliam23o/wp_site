@@ -31,19 +31,24 @@
 {% block content %}
 	{% if tag_list %}
 		<div class='blog-tag-list'>
-			{% for tag_ in tag_list %}
+			{% for wptag in tag_list %}
 				<div class='blog-tag-list-item'>
-					<a href='/blog/tag/page/{{ tag_.name }}?start_id=0'>
-						<span class='blog-tag-list-text' style='font-size: {{ tag_.size }}'>
-							{{ tag_.name }}
+					<a href='/blog/tag/page/{{ wptag.name }}?start_id=0'>
+						<span class='blog-tag-list-text' style='font-size: {{ wptag.size }}'>
+							{{ wptag.name }}
 						</span>
 					</a>
 				</div>
 				{% endfor %}
 		</div>
 	{% else %}
-		<span style='font-style: italic;'>Sorry, no tags were found.</span>
-		<br/>
-		<a href='/blog/page'><span>Click here to go back to the blog.</span></a>
+        <div>
+		    <span style='font-style: italic;'>Sorry, no tags were found.</span>
+		</div>
+        <div>
+		    <a href='/blog/page'>
+                <span>Click here to go back to the blog.</span>
+            </a>
+        </div>
 	{% endif %}
 {% endblock %}

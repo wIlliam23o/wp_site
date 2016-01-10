@@ -146,19 +146,8 @@ def view_post(request, identifier):
 
 def view_tags(request):
     """ list all posts by tags (categories) """
-
-    # get all tag counts
-    tag_count = blogtools.get_tags_post_count()
-    tag_sizes = blogtools.get_tags_fontsizes(tag_count)
-
-    def make_tag(tagname):
-        """ Make a WpTag() based on count and size info gathered. """
-        return blogtools.WpTag(name=tagname,
-                               count=tag_count[tagname],
-                               size=tag_sizes[tagname])
-
     # build list of tags and info for tags.html template
-    tag_list = [make_tag(tname) for tname in tag_count]
+    tag_list = blogtools.get_tags()
     context = {
         'tag_list': tag_list,
         'tag_count': len(tag_list),
