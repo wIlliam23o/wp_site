@@ -4,9 +4,10 @@
 """
 
 import logging
-log = logging.getLogger('wp.apps.tools')
 
 from apps.models import wp_app
+
+log = logging.getLogger('wp.apps.tools')
 
 
 def get_appgitdir(appname, branch=None):
@@ -20,11 +21,13 @@ def get_appgitdir(appname, branch=None):
     return gitdir
 
 
-def get_apps(printdebug=False):
+def get_apps(printdebug=False, admin_apps=False):
     """ Return all apps or None. """
-
+    filterargs = {'disabled': False}
+    if not admin_apps:
+        filterargs['admin_only'] = False
     try:
-        apps = wp_app.objects.filter(disabled=False)
+        apps = wp_app.objects.filter(**filterargs)
     except Exception as ex:
         log.error('Unable to get apps:\n{}'.format(ex))
         return None
@@ -52,8 +55,9 @@ def cmdline_test():
     for subapp in get_apps():
         # Print attributes for this sub app.
         print('name: {}, version: {}'.format(subapp.name, subapp.version))
-        print('    json: {}'.format(subapp.json_data))
-        print('    desc: {}'.format(subapp.description))
+        print('    admin only: {}'.format(subapp.admin_only))
+        print('          json: {}'.format(subapp.json_data))
+        print('          desc: {}'.format(subapp.description))
 
     return 0
 

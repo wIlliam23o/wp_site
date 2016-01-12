@@ -12,7 +12,6 @@
 '''
 
 import logging
-log = logging.getLogger('wp.sitemaps')
 
 # For today's date
 from datetime import date
@@ -29,6 +28,7 @@ from img.models import wp_image
 from misc.models import wp_misc
 from projects.models import wp_project
 
+log = logging.getLogger('wp.sitemaps')
 
 @never_cache
 def view_sitemap(request):
@@ -69,7 +69,10 @@ def view_byserver(request):
 def build_app_urls(protocol, domain):
     """ Yields SitemapUrl()s for all web apps. """
     # build apps urls.
-    for app in wp_app.objects.filter(disabled=False).order_by('name'):
+    apps = wp_app.objects.filter(
+        disabled=False,
+        admin_only=False)
+    for app in apps.order_by('name'):
         yield SitemapUrl(
             rel_location='/apps/{}'.format(app.alias),
             protocol=protocol,
@@ -167,7 +170,7 @@ def build_urls(request):
         request is a WSGIRequest or HttpRequest object that was
         passed to the view. It is used to determine the protocol (http/https),
         and the domain name.
-        (for building location urls like: http://mysite.com/projects/myproject)
+        (for building location urls: http://mysite.com/projects/myproject)
 
         returns list of SitemapUrl()
     """
