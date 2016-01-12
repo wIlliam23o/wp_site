@@ -20,12 +20,12 @@ from wp_main.utilities import (
     tweets
 )
 
-# logging
-log = logging.getLogger('wp.home')
-
 # Home tools
 from home import hometools
 from home.models import home_config
+
+# logging
+log = logging.getLogger('wp.home')
 
 
 def index(request):
@@ -172,7 +172,7 @@ def view_login(request):
 
                 # log.debug("referer_view: " + str(referer_view))
 
-                # Change response based on whether or not prev. view was given.
+                # Change response based on whether prev. view was given.
                 if referer_view is None:
                     # Success
                     response = responses.redirect_response('/')
