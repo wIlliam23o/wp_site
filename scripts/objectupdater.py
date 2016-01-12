@@ -13,29 +13,26 @@ import os
 import re
 import zlib
 
-from sys import version_info as sysversion_info
-PY3 = (sysversion_info.major == 3)
-
-# fix for input function if py2 is used. (remove when py2 is disabled)
-if not PY3:
-    input = raw_input  # noqa
-
 # Base usage string to build per-model usage strings from.
 base_usage_str = """{name} v. {ver}
 
     Usage:
-        {script} -A <file>
-        {script} <identifier> -a [-F]
-        {script} <identifier> [-d | -l | -j | -p]
-        {script} <identifier> -u attribute:val
         {script} [-h | -v]
+        {script} -A FILE...
+        {script} ID... -a [-F]
+        {script} IDENT [-d | -l | -j | -p]
+        {script} IDENT -u attribute:val
         {script} -f | -l
 
     Options:
-        <identifier>           : {properid} identifier ({attrstr}).
-        -a,--archive           : Show Archive string for a {lowerid}.
+        FILE                   : One or more archive files to create objects
+                                 from.
+        ID                     : Same as IDENT, except multiple ids can be
+                                 used.
+        IDENT                  : {properid} identifier ({attrstr}).
+        -a,--archive           : Show archive string for a {lowerid}.
                                  When -F is used, data is written to file.
-        -A file,--ARCHIVE file : Load object from archive file.
+        -A,--ARCHIVE           : Load object from archive file.
         -d,--delete            : Delete a {lowerid} (confirmation needed).
         -f,--fields            : List model fields.
         -F,--file              : When archiving, write to file.
@@ -73,7 +70,8 @@ def convert_attr(oldattr, val):
             # mymisc.publish_date = newval
     """
     # Retrieve conversion function needed for this type.
-    # If they are the same, or the types are the same, no conversion is needed.
+    # If they are the same, or the types are the same,
+    # no conversion is needed.
     if oldattr == val:
         return oldattr
     elif type(oldattr) == type(val):
@@ -131,7 +129,14 @@ def do_headerstr(ident, model, attrs=None):
 
 
 def do_object_archive(ident, model, attrs, usefile=False):
-    """ Prints the archive format of an object. """
+    """ Creates the archive format of an object.
+        Arguments:
+            ident   : Identifier for object (value of one of the attrs).
+            model   : Model to find object in.
+            attrs   : Attributes to search for ident.
+            usefile : True for automatic file name, or an explicit file name.
+                      If falsey, output repr is written to stdout.
+    """
     obj = get_object(ident, model, attrs=attrs)
     mname = model.__name__
     if not obj:
@@ -148,15 +153,30 @@ def do_object_archive(ident, model, attrs, usefile=False):
 
     if usefile:
         # Write this data to a file
-        if ' ' in headerstr:
-            objname = headerstr.split()[0].lower()
+        if isinstance(usefile, str):
+            # Explicit file name given.
+            filename = usefile
         else:
-            objname = headerstr.lower()
-        filename = '{}.{}.wparc'.format(mname, objname)
+            for a in attrs:
+                # Get object name from ident attrs.
+                objname = getattr(obj, a, None)
+                if objname:
+                    break
+            else:
+                # Get object name from header.
+                objname = headerstr.split()[0]
+            objname = objname[:16].lower()
+            # Add version if this object is versioned.
+            verstr = getattr(obj, 'version', None)
+
+            filename = '{}.{}{}.wparc'.format(
+                mname,
+                objname,
+                '-{}'.format(verstr) if verstr else '')
         try:
             with open(filename, 'wb') as fwrite:
                 fwrite.write(arcstr)
-        except (IOError, OSError) as ex:
+        except EnvironmentError as ex:
             print('\nUnable to write file: {}\n{}'.format(filename, ex))
             return 1
         # Write success.
@@ -170,6 +190,26 @@ def do_object_archive(ident, model, attrs, usefile=False):
         print(arcstr)
 
     return 0
+
+
+def do_objects_archive(idents, model, attrs, use_file=False):
+    """ Archive all objects with do_object_archive.
+        Prints any errors, and returns the number of errors as an exit status
+        code.
+    """
+    if not idents:
+        print('\nNo objects given to archive!\n')
+        return 1
+
+    errs = 0
+    for ident in idents:
+        errs += do_object_archive(
+            ident,
+            model,
+            attrs,
+            use_file=use_file)
+
+    return errs
 
 
 def do_object_fromarchive(filename):
@@ -194,6 +234,20 @@ def do_object_fromarchive(filename):
     else:
         print('\nUnable to create object from archive: {}'.format(filename))
         return 1
+
+
+def do_objects_fromarchives(filenames):
+    """ Create multiple objects from files using do_object_fromarchive.
+        Returns the number of errors as an exit status code.
+    """
+    if not filenames:
+        print('\nNo files to load objects from!\n')
+        return 1
+    
+    errs = 0
+    for filename in filenames:
+        errs += do_object_fromarchive(filename)
+    return errs
 
 
 def do_object_delete(ident, model, attrs):
@@ -224,7 +278,7 @@ def do_object_delete(ident, model, attrs):
 def do_object_info(ident, model, attrs):
     """ Print info about an object.
         Arguments:
-            ident  : name, title, or part of a name used to retrieve the object
+            ident  : name, title, or part of a name used to retrieve the obj.
             model  : model containing the objects to retrieve from
                      (wp_project, wp_blog, etc.)
         Keyword Arguments:
@@ -342,11 +396,11 @@ def do_object_update(ident, model, attrs, data=None):
         data is attribute:value, or "attribute:spaced value".
         returns 0 on success, 1 on failure (with error msgs printed)
         Arguments:
-            attrs  : list of attributes to search for a match.
-                     (name, alias, title, etc.)
             ident  : name, title, or part of a name to retrieve object with.
             model  : model to retrieve objects from.
                      (wp_project, wp_blog, etc.)
+            attrs  : list of attributes to search for a match.
+                     (name, alias, title, etc.)
 
         Keyword Arguments:
             data   : update data in the form of
@@ -423,9 +477,10 @@ def get_headerstr(obj):
     """ Get header string to print for this model. (wp_project, wp_blog, etc.)
         Arguments:
             model : model this object belongs to. (to determine header style.)
-            obj   : object to get header info from. (obj.name, obj.title, etc.)
+            obj   : object to get header info from. (obj.name, obj.title, ..)
     """
-    # TODO: This could be built into the model, like a 'console_repr' attribute
+    # TODO: This could be built into the model, like a 'console_repr'
+    #       attribute.
     # TODO: ..then get_headerstr() would be: obj.console_repr()
     # TODO: ..so this hardcoded mess (attrs as strings that are loaded) dies.
 
@@ -547,15 +602,14 @@ def get_object(ident, model, attrs=None):
     """
 
     try:
+        # Try by id.
         intval = int(ident)
-    except:
-        intval = None
-
-    # Try id
-    if intval:
         obj = try_get(model, id=intval)
         if obj:
             return obj
+    except (ValueError, TypeError):
+        # We'll try some other method (name, alias, ..)
+        pass
 
     # Build keyword args for attributes, and get().
     attrset = {}
@@ -618,7 +672,8 @@ def get_object_fromarchive(data):
     """ Creates an object from an archive. """
 
     # TODO: This should be on the model itself.
-    # TODO: ..like: wp_blog.from_archive_bytes(b), .from_archive_file(filename)
+    # TODO: ..like: wp_blog.from_archive_bytes(b),
+    #               wp_blog.from_archive_file(filename)
     if isinstance(data, str):
         # We need bytes for these operations.
         data = bytes(data, 'utf-8')
@@ -718,7 +773,9 @@ def get_object_by_partname(partname, model, attrs=None, objects=None):
                 if hasattr(attrval, 'lower'):
                     attrval = attrval.lower()
             except Exception as ex:
-                print('\nError retrieving attribute {}:\n{}'.format(aname, ex))
+                print('\nError retrieving attribute {}:\n{}'.format(
+                    aname,
+                    ex))
                 continue
             attrmatch = repat.search(attrval)
             if attrmatch:
@@ -898,7 +955,10 @@ def update_object_bydata(obj, data, **kwargs):
 def update_object(obj, attr, val, objectname=None):
     """ Updates an attribute of an object, where attr is a string.
         Example:
-            update_object(wp_project.objects.all()[0], 'name', 'First Project')
+            update_object(
+                wp_project.objects.all()[0],
+                'name',
+                'First Project')
 
         Arguments:
             obj  : object to update.
@@ -929,7 +989,11 @@ def update_object(obj, attr, val, objectname=None):
         val = convert_attr(oldattr, val)
         # A little bit 'prettier' type string than <type 'this'>.
         typestr = str(type(val)).strip('<').strip('>')
-        print('\nSetting {}.{} = {} as {}'.format(objname, attr, val, typestr))
+        print('\nSetting {}.{} = {} as {}'.format(
+            objname,
+            attr,
+            val,
+            typestr))
     except Exception as ex:
         print('\nError converting value to required type!: '
               '{}\n{}'.format(val, ex))

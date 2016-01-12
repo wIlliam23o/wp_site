@@ -3,9 +3,9 @@
 '''updateobject.py
     Busybox-style command that updates various models depending on the
     name it is called by.
-    If it is called using a symlink named 'updateproject', the wp_project model
-    will be used to lookup objects. Same idea with 'updateblog', 'updatemisc',
-    etc.
+    If it is called using a symlink named 'updateproject', the wp_project
+    model will be used to lookup objects. Same idea with 'updateblog',
+    'updatemisc', etc.
     The name determines which model we will start with, and what the friendly
     names for objects are ('Project', 'Blog Post', etc.). From there, its a
     matter of knowing what attributes are available for the model and
@@ -90,10 +90,16 @@ except ImportError as eximp:
     print('Unable to import docopt!,\n{}'.format(eximp))
     sys.exit(1)
 
-# Helpers for filtering/gathering alias names for updateobject.py
-is_updatealias = lambda s: s.startswith('update') and ('updateobj' not in s)
-# Helper for trimming .py from a filename (for aliases, and _SCRIPT)
-trim_ext = lambda s: os.path.splitext(s)[0]
+
+def is_updatealias(s):
+    """ Helpers for filtering/gathering alias names for updateobject.py """
+    return s.startswith('update') and ('updateobj' not in s)
+
+
+def trim_ext(s):
+    """ Helper for trimming .py from a filename (for aliases, and _SCRIPT) """
+    return os.path.splitext(s)[0]
+
 # Directory where the alias scripts for updateobject.py can be found.
 SCRIPTSDIR = django_init.scripts_dir
 
@@ -175,7 +181,7 @@ modelused = modelinfo[modelname]
 # Script info changes a little depending on how its called (busybox-style
 # I guess)
 _NAME = 'Update{}'.format(modelused['name'])
-_VERSION = '1.1.1'
+_VERSION = '1.1.2'
 _VERSIONSTR = '{} v. {}'.format(_NAME, _VERSION)
 
 # Usage string to use with docopt.
@@ -194,39 +200,49 @@ def main(argd):
     # Args for simple object operations.
     # TODO: Pass a single object with all the info needed, grabbed from
     #       the app itself (maybe in an updater.py module)
-    id_args = [argd['<identifier>'], modelused['model'], modelused['attrs']]
+    id_args = (
+        argd['ID'] if argd['--archive'] else argd['IDENT'],
+        modelused['model'],
+        modelused['attrs'])
 
     # Function map for simple object operations.
-    id_funcs = {'--archive': {'func': objectupdater.do_object_archive,
-                              'args': id_args,
-                              'kwargs': {'usefile': argd['--file']},
-                              },
-                '--delete': {'func': objectupdater.do_object_delete,
-                             'args': id_args,
-                             },
-                '--list': {'func': objectupdater.do_object_info,
-                           'args': id_args,
-                           },
-                '--json': {'func': objectupdater.do_object_json,
-                           'args': id_args,
-                           },
-                '--pickle': {'func': objectupdater.do_object_pickle,
-                             'args': id_args,
-                             },
-                '--update': {'func': objectupdater.do_object_update,
-                             'args': id_args,
-                             'kwargs': {'data': argd['--update']},
-                             },
-                }
+    id_funcs = {
+        '--archive': {
+            'func': objectupdater.do_objects_archive,
+            'args': id_args,
+            'kwargs': {'usefile': argd['--file']},
+        },
+        '--delete': {
+            'func': objectupdater.do_object_delete,
+            'args': id_args,
+        },
+        '--list': {
+            'func': objectupdater.do_object_info,
+            'args': id_args,
+        },
+        '--json': {
+            'func': objectupdater.do_object_json,
+            'args': id_args,
+        },
+        '--pickle': {
+            'func': objectupdater.do_object_pickle,
+            'args': id_args,
+        },
+        '--update': {
+            'func': objectupdater.do_object_update,
+            'args': id_args,
+            'kwargs': {'data': argd['--update']},
+        },
+    }
 
     if argd['--ARCHIVE']:
-        # Create object from archive.
-        ret = objectupdater.do_object_fromarchive(argd['--ARCHIVE'])
-    elif argd['--list'] and (not argd['<identifier>']):
+        # Create objects from archives.
+        ret = objectupdater.do_objects_fromarchives(argd['FILE'])
+    elif argd['--list'] and (not argd['IDENT']):
         ret = do_list()
     elif argd['--fields']:
         ret = objectupdater.do_fields(modelused['model'])
-    elif argd['<identifier>']:
+    elif argd['IDENT']:
         # ID specific functions..
         handled = False
         for id_flag in id_funcs.keys():
@@ -247,7 +263,7 @@ def main(argd):
         # Unhandled args, or no args.
         if not handled:
             # No args with identifier (do Header String print)
-            ret = objectupdater.do_headerstr(argd['<identifier>'],
+            ret = objectupdater.do_headerstr(argd['IDENT'],
                                              modelused['model'],
                                              attrs=modelused['attrs'])
 
@@ -376,6 +392,21 @@ def do_list_projects(model=None):
             infostr = '{} {}'.format(infostr, proj.filename)
         print(infostr)
     return 0
+
+
+def get_ids():
+    """ Retrieve all ids for the model being used. """
+    return get_model_ids(modelused)
+
+
+def get_model_ids(modelinfo):
+    """ Retrieve all pks for a given model (through modelinfo). """
+    try:
+        objects = modelinfo['model'].objects.all()
+    except Exception as ex:
+        print('Unable to get ids for: {}'.format(modelinfo['name']))
+        return set()
+    return {o.id for i in objects}
 
 
 def iter_paste_children(paste, level=1):
