@@ -41,7 +41,7 @@ done
 sass_ignore=("_welbornprod.scss")
 
 # Default sass args.
-sass_args=("--style" "compressed")
+sass_args=("--style" "compressed" "--sourcemap" "none")
 
 # Path to closure.jar.
 closure_path="$dir_project/scripts/external/closure.jar"
@@ -303,4 +303,3 @@ fi
 if [[ $do_sass == true ]]; then
     build_sass
 fi
-
