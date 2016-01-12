@@ -216,9 +216,18 @@ def error_response(request=None, errnum=500, msgs=None, user_error=None):
                           Without it, the default 'sorry, this was my fault..'
                           msg is shown.
     """
-
     if msgs and isinstance(msgs, str):
         msgs = [msgs]
+
+    if not request:
+        # This happens when the request isn't passed from the original view.
+        return text_response('\n'.join((
+            'A developer error occurred.',
+            'The Request() object was lost somewhere down the line.',
+            'This error has been emailed to me, and I will fix it asap.',
+            'Thanks for your patience, -Cj',
+            '\nOriginal message:\n{}'.format('\n'.join(msgs)) if msgs else ''
+        )))
 
     if msgs:
         # Send messages using the message framework.
