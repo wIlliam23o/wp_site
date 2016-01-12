@@ -432,7 +432,7 @@ def view_json(request):
     else:
         pasteidarg = pasteidarg.lower()
 
-    if pasteidarg in ('all', 'latest', 'top'):
+    if pasteidarg in {'all', 'latest', 'top'}:
         # Paste listing.
         return json_paste_listing(pasteidarg)
 
