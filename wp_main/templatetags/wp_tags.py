@@ -36,15 +36,16 @@ from apps.models import wp_app
 from apps.phonewords.models import pw_result
 from apps.paste.models import wp_paste
 
-log = logging.getLogger('wp.wp_main.tags')
-
-register = template.Library()
 
 # for admin change_list filtering.
 import re
 #                               adminpage type  id     str()
 disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
+
+log = logging.getLogger('wp.wp_main.tags')
+
+register = template.Library()
 
 
 @register.filter
@@ -581,7 +582,7 @@ def repr_(object_):
     """ returns repr(object_) to the template """
     return repr(object_)
 
-
+    
 @register.filter
 def sortdict(d):
     """ Generator for returning an iterable of a sorted dict.

@@ -41,12 +41,14 @@ enable_comments.short_description = "Enable Comments in selected Posts"
 
 class wp_blogAdmin(admin.ModelAdmin):
     # exclude = ['posted']
-    prepopulated_fields = {'slug': ('title'.lower(),)
-                           }
+    prepopulated_fields = {
+        'slug': ('title'.lower(),)
+    }
     # enable actions found above for this admin page.
-    actions = [enable_posts,
-               disable_posts,
-               enable_comments,
-               disable_comments]
+    actions = [
+        enable_posts,
+        disable_posts,
+        enable_comments,
+        disable_comments]
 
 admin_site.register(wp_blog, wp_blogAdmin)

@@ -563,9 +563,9 @@ def json_response(data):
     return HttpResponse(data, content_type='application/json')
 
 
-def json_response_err(ex, log=False):
+def json_response_err(ex, logit=False):
     """ Respond with contents of error message using JSON. """
-    if log:
+    if logit:
         log.error('Sent JSON error:\n{}'.format(ex))
 
     if hasattr(ex, '__class__'):

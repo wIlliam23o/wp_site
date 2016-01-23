@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Version for welbornprod.com
-WPVERSION = '2.3.0'
 
 # file/path (path joining)
 import os.path
 import sys
-SYSVERSION = sys.version
 
 import settings_local
+
+SYSVERSION = sys.version
+# Version for welbornprod.com
+WPVERSION = '2.3.0'
+
 TEMPLATE_DEBUG, DEBUG = settings_local.TEMPLATE_DEBUG, settings_local.DEBUG
 
 # Django messages framework, message-levels
@@ -40,7 +42,7 @@ SERVER_LOCATION = SECRETS.site_info['location']
 STATIC_PARENT, STATIC_ROOT = SECRETS.static_parent, SECRETS.static_root
 STATIC_URL = SECRETS.static_url
 MEDIA_URL = SECRETS.site_info['media_url']
-MEDIA_ROOT = os.path.join(STATIC_ROOT, "media")
+MEDIA_ROOT = os.path.join(STATIC_ROOT, 'media')
 
 # Email info.
 EMAIL_HOST = SECRETS.settings['email']['host']
@@ -75,8 +77,8 @@ else:
 USER_AGENTS_CACHE = 'default'
 
 # main app (location of settings.py)
-MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
-TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
+MAIN_DIR = os.path.join(BASE_DIR, 'wp_main')
+TEMPLATES_BASE = os.path.join(MAIN_DIR, 'templates')
 
 # IP's debug_toolbar should be shown to.
 INTERNAL_IPS = tuple(SECRETS.settings.get('internal_ips', []))
@@ -111,7 +113,10 @@ USE_TZ = False
 
 # Additional locations of static files
 STATICFILES_DIRS = (
+    # Local js/sass that has been built.
     os.path.join(BASE_DIR, 'built'),
+    # Global, or third-party resources (js, css, images, fonts, etc.).
+    os.path.join(BASE_DIR, 'static'),
 )
 
 # List of finder classes that know how to find static files in
@@ -204,6 +209,7 @@ INSTALLED_APPS = (
     'apps',  # handles urls for all sub-apps.
     'apps.phonewords',
     'apps.paste',
+    'apps.timekeeper',
     'blogger',
     'downloads',
     'home',
@@ -280,10 +286,10 @@ DEBUG_TOOLBAR_PATCH_SETTINGS = False
 
 # default login url
 # (regex for wp_main.urls, put here to avoid future mismatches)
-LOGIN_URL = "/login"
-LOGIN_URL_REGEX = "^login/?.+"
+LOGIN_URL = '/login'
+LOGIN_URL_REGEX = '^login/?.+'
 
 # default page to visit after login (if 'next url' is not specified)
-LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = '/'
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
