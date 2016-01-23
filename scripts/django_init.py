@@ -20,6 +20,11 @@ project_dir = ''
 settings_dir = ''
 scripts_dir = ''
 initialized = False
+# Path to django installation.
+django_path = '/usr/local/lib/python{}.{}/dist-packages/django'.format(
+    sys.version_info.major,
+    sys.version_info.minor
+)
 
 
 def get_root_parent(scriptpath):

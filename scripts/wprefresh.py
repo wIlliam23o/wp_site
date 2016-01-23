@@ -3,8 +3,7 @@
 
 '''
       project: Welborn Productions - Tools - Refresher
-     @summary: Builds files that need it with builder.py,
-               Refreshes static files (collectstatic),
+     @summary: Refreshes static files (collectstatic),
                refreshes admin css (static/admin/css),
                and Restarts the server.
 
@@ -14,15 +13,16 @@
 
    start date: May 29, 2013
 '''
-
+import inspect
 import sys
 import os
+from contextlib import suppress
 
 from docopt import docopt
 
 # Script info...
 NAME = 'WpRefresh'
-VERSION = '2.0.3'
+VERSION = '2.0.4'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 
 
@@ -38,9 +38,10 @@ except Exception as ex:
     print('\nError initializing django environment!:\n{}'.format(ex))
     sys.exit(1)
 
-# Get Django Settings and Cache to work with..
-from django.conf import settings
-from django.core.cache import cache
+# Get Django Settings and Cache to work with.
+# ...must be imported after django_init!
+from django.conf import settings     # noqa
+from django.core.cache import cache  # noqa
 
 USAGESTR = """{version}
 
@@ -51,6 +52,7 @@ USAGESTR = """{version}
         -A,--noadmin         : Skip admin css copy.
         -C,--nocollect       : Skip static collection.
         -d,--debug           : Prints extra info (not much right now).
+        -D,--django          : Refresh django admin css/js/etc. also.
         -h,--help            : Show this message.
         -k,--clearcache      : Clear Django's cache for the WP site.
         -l,--live            : Suppress warning about live site.
@@ -60,8 +62,19 @@ USAGESTR = """{version}
         -v,--version         : Show version.
 """.format(version=VERSIONSTR)
 
+# Files to ignore when collecting static files.
+STATIC_IGNORE = (
+    '_in*',
+    'sass',
+    '*.scss',
+)
+
+DEBUG = False
+
 
 def main(argd):
+    global DEBUG
+    DEBUG = argd['--debug']
     # if test is passed no warning is given before restarting the server.
     test = (
         settings.SERVER_LOCATION == 'local' or
@@ -95,9 +108,11 @@ def main(argd):
         check_call(collect_static)
     # Run admin copy (overwrites anything in /static)
     if not argd['--noadmin']:
-        check_call(collect_admin_css, printskipped=argd['--debug'])
+        if argd['--django']:
+            check_call(collect_django_admin_files)
         if argd['--admintemplates']:
-            check_call(collect_admin_templates, printskipped=argd['--debug'])
+            check_call(collect_django_admin_templates)
+        check_call(collect_admin_files)
     # Run apache restart
     if not argd['--norestart']:
         check_call(apache_restart)
@@ -128,14 +143,14 @@ def apache_restart():
     if not (
             os.path.isfile(apachecmd.strip(' ')) or
             os.path.isdir(apachecmd.strip('/').strip('. '))):
-        print('\napache command not found!: {}\n'.format(apachecmd))
+        print_err('\nApache command not found!: {}\n'.format(apachecmd))
         return False
 
     try:
         callret = os.system(restartcmd)
         ret = (callret == 0)
     except Exception as ex:
-        print('\nunable to restart apache:\n' + str(ex))
+        print_err('\nUnable to restart apache:\n' + str(ex))
         ret = False
 
     return ret
@@ -162,11 +177,11 @@ def check_args(argd, arglist, unless=None):
             # The unless args were given, and present. So we're okay.
             return False
         # Args were present, no unless given or no unless present.
-        print('\nThese args can\'t be used at the same time:')
-        print('    {}'.format('\n    '.join(arglist)))
+        print_err('\nThese args can\'t be used at the same time:')
+        print_err('    {}'.format('\n    '.join(arglist)))
         if unless:
-            print('\nUnless these args are used:')
-            print('    {}'.format('\n    '.join(unless)))
+            print_err('\nUnless these args are used:')
+            print_err('    {}'.format('\n    '.join(unless)))
         return True
     return False
 
@@ -184,7 +199,7 @@ def check_argset(argd, argsets):
 def check_call(func, *args, **kwargs):
     """ Check return of a command, exit on failure. """
     if not func(*args, **kwargs):
-        print('Command failed: {}'.format(func.__name__))
+        print_err('WpRefresh command failed: {}'.format(func.__name__))
         sys.exit(1)
     return True
 
@@ -196,7 +211,7 @@ def clear_cache():
         print('\nClearing the cache...')
         cache.clear()
     except Exception as ex:
-        print('\nError clearing the cache:\n{}'.format(ex))
+        print_err('\nError clearing the cache:\n{}'.format(ex))
         return False
     print('\nCache was cleared.')
     return True
@@ -207,11 +222,15 @@ def collect_static():
     manage_py = os.path.join(settings.BASE_DIR, 'manage.py')
 
     if not os.path.isfile(manage_py):
-        print("\nmanage.py not found!: " + manage_py + '\n')
+        print_err("\nmanage.py not found!: " + manage_py + '\n')
         return False
 
     print("\nRunning collectstatic...")
+    # No user input when running wprefresh.
     collect_cmd = ['python3', manage_py, 'collectstatic', '--noinput']
+    # Add all ignored patterns.
+    for globpat in STATIC_IGNORE:
+        collect_cmd.extend(('--ignore', globpat))
 
     cmdstr = ' '.join(collect_cmd)
     print('running: {}'.format(cmdstr))
@@ -220,91 +239,164 @@ def collect_static():
     return (callret == 0)
 
 
-def collect_admin_css(printskipped=False):
-    """ Move admin css to proper dir """
+def collect_admin_files():
+    """ Move admin files to the proper static dir for serving.
+        Possibly raises CopyError or CreateError.
+    """
     # admin css dirs (source, target)
-    admin_css = os.path.join(django_init.project_dir, 'home/static/admin/css')
-    admin_css_static = os.path.join(settings.STATIC_ROOT, 'admin/css')
-
-    if not admin_css_static.endswith('/'):
-        admin_css_static += '/'
-
-    if not (os.path.isdir(admin_css) and os.path.isdir(admin_css_static)):
-        print('\n'.join((
-            'admin css directories not found:',
-            '    source: {src}',
-            '    target: {dest}\n')).format(
-                src=admin_css,
-                dest=admin_css_static))
-        return False
-
-    print('\nCopying admin css...')
-    srcfiles = os.listdir(admin_css)
-    for filename in srcfiles:
-        srcfile = os.path.join(admin_css, filename)
-        dstfile = os.path.join(admin_css_static, filename)
-        if copy_file(srcfile, dstfile):
-            print('    Copied to: {}'.format(dstfile))
-        else:
-            if printskipped:
-                print('     Skipping: {}'.format(srcfile))
+    admin_path = os.path.join(django_init.project_dir, 'static/admin')
+    admin_destpath = os.path.join(settings.STATIC_ROOT, 'admin')
+    copy_tree(admin_path, admin_destpath)
     return True
 
 
-def collect_admin_templates(printskipped=False):
-    """ Move admin templates to proper dir if they have changed. """
+def collect_django_admin_templates():
+    """ Move admin templates to proper dir for use.
+        Possibly raises CopyError or CreateError.
+    """
     # admin css dirs (source, target)
     admin_dest = os.path.join(
         django_init.project_dir,
         'wp_main/templates/admin'
     )
-
-    pyver = '{}.{}'.format(sys.version_info.major, sys.version_info.minor)
-    admin_src = '/'.join((
-        '/usr/local/lib/python{}/dist-packages'.format(pyver),
-        'django/contrib/admin/templates/admin'
-    ))
-
-    if not (os.path.isdir(admin_dest) and os.path.isdir(admin_src)):
-        print('\n'.join((
-            '',
-            'admin template directories not found:'
-            '    source: {src}',
-            '    target: {dest}\n')).format(
-                src=admin_src,
-                dest=admin_dest))
-
-        return False
+    admin_src = django_src_path('contrib/admin/templates/admin')
 
     change_files = ('change_list_results.html',)
     change_msg = 'This file must be edited again!'
 
     print('\nCopying admin templates from: {}'.format(admin_src))
-    srcfiles = os.listdir(admin_src)
-    for filename in srcfiles:
-        srcfile = os.path.join(admin_src, filename)
-        dstfile = os.path.join(admin_dest, filename)
-        if copy_file(srcfile, dstfile):
-            print('    Copied to: {}'.format(dstfile))
-            if filename in change_files:
-                print('               ** {} **'.format(change_msg))
-        else:
-            if printskipped:
-                print('     Skipping: {}'.format(srcfile))
+    copied_files = copy_tree(admin_src, admin_dest)
+    for copiedfile in copied_files:
+        for changefile in change_files:
+            if copiedfile.endswith(changefile):
+                print_err('** Must be edited again: {} **'.format(copiedfile))
     return True
 
 
-def copy_file(srcfile, dstfile):
-    """ Copies a single file. """
+def collect_django_admin_files():
+    """ Collect django's admin css files into /static/admin/css.
+        This only needs to run when django has been updated.
+        Possibly raises CopyError or CreateError.
+    """
+    srcpath = django_src_path('contrib/admin/static/admin')
+    if not srcpath:
+        return False
+    destpath = os.path.join(django_init.project_dir, 'static/admin')
+    print('\nCopying django admin files...')
+    return copy_tree(srcpath, destpath)
 
-    if is_modified(srcfile, dstfile):
-        cp_cmd = ['cp', '-r', srcfile, dstfile]
+
+def copy_file(srcfile, destfile, force=False):
+    """ Copies a single file if it has been modified, or `force` is used.
+        Returns the dest. name on copies, and None for non-modified files.
+        Raises a CopyError on failure.
+    """
+
+    if force or is_modified(srcfile, destfile):
+        cp_cmd = ['cp', '-r', srcfile, destfile]
         callret = os.system(' '.join(cp_cmd))
-        return (callret == 0)
-    return False
+        if callret == 0:
+            print('Copied {}\n  {}'.format(srcfile, destfile))
+            return destfile
+        raise CopyError(src=srcfile, dest=destfile)
+
+    debug('Skipping unmodified file: {}'.format(srcfile))
+    return None
 
 
-def is_modified(srcfile, dstfile):
+def copy_tree(srcpath, destpath):
+    """ Copy an entire directory tree.
+        Returns a set of copied files for success,
+        Raises CopyError or CreateError on failure.
+    """
+    if not os.path.exists(srcpath):
+        raise CopyError(
+            src=srcpath,
+            ex=FileNotFoundError('Source path does not exist.'))
+    create_dir(destpath)
+    copied = set()
+    for root, dirs, files in os.walk(srcpath):
+        relpath = root.replace(srcpath, '').lstrip('/')
+        for dirname in dirs:
+            destdirname = os.path.join(destpath, relpath, dirname)
+            create_dir(destdirname)
+
+        for filename in files:
+            destfilename = os.path.join(destpath, relpath, filename)
+            filepath = os.path.join(root, filename)
+            copiedfile = copy_file(filepath, destfilename)
+            if copiedfile:
+                copied.add(copiedfile)
+    return copied
+
+
+def create_dir(dirpath):
+    """ Create a directory if it doesn't exist.
+        Returns a path name for created directories, or None for existing.
+        Raises CreateError on failure.
+    """
+    if not os.path.exists(dirpath):
+        debug('Creating directory: {}'.format(dirpath))
+        try:
+            os.mkdir(dirpath)
+        except EnvironmentError as ex:
+            raise CreateError(path=dirpath, ex=ex)
+        return dirpath
+
+    return None
+
+
+def debug(*args, **kwargs):
+    """ Print a message only if DEBUG is truthy. """
+    if not (DEBUG and args):
+        return None
+
+    # Include parent class name when given.
+    parent = kwargs.get('parent', None)
+    with suppress(KeyError):
+        kwargs.pop('parent')
+
+    # Go back more than once when given.
+    backlevel = kwargs.get('back', 1)
+    with suppress(KeyError):
+        kwargs.pop('back')
+
+    frame = inspect.currentframe()
+    # Go back a number of frames (usually 1).
+    while backlevel > 0:
+        frame = frame.f_back
+        backlevel -= 1
+    fname = os.path.split(frame.f_code.co_filename)[-1]
+    lineno = frame.f_lineno
+    if parent:
+        func = '{}.{}'.format(parent.__class__.__name__, frame.f_code.co_name)
+    else:
+        func = frame.f_code.co_name
+
+    # Patch args to stay compatible with print().
+    pargs = list(args)
+
+    lineinfo = '{}:{} {}(): '.format(fname, lineno, func).ljust(40)
+    pargs[0] = ''.join((lineinfo, pargs[0]))
+    print(*pargs, **kwargs)
+
+
+def django_src_path(relpath):
+    """ Return the full path to a django installation's sub dir.
+        On error, prints a message and returns None.
+    """
+    srcpath = os.path.join(
+        django_init.django_path,
+        relpath)
+    if not os.path.exists(srcpath):
+        print_err('Missing django path: {}'.format(
+            srcpath
+        ))
+        return None
+    return srcpath
+
+
+def is_modified(srcfile, destfile):
     """ Returns true if the src file has been modified,
         and the destination file has not (or doesn't exist yet).
     """
@@ -316,13 +408,13 @@ def is_modified(srcfile, dstfile):
         print('\nUnable to stat file: {}'.format(srcfile, ex))
         return False
     try:
-        if os.path.isfile(dstfile):
-            dstmod = os.path.getmtime(dstfile)
+        if os.path.isfile(destfile):
+            dstmod = os.path.getmtime(destfile)
         else:
             # Destination doesn't exit yet.
             return True
     except Exception as ex:
-        print('\nUnable to stat file: {}'.format(dstfile, ex))
+        print('\nUnable to stat file: {}'.format(destfile, ex))
         return False
 
     if srcmod > dstmod:
@@ -333,21 +425,80 @@ def is_modified(srcfile, dstfile):
     return False
 
 
+def print_copy_err(srcfile, destfile, lbl=None):
+    """ Print an error message pertaining to failed file copies. """
+    lbl = ' {}'.format(lbl) if lbl else ''
+    print_err('\n'.join((
+        'Failed to copy{ftype} file:',
+        '    Source: {src}',
+        '     Dest.: {dest}'
+    )).format(
+        ftype=lbl,
+        src=srcfile,
+        dest=destfile
+    ))
+
+
+def print_err(*args, **kwargs):
+    """ Wrapper for print() that uses stderr by default. """
+    if kwargs.get('file', None) is None:
+        kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+
+
 def warn_live():
     """ Print a helpful warning if the live site may be interrupted.
         Offer the user a chance to cancel the operation.
     """
-    print('\nYou are working on the ** LIVE SITE ** !')
-    print('Continuing will restart the server...')
+    print_err('\nYou are working on the ** LIVE SITE ** !')
+    print_err('Continuing will restart the server...')
     warn_response = input('\n    Continue anyway? (y|n): ')
     if not warn_response.lower().startswith('y'):
-        print('\nCancelling, goodbye.')
+        print_err('\nCancelling, goodbye.')
         return False
     return True
 
 
+class CopyError(EnvironmentError):
+    def __init__(self, src=None, dest=None, ex=None):
+        self.src = str(src)
+        self.dest = str(dest)
+        self.ex = ex
+
+    def __str__(self):
+        lines = ['Failed to copy file:']
+        if self.src:
+            lines.append('    Source: {s.src}')
+        if self.dest:
+            lines.append('     Dest.: {s.dest}')
+        if self.ex:
+            lines.append('  {s.ex}')
+        return '\n'.join(lines).format(s=self)
+
+
+class CreateError(EnvironmentError):
+    def __init__(self, path=None, ex=None):
+        self.path = str(path)
+        self.ex = ex
+
+    def __str__(self):
+        return '\n'.join((
+            'Failed to create directory: {s.path}',
+            '  {s.ex}'
+        )).format(s=self)
+
+
 # START OF SCRIPT ------------------------------------------------------------
 if __name__ == '__main__':
-    mainargd = docopt(USAGESTR, version=VERSIONSTR)
-    mainret = main(mainargd)
+    try:
+        mainret = main(docopt(USAGESTR, version=VERSIONSTR))
+    except (CopyError, CreateError) as ex:
+        print_err(ex)
+        mainret = 1
+    except (EOFError, KeyboardInterrupt):
+        print_err('\nUser Cancelled.\n')
+        mainret = 2
+    except BrokenPipeError:
+        print_err('Broken pipe.')
+        mainret = 3
     sys.exit(mainret)
