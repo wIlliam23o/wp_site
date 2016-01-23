@@ -3,12 +3,9 @@
    - Christopher Welborn 2013 -desc added in 2014 :)
 */
 
-/*  JSHint/JSLint options:
-    `ace` and `wptools` are read-only.
 
-    global ace:false, wptools:false
-    global wp_content:true, wp_modelist:true
-*/
+/*    global ace:false, wptools:false */
+/*    global wp_content:true, wp_modelist:true */
 
 // Store current relative filename here. The template sends it on the first
 // page load, and then it is set with JS when doing ajax calls.
@@ -135,7 +132,7 @@ var wpviewer = {
                 $('#file-menu').fadeIn();
             } else {
                 // Re-mark current file (disable current file in menu)
-                $.each($(".vertical-menu-link"), function () {
+                $.each($('.vertical-menu-link'), function () {
                     // get name from this link.
                     menuname = $(this).children().text();
                     // fix onclick for view_file(), by disabling links on all other files.

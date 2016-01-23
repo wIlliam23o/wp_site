@@ -22,14 +22,9 @@
 
 */
 
-/*  Some JSHint options:
-    Allow browser globals, including console, and $ for jQuery.
-    Allow a global 'use strict'.
-*/
-/* jshint browser:true, devel: true, jquery:true,globalstrict:true */
 
 // Base64 is not linted, but is used in wptools. It should be read-only.
-/* global Base64:false, ace:true */
+/* global Base64:false, ace:true */ //eslint-disable-line no-unused-vars
 
 'use strict';
 var wptools = {
@@ -47,13 +42,21 @@ var wptools = {
         */
         var $floater = $('#floater');
         if ($floater.length) {
-            $('#floater-msg').html(msg);
+            var $floater_msg = $('#floater-msg'),
+                $floater_smallmsg = $('#floater-smalltext');
+            $floater_msg.html(msg);
             if (smallmsg) {
-                $('#floater-smalltext').html(smallmsg);
+                $floater_smallmsg.html(smallmsg);
             }
             $floater.fadeIn();
             wptools.center($floater, true);
-            setTimeout(function () { $floater.fadeOut(); }, 5000);
+            setTimeout(
+                function () {
+                    $floater.fadeOut();
+                    $floater_msg.html('');
+                    $floater_smallmsg.html('');
+                },
+                5000);
 
         } else {
             // Fall-back to alert.
@@ -412,7 +415,7 @@ var wptools = {
       it is kept here in the 'global' utilities. If the code ever grows
       beyond these few things it may be moved to its own file in misc/static/js
 */
-var misctools = {
+var misctools = { //eslint-disable-line no-unused-vars
     fixLongDescBtn: function fixLongDescBtn(alias) {
         var miscbtnid = '#misclongdescbtn-' + alias;
         var $longdescbtn = $(miscbtnid);
@@ -447,6 +450,8 @@ var misctools = {
 *
 **/
 
+/* This code works, despite whatever warnings jshint was spouting. */
+/* eslint: disable */
 /* jshint ignore:start */
 var Base64 = {
 
@@ -572,11 +577,11 @@ var Base64 = {
 };
 
 /* jshint ignore:end */
-
+/*eslint: enable */
 /* ------------------------------------------------------------------------- */
 
 /* Rotator settings specific to welbornprod.... */
-var wprotator_settings = {
+var wprotator_settings = { //eslint-disable-line no-unused-vars
     width: '100%',
     height: 300,
     thumb_width: 24,

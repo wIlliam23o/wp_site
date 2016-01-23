@@ -5,10 +5,10 @@
 
 /*  JSHint/JSLint options:
     `wptools` is a read-only global.
-    global wptools:false
 */
+/* global wptools:false */
 
-var imgtools = {
+var imgtools = { // eslint-disable-line no-unused-vars
     // Modules and file names are versioned to "break" the cache on updates.
     version: '0.0.2',
     do_upload : function () {
