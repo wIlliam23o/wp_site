@@ -1,6 +1,8 @@
 // Global colors/settings for Welborn Productions
 // Every .scss file should import this, if it uses the common colors/styles.
 
+// scss-lint:disable ColorVariable, VendorPrefix
+
 // Borders
 $bordermain: rgba(202, 217, 224, .5);
 $borderfaint: rgba(202, 217, 224, .25);
@@ -30,6 +32,7 @@ $bluelink: #2358a6;
 $bluemain: #26a1f4;
 $bluelight: #74afee;
 $bluehover: #007dd1;
+$redlight: rgb(206, 154, 154);
 $redmain: #b90000;
 $redhover: #f00;
 $greenmain: #01941e;
@@ -40,6 +43,7 @@ $shadowbig:  #eee 0 0 20px;
 $shadowmedium: #bac2c7 0 0 15px;
 $shadownormal: 4px 4px 4px rgba(0, 0, 0, .07);
 $shadowbox: 2px 2px 3px rgba(0, 0, 0, .4);
+$shadowboxmed: 4px 4px 5px rgba(5, 5, 5, .66);
 $shadowsmall: #bac2c7 1px 1px 4px;
 $shadowtext: 2px 2px 4px rgba(0, 0, 0, 1);
 $shadowtextsmall:  #999 1px 1px 3px;
@@ -66,6 +70,8 @@ $fontlarge: 3.5em;
 
 // Line Heights
 $lineheightnormal: 1.1em;
+
+// scss-lint:disable Indentation
 
 // mixins (not everything uses this yet.)
 @mixin border-radius($radius) {
@@ -167,3 +173,4 @@ $lineheightnormal: 1.1em;
       -ms-user-select: $sel;
           user-select: $sel;
 }
+// scss-lint:enable Indentation
