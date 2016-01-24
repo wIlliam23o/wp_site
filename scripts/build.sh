@@ -42,7 +42,7 @@ done
 sass_ignore=("_welbornprod.scss")
 
 # Default sass args.
-sass_args=("--style" "compressed" "--sourcemap" "none")
+sass_args=("--style" "compressed" "--sourcemap=none")
 
 # Path to closure.jar.
 closure_path="$dir_project/scripts/external/closure.jar"
