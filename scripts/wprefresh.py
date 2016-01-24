@@ -17,6 +17,7 @@ import inspect
 import sys
 import os
 from contextlib import suppress
+from functools import wraps
 
 from docopt import docopt
 
@@ -32,10 +33,14 @@ try:
     if not django_init.init_django():
         sys.exit(1)
 except ImportError as eximp:
-    print('\nMissing django_init.py!:\n{}'.format(eximp))
+    print(
+        '\nMissing django_init.py!:\n{}'.format(eximp),
+        file=sys.stderr)
     sys.exit(1)
 except Exception as ex:
-    print('\nError initializing django environment!:\n{}'.format(ex))
+    print(
+        '\nError initializing django environment!:\n{}'.format(ex),
+        file=sys.stderr)
     sys.exit(1)
 
 # Get Django Settings and Cache to work with.
@@ -46,18 +51,19 @@ from django.core.cache import cache  # noqa
 USAGESTR = """{version}
 
     Usage:
-        wprefresh.py [options]
+        wprefresh.py -h | -v
+        wprefresh.py -r [-l] [-D]
+        wprefresh.py [-c] [-d] [-k] [-l] ([-C] | [-R]) [-t] [-D]
 
     Options:
-        -A,--noadmin         : Skip admin css copy.
         -C,--nocollect       : Skip static collection.
-        -d,--debug           : Prints extra info (not much right now).
-        -D,--django          : Refresh django admin css/js/etc. also.
+        -c,--clearcache      : Clear Django's cache for the WP site.
+        -D,--debug           : Prints extra info (not much right now).
+        -d,--django          : Refresh django admin css/js/etc. also.
         -h,--help            : Show this message.
-        -k,--clearcache      : Clear Django's cache for the WP site.
         -l,--live            : Suppress warning about live site.
-        -r,--restart         : Just restart the server, nothing else.
         -R,--norestart       : Skip apache restart.
+        -r,--restart         : Just restart the server, nothing else.
         -t,--admintemplates  : Refresh admin templates also.
         -v,--version         : Show version.
 """.format(version=VERSIONSTR)
@@ -71,6 +77,10 @@ STATIC_IGNORE = (
 
 DEBUG = False
 
+# If any warnings are available after all commands run, they will be printed
+# to stderr. This is so they don't get lost in the mix.
+WARNINGS = set()
+
 
 def main(argd):
     global DEBUG
@@ -82,175 +92,120 @@ def main(argd):
     )
     warn = False if test else (not (argd['--live'] or argd['--norestart']))
 
-    # Check for mismatched args (rather than write a complicated USAGESTR)..
-    mismatched = check_argset(argd, [('--restart', '--norestart')])
-    if mismatched:
-        return 1
-
-    # Check overall skip.
-    if check_args(argd,
-                  ('--norestart', '--nocollect', '--noadmin'),
-                  unless=('--clearcache',)):
-        print('\nSkipping entire refresh...')
-        return 0
-
     # Show warning if needed..
     if warn and (not warn_live()):
         return 0
 
     # Just restart
     if argd['--restart']:
-        check_call(apache_restart)
+        cmd_apache_restart()
         return 0
+
+    if argd['--django']:
+        # Move django css/js/etc. to /static/admin
+        cmd_collect_django_admin_files()
+    if argd['--admintemplates']:
+        # Move django template to wp_main/templates/admin
+        cmd_collect_django_admin_templates()
 
     # Run collect static
     if not argd['--nocollect']:
-        check_call(collect_static)
-    # Run admin copy (overwrites anything in /static)
-    if not argd['--noadmin']:
-        if argd['--django']:
-            check_call(collect_django_admin_files)
-        if argd['--admintemplates']:
-            check_call(collect_django_admin_templates)
-        check_call(collect_admin_files)
+        cmd_collect_static()
+
     # Run apache restart
     if not argd['--norestart']:
-        check_call(apache_restart)
+        cmd_apache_restart()
 
     if argd['--clearcache']:
-        check_call(clear_cache)
+        cmd_clear_cache()
 
     return 0
 
 
-def apache_restart():
+def check_call(func):
+    """ Convert a simple boolean-returning function into a "checked call",
+        where if the command returns a Falsey value a CommandError is raised.
+        This also catches CopyError and CreateError, converting them to
+        CommandError (building a better error message).
+        These errors are caught above main(), and will cause a program exit.
+    """
+    @wraps(func)
+    def run_func(*args, **kwargs):
+        try:
+            cmdreturn = func(*args, **kwargs)
+        except (CopyError, CreateError) as ex:
+            # Instead of just CopyError, tell the user which command did it.
+            raise CommandError(
+                name=func.__name__,
+                msg=str(ex)
+            )
+        else:
+            if not cmdreturn:
+                raise CommandError(
+                    name=func.__name__,
+                    msg='Return value was: {}'.format(cmdreturn)
+                )
+
+        return True
+
+    return run_func
+
+
+@check_call
+def cmd_apache_restart():
     """ Restart the apache server """
     # apache restart locations.
     remote_apache_path = os.path.join(settings.BASE_PARENT, 'apache2', 'bin')
     if os.path.isdir(remote_apache_path):
         # Remote: `../apache2/bin/restart`
-        elevcmd = ''
-        apachecmd = ''.join(['. ', remote_apache_path]) + '/'
-        apacheargs = 'restart'
+        restartcmd = '.{}/restart'.format(remote_apache_path)
+        if not os.path.exists(restartcmd):
+            raise CommandError(
+                'cmd_apache_restart',
+                'Apache command not found: {}'.format(restartcmd)
+            )
     else:
         # Local: `sudo apache2 restart`
-        elevcmd = 'sudo '
-        apachecmd = '/etc/init.d/apache2 '
-        apacheargs = ' restart'
+        local_apachecmd = '/etc/init.d/apache2'
+        restartcmd = ' '.join(('sudo', local_apachecmd, 'restart'))
+        if not os.path.exists(local_apachecmd):
+            raise CommandError(
+                name='cmd_apache_restart',
+                msg='Apache command not found: {}'.format(local_apachecmd)
+            )
 
-    restartcmd = ''.join((elevcmd, apachecmd, apacheargs))
     print('\nRestarting apache... ({})'.format(restartcmd))
-    if not (
-            os.path.isfile(apachecmd.strip(' ')) or
-            os.path.isdir(apachecmd.strip('/').strip('. '))):
-        print_err('\nApache command not found!: {}\n'.format(apachecmd))
-        return False
-
     try:
         callret = os.system(restartcmd)
-        ret = (callret == 0)
+        cmdreturn = (callret == 0)
     except Exception as ex:
-        print_err('\nUnable to restart apache:\n' + str(ex))
-        ret = False
+        raise CommandError(
+            name='cmd_apache_restart',
+            msg='Unable to restart apache:\n{}'.format(ex)
+        )
 
-    return ret
-
-
-def check_args(argd, arglist, unless=None):
-    """ If all args in arglist are present in argd,
-        return True. (Checks for mismatched args)
-        If unless is given, the args can be present as long as the
-        'unless' arguments are also present.
-        Arguments:
-            argd     : Docopt style argument dict.
-            arglist  : Tuple/List of arguments to check.
-            unless   : Tuple/List of arguments that make the presence of all
-                       other arguments okay.
-    """
-
-    argsgiven = all([argd[a] for a in arglist])
-    unlessvals = [argd[a] for a in unless] if unless else []
-    unlessgiven = all(unlessvals) if unlessvals else False
-
-    if argsgiven:
-        if unless and unlessgiven:
-            # The unless args were given, and present. So we're okay.
-            return False
-        # Args were present, no unless given or no unless present.
-        print_err('\nThese args can\'t be used at the same time:')
-        print_err('    {}'.format('\n    '.join(arglist)))
-        if unless:
-            print_err('\nUnless these args are used:')
-            print_err('    {}'.format('\n    '.join(unless)))
-        return True
-    return False
+    return cmdreturn
 
 
-def check_argset(argd, argsets):
-    """ Checks several sets of args at once. """
-    ret = False
-    for arglist in argsets:
-        if check_args(argd, arglist):
-            ret = True
-            break
-    return ret
-
-
-def check_call(func, *args, **kwargs):
-    """ Check return of a command, exit on failure. """
-    if not func(*args, **kwargs):
-        print_err('WpRefresh command failed: {}'.format(func.__name__))
-        sys.exit(1)
-    return True
-
-
-def clear_cache():
+@check_call
+def cmd_clear_cache():
     """ Clear Django's cache. """
 
     try:
         print('\nClearing the cache...')
         cache.clear()
     except Exception as ex:
-        print_err('\nError clearing the cache:\n{}'.format(ex))
-        return False
+        raise CommandError(
+            name='cmd_clear_cache',
+            msg='Error clearing the cache:\n{}'.format(ex)
+        )
+
     print('\nCache was cleared.')
     return True
 
 
-def collect_static():
-    """ Run manage.py collectstatic """
-    manage_py = os.path.join(settings.BASE_DIR, 'manage.py')
-
-    if not os.path.isfile(manage_py):
-        print_err("\nmanage.py not found!: " + manage_py + '\n')
-        return False
-
-    print("\nRunning collectstatic...")
-    # No user input when running wprefresh.
-    collect_cmd = ['python3', manage_py, 'collectstatic', '--noinput']
-    # Add all ignored patterns.
-    for globpat in STATIC_IGNORE:
-        collect_cmd.extend(('--ignore', globpat))
-
-    cmdstr = ' '.join(collect_cmd)
-    print('running: {}'.format(cmdstr))
-    callret = os.system(cmdstr)
-
-    return (callret == 0)
-
-
-def collect_admin_files():
-    """ Move admin files to the proper static dir for serving.
-        Possibly raises CopyError or CreateError.
-    """
-    # admin css dirs (source, target)
-    admin_path = os.path.join(django_init.project_dir, 'static/admin')
-    admin_destpath = os.path.join(settings.STATIC_ROOT, 'admin')
-    copy_tree(admin_path, admin_destpath)
-    return True
-
-
-def collect_django_admin_templates():
+@check_call
+def cmd_collect_django_admin_templates():
     """ Move admin templates to proper dir for use.
         Possibly raises CopyError or CreateError.
     """
@@ -261,19 +216,19 @@ def collect_django_admin_templates():
     )
     admin_src = django_src_path('contrib/admin/templates/admin')
 
-    change_files = ('change_list_results.html',)
-    change_msg = 'This file must be edited again!'
+    change_files = ('admin/base.html', 'change_list_results.html',)
 
     print('\nCopying admin templates from: {}'.format(admin_src))
     copied_files = copy_tree(admin_src, admin_dest)
     for copiedfile in copied_files:
         for changefile in change_files:
             if copiedfile.endswith(changefile):
-                print_err('** Must be edited again: {} **'.format(copiedfile))
+                warning_add('Must be edited again: {}'.format(copiedfile))
     return True
 
 
-def collect_django_admin_files():
+@check_call
+def cmd_collect_django_admin_files():
     """ Collect django's admin css files into /static/admin/css.
         This only needs to run when django has been updated.
         Possibly raises CopyError or CreateError.
@@ -286,6 +241,28 @@ def collect_django_admin_files():
     return copy_tree(srcpath, destpath)
 
 
+@check_call
+def cmd_collect_static():
+    """ Run manage.py collectstatic """
+    manage_py = os.path.join(settings.BASE_DIR, 'manage.py')
+
+    if not os.path.isfile(manage_py):
+        print_err('manage.py is missing!: {}'.format(manage_py))
+        return False
+
+    # No user input when running wprefresh.
+    collect_cmd = ['python3', manage_py, 'collectstatic', '--noinput']
+    # Add all ignored patterns.
+    for globpat in STATIC_IGNORE:
+        collect_cmd.extend(('--ignore', globpat))
+
+    cmdstr = ' '.join(collect_cmd)
+    print('Running collectstatic: {}'.format(cmdstr))
+    callret = os.system(cmdstr)
+
+    return (callret == 0)
+
+
 def copy_file(srcfile, destfile, force=False):
     """ Copies a single file if it has been modified, or `force` is used.
         Returns the dest. name on copies, and None for non-modified files.
@@ -296,7 +273,7 @@ def copy_file(srcfile, destfile, force=False):
         cp_cmd = ['cp', '-r', srcfile, destfile]
         callret = os.system(' '.join(cp_cmd))
         if callret == 0:
-            print('Copied {}\n  {}'.format(srcfile, destfile))
+            print('  Copied {}\n    {}'.format(srcfile, destfile))
             return destfile
         raise CopyError(src=srcfile, dest=destfile)
 
@@ -336,7 +313,7 @@ def create_dir(dirpath):
         Raises CreateError on failure.
     """
     if not os.path.exists(dirpath):
-        debug('Creating directory: {}'.format(dirpath))
+        debug('  Creating directory: {}'.format(dirpath))
         try:
             os.mkdir(dirpath)
         except EnvironmentError as ex:
@@ -459,6 +436,34 @@ def warn_live():
     return True
 
 
+def warning_add(s):
+    """ Add a warning to be printed when the program terminates. """
+    global WARNINGS
+    WARNINGS.add(s)
+
+
+def warnings():
+    """ Print any warnings that were collected while running. """
+    if not WARNINGS:
+        return False
+    print_err('\nWarnings ({}):'.format(len(WARNINGS)))
+    for warnmsg in WARNINGS:
+        print_err('    {}'.format(warnmsg))
+    return True
+
+
+class CommandError(Exception):
+    def __init__(self, name=None, msg=None):
+        self.name = name or 'Unknown Function'
+        self.msg = msg
+
+    def __str__(self):
+        lines = ['WpRefresh command failed: {}']
+        if self.msg:
+            lines.append('  {}'.format(self.msg))
+        return '\n'.join(lines)
+
+
 class CopyError(EnvironmentError):
     def __init__(self, src=None, dest=None, ex=None):
         self.src = str(src)
@@ -492,7 +497,7 @@ class CreateError(EnvironmentError):
 if __name__ == '__main__':
     try:
         mainret = main(docopt(USAGESTR, version=VERSIONSTR))
-    except (CopyError, CreateError) as ex:
+    except (CommandError, CopyError, CreateError) as ex:
         print_err(ex)
         mainret = 1
     except (EOFError, KeyboardInterrupt):
@@ -501,4 +506,6 @@ if __name__ == '__main__':
     except BrokenPipeError:
         print_err('Broken pipe.')
         mainret = 3
+    # Print any warnings that were generated.
+    warnings()
     sys.exit(mainret)
