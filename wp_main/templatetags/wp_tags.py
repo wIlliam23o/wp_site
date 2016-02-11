@@ -10,11 +10,10 @@
 
    start date: Mar 29, 2013
 '''
-# For insert_video, building a mimetype from file extension.
 import os
-
 import base64
 import logging
+from collections import Iterable
 
 # Django stuff
 from django import template
@@ -294,10 +293,10 @@ def get_remote_ip(request):
 
 @register.filter
 def get_time_since(date):
-    """ Shortcut to utilities.get_time_since(date, limit=True). """
+    """ Shortcut to utilities.get_time_since(date, limit=7). """
     if not date:
         return date
-    since = utilities.get_time_since(date, limit=True)
+    since = utilities.get_time_since(date, limit=7)
     return since if ':' in since else '{} ago'.format(since)
 
 
@@ -555,8 +554,22 @@ def log_safe(data):
     """ Ensure an object is stringified for log output.
         Lists/Tuples are separated by a newline.
     """
-    if isinstance(data, (list, tuple)):
-        return '\n'.join(data)
+    if isinstance(data, str):
+        return data.lstrip()
+    elif isinstance(data, bytes):
+        try:
+            s = data.decode()
+        except UnicodeDecodeError:
+            s = repr(data)
+            log.error('Invalid unicode passed in: {}'.format(s))
+        return s
+    elif isinstance(data, Iterable):
+        return '\n'.join(str(x) for x in data)
+
+    log.error('Unsupported type passed: {}\n  {}'.format(
+        type(data).__name__,
+        data
+    ))
     return str(data).lstrip()
 
 
@@ -582,7 +595,7 @@ def repr_(object_):
     """ returns repr(object_) to the template """
     return repr(object_)
 
-    
+
 @register.filter
 def sortdict(d):
     """ Generator for returning an iterable of a sorted dict.
@@ -604,18 +617,12 @@ def sortitems(o):
 
 
 @register.filter
-def starts(str_, val_to_check):
-    """ uses str_.startswith() to check a value.
-        returns True if str_.startswith(val_to_check)
+def starts(s, val_to_check):
+    """ uses str.startswith() to check a value.
+        returns True if s.startswith(val_to_check)
     """
 
-    return (str_.startswith(val_to_check))
-
-
-@register.filter
-def str_(object_):
-    """ returns str(object_) to the template. """
-    return str(object_)
+    return s.startswith(val_to_check)
 
 
 @register.filter
