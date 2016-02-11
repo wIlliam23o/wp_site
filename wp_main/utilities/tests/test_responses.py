@@ -1,3 +1,4 @@
+from django.http import QueryDict
 from django.test import TestCase
 
 from wp_main.utilities import responses as resp
@@ -12,7 +13,7 @@ class ResponsesTest(TestCase):
                 'id': '5',
                 'start': '99999998',
                 'end': '-1'
-                },
+            },
             post={
                 'pasteid': 'latest',
             })
@@ -64,11 +65,14 @@ class FakeRequestArgs(object):
         Ensured to have at least an empty REQUEST, GET, and POST attribute.
     """
     def __init__(self, request=None, get=None, post=None):
+        self.REQUEST = QueryDict().copy()
+        self.GET = QueryDict().copy()
+        self.POST = QueryDict().copy()
         if not request and (post or get):
-            self.REQUEST = get or {}
+            self.REQUEST.update(get or {})
             self.REQUEST.update(post or {})
         else:
-            self.REQUEST = request or {}
+            self.REQUEST.update(request or {})
 
-        self.GET = get or (request or {})
-        self.POST = post or (request or {})
+        self.GET.update(get or (request or {}))
+        self.POST.update(post or (request or {}))

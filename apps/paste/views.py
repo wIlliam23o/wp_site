@@ -263,9 +263,10 @@ def process_submit(submitdata, apisubmit=False):
         return responses.json_response_err(exc)
 
     # See if this is a reply.
-    replytoid = submitdata.get('replyto', None)
+    replytoids = submitdata.get('replyto', None)
     replytoobj = None
-    if replytoid:
+    if replytoids:
+        replytoid = replytoids[0]
         replytoobj = get_object(wp_paste.objects,
                                 paste_id=replytoid)
         if replytoobj is None:
@@ -354,6 +355,8 @@ def submit_public(request):
     # Try using GET/POST..
     if not submitdata:
         submitdata = responses.get_request_args(request)
+        # Using multiple content args, but first for the rest.
+        submitdata['content'] = '\n'.join(submitdata.getlist('content', []))
         # Parse a few args that string values would break.
         onhold = parse_bool(submitdata.get('onhold', ''))
         private = parse_bool(submitdata.get('private', ''))
