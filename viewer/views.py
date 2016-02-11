@@ -22,12 +22,6 @@ from misc import tools as misctools
 log = logging.getLogger('wp.viewer')
 
 
-def logdebug(s):
-    """ Write log message only if settings.DEBUG. """
-    if settings.DEBUG:
-        log.debug(s)
-
-
 @csrf_protect
 def ajax_contents(request):
     """ retrieves file contents per an ajax request. """
@@ -39,7 +33,7 @@ def ajax_contents(request):
 
     file_info = {}
     if get_data.get('file', False):
-        logdebug('Loading info for file: {}'.format(get_data['file']))
+        log.debug('Loading info for file: {}'.format(get_data['file']))
 
         try:
             file_info = get_file_info(get_data['file'])
@@ -54,9 +48,6 @@ def ajax_contents(request):
 
         # Grab DEBUG and send it.
         file_info['debug'] = settings.DEBUG
-
-        # Send raw file content in response (ace will load it and highlight it)
-        file_info['file_content'] = file_info['file_content']
 
         # override non-serializable project
         project = file_info['project']
@@ -219,7 +210,7 @@ def get_file_info(file_path):
     else:
         # Not a project, may be a Misc Object.
         miscobj = misctools.get_by_filename(file_path)
-        logdebug('Found Misc Object: {}'.format(repr(miscobj)))
+        log.debug('Found Misc Object: {}'.format(repr(miscobj)))
 
         # Update misc view count tracker
         if miscobj:
