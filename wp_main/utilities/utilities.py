@@ -25,8 +25,8 @@ log = logging.getLogger('wp.utilities')
 
 
 class _NoValue(object):
-
-    """ Something other than 'None' to represent no value, or missing attr. """
+    """ Something other than 'None' to represent no value, or missing attr.
+    """
 
     def __bool__(self):
         """ NoValue is falsey. """
@@ -417,83 +417,105 @@ def get_time(time=None, shorttime=False,):
     return time.strftime('%I:%M:%S %p')
 
 
-def get_time_since(date, humanform=True, limit=False):  # noqa
+def get_time_fromsecs(seconds, label=True):
+    """ Return a time string from total seconds.
+        Calculates hours, minutes, and seconds.
+        Returns '0d:1h:2m:3s' if label is True, otherwise just: '0:1:2:3'
+
+        Output is only as big as the time.
+            get_time_fromsecs(30) == '30s'
+            get_time_fromsecs(61) == '1m:1s'
+            get_time_fromsecs(3661) == '1h:1m:1s'
+            get_time_fromsecs(90061) == '1d:1h:1m:1s'
+
+            get_time_fromsecs(90062, label=False) = '1:1:1:2'
+
+        * Exact precision is not guaranteed.
+    """
+    secs = float(seconds)
+    if secs < 60:
+        # Seconds only.
+        return '{:.0f}s'.format(secs) if label else str(int(secs))
+
+    minutes, seconds = divmod(secs, 60)
+    if minutes < 60:
+        # Minutes and seconds only.
+        if label:
+            fmtstr = '{:.0f}m:{:.0f}s'
+        else:
+            fmtstr = '{:.0f}:{:.0f}'
+        return fmtstr.format(minutes, seconds)
+
+    hours, minutes = divmod(minutes, 60)
+    if hours < 24:
+        # Hours, minutes, and seconds only.
+        if label:
+            fmtstr = '{:.0f}h:{:.0f}m:{:.0f}s'
+        else:
+            fmtstr = '{:.0f}:{:.0f}:{:.0f}'
+        return fmtstr.format(hours, minutes, seconds)
+
+    days, hours = divmod(hours, 24)
+    # Days, hours, minutes, and seconds.
+    if label:
+        fmtstr = '{:.0f}d:{:.0f}h:{:.0f}m:{:.0f}s'
+    else:
+        fmtstr = '{:.0f}:{:.0f}:{:.0f}:{:.0f}'
+    return fmtstr.format(days, hours, minutes, seconds)
+
+
+def get_time_since(date, limit=None):
     """ Parse a datetime object,
         return human-readable time-elapsed.
         Arguments:
             date       : datetime object to work with.
             humanform  : Use minutes, seconds, etc. instead of m, s, etc.
-            limit      : If True, uses get_datetime() when it's been over one
-                         week.
+            limit      : If not None, uses get_datetime() when it's been over
+                         `limit` days.
     """
-
     secs = (datetime.now() - date).total_seconds()
     if secs < 60:
-        if humanform:
-            # Right now.
-            if secs < 0.1:
-                return ''
-            # Seconds (decimal format)
-            return '{:0.1f} seconds'.format(secs)
-        else:
-            # Seconds only.
-            return '{:0.1f}s'.format(secs)
+        # Right now.
+        if secs < 0.1:
+            return ''
+        # Seconds (decimal format)
+        return '{:0.1f} seconds'.format(secs)
 
-    minutes = secs / 60
-    seconds = int(secs % 60)
+    minutes, seconds = divmod(secs, 60)
     minstr = 'minute' if int(minutes) == 1 else 'minutes'
     secstr = 'second' if seconds == 1 else 'seconds'
     if minutes < 60:
         # Minutes and seconds only.
-        if humanform:
-            if seconds == 0:
-                # minutes
-                return '{} {}'.format(int(minutes), minstr)
-            # minutes, seconds
-            fmtstr = '{} {}, {} {}'
-            return fmtstr.format(int(minutes), minstr, seconds, secstr)
-        else:
-            # complete minutes, seconds
-            fmtstr = '{}m:{}s'
-            return fmtstr.format(int(minutes), seconds)
+        if seconds == 0:
+            # minutes
+            return '{:.0f} {}'.format(minutes, minstr)
+        # minutes, seconds
+        return '{:.0f} {}, {:.0f} {}'.format(minutes, minstr, seconds, secstr)
 
-    hours = minutes / 60
-    minutes = int(minutes % 60)
+    hours, minutes = divmod(minutes, 60)
     hourstr = 'hour' if int(hours) == 1 else 'hours'
     minstr = 'minute' if minutes == 1 else 'minutes'
     if hours < 24:
         # Hours, minutes, and seconds only.
-        if humanform:
-            if minutes == 0:
-                # hours
-                return '{} {}'.format(int(hours), hourstr)
-            # hours, minutes
-            fmtstr = '{} {}, {} {}'
-            return fmtstr.format(int(hours), hourstr, minutes, minstr)
-        else:
-            # complete hours, minutes, seconds
-            fmtstr = '{}h:{}m:{}s'
-            return fmtstr.format(int(hours), hourstr, minutes, seconds)
+        if minutes == 0:
+            # hours
+            return '{:.0f} {}'.format(hours, hourstr)
+        # hours, minutes
+        return '{:.0f} {}, {:.0f} {}'.format(hours, hourstr, minutes, minstr)
 
-    days = int(hours / 24)
-    hours = int(hours % 24)
-    if limit and (days > 7):
+    days, hours = divmod(hours, 24)
+    if (limit is not None) and (days > limit):
         return get_datetime(date)
 
     # Days, hours
     daystr = 'day' if days == 1 else 'days'
     hourstr = 'hour' if hours == 1 else 'hours'
-    if humanform:
-        if hours == 0:
-            # days
-            return '{} {}'.format(days, daystr)
-        # days, hours
-        fmtstr = '{} {}, {} {}'
-        return fmtstr.format(days, daystr, hours, hourstr)
-    else:
-        # complete days, hours, minutes, seconds
-        fmtstr = '{}d:{}h:{}m:{}s'
-        return fmtstr.format(days, hours, minutes, seconds)
+    if hours == 0:
+        # days
+        return '{:.0f} {}'.format(days, daystr)
+
+    # days, hours
+    return '{:.0f} {}, {:.0f} {}'.format(days, daystr, hours, hourstr)
 
 
 def is_file_or_dir(spath):
@@ -601,12 +623,6 @@ def remove_list_dupes(lst, max_allowed=1):
             copy.remove(item)
 
     return copy
-
-
-def safe_arg(url):
-    """ basically just trims one / from the POST args right now """
-    s = url[:-1] if url.endswith('/') else url
-    return s[1:] if s.startswith('/') else s
 
 
 def slice_list(lst, start=0, max_items=-1):
