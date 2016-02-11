@@ -102,56 +102,56 @@ def request_any(request, identifier):
         returns project on success
     """
 
-    proj = get_withmatches(utilities.safe_arg(identifier))
+    proj = get_withmatches(identifier)
     return view_project(request, proj, identifier, source='by_any')
 
 
 def request_id(request, _id):
     """ returns project by id """
 
-    proj = get_byid(utilities.safe_arg(_id))
+    proj = get_byid(_id)
     return view_project(request, proj, str(_id), source='by_id')
 
 
-def request_alias(request, _alias):
+def request_alias(request, alias):
     """ returns project by alias """
 
-    proj = get_byalias(utilities.safe_arg(_alias))
-    return view_project(request, proj, _alias, source='by_alias')
+    proj = get_byalias(alias)
+    return view_project(request, proj, alias, source='by_alias')
 
 
-def request_name(request, _name):
+def request_name(request, name):
     """ returns project by name """
 
-    proj = get_byname(utilities.safe_arg(_name))
-    return view_project(request, proj, _name, source='by_name')
+    proj = get_byname(name)
+    return view_project(request, proj, name, source='by_name')
 
 
-def get_byname(_name):
+def get_byname(name):
     """ safely retrieve project by name
         returns None on failure. """
 
     try:
-        proj = wp_project.objects.get(name=_name)
+        proj = wp_project.objects.get(name=name)
         return proj if not proj.disabled else None
     except wp_project.DoesNotExist:
         # long search..
-        _name = _name.lower().replace(' ', '')
+        name = name.lower().replace(' ', '')
         for proj in wp_project.objects.all():
             projname = proj.name.lower().replace(' ', '')
-            if projname == _name:
+            if projname == name:
                 return proj
         return None
     except:
         return None
 
 
-def get_byalias(_alias):
+def get_byalias(alias):
     """ safely retrieve project by alias
         returns None on failure. """
 
     try:
-        proj = wp_project.objects.get(alias=_alias)
+        proj = wp_project.objects.get(alias=alias)
         return proj if not proj.disabled else None
     except wp_project.DoesNotExist:
         return None
@@ -170,12 +170,12 @@ def get_byid(_id):
         return None
 
 
-def get_withmatches(_identifier):
+def get_withmatches(identifier):
     """ safely retrieve project by name, alias, or id.
         returns project on success,
         return list of possible close matches on failure
     """
-    identifiers = str(_identifier).split(' ')
+    identifiers = str(identifier).split(' ')
 
     # Try alias.
     proj = get_byalias(identifiers[0])
