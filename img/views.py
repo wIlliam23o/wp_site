@@ -1,13 +1,15 @@
 """ Welborn Productions - img - views
-    Handles requests for the img app, returns HttpRequests with proper content.
+    Handles requests for the img app, returns HttpRequests with proper
+    content.
     -Christopher Welborn 2-2-15
 """
 
 import logging
-log = logging.getLogger('wp.img')
 
 from wp_main.utilities import responses, utilities
 from img.models import wp_image
+
+log = logging.getLogger('wp.img')
 
 
 def handle_files(request):
