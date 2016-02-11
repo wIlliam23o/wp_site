@@ -7,18 +7,18 @@ urlpatterns = patterns(
     '',
     # apps index
     url(
-        r'^/?$',
+        r'^$',
         appviews.view_index),
     # phonewords
     url(
-        r'^/[Pp]hone[Ww]ords',
+        r'^[Pp]hone[Ww]ords/?',
         include('apps.phonewords.urls')),
     # paste
     url(
-        r'^/[Pp]aste',
+        r'^[Pp]aste/?',
         include('apps.paste.urls')),
     # timekeeper
     url(
-        r'^/[Tt]ime[Kk]eep(er)?',
+        r'^[Tt]ime[Kk]eep(er)?/?',
         include('apps.timekeeper.urls'))
 )

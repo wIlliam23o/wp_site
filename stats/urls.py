@@ -7,7 +7,7 @@ from stats.views import view_index
 
 urlpatterns = patterns(
     '',
-    url(r'^/?$', view_index)
+    url(r'^$', view_index)
 )
 
 # TODO: Allow finer-grain stats pages. URL would point to a specific stats page

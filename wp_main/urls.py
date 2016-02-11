@@ -40,7 +40,7 @@ urlpatterns = patterns(
     url(r'^debug\.html?$',
         homeviews.view_debug),
     # ip simple
-    url(r'^ip$',
+    url(r'^ip/?$',
         homeviews.view_ip_simple),
     # ip html
     url(r'^ip\.html?$',
@@ -63,9 +63,7 @@ urlpatterns = patterns(
     url(r'^textmode\.html?$',
         homeviews.view_textmode),
     # useragent simple
-    url(r'^useragent$',
-        homeviews.view_useragent_simple),
-    url(r'^ua$',
+    url(r'^u(ser)?a(gent)/?$',
         homeviews.view_useragent_simple),
     # useragent html
     url(r'^useragent\.html?$',
@@ -81,66 +79,66 @@ urlpatterns = patterns(
 # Apps views (apps) (see apps.urls)
 urlpatterns += patterns(
     '',
-    url(r'^[Aa]pps',
+    url(r'^[Aa]pps/?',
         include('apps.urls')),
     # shortcut for /apps/paste
-    url(r'^[Pp]aste',
+    url(r'^[Pp]aste/?',
         include('apps.paste.urls')),
 )
 
 # Image share
 urlpatterns += patterns(
     '',
-    url(r'^[Ii][Mm][Gg]',
+    url(r'^[Ii][Mm][Gg]/?',
         include('img.urls'))
 )
 
 # Projects view (projects)
 urlpatterns += patterns(
     '',
-    url(r'^[Pp]rojects',
+    url(r'^[Pp]rojects/?',
         include('projects.urls'))
 )
 
 # Misc view (misc)
 urlpatterns += patterns(
     '',
-    url(r'^[Mm]isc',
+    url(r'^[Mm]isc/?',
         include('misc.urls'))
 )
 # Download view (downloads)
 urlpatterns += patterns(
     '',
     # /dl/
-    url(r'^[Dd][Ll]',
+    url(r'^[Dd][Ll]/?',
         include('downloads.urls'))
 )
 
 # Viewer view (viewer)
 urlpatterns += patterns(
     '',
-    url(r'^[Vv]iew',
+    url(r'^[Vv]iew/?',
         include('viewer.urls'))
 )
 
 # Blogger views (blogger)
 urlpatterns += patterns(
     '',
-    url(r'[Bb]log',
+    url(r'^[Bb]log/?',
         include('blogger.urls'))
 )
 
 # Searcher views (searcher)
 urlpatterns += patterns(
     '',
-    url(r'[Ss]earch',
+    url(r'^[Ss]earch/?',
         include('searcher.urls'))
 )
 
 # Private Sandbox views.
 urlpatterns += patterns(
     '',
-    url(r'[Ss]and[Bb]ox',
+    url(r'^[Ss]and[Bb]ox/?',
         include('sandbox.urls'))
 )
 
@@ -148,7 +146,7 @@ urlpatterns += patterns(
 urlpatterns += patterns(
     '',
     # stats info
-    url(r'^[Ss]tats',
+    url(r'^[Ss]tats/?',
         include('stats.urls'))
 )
 # Admin/Other

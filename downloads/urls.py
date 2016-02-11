@@ -4,6 +4,6 @@ from downloads import views
 urlpatterns = patterns(
     '',
     # send filename to downloader
-    url(r'^/?$', views.index),
-    url(r'^/(?P<file_path>.+)', views.download),
+    url(r'^$', views.index),
+    url(r'^(?P<file_path>.+)', views.download),
 )
