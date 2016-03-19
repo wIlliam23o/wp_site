@@ -28,8 +28,7 @@ def view_index(request):
 
     reqargs = responses.get_request_args(
         request,
-        requesttype='request',
-        default='')
+        requesttype='request')
     if reqargs:
         # This request came with args, send it to view_results()
         return view_results(request, args=reqargs)
