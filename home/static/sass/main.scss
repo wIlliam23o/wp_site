@@ -142,12 +142,6 @@ strong {
     font-weight: bold; // old-fonts used: 400
 }
 
-.clearfix {
-    display: block;
-    overflow: auto;
-    zoom: 1;
-}
-
 p,
 .paragraph {
     // Putting a div inside a p breaks some of the highlight-code formatting.
@@ -178,6 +172,13 @@ kbd {
     white-space: nowrap;
 }
 
+.clearfix,
+%clearfix {
+    display: block;
+    overflow: auto;
+    zoom: 1;
+}
+
 // Cj's Text Styles
 .header {
     text-shadow: $shadowtext;
@@ -186,6 +187,7 @@ kbd {
     color: $bluemain;
     text-transform: lowercase;
     }
+
 a .header:hover, a .header.featured-name:hover {
     color: $bluelight;
 }

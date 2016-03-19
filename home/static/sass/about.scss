@@ -1,4 +1,5 @@
 @import 'welbornprod';
+
 // ------------------------- about.css -------------------------
 .about-box,
 %about-box {
@@ -44,6 +45,10 @@
     padding-right: 10px;
 }
 
+#about-more {
+    clear: both;
+}
+
 #about-specialties {
     overflow: visible;
 }
@@ -68,6 +73,13 @@
     padding-right: 2px;
 }
 
+@media (max-width: 980px) {
+    .about-contact-button {
+        display: block;
+        font-size: $fontbigger;
+    }
+}
+
 #about-contrib-box {
     @include border-radius-thin(5px);
     padding: 5px;
@@ -82,4 +94,22 @@
 
 #github-badge-wrapper {
     display: block;
+}
+
+.clearfix,
+%clearfix {
+    display: block;
+    overflow: auto;
+    zoom: 1;
+}
+
+// scss-lint:disable QualifyingElement
+p.about-paragraph {
+    padding-left: 20px;
+}
+
+h2.about-title {
+    // Overrides h2.title from main.scss.
+    @extend %clearfix;
+    margin-left: 0;
 }
