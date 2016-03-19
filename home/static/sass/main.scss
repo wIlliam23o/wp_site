@@ -1,5 +1,6 @@
 @import 'welbornprod';
-/* -------------------------- main.css -------------------------- *//* Reset */
+// -------------------------- main.css --------------------------
+// Reset
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, caption {
     margin: 0;
     padding: 0;
@@ -9,74 +10,83 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
     background: transparent;
 }
 
-/* Mobile Reset for Doubled Font Headers */
+// Mobile Reset for Doubled Font Headers
 h1, h2, h3, h4, h5, h6, span, p {
     font-weight: normal;
 }
 
-/* Core */
-*:focus { outline: 0 !important; } /* hopefully fixes IE9's stupid little attitude */
+// Core
+*:focus { outline: 0 !important; } // hopefully fixes IE9's stupid little attitude
 
 
-/* ----------------------------- Media queries ----------------------------- */
+// ----------------------------- Media queries -----------------------------
 @media (max-width: 800px) {
-    /* Push the surround to the right a bit when space is squeezed. */
+    // Push the surround to the right a bit when space is squeezed.
     #page-surround {
         margin-left: 20px;
     }
 }
 
 @media (max-width: 980px) {
-    /* Reduce the font-size on android and other phones/tablets,
-       it's actually too big without this.
-    */
+    // Reduce the font-size on android and other phones/tablets,
+    // it's actually too big without this.
     body {
         font-size: 12px;
     }
 }
 
 html {
-    margin-bottom: 1px;
     height: 100%;
+    margin-bottom: 1px;
 }
 
 body {
-    min-width: 650px; // original: 960px (playing with responsive design)
+    background-attachment: fixed;
     background-color: black;
-    background-repeat:no-repeat;
-    background-attachment:fixed;
-    height: 100%;
-    margin-bottom: 1px;
+    background-repeat: no-repeat;
+    color: $greydark;
     font-family: $fontsnormal;
     font-weight: Normal;
-    color: $greydark;
-    }
+    height: 100%;
+    margin-bottom: 1px;
+    min-width: 650px; // original: 960px (playing with responsive design)
+}
 
 a {
     color: $bluelink;
     font-weight: normal;
     text-decoration: none;
-    @include transition((color 0.2s ease-out, color 0.2s ease-in));
+    @include transition((color .2s ease-out, color .2s ease-in));
 }
+
 a:hover { color: $greymain;}
+
 a:-webkite-any-link {
-    text-decoration: none;
     color: $bluelink;
+    text-decoration: none;
 }
 
 h1 {
     font-family: $fontsnormal;
 }
+
 h1.title {
     margin-top: 0;
-    }
-h1, h2, .module-title h2, h3, h4, h5 {
+}
+
+h1,
+h2,
+.module-title h2,
+h3,
+h4,
+h5 {
     font-family: $fontsnormal;
-    line-height: $lineheightnormal;
     letter-spacing: inherit;
+    line-height: $lineheightnormal;
     }
 
-.title, h3.title {
+.title,
+h3.title {
     font-family: $fontsnormal;
     font-size: 1em;
     margin-bottom: 2px;
@@ -88,7 +98,8 @@ h1, h2, .module-title h2, h3, h4, h5 {
     }
 
 
-h1.title {
+h1.title,
+%h1-title {
     font-size: $fontmedium;
     margin-left: 0px;
     margin-bottom: 5px;
@@ -101,7 +112,7 @@ h1.title {
 h2.title {
     // H2's are used alone, not fitting in any box.
     // They need to be unindented to stand out.
-    @extend h1.title;
+    @extend %h1-title;
     font-size: $fontbigger;
     margin-left: -20px;
 }
@@ -128,20 +139,23 @@ blockquote p {
     }
 
 strong {
-    font-weight: bold; /* old-fonts used: 400 */
+    font-weight: bold; // old-fonts used: 400
 }
 
 .clearfix {
     display: block;
+    overflow: auto;
+    zoom: 1;
 }
 
-p, .paragraph {
+p,
+.paragraph {
     // Putting a div inside a p breaks some of the highlight-code formatting.
     // The fix is using a div, so the formatted div will flow correctly.
     // This style should make a div behave kinda like a paragraph,
     // minus that one flaw.
-    margin-top: 5px;
     margin-bottom: 10px;
+    margin-top: 5px;
 }
 
 ul {list-style-image: none;}
@@ -164,7 +178,7 @@ kbd {
     white-space: nowrap;
 }
 
-/* Cj's Text Styles */
+// Cj's Text Styles
 .header {
     text-shadow: $shadowtext;
     font-family: $fontsnormal;
@@ -176,9 +190,12 @@ a .header:hover, a .header.featured-name:hover {
     color: $bluelight;
 }
 
-.indented { margin-left: 15px;}
-.subtext { font-size: $fontsmall; }
-.indented-subtext { @extend .indented; @extend .subtext;}
+.indented,
+%indented { margin-left: 15px; }
+
+.subtext,
+%subtext { font-size: $fontsmall; }
+.indented-subtext { @extend %indented; @extend %subtext;}
 
 .desc {
     padding-left: 40px;
@@ -396,9 +413,10 @@ a.jumpto-nav {
 }
 
 /* Base for a button div.
-   (use @extend .wpbutton; to modify css properties for new button styles)
+   (use @extend %wpbutton; to modify css properties for new button styles)
 */
-.wpbutton {
+.wpbutton,
+%wpbutton {
     display: inline;
     @include border-radius-thin-color(5px, $borderblue);
     margin-top: 10px;
@@ -427,38 +445,39 @@ a.jumpto-nav {
 }
 
 .readmore-box {
-    @extend .wpbutton;
+    @extend %wpbutton;
     display: inline-block;
 }
 
 .comments-button {
-    @extend .wpbutton;
+    @extend %wpbutton;
     display: inline-block;
     margin-top: 5px;
 }
 
 .continued {
-    font-size:$fontsmall;
-    font-style: italic;
     color: $greymain;
+    font-size: $fontsmall;
+    font-style: italic;
 }
 
 
 
 
-/* Navigation */
+// Navigation
 .topbar {
-    margin-top: 0px;
+    margin-top: 0;
 }
+
 .menubar {
     display: inline-block;
-    position: relative;
     margin-top: 50px;
     padding: 0;
-    /*left: -60px; */ /* fix for fisheye being slightly off (see dock.css #dock) */
-    width: auto; /* set to 100% for centered menu, see dock.css for padding-left: 20px  */
+    position: relative;
+    // left: -60px; * fix for fisheye being slightly off (see dock.css #dock)
     text-transform: lowercase;
     text-align: left;
+    width: auto; // set to 100% for centered menu, see dock.css for padding-left: 20px
 }
 
 .menu-spacer {
@@ -621,50 +640,53 @@ a.jumpto-nav {
     color: $greymain;
     }
 /* Google Ads */
-.ad-google {
+.ad-google,
+%ad-google {
     display: block;
-    text-align: center;
-    margin-top: 10px;
     margin-bottom: 10px;
+    margin-top: 10px;
+    text-align: center;
 }
 
 .ad-article {
-    @extend .ad-google;
+    @extend %ad-google;
 }
 
 .ad-bottom {
-    @extend .ad-google;
+    @extend %ad-google;
 }
 
-/* Donations */
+// Donations
 .donations {
-    position: relative;
     margin-top: 30px;
+    position: relative;
     text-align: center;
 
 }
+
 .donations-desc {
-    font-size: $fontsmall;
     color: $greymain;
-}
-.donations-title {
-    font-size: 12px;
-    color: $greylight
+    font-size: $fontsmall;
 }
 
-/* ToTop */
+.donations-title {
+    color: $greylight;
+    font-size: 12px;
+}
+
+// ToTop
 .totop-block {
     text-align: center;
 }
+
 #wp-totop {
-    font-size: 100%;
-    line-height: 100%;
-    font-weight: lighter;
-    padding: 0px 0 4px 30px;
-    background-image: url(/static/images/overlays/dark/to-top.png);
-    /* single-image animation */
+    background-image: url('/static/images/overlays/dark/to-top.png');
     background-position: 0 1px;
     background-repeat: no-repeat;
+    font-size: 100%;
+    font-weight: lighter;
+    line-height: 100%;
+    padding: 0 0 4px 30px;
 
     &:hover {
         background-position: 0 -26px;
@@ -672,12 +694,12 @@ a.jumpto-nav {
 }
 
 
-/* Form Styles */
+// Form Styles
 .submit-button {
-    display: inline-block;
     @include border-radius-thin(5px);
     background: $whitemain;
     color: $bluemain;
+    display: inline-block;
     font-family: $fontsnormal;
     font-weight: bold;
     padding: 2px;
@@ -692,25 +714,27 @@ a.jumpto-nav {
     padding-left: 5px;
 }
 
-.input-text, .input-textbox {
+.input-text,
+.input-textbox,
+%input-text {
     @include border-radius-thin(5px);
     background: $whitemain;
     color: $greymain;
     font-family: $fontssmall;
-    width: 200px;
     padding-left: 5px;
+    width: 200px;
 }
 
 .input-checkbox {
-    @extend .input-text;
+    @extend %input-text;
     width: auto;
 }
 
-/* Inset Styles */
-span.inset-left {float: left;margin-right: 20px;}
-span.inset-right {float: right;margin-left: 20px;}
-span.inset-right-title, span.inset-left-title {display: block;font-size: 100%;font-weight: bold;}
-span.inset-left, span.inset-right {display: block;padding: 10px;width: 20%;font-size: 100%;font-style: italic;margin-top: 15px;position: relative;text-align: justify; margin-bottom: 15px;}
+// Inset Styles
+span.inset-left {float: left; margin-right: 20px;}
+span.inset-right {float: right; margin-left: 20px;}
+span.inset-right-title, span.inset-left-title {display: block; font-size: 100%; font-weight: bold;}
+span.inset-left, span.inset-right {display: block; padding: 10px; width: 20%; font-size: 100%; font-style: italic;margin-top: 15px;position: relative;text-align: justify; margin-bottom: 15px;}
 
 /* List and Text Styles - Icons */
 ul.list-icon {padding: 0;margin: 0 0 15px 0;background: none;}
@@ -843,19 +867,22 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
 
 
 /* Code wrap. Border with blueish text. (use pre for indention) */
-.codewrap,.sampwrap {
+.codewrap,
+.sampwrap,
+%codewrap {
     @include border-radius-thin-color(3px, $bordercode);
     color: $greydark;
     display: inline-block;
     font-family: $fontsmono;
-    font-size:$fontinline;
+    font-size: $fontinline;
     margin: 2px;
     padding: 2px;
 }
 
 // simple inline code highlight
-code, samp {
-    @extend .codewrap;
+code,
+samp {
+    @extend %codewrap;
     display: inline;
 }
 
