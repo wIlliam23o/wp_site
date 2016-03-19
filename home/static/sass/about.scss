@@ -1,64 +1,71 @@
 @import 'welbornprod';
 // ------------------------- about.css -------------------------
-.about-box {
-  @include box-shadow-normal();
-  @include border-radius(5px);
-  background: $whitedull;
-  display: block;
-  overflow: auto;
-  padding: 5px;
-  zoom: 1;
+.about-box,
+%about-box {
+    @include box-shadow-normal();
+    @include border-radius(5px);
+    background: $whitedull;
+    display: block;
+    overflow: auto;
+    padding: 5px;
+    zoom: 1;
 }
 
 .about-box-extras {
-  @extend.about-box;
-  overflow: visible;
+    @extend %about-box;
+    overflow: visible;
 }
 
 #about-pic-box {
-  @include border-radius-none(5px);
-  @include box-shadow-normal();
-  background: $whitemain;
-  float: left;
-  height: auto;
-  margin-bottom: 20px;
-  margin-right: 20px;
-  margin-top: 30px;
-  padding: 5px;
-  text-align: center;
-  width: auto;
+    @include border-radius-none(5px);
+    @include box-shadow-normal();
+    background: $whitemain;
+    float: left;
+    height: auto;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    margin-top: 30px;
+    padding: 5px;
+    text-align: center;
+    width: auto;
 }
 
 #about-img {
-  border: 0;
-  height: auto;
-  width: auto; }
+    border-color: $bluelight;
+    border-radius: 50%;
+    border-style: solid;
+    border-width: 2px;
+    height: auto;
+    width: auto;
+}
 
 #about-bio {
-  padding-left: 10px;
-  padding-right: 10px; }
+    padding-left: 10px;
+    padding-right: 10px;
+}
 
 #about-specialties {
-  overflow: visible;
+    overflow: visible;
 }
 
 #about-contact {
-  text-align: left; }
+    text-align: left;
+}
 
 #about-contact-box {
-  // container for all contact buttons
-  border-style: none;
-  margin-top: 5px;
-  text-align: center;
-  width: auto;
+    // container for all contact buttons
+    border-style: none;
+    margin-top: 5px;
+    text-align: center;
+    width: auto;
 }
 
 .about-contact-button {
-  @include border-radius-thin-color(5px, $borderblue);
-  display: inline-block;
-  margin: 2px;
-  padding-left: 2px;
-  padding-right: 2px;
+    @include border-radius-thin-color(5px, $borderblue);
+    display: inline-block;
+    margin: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
 }
 
 #about-contrib-box {
@@ -74,5 +81,5 @@
 }
 
 #github-badge-wrapper {
-  display: block;
+    display: block;
 }
