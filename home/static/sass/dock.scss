@@ -19,7 +19,8 @@ a.dock-item {
         position: relative;
     }
 
-    &.noscript:hover, &.noscript:active {
+    &.noscript:hover,
+    &.noscript:active {
         color: $greymain;
     }
 }
