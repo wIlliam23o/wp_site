@@ -158,7 +158,7 @@ def cmd_apache_restart():
     remote_apache_path = os.path.join(settings.BASE_PARENT, 'apache2', 'bin')
     if os.path.isdir(remote_apache_path):
         # Remote: `../apache2/bin/restart`
-        restartcmd = '.{}/restart'.format(remote_apache_path)
+        restartcmd = '{}/restart'.format(remote_apache_path)
         if not os.path.exists(restartcmd):
             raise CommandError(
                 'cmd_apache_restart',
