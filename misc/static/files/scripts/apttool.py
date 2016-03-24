@@ -920,8 +920,8 @@ def dependency_info(dep, default=None):
                        found.
     """
     deppkg = cache_main.get(strip_arch(dep.name), default)
-    deprel = getattr(deppkg, 'relation', None) or ''
-    depver = getattr(deppkg, 'version', None) or ''
+    deprel = getattr(dep, 'relation', None) or ''
+    depver = getattr(dep, 'version', None) or ''
     return deppkg, depver, deprel
 
 
@@ -1331,6 +1331,7 @@ def pkg_format(
             use_version  : Print this version number instead of grabbing the
                            latest/installed version.
             use_relation : Print this version relation (for dependencies).
+                           (=, >=, ~, etc.).
     """
     missing = False
     name_len = 35
@@ -1368,7 +1369,7 @@ def pkg_format(
         verstr = use_version if use_version else get_latest_ver(pkg)
         relation = use_relation or ''
         if relation:
-            verfmt = '{} ({})'.format(
+            verfmt = '{} {}'.format(
                 C(relation, fore='green'),
                 C(verstr, fore='blue')
             )
@@ -1393,7 +1394,7 @@ def pkg_format(
     # The +1 is for a space between the marker and the name.
     if not no_marker:
         padlen += 1
-    
+
     descmax = TERM_WIDTH - padlen
     padding = ' ' * padlen
     if len(pkgdesc_full) <= descmax:
