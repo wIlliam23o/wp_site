@@ -10,7 +10,7 @@ import settings_local
 
 SYSVERSION = sys.version
 # Version for welbornprod.com
-WPVERSION = '2.3.0'
+WPVERSION = '2.3.1'
 
 TEMPLATE_DEBUG, DEBUG = settings_local.TEMPLATE_DEBUG, settings_local.DEBUG
 
