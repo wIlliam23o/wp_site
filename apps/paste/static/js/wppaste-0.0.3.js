@@ -319,7 +319,6 @@ var wppaste = {
 
     setup_ace: function (doreadonly) {
         /* Initial setup for ace editor.*/
-        wppaste.set_ace_container();
         wp_content = ace.edit('paste-content');
 
         // various settings for ace
