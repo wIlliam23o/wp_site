@@ -263,20 +263,25 @@ def process_submit(submitdata, apisubmit=False):
         return responses.json_response_err(exc)
 
     # See if this is a reply.
-    replytoids = submitdata.get('replyto', None)
+    replytoid = submitdata.get('replyto', None)
     replytoobj = None
-    if replytoids:
-        replytoid = replytoids[0]
-        replytoobj = get_object(wp_paste.objects,
-                                paste_id=replytoid)
+    if replytoid:
+        replytoobj = get_object(
+            wp_paste.objects,
+            paste_id=replytoid
+        )
         if replytoobj is None:
             # Trying to reply to a dead paste.
-            exc = ValueError('No paste with that id: {}'.format(replytoid))
+            errmsg = 'No paste with that id: {}'.format(replytoid)
+            exc = ValueError(errmsg)
+            log.debug(errmsg)
             return responses.json_response_err(exc)
         else:
             # Check for disabled replyto paste.
             if replytoobj.disabled:
-                exc = ValueError('Paste is disabled: {}'.format(replytoid))
+                errmsg = 'Paste is disabled or expired: {}'.format(replytoid)
+                exc = ValueError(errmsg)
+                log.debug(errmsg)
                 return responses.json_response_err(exc)
 
     newpaste = wp_paste(
@@ -393,7 +398,11 @@ def view_api(request):
 @csrf_protect
 @ensure_csrf_cookie
 def view_index(request):
-    """  Main page for pastebin. Add a new paste. """
+    """ Main page for pastebin. Add a new paste.
+        Arguments:
+            request        : Django's Request object.
+            template_name  : Template to render.
+    """
     # Update the view count for the paste app.
     app = get_object(wp_app.objects, alias='paste')
     if app:

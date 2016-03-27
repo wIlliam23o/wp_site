@@ -8,10 +8,13 @@
     global ace:false, wptools:false
     global wp_modelist:true, wp_themelist:true, wp_content:true
 */
+/* ESLint options. */
+/* global Base64:false, ace:false, wptools:false */
+/* global wp_modelist:true, wp_themelist:true, wp_content:true */
 
 var wppaste = {
     // Modules and file names are versioned to "break" the cache on updates.
-    version: '0.0.2',
+    version: '0.0.3',
     build_lang_menu : function () {
         /* Build language options. */
         $('#langselect').append(
@@ -81,7 +84,7 @@ var wppaste = {
                 'theme',
                 'caption'
             )
-        )
+        );
     },
 
     fix_line_breaks : function (size) {
@@ -232,7 +235,7 @@ var wppaste = {
         var cookieinfo = JSON.stringify({
             'lang': wppaste.get_selected_lang(),
             'author': wppaste.get_paste_author(),
-            'theme': wppaste.get_selected_theme_name(),
+            'theme': wppaste.get_selected_theme_name()
         });
 
         return $.cookie('pastesettings', cookieinfo, {expires: 365, path: '/'});
@@ -316,6 +319,7 @@ var wppaste = {
 
     setup_ace: function (doreadonly) {
         /* Initial setup for ace editor.*/
+        wppaste.set_ace_container();
         wp_content = ace.edit('paste-content');
 
         // various settings for ace
@@ -412,7 +416,7 @@ var wppaste = {
                     if (respdata.status && respdata.status === 'error') {
                         // App sent an error msg back.
                         wppaste.show_error_msg('<span class="warning-msg">' + respdata.message + '</span>');
-                        console.log('error: ' + respdata.message);
+                        console.log('submit error: ' + respdata.message);
                     } else {
                         // App sent back a success.
                         wppaste.submit_success(respdata);

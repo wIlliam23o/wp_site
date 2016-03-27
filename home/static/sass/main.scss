@@ -1,13 +1,14 @@
 @import 'welbornprod';
+// scss-lint:disable SingleLinePerSelector, QualifyingElement, PseudoElement, VendorPrefix, ColorKeyword, ColorVariable
 // -------------------------- main.css --------------------------
 // Reset
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, caption {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    outline: 0;
-    font-size: 1em;
     background: transparent;
+    border: 0;
+    font-size: 1em;
+    margin: 0;
+    outline: 0;
+    padding: 0;
 }
 
 // Mobile Reset for Doubled Font Headers
@@ -16,7 +17,11 @@ h1, h2, h3, h4, h5, h6, span, p {
 }
 
 // Core
-*:focus { outline: 0 !important; } // hopefully fixes IE9's stupid little attitude
+*:focus {
+    // scss-lint:disable ImportantRule
+    // hopefully fixes IE9's stupid little attitude
+    outline: 0 !important;
+}
 
 
 // ----------------------------- Media queries -----------------------------
@@ -53,10 +58,10 @@ body {
 }
 
 a {
+    @include transition((color .2s ease-out, color .2s ease-in));
     color: $bluelink;
     font-weight: normal;
     text-decoration: none;
-    @include transition((color .2s ease-out, color .2s ease-in));
 }
 
 a:hover { color: $greymain;}
@@ -68,10 +73,10 @@ a:-webkite-any-link {
 
 h1 {
     font-family: $fontsnormal;
-}
 
-h1.title {
-    margin-top: 0;
+    &.title {
+        margin-top: 0;
+    }
 }
 
 h1,
@@ -583,54 +588,67 @@ a.jumpto-nav {
 
 /* Backgrounds */
 .grad-bottom {
+    background: linear-gradient(top, rgba(49, 49, 49, 0) 0px, rgba(49, 49, 49, 1) 100%);
+    background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0px, rgba(49, 49, 49, 1) 100%);
+    background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0px, rgba(49, 49, 49, 1) 100%);
+    bottom: 0;
+    height: 250px;
+    left: 0;
     position: absolute;
-    right: 0;left: 0;bottom: 0;height: 250px;
-    background: linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
-    background: -webkit-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
-    background: -moz-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
+    right: 0;
     }
 
 .pattern-gradient {
+    background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49,1) 100%);
+    background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49,1) 100%);
+    background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49,1) 100%);
+    bottom: 0;
+    height: 350px;
+    left: 0;
     position: absolute;
-    right: 0; left: 0; bottom: 0; height: 350px;
-    background: linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
-    background: -webkit-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
-    background: -moz-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
+    right: 0;
     }
 
 #bg-pattern {
-    position: absolute;
-    width: 100%;
     height: 350px;
-    top: 0;
     left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
     }
 
 /* Background Pattern */
 .main-pattern {
-    background: url(/static/images/overlays/patterns/carbonfiber.png) 50% 0;
-    }
+    background: url('/static/images/overlays/patterns/carbonfiber.png') 50% 0;
+}
 
 
 
-/* Logo */
-#wp-logo {
-    width:516px;
-    height:101px;
-    background: url(/static/images/welbornprod-logo.png) 0 0 no-repeat;
+// Logo
+.logo {
+    background: url('/static/images/welbornprod-logo.png') 0 0 no-repeat;
     display: block;
+    height: 101px;
     margin: -8px 0 0 -20px;
     position: relative;
+    width: 516px;
     z-index: 2;
-    }
+}
 
-/* Copyright */
+.logo-full {
+    position: fixed;
+    right: 5px;
+    top: 5px;
+}
+
+// Copyright
 #copyright {
+    background-color: $blackmain;
     margin-left: 135px;
     padding: 10px 15px;
     text-align: inherit;
-    background-color: $blackmain;
-    }
+}
+
 .copytext {
     padding: 0;
     margin: 0;
@@ -641,7 +659,7 @@ a.jumpto-nav {
     text-align: left;
     color: $greymain;
     }
-/* Google Ads */
+// Google Ads
 .ad-google,
 %ad-google {
     display: block;
