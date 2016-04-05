@@ -1,231 +1,475 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """ pidnet.py
-    Shows network connections being used by applications.
+    Shows network/open-file info for a pid.
+    -Christopher Welborn 04-04-2016
 """
 
+import inspect
 import os
+import re
+import subprocess
 import sys
-import commands
+from collections import UserList
+from contextlib import suppress
 
-__VERSION__ = '1.0.1'
+from colr import (
+    auto_disable as colr_auto_disable,
+    Colr as C,
+)
+from docopt import docopt
+
+colr_auto_disable()
+
+NAME = 'pidnet.py'
+VERSION = '0.2.0'
+VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
+SCRIPT = os.path.split(os.path.abspath(sys.argv[0]))[1]
+SCRIPTDIR = os.path.abspath(sys.path[0])
+
+USAGESTR = """{versionstr}
+    Usage:
+        {script} -h | -v
+        {script} [-F | -N] [-f | -q] [-D] [PROCESS...]
+
+    Options:
+        PROCESS       : Process name/pattern, or pid to use.
+                        Stdin words are used when not given.
+        -D,--debug    : Show some debug info while running.
+        -F,--file     : Show file information.
+        -f,--first    : Use first pid with usable info if multiple pids are
+                        found.
+        -h,--help     : Show this help message.
+        -N,--net      : Show network information (default).
+        -q,--quick    : Use first pid if multiple pids are found.
+        -v,--version  : Show version.
+""".format(script=SCRIPT, versionstr=VERSIONSTR)
+
+DEBUG = False
 
 
-def main(args):
-    # parse args
-    argdict = get_args(args)
-    # help?
-    if get_arg(argdict, '-h'):
-        print_help(exit_code=0)
-    elif get_arg(argdict, '-a'):
-        # debug....
-        print_args(argdict)
-        sys.exit(0)
-    
-    # get process to work with.
-    pid = get_arg(argdict, 'pid')
-    pname = get_arg(argdict, 'name')
-    # no valid pname/pid?
-    if (not pid) and (not pname):
-        print('no process id or name given!')
-        sys.exit(1)
-    
-    # get pid from name
-    if pname:
-        pid = get_pidfromname(pname, usefirst=get_arg(argdict, '-s'))
-        if not pid:
-            print('no process found for: {}'.format(pname))
-            sys.exit(1)
-        elif ' ' in pid:
-            pids = pid.split()
-            # See if this script was included, we may be able to trim the pids.
-            thispid = str(os.getpid())
-            if thispid in pids:
-                pids.remove(thispid)
+def main(argd):
+    """ Main entry point, expects doctopt arg dict as argd. """
+    global DEBUG
+    DEBUG = argd['--debug']
 
-            if len(pids) == 1:
-                # Able to trim this script from the pids, save the real one.
-                pid = pids[0]
-            else:
-                # several processes named
-                print('more than one process named: {}'.format(pname))
-                print(' '.join(pids))
-                print(''.join([
-                    'run the program again with the ',
-                    'current pid instead of a name,\n',
-                    'or run pidnet with the -s flag ',
-                    'to choose the first pid found.',
-                ]))
-                sys.exit(1)
-    
+    if not (argd['--net'] or argd['--file']):
+        argd['--net'] = True
+
+    # Holds ProcResult()'s with no lsof output.
+    emptypids = set()
+    userargs = argd['PROCESS'] or read_stdin().strip().split()
+    if not userargs:
+        raise InvalidArg('No process names/patterns to use!')
+
+    pidargs = parse_pid_args(userargs, firstonly=argd['--quick'])
+    for userarg, pids in pidargs.items():
+        if not pids:
+            print_err('No pid found for: {}'.format(userarg))
+            continue
+        if argd['--quick']:
+            pids = ProcResultList((pids[0], ))
+        debug('Getting lsof info for arg: {} -> {}...'.format(
+            userarg,
+            pids.fmt(pid=True, sep=', ')[:40]
+        ))
+        for pidresult in pids:
+            debug('  Getting lsof info for: {}'.format(
+                pidresult.fmt(pid=True)
+            ))
+            try:
+                lsof_output = get_procinfo(
+                    pidresult.pid,
+                    net_info=argd['--net'],
+                    file_info=argd['--file']
+                )
+            except subprocess.CalledProcessError as exproc:
+                debug('  Error: lsof returned {} for `{}`!'.format(
+                    exproc.returncode,
+                    ' '.join(exproc.cmd)
+                ))
+                lsof_output = None
+
+            if lsof_output is None:
+                continue
+            elif not lsof_output:
+                debug(
+                    '  No info found for: {}'.format(
+                        pidresult.fmt(pidname=True)
+                    )
+                )
+                emptypids.add(pidresult)
+                continue
+            print(lsof_output)
+            if argd['--first']:
+                break
+
+    if emptypids:
+        emptylen = len(emptypids)
+        pidplural = 'pid' if emptylen == 1 else 'pids'
+        print('\n{} {} had no info.'.format(emptylen, pidplural))
+        debug('    {}'.format(', '.join(str(p.pid) for p in emptypids)))
+
+    return 1 if emptypids else 0
+
+
+# FUNCTIONS -----------------------------------------------------------------
+def debug(*args, **kwargs):
+    """ Print a message only if DEBUG is truthy. """
+    if not (DEBUG and args):
+        return None
+
+    # Include parent class name when given.
+    parent = kwargs.get('parent', None)
+    with suppress(KeyError):
+        kwargs.pop('parent')
+
+    # Go back more than once when given.
+    backlevel = kwargs.get('back', 1)
+    with suppress(KeyError):
+        kwargs.pop('back')
+
+    frame = inspect.currentframe()
+    # Go back a number of frames (usually 1).
+    while backlevel > 0:
+        frame = frame.f_back
+        backlevel -= 1
+    fname = os.path.split(frame.f_code.co_filename)[-1]
+    lineno = frame.f_lineno
+    if parent:
+        func = '{}.{}'.format(parent.__class__.__name__, frame.f_code.co_name)
+    else:
+        func = frame.f_code.co_name
+
+    # Patch args to stay compatible with print().
+    pargs = list(args)
+
+    lineinfo = '{}:{} {}(): '.format(fname, lineno, func).ljust(40)
+    pargs[0] = ''.join((lineinfo, pargs[0]))
+    print(*pargs, **kwargs)
+
+
+def get_processes(skipthisscript=True):
+    """ Returns all processes running from /proc,
+        Returns Dict of {"pid": {"name": "blah", "args": "blah -a"}}
+
+        If keyword 'skipthisscript' is True, the python process currently
+        running this script is omitted. [Default: True]
+    """
+
+    # build list of running process ids using /proc
+    thispid = str(os.getpid())
+    if skipthisscript:
+        # don't inlcude this process (the python proc running this script)
+        pids = [pid for pid in os.listdir('/proc')
+                if (pid.isdigit() and pid != thispid)]
+    else:
+        # all proc pids (string), including this one.
+        pids = [pid for pid in os.listdir('/proc') if pid.isdigit()]
+
+    # grab info from processes
+    processes = {}
+    for pid in pids:
+        # dict to hold info about this process
+        processinfo = {}
+
+        # Try getting command info from /proc, skip it on failure.
+        # Name
+        cmdnamepath = os.path.join('/proc', pid, 'comm')
+        processinfo['name'] = try_fileread(cmdnamepath)
+        if processinfo['name'] is None:
+            print_err('Read error for /proc/comm, pid: {}'.format(pid))
+
+        # Args
+        cmdargspath = os.path.join('/proc', pid, 'cmdline')
+        processinfo['args'] = try_fileread(cmdargspath)
+        if processinfo['args'] is None:
+            print_err('Read error for /proc/cmdline: pid: {}'.format(pid))
+        elif skipthisscript and (SCRIPT in processinfo['args']):
+            # Skip this script's parent process (not caught by pid earlier).
+            continue
+        else:
+            # Separate the null-delimited args.
+            processinfo['args'] = ' '.join(
+                processinfo['args'].split('\x00')).strip()
+
+        # Save info for this pid, if it didn't fail completely.
+        if processinfo['name'] or processinfo['args']:
+            processes[pid] = processinfo
+
+    return processes
+
+
+def get_procinfo(pid, net_info=True, file_info=False):
+    """ Get process info from lsof, return the output string. """
+    if not (net_info or file_info):
+        raise InvalidArg('Either --net or --file must be used!')
+
     # build lsof command
     lsof_cmd = ['lsof']
     # apply lsof filters (if any)
-    if get_arg(argdict, '-f'):
+    if file_info:
         # applies file names
         lsof_cmd.append('-f')
-    else:
+    if net_info:
         # default IPv4 filter
-        lsof_cmd += ['-i', '4']
-    
+        lsof_cmd.extend(('-i', '4'))
+
     # apply AND, pid flag, and pid.
-    lsof_cmd += ['-a', '-p', pid]
-    
+    lsof_cmd.extend(('-a', '-p', str(pid)))
+
     # get output of lsof
-    lsof_cmd_str = ' '.join(lsof_cmd)
-    if get_arg(argdict, '-d'):
-        print('running command: {}'.format(lsof_cmd_str))
-    results = commands.getoutput(lsof_cmd_str)
-    if results == '':
-        if get_arg(argdict, '-f'):
-            sresult = 'sorry, no open net or file info for: ' + pid
-        else:
-            sresult = 'sorry, no open net info for: ' + pid + '\n' + \
-                      'the -f flag will list open files if any are found.'
-        print(sresult)
-        sys.exit(1)
-    
-    results_lines = results.split('\n')
-    if get_arg(argdict, '-f'):
-        # show open files too
-        filter_ = None
-    else:
-        # only show network info
-        filter_ = 'IPv4'
-    
-    # print results
-    fixed_results = format_results(results_lines, filter_txt=filter_)
-    for sline in fixed_results:
-        print(sline)
-    # finished
-    sys.exit(0)
-    
-# FUNCTIONS -------------------------------------------------------------------
+    return subprocess.check_output(lsof_cmd).decode()
 
 
-def get_pidfromname(pname, usefirst=False):
-    """ returns the pid by process name using pidof.
-        fails on multiple pids (prints results, and exits).
+def get_searchpid(
+        pname, exclude=None, firstonly=False, noargsearch=False,
+        procs=None):
+    """ Returns a ProcResultList() with matching pids from process name.
+        Pre-compiled regex pattern expected.
+        Raises InvalidArg() on failure, a tuple of ProcResult() on success.
+
+        Arguments:
+            pname       : Process name/pattern/id to use.
+            exclude     : Pattern to exclude matches.
+            firstonly   : Only use first pid found.
+            noargsearch : Don't search args at all if True.
+                          (boolean) - default: False
     """
-    # start command list
-    pid_cmd = ['pidof']
-    # use first available pid?
-    if usefirst:
-        pid_cmd.append('-s')
-        
-    # add process name to command
-    pid_cmd.append(pname)
-    # run command
-    pid = commands.getoutput(' '.join(pid_cmd))
-    return pid
+    try:
+        pnamepat = re.compile(pname)
+    except re.error as exre:
+        raise InvalidArg('Invalid pattern: {}\n{}'.format(pname, exre))
 
+    try:
+        excludepat = re.compile(exclude) if exclude else None
+    except re.error as exre:
+        raise InvalidArg('Invalid exclude pattern: {}\n{}'.format(
+            exclude,
+            exre
+        ))
 
-def format_results(results_list, filter_txt=None):
-    """ format results list, filtering if needed. returns formatted list """
-    
-    header = results_list[0]
-    results = sorted(results_list[1:])
-    
-    formatted = [header]
-    for line_ in results:
-        if filter_txt is None:
-            formatted.append(line_)
-        else:
-            if filter_txt in line_:
-                formatted.append(line_)
-    return formatted
+    procs = procs or get_processes()
 
+    results = ProcResultList()
 
-def get_args(args):
-    """ formats/locates args no matter the position. """
-
-    pid = None
-    pname = None
-    argdict = {}
-    for arg in args:
-        if arg.startswith('-'):
-            # flag argument.
-            farg = arg
-            if farg.startswith('--'):
-                while farg.startswith('--'):
-                    farg = farg.replace('--', '-')
-                # get short arg version.
-                farg = farg[0:2]
-                if farg == '-':
-                    print('invalid argument passed: {}'.format(arg))
-                else:
-                    argdict[farg] = True
-            else:
-                if len(farg) > 2:
-                    # multiple args in one flag.
-                    for char in farg:
-                        if char == '-':
-                            pass
-                        elif char == '':
-                            print('invalid argument: {}'.format(argdict))
-                        else:
-                            argdict['-' + char] = True
-                else:
-                    argdict[farg] = True
-                        
-        else:
-            # process id or name
-            try:
-                pid = int(arg)
-            except:
-                pname = arg
-    
-    if pid is not None:
-        argdict['pid'] = str(pid)
-    if pname is not None:
-        argdict['name'] = pname
-    
-    # do some sorting, just because (debug print)
-    sorted_keys = sorted(argdict)
-    sorteddict = {}
-    for skey in sorted_keys:
-        sorteddict[skey] = argdict[skey]
-        
-    # return results
-    return sorteddict
-
-
-def get_arg(argdict, argname):
-    """ safely retrieve argument """
-    if argname in argdict.keys():
-        return argdict[argname]
+    # If the user passed an integer (possibly pid), check to see if the
+    # pid exists, and use it's info if available.
+    try:
+        int(pnamepat.pattern)
+        # was an integer, save the pattern for procs key use.
+        pidnum = pnamepat.pattern
+    except (ValueError, TypeError):
+        pidnum = None
     else:
-        return False
-        
+        if pidnum in procs:
+            # User passed a valid pid number.
+            results.append(
+                ProcResult.from_procinfo(procs, pidnum, used_args=False)
+            )
+            if firstonly:
+                return results
 
-def print_args(argdict):
-    for argkey in argdict.keys():
-        print('{}: {}'.format(argkey, argdict[argkey]))
+    for pid in sorted(procs, key=lambda k: int(k)):
+        # grab info from this pid. (defaults to empty string if read failed.)
+        pname = procs[pid]['name'] or ''
+        pargs = procs[pid]['args'] or ''
+        if not (pname or pargs):
+            continue
+
+        # exclude process if name matches excluded (when excluded is used)
+        if excludepat and excludepat.search(pname):
+            continue
+
+        # try matching command name first.
+        namematch = pnamepat.search(pname)
+        usedargs = False
+
+        if (namematch is None) and (not noargsearch):
+            # try matching args (unless --noargsearch is enabled)
+            namematch = pnamepat.search(pargs)
+            usedargs = namematch is not None
+
+        if namematch is not None:
+            results.append(
+                ProcResult.from_procinfo(procs, pid, used_args=usedargs)
+            )
+            if firstonly:
+                break
+
+    return results
 
 
-def print_usage(exit_code=None):
-    print('usage: pidnet.py <process id | process name> [options]\n')
-    if exit_code is not None:
-        sys.exit(exit_code)
+def parse_pid_args(args, exclude=None, firstonly=False):
+    """ Parse process names/patterns/ids into a dict of:
+            { user_arg: ProcResultList(ProcResult(), ..) }
+        Possibly raises InvalidArg().
+    """
+    procs = get_processes()
+    return {
+        a: get_searchpid(
+            a,
+            exclude=exclude,
+            firstonly=firstonly,
+            noargsearch=True,
+            procs=procs)
+        for a in args
+    }
 
-    
-def print_help(exit_code=None):
-    print_usage()
-    print('\n'.join([
-        'pidnet help:',
-        '    options:',
-        '        -h : show this message',
-        '        -f : show open files too',
-        '        -s : use first pid if multiple ids are found for name',
-    ]))
-          
-    if exit_code is not None:
-        sys.exit(exit_code)
 
-# MAIN SCRIPT START -----------------------------------------------------------
+def print_err(*args, **kwargs):
+    """ A wrapper for print() that uses stderr by default. """
+    if kwargs.get('file', None) is None:
+        kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+
+
+def read_stdin():
+    """ Read from stdin, print a helpful message if possible. """
+    if sys.stdout.isatty() and sys.stdin.isatty():
+        print('\nReading from stdin until end of file (Ctrl + D)...\n')
+    return sys.stdin.read()
+
+
+def try_fileread(filename):
+    """ Returns data from a file, returns None on failure """
+
+    try:
+        with open(filename, 'r') as f:
+            return f.read().strip()
+    except EnvironmentError:
+        print_err('Unable to read file: {}'.format(filename))
+        return None
+    except Exception as ex:
+        # General programming error.
+        print_err('Error in try_readfile(): {}'.format(ex))
+        raise
+
+
+class InvalidArg(ValueError):
+    """ Raised when the user has used an invalid argument. """
+    def __init__(self, msg=None):
+        self.msg = msg or ''
+
+    def __str__(self):
+        if self.msg:
+            return 'Invalid argument, {}'.format(self.msg)
+        return 'Invalid argument!'
+
+
+class ProcResult(object):
+
+    """ A single search result with a pid, name, args (if any), and
+        and a flag to show whether the result was found based on searching
+        the arguments (used_args).
+        Also includes helper methods for printing the result.
+    """
+
+    def __init__(self, pid=None, name=None, args=None, used_args=False):
+        self.pid = pid
+        self.name = name
+        self.args = args
+        self.used_args = used_args
+
+    def __format__(self, fmt):
+        return str(self).__format__(fmt)
+
+    def __repr__(self):
+        usedargs = ' * ' if self.used_args else '   '
+        return '{}:{}{} {}'.format(self.pid, usedargs, self.name, self.args)
+
+    def __str__(self):
+        return self.__repr__()
+
+    def fmt(self, indent=None, pid=False, pidname=False, used_args=False):
+        """ A formatted string representation with options.
+            Arguments:
+                indent     : Integer representing the str.rjust() value.
+                pid        : Use the pid only.
+                pidname    : Use the pid and name only.
+                used_args  : Use args only when they triggered the match.
+        """
+        if self.used_args:
+            fmtfull = '{}: * {} {}'.format
+            fmtpidname = '{}: * {}'.format
+
+        else:
+            fmtfull = '{}:   {} {}'.format
+            fmtpidname = '{}:   {}'.format
+
+        if indent is None:
+            indent = 0
+
+        if pid:
+            return str(self.pid).rjust(indent)
+        elif pidname:
+            return fmtpidname(str(self.pid).rjust(indent), self.name)
+        elif used_args:
+            if self.used_args:
+                return fmtfull(
+                    str(self.pid).rjust(indent),
+                    self.name,
+                    self.args)
+            return fmtpidname(str(self.pid).rjust(indent), self.name)
+
+        # No options, just fully formatted.
+        return fmtfull(str(self.pid).rjust(indent), self.name, self.args)
+
+    @classmethod
+    def from_dict(cls, d):
+        return cls(**d)
+
+    @classmethod
+    def from_procinfo(cls, procs, pid, used_args=False):
+        """ Function to make a ProcResult using only a pid and used_args,
+            with info from get_processes().
+        """
+        return cls(
+            pid=int(pid),
+            name=procs[pid]['name'],
+            args=procs[pid]['args'],
+            used_args=used_args
+        )
+
+    @classmethod
+    def from_tuple(cls, tup):
+        return cls(*tup)
+
+
+class ProcResultList(UserList):
+    def __bool__(self):
+        return bool(self.data)
+
+    def __str__(self):
+        return ', '.join(str(r) for r in self.data)
+
+    def fmt(
+            self, indent=None, pid=False, pidname=False, used_args=False,
+            sep='\n'):
+        return (sep or '\n').join(
+            r.fmt(
+                indent=indent,
+                pid=pid,
+                pidname=pidname,
+                used_args=used_args
+            )
+            for r in self.data
+        )
+
+
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print_usage(exit_code=1)
-    else:
-        main(sys.argv[1:])
+    try:
+        mainret = main(docopt(USAGESTR, version=VERSIONSTR))
+    except InvalidArg as ex:
+        print_err(ex)
+        mainret = 1
+    except (EOFError, KeyboardInterrupt):
+        print_err('\nUser cancelled.\n', file=sys.stderr)
+        mainret = 2
+    except BrokenPipeError:
+        print_err(
+            '\nBroken pipe, input/output was interrupted.\n',
+            file=sys.stderr)
+        mainret = 3
+    sys.exit(mainret)
