@@ -23,18 +23,21 @@ from docopt import docopt
 colr_auto_disable()
 
 NAME = 'pidnet.py'
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(os.path.abspath(sys.argv[0]))[1]
 SCRIPTDIR = os.path.abspath(sys.path[0])
 
 USAGESTR = """{versionstr}
+    Show network/file information for a process.
+
     Usage:
         {script} -h | -v
         {script} [-F | -N] [-f | -q] [-D] [PROCESS...]
 
     Options:
         PROCESS       : Process name/pattern, or pid to use.
+                        A pattern may return more than one pid.
                         Stdin words are used when not given.
         -D,--debug    : Show some debug info while running.
         -F,--file     : Show file information.
@@ -142,10 +145,13 @@ def debug(*args, **kwargs):
     else:
         func = frame.f_code.co_name
 
+    lineinfo = '{}:{} {}(): '.format(
+        C(fname, 'yellow'),
+        C(lineno, 'blue'),
+        C(func, 'magenta')
+    ).ljust(40)
     # Patch args to stay compatible with print().
-    pargs = list(args)
-
-    lineinfo = '{}:{} {}(): '.format(fname, lineno, func).ljust(40)
+    pargs = list(C(a, 'green').str() for a in args)
     pargs[0] = ''.join((lineinfo, pargs[0]))
     print(*pargs, **kwargs)
 
@@ -322,7 +328,10 @@ def print_err(*args, **kwargs):
     """ A wrapper for print() that uses stderr by default. """
     if kwargs.get('file', None) is None:
         kwargs['file'] = sys.stderr
-    print(*args, **kwargs)
+    print(
+        C(kwargs.get('sep', ' ')).join(C(a, 'red') for a in args),
+        **kwargs
+    )
 
 
 def read_stdin():

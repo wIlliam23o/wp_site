@@ -6,16 +6,16 @@
     06-2013
 """
 
-from collections import UserList   # PackageVersions class.
-from datetime import datetime      # log date parsing.
-from enum import Enum              # install states.
-import os.path                     # for file/dir
-import re                          # search pattern matching
-import stat                        # checking for executables
-import struct                      # for get_terminal_size()
-import sys                         # for args (Scriptname)
-from time import time              # run time calc.
-import weakref                     # for IterCache()
+from collections import UserDict, UserList   # PackageVersions/UsageExampleKey
+from datetime import datetime                # log date parsing.
+from enum import Enum                        # install states.
+import os.path                               # for file/dir
+import re                                    # search pattern matching
+import stat                                  # checking for executables
+import struct                                # for get_terminal_size()
+import sys                                   # for args (Scriptname)
+from time import time                        # run time calc.
+import weakref                               # for IterCache()
 
 try:
     import apt                        # apt tools
@@ -65,7 +65,7 @@ except ImportError as excolr:
     )
     sys.exit(1)
 
-__version__ = '0.6.2'
+__version__ = '0.6.4'
 NAME = 'AptTool'
 
 # Get short script name.
@@ -74,13 +74,13 @@ SCRIPT = os.path.split(sys.argv[0])[-1]
 USAGESTR = """{name} v. {version}
 
     Usage:
+        {script} -? | -h | -v
         {script} -c file [-C] [-n] [-q]
         {script} (-i | -d | -p) PACKAGES... [-C] [-q]
         {script} (-e | -f | -S) PACKAGES... [-C] [-q] [-s]
         {script} (-P | -R) PACKAGES... [-C] [-I | -N] [-q] [-s]
         {script} -H [QUERY] [COUNT] [-C] [-q]
-        {script} -h | -v
-        {script} (-l | -L) PACKAGES... [-C] [-q]
+        {script} (-l | -L) PACKAGES... [-C] [-q] [-s]
         {script} -u [-C] [-q]
         {script} -V PACKAGES... [-C] [-a] [-q] [-s]
         {script} PATTERNS... [-a] [-C] [-I | -N] [-D | -n] [-q] [-r] [-s] [-x]
@@ -117,6 +117,7 @@ USAGESTR = """{name} v. {version}
                                        Multiple package names may be
                                        comma-separated, or passed with
                                        multiple flags.
+        -?,--examples                : Show specific usage examples and exit.
         -h,--help                    : Show this help message and exit.
         -H,--history                 : Show package history.
                                        (installs, uninstalls, etc.)
@@ -146,6 +147,8 @@ USAGESTR = """{name} v. {version}
         -s,--short                   : Use shorter output.
                                        When searching, don't print the
                                        description.
+                                       When locating, don't show the install
+                                       state.
         -S,--suggests                : Show package suggestions.
         -u,--update                  : Update the cache.
                                        ..Just like `apt-get update`.
@@ -153,15 +156,6 @@ USAGESTR = """{name} v. {version}
         -V,--VERSION                 : Show a package's installed or available
                                        versions.
         -x,--ignorecase              : Make the search query case-insensitive.
-
-    Notes:
-        If no options are given, the default behaviour is to search for
-        packages by name and description, then print results.
-
-        In the search results:
-            [i] = package is installed
-            [u] = package is not installed
-
 """.format(name=NAME, script=SCRIPT, version=__version__)
 
 
@@ -183,6 +177,10 @@ def main(argd):
         colr_disable()
     if argd['--quiet']:
         print_status = print_status_err = noop
+    # Non-cache related args.
+    if argd['--examples']:
+        print_example_usage()
+        return 0
 
     # Search (iter_open the cache, not pre-load. for performance)
     if argd['PATTERNS']:
@@ -501,29 +499,29 @@ def cmd_installed_files(pkgname, execs_only=False, short=False):
     return 1
 
 
-def cmd_locate(pkgnames, only_existing=False):
+def cmd_locate(pkgnames, only_existing=False, short=False):
     """ Locate one or more packages.
         Arguments:
             pkgnames       : A list of package names, or file names to read
                              from. If '-' is encountered in the list then
                              stdin is used. stdin can only be used once.
             only_existing  : Only show existing packages.
+            short          : When truthy, do not print the install state.
     """
     existing = 0
     checked = 0
     for pname in pkgnames:
         pname = pname.lower().strip()
-        if pname in cache_main:
-            print(C(': ').join(
-                pkg_format_name(pname.rjust(20)),
-                C('exists', fore='green')
-            ))
+        # Use Package for existing, packagename for missing.
+        pkg = cache_main.get(pname, pname)
+        if pkg != pname:
             existing += 1
-        elif not only_existing:
-            print(C(': ').join(
-                C(pname.rjust(20), fore='red', style='bright'),
-                C('missing', fore='red')
-            ))
+        print(pkg_format(
+            pkg,
+            color_missing=True,
+            no_marker=short,
+            no_desc=short
+        ))
 
         checked += 1
 
@@ -871,7 +869,10 @@ def cmdmap_build(argd):
             'args': (
                 parse_packages_arg(argd['PACKAGES']),
             ),
-            'kwargs': {'only_existing': argd['--LOCATE']}
+            'kwargs': {
+                'only_existing': argd['--LOCATE'],
+                'short': argd['--short']
+            }
         },
         '--reversedeps': {
             'func': multi_pkg_func,
@@ -1314,24 +1315,27 @@ def parse_packages_arg(names):
 
 
 def pkg_format(
-        pkg, no_desc=False, no_ver=False, no_marker=False, indent=0,
-        use_version=None, use_relation=None):
+        pkg, color_missing=False, indent=0,
+        no_desc=False, no_marker=False, no_ver=False,
+        use_relation=None, use_version=None):
     """ Formats a single search result, using colors.
 
         Arguments:
-            pkg          : Package object to format.
-            no_desc      : If True, only prints state and name.
-                           Default: False
-            no_ver       : If True, print package version also
-                           (even with no_desc).
-                           Default: False
-            no_marker    : If True, do not print the install state marker.
-            indent       : Number of spaces to indent the final line.
-                           Default: 0
-            use_version  : Print this version number instead of grabbing the
-                           latest/installed version.
-            use_relation : Print this version relation (for dependencies).
-                           (=, >=, ~, etc.).
+            pkg           : Package object to format.
+            color_missing : If True, colorize missing package names
+                            (when pkg is a str instead of a Package).
+            indent        : Number of spaces to indent the final line.
+                            Default: 0
+            no_desc       : If True, only prints state and name.
+                            Default: False
+            no_marker     : If True, do not print the install state marker.
+            no_ver        : If True, print package version also
+                            (even with no_desc).
+                            Default: False
+            use_relation  : Print this version relation (for dependencies).
+                            (=, >=, ~, etc.).
+            use_version   : Print this version number instead of grabbing the
+                            latest/installed version.
     """
     missing = False
     name_len = 35
@@ -1350,7 +1354,10 @@ def pkg_format(
     else:
         marker = '' if no_marker else C('[u]')
         pkgname = pkg.name
-    pkgname = pkg_format_name(pkgname.ljust(name_len))
+    pkgname = pkg_format_name(
+        pkgname.ljust(name_len),
+        missing=missing and color_missing
+    )
     if not no_marker:
         pkgname = C(' ').join(
             marker,
@@ -1438,9 +1445,15 @@ def pkg_format(
     ))
 
 
-def pkg_format_name(s):
-    """ Colorize a package name. """
-    return str(C(s, fore='magenta', style='bright'))
+def pkg_format_name(s, missing=False):
+    """ Colorize a package name.
+        Arguments:
+            s        : A package name to format.
+            missing  : Whether this is a missing package
+                       (not found in the cache).
+                       It will be colored different.
+    """
+    return str(C(s, fore=('red' if missing else 'magenta'), style='bright'))
 
 
 def pkg_install_state(pkg, expected=None):
@@ -1489,6 +1502,51 @@ def print_err(*args, **kwargs):
         C(kwargs.get('sep', ' ').join(args), fore='red'),
         **kwargs
     )
+
+
+def print_example_usage():
+    """ Print specific usage examples when -? is used. """
+    print("""{name} v. {ver}
+
+Example Usage:
+
+    Shows installed packages with 'foo' in the name or desc.
+        {script} foo -I
+
+    Show non-installed packages with 'bar' in the name only.
+        {script} bar -n -N
+
+    Show installed files for the 'python' package.
+        {script} -f python
+
+    Show installed executables for the 'python' package.
+        {script} -e python
+
+    Show suggested packages for the 'python' package.
+        {script} -S python
+
+    Determine whether a full package name exists in the cache.
+    This is quicker than a full search.
+        {script} -l pythonfoo
+
+    Search dpkg history for latest installs/half-installs.
+        {script} -H install
+
+    Show packages containing files with 'foo' in the path.
+        {script} -c foo
+
+    Show full help/options.
+        {script} -h
+
+Marker Legend:
+    [i] = package is installed
+    [u] = package is not installed
+    [?] = package name was not found in the cache
+
+Notes:
+    If no options are given, the default behaviour is to search for
+    packages by name and description, then print results.
+    """.format(name=NAME, ver=__version__, script=SCRIPT))
 
 
 def print_missing_pkg(pkgname):
@@ -2244,6 +2302,7 @@ if __name__ == '__main__':
 
     # Report how long it took
     duration = time() - start_time
-    print_runtime(duration)
+    if duration > 0.01:
+        print_runtime(duration)
 
     sys.exit(ret)
