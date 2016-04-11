@@ -52,22 +52,18 @@ def alert_message(request, alert_msg, **kwargs):
         Keyword Arguments:
             body_message  : Body content wrapped in a wp-block div.
                             Default is "Click here to go home."
-            noblock       : Don't wrap in wp-block div if True.
-
+            status        : Status code for HTTP. Default: 200
     """
 
-    body_message = kwargs.get('body_message',
-                              ('<a href=\'/\'><span>'
-                               'Click here to go home'
-                               '</span></a>'))
+    body_message = kwargs.get(
+        'body_message',
+        '<a href=\'/\'><span>Click here to go home</span></a>'
+    )
     noblock = kwargs.get('noblock', False)
 
     # passes the body message to the generic 'main_content'
     # block of the main template
-    if noblock:
-        main_content = body_message
-    else:
-        main_content = '<div class=\'wp-block\'>{}</div>'.format(body_message)
+    main_content = '<div class=\'wp-block\'>{}</div>'.format(body_message)
 
     # alert_message will display at the top of the page,
     # per the main templates 'alert_message' block.
@@ -75,7 +71,11 @@ def alert_message(request, alert_msg, **kwargs):
         'main_content': mark_safe(main_content),
         'alert_message': mark_safe(alert_msg),
     }
-    return clean_response('home/main.html', context=context, request=request)
+    return clean_response(
+        'home/main.html',
+        context=context,
+        request=request,
+        status=kwargs.get('status', 200))
 
 
 def basic_response(scontent='', *args, **kwargs):

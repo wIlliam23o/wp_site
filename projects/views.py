@@ -1,7 +1,6 @@
 import logging
-# Django page caching.
-from django.views.decorators.cache import cache_page
 
+from django.views.decorators.cache import cache_page
 # Project Info
 from projects.models import wp_project
 
@@ -55,18 +54,10 @@ def view_project(request, project, requested_page, source=None):
 
     # no project, no matches found (or error retrieving).
     if not project:
-        alertmsg = 'Sorry, I can\'t find that project.'
-        notfound_msg = (
-            '<a href=\'/projects\'>'
-            'Click here to visit a listing of my projects.'
-            '</a><br/>\n'
-            '<span>Or you could try '
-            '<a href=\'/search?q={page}\'>searching</a>'
-            '...</span>').format(page=str(requested_page))
-        return responses.alert_message(
+        return responses.error404(
             request,
-            alert_msg=alertmsg,
-            body_message=notfound_msg)
+            'Project not found: {}'.format(requested_page)
+        )
 
     # possible matches passed?
     matches = project if isinstance(project, set) else None
@@ -75,7 +66,7 @@ def view_project(request, project, requested_page, source=None):
 
     # Grab project info
     if project:
-        # this will tell the template to add screenshots javascript.
+        # this will tell the template to add the screenshots javascript.
         use_screenshots = project.screenshot_dir != ''
         # keep track of how many times this has been viewed.
         project.view_count += 1
@@ -132,17 +123,17 @@ def get_byname(name):
         returns None on failure. """
 
     try:
-        proj = wp_project.objects.get(name=name)
-        return proj if not proj.disabled else None
+        proj = wp_project.objects.get(name=name, disabled=False)
+        return proj
     except wp_project.DoesNotExist:
         # long search..
         name = name.lower().replace(' ', '')
-        for proj in wp_project.objects.all():
+        for proj in wp_project.objects.filter(disabled=False):
             projname = proj.name.lower().replace(' ', '')
             if projname == name:
                 return proj
         return None
-    except:
+    except Exception:
         return None
 
 
@@ -151,11 +142,9 @@ def get_byalias(alias):
         returns None on failure. """
 
     try:
-        proj = wp_project.objects.get(alias=alias)
-        return proj if not proj.disabled else None
-    except wp_project.DoesNotExist:
-        return None
-    except:
+        proj = wp_project.objects.get(alias=alias, disabled=False)
+        return proj
+    except (wp_project.DoesNotExist, Exception):
         return None
 
 
@@ -164,9 +153,9 @@ def get_byid(_id):
         returns None on failure. """
 
     try:
-        proj = wp_project.objects.get(id=_id)
-        return proj if not proj.disabled else None
-    except:
+        proj = wp_project.objects.get(id=_id, disabled=False)
+        return proj
+    except (wp_project.DoesNotExist, Exception):
         return None
 
 

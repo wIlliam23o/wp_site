@@ -108,11 +108,10 @@ def view_image_id(request, imageid):
     if not images:
         return responses.error404(
             request,
-            ['I can\'t find an image with that id.']
+            'Image not found: {}'.format(imageid)
         )
 
     image = images[0]
-    alert_msg, alert_class = None, None
     image.view_count += 1
     image.save()
     log.debug('Image view_count incremented to {}: {}'.format(
@@ -124,8 +123,6 @@ def view_image_id(request, imageid):
         'image': image,
         'images': (image,),
         'album': None,
-        'alert_message': alert_msg,
-        'alert_class': alert_class
     }
     return responses.clean_response(
         template_name='img/image.html',

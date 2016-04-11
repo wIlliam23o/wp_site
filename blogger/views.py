@@ -1,4 +1,5 @@
 import logging
+
 # Blog Info/Tools
 from blogger.models import wp_blog
 from blogger import blogtools
@@ -98,14 +99,11 @@ def view_post(request, identifier):
     post = blogtools.get_post_byany(identifier)
 
     if post is None:
-        log.error('Post not found: {}'.format(identifier))
-        errmsg = 'Sorry, I can\'t find that post.'
-        errlink = '\n'.join([
-            '<a href=\'/blog\'><span>',
-            'Click here to go back to the main blog page.',
-            '</span></a>'])
-
-        return responses.alert_message(request, errmsg, body_message=errlink)
+        # No post found with that identifier
+        return responses.error404(
+            request,
+            'Blog post not found: {}'.format(identifier)
+        )
 
     # build blog post.
 

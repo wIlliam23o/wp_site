@@ -1,5 +1,5 @@
 import logging
-from django.http import Http404
+
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.cache import cache_page
 
@@ -31,7 +31,11 @@ def view_misc_any(request, identifier):
     misc = misctools.get_by_identifier(identifier)
     if not misc:
         # No misc item found by that identifier
-        raise Http404()
+        return responses.error404(
+            request,
+            'Misc. object not found: {}'.format(identifier)
+        )
+
     context = {
         'misc': misc,
     }
