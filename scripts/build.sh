@@ -17,6 +17,8 @@ shopt -s nullglob
 debug_mode=0
 # Whether to ignore modification times.
 forced_mode=0
+# Force SASS when forced_mode is set, or trigger files are modified.
+forced_mode_sass=0
 
 dir_project="$appdir/.."
 # Final home for minified files.
@@ -29,6 +31,8 @@ fi
 dir_css="$dir_out/css"
 dir_js="$dir_out/js"
 
+# If a trigger file is newer than this file, it will trigger a rebuild.
+trigger_ref="${dir_project}/build_trigger.txt"
 
 # Build sass include paths
 sass_includes=("$dir_project/wp_main/static/sass")
@@ -40,6 +44,8 @@ done
 
 # These files will not be built with sass.
 sass_ignore=("_welbornprod.scss")
+# Modifications to these files will trigger all SASS files to be rebuilt.
+sass_triggers=("${dir_project}/wp_main/static/sass/_welbornprod.scss")
 
 # Default sass args.
 sass_args=("--style" "compressed" "--sourcemap=none")
@@ -195,6 +201,11 @@ function build_sass {
         echo "Creating CSS directory: $dir_css"
         mkdir -p "$dir_css"
     fi
+    if is_triggered "${sass_triggers[@]}"; then
+        echo "SASS trigger files have been modified, rebuilding SASS files."
+        forced_mode_sass=1
+        create_trigger_ref
+    fi
     local sassfiles
     local sassfile
     sassfiles=($dir_project/static/sass/*.scss $dir_project/*/static/sass/*.scss $dir_project/*/*/static/sass/*.scss)
@@ -223,7 +234,7 @@ function build_sass_file {
     local outname="${relshortname%.*}.min.css"
     local outpath="$dir_out/css/$outname"
     local outpathshort="${outpath##*..}"
-    if ! is_modified "$sassfile" "$outpath" && (( ! forced_mode )); then
+    if ! is_modified "$sassfile" "$outpath" && (( ! forced_mode )) && (( ! forced_mode_sass )); then
         debug_lbl "Skipping non-modified file:" "$relshortname"
         return 0
     fi
@@ -237,6 +248,15 @@ function build_sass_file {
     sass "${sass_args[@]}" "${sass_include_args[@]}" "$sassfile" "$outpath"
 }
 
+function create_trigger_ref {
+    # Update the modification time for the trigger reference file.
+    if ((debug_mode)) && [[ -e "$trigger_ref" ]]; then
+        debug_lbl "Would've updated the trigger reference:" "$trigger_ref"
+    else
+        debug_lbl "Creating trigger ref.:" "$trigger_ref"
+        date --utc +%s > "$trigger_ref"
+    fi
+}
 
 function debug {
     if (( debug_mode )); then
@@ -271,6 +291,12 @@ function echo_lbl {
     printf "%-40s %s\n" "$1" "$2"
 }
 
+function ensure_trigger_ref {
+    # Create the reference file for "is this a fresh file" triggers.
+    [[ -e "$trigger_ref" ]] && return 0
+    create_trigger_ref
+}
+
 function get_browserify_outname {
     local jsfile
     jsfile=$1
@@ -284,6 +310,17 @@ function get_browserify_outname {
     local browserify_relshortname
     browserify_relshortname="${relshortname#$browserify_prefix*}"
     printf "%s/%s" "$input_dir" "$browserify_relshortname"
+}
+
+function is_fresh {
+    # Determine if a file has been updated since the last build.
+    if [[ ! -e "$1" ]]; then
+        debug "File does not exist: $1"
+        return 1
+    fi
+    ensure_trigger_ref
+    debug_lbl "Checking for freshness:" "$1"
+    is_modified "$1" "$trigger_ref"
 }
 
 function is_ignored_js {
@@ -329,7 +366,25 @@ function is_modified {
     return 1
 }
 
-
+function is_triggered {
+    # Returns a success exit status if any of the "trigger" files have been
+    # modified since the last build.
+    # Arguments:
+    #     $@ : Trigger files to check.
+    local fname
+    local triggered
+    let triggered=0
+    debug "Checking trigger files..."
+    for fname in "$@"; do
+        is_fresh "$fname" && let triggered+=1
+    done
+    if ((triggered)); then
+        debug_lbl "Trigger files modified:" "$triggered"
+        return 0
+    fi
+    debug "Trigger files have not been modified."
+    return 1
+}
 
 # shellcheck disable=SC2120
 function print_usage {
@@ -402,8 +457,8 @@ if (( ${#infiles[@]} > 0 )); then
     exit
 fi
 
-# Build all files (default behavior).
 if (( ! do_browserify )) && (( ! do_js )) && (( ! do_sass )); then
+    # Build all files (default behavior).
     build_js
     build_sass
     exit
