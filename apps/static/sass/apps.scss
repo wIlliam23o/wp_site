@@ -1,6 +1,6 @@
 @import 'welbornprod';
 
-/* -- apps.css -- */
+// -- apps.css --
 .apps-header {
     margin-bottom: 10px;
 }
@@ -20,9 +20,9 @@
 .apps-listing-item-box {
     @include border-radius(5px);
     @include box-shadow-medium();
+    background-color: $whitedull;
     margin: 15px;
     padding: 10px;
-    background-color: $whitedull;
     text-align: left;
 }
 
@@ -41,12 +41,12 @@
 }
 
 .version {
-    font-size:$fontsmall;
     color: $greydark;
-    font-weight: bold;
     font-family: $fontssmall;
-    text-align: right;
+    font-size: $fontsmall;
+    font-weight: bold;
     padding-left: 0%;
+    text-align: right;
 }
 
 .apps-desc {
@@ -56,38 +56,53 @@
     padding: 5px;
     padding-left: 20px;
     padding-right: 20px;
+
+    .apps-index {
+        font-size: .8em;
+    }
 }
 
-.apps-desc.apps-index {
-    font-size: .8em;
-}
-
-/* Long Description */
+// Long Description
 .apps-longdesc {
     @include border-radius-thick(5px);
     @include box-shadow-normal();
     background: $whitedull;
-    font-size:$fontsmall;
-    padding: 5px;
+    font-size: $fontsmall;
     margin-bottom: 10px;
+    padding: 5px;
 }
 
-/* Goto Button */
+// Goto Button
 .apps-button {
-    display: inline-block;
-    position: relative;
     @include box-shadow-small();
     @include border-radius(3px);
+    background-color: $whitedull;
+    display: inline-block;
     font-family: $fontsnormal;
     font-size: $fontsmall;
-    background-color: $whitedull;
-    margin-top: 10px;
-    margin-right: 5px;
-    margin-left: 5px;
     margin-bottom: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 10px;
     padding: 5px;
+    position: relative;
 }
 
 a .apps-button {
     background-color: $whitedull;
+}
+
+.app-input-text {
+    margin-left: 10px;
+    width: 80px;
+}
+
+.app-submit-button {
+    margin-left: 10px;
+
+    span {
+        font-size: $fontsmall;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
 }

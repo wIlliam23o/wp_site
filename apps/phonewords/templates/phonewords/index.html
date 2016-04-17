@@ -9,6 +9,7 @@
 {% endblock %}
 
 {% block extrastylelink %}
+    <link type='text/css' rel='stylesheet' href='/static/css/apps.min.css'/>
     <link type='text/css' rel='stylesheet' href='/static/css/phonewords.min.css'/>
     {{ block.super }}
 {% endblock %}
@@ -46,12 +47,12 @@
         <!-- App container -->
         <div class='phonewords-container phonewords-sub-container'>
             <!-- Query Form -->
-            <div class='phonewords-form'>
+            <div id='phonewords-form'>
                 <form id='lookup-form' method='POST' action='/apps/phonewords/' onsubmit='javascript: return phonewords.validate_submit();'>{% csrf_token %}
                     <span class='input-label'>
                         Word or number to look up:
                     </span>
-                    <input type='text' name='query' id='query-box' class='input-text app-input-text' maxlength='8' required='True'>
+                    <input type='text' name='query' id='query-box' class='input-text app-input-text phonewords-input-text' maxlength='8' required='True'>
                     <a href='javascript: void(0);' onclick='javascript: phonewords.do_lookup();' title='check this number/word.'>
                         <div class='submit-button app-submit-button'>
                             <span>lookup</span>
