@@ -18,13 +18,11 @@
 {% block extrahead %}
 	{% if use_screenshots %}
 		<script type='text/javascript'>
-			$(document).ready(
-					function() {
-						$('.screenshots_box').wtRotator(wprotator_settings);
-						$('.wt-rotator').width('100%');
-						$('.screen').width('100%');
-					}
-				);
+			$(document).ready(function() {
+                $('.screenshots-box').wtRotator(wprotator_settings);
+                $('.wt-rotator').width('100%');
+                $('.screen').width('100%');
+			});
 		</script>
 	{% endif %}
 {% endblock %}

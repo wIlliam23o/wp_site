@@ -291,7 +291,9 @@
 	</div>
 	<div class='wp-block bottom'>
 		<div id='copyright'>
-			<span class='copytext'>copyright 2013-2016 welborn productions</span>
+			<span class='copytext'>copyright 2013 -</span>
+			<span id='copyright-year' class='copytext'>2016</span>
+			<span class='copytext'>welborn productions</span>
 		</div>
 		<div class='totop-block'>
 			<a href='#' id='wp-totop' style='outline: none;'>
@@ -306,9 +308,9 @@
 		$(document).ready( function () {
 			{# Dock initialize (non-mobile clients) #}
 			{% if not request|is_mobile and not request|feature:"nofisheye" %}
-				var dock = $('#dock');
-				if ((typeof dock.Fisheye) == 'function') {
-					dock.Fisheye(
+				var $dock = $('#dock');
+				if ((typeof $dock.Fisheye) == 'function') {
+					$dock.Fisheye(
 						{
 							maxWidth: 30,
 							items: 'a',
@@ -323,31 +325,35 @@
 					);
 				}
 			{% endif %}
-
+			{# Fix the copyright year. #}
+			var $copyyear = $('#copyright-year');
+			if ($copyyear.length) {
+				$copyyear.text((new Date()).getFullYear() || '2016');
+			}
 			{# Fix any base64 encoded email addresses. #}
 			wptools.wpreveal('.wp-address');
 
 			{# Make alert messages clickable. #}
 			{% if alert_message or alert_content %}
-				var alertbox = $('#alert-box');
-				$(alertbox).slideDown();
-				$(alertbox).click(function () {
-					$('#alert-box').slideUp();
+				var $alertbox = $('#alert-box');
+				$alertbox.slideDown();
+				$alertbox.click(function () {
+					$(this).slideUp();
 				});
-				setTimeout(function () { $(alertbox).slideUp(); }, 5000);
+				setTimeout(function () { $alertbox.slideUp(); }, 5000);
 
 			{% elif request|is_test_site and not request.user.is_staff %}
-				var alertbox = $('#alert-box');
-				$(alertbox).slideDown();
-				$(alertbox).click(function () {
-					$('#alert-box').slideUp();
+				var $alertbox = $('#alert-box');
+				$alertbox.slideDown();
+				$alertbox.click(function () {
+					$(this).slideUp();
 				});
 			{% endif %}
 
 			{# Make all floaters destroyable and self-centering #}
-			var floater = $('#floater');
-			if (floater.length) {
-				$(floater).click(function () { $(floater).fadeOut(); });
+			var $floater = $('#floater');
+			if ($floater.length) {
+				$floater.click(function () { $(this).fadeOut(); });
 				wptools.center('#floater', true);
 				window.onresize = function () {
 					wptools.center('#floater', true);
