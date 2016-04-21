@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block javascript %}
-    <script type='text/javascript' src='/static/js/img.min.js'></script>
+    <script type='text/javascript' src='/static/js/img-0.0.2.min.js'></script>
 {% endblock %}
 
 {% block content %}
@@ -161,20 +161,20 @@
                                 </a>
                             </div>
                         </div>
-                        {# Include the view count. #}
+                        {# Include the view count (downloads count as views). #}
+                        {# ..because accessing the images static url is downloading AND viewing. #}
                         <div class='img-image-attribute'>
                             <div class='img-image-label'>
                                 views:
                             </div>
                             <div class='img-image-value'>
-                                {{ image.view_count }}
+                                {{ image.download_count }}
                             </div>
                         </div>
-                        {# TODO: Possibly include the download count #}
 
                         {# The actual image view. #}
                         <div class='img-image-preview'>
-                            <a href='{{ image|download_url }}' title='{{ image.title }}'>
+                            <a href='{{ image|download_url }}' title='{{ image.title }}' target='_blank'>
                                 <img src='{{ image.image.url }}' class='img-image-src' alt='{{ image.title }}'>
                             </a>
                         </div>

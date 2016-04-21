@@ -62,11 +62,13 @@ def download(request, file_path):
             '</div>'
         ))
         context = {
-            'request': request,
             'main_content': mark_safe(main_content),
             'alert_message': mark_safe(alert_message),
         }
-        response = responses.clean_response('home/main.html', context)
+        response = responses.clean_response(
+            'home/main.html',
+            context=context,
+            request=request)
     else:
         # redirect to actual file.
         # log.debug("redirecting to: " + static_path)

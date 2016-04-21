@@ -3,17 +3,16 @@
 
 '''
       project: welbornproductions blog admin
-    
+
       @author: Christopher Welborn <cj@welbornproductions.net>
 @organization: welborn productions <welbornproductions.net>
- 
+
    start date: Mar 19, 2013
 '''
 
 from django.contrib import admin
 from blogger.models import wp_blog
-
-# admin actions
+from home.admin import admin_site
 
 
 def disable_posts(modeladmin, request, queryset):
@@ -41,13 +40,15 @@ enable_comments.short_description = "Enable Comments in selected Posts"
 
 
 class wp_blogAdmin(admin.ModelAdmin):
-    #exclude = ['posted']
-    prepopulated_fields = {'slug': ('title'.lower(),)
-                           }
+    # exclude = ['posted']
+    prepopulated_fields = {
+        'slug': ('title'.lower(),)
+    }
     # enable actions found above for this admin page.
-    actions = [enable_posts,
-               disable_posts,
-               enable_comments,
-               disable_comments]
-    
-admin.site.register(wp_blog, wp_blogAdmin)
+    actions = [
+        enable_posts,
+        disable_posts,
+        enable_comments,
+        disable_comments]
+
+admin_site.register(wp_blog, wp_blogAdmin)

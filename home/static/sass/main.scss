@@ -1,189 +1,227 @@
 @import 'welbornprod';
-/* -------------------------- main.css -------------------------- *//* Reset */
+// scss-lint:disable SingleLinePerSelector, QualifyingElement, PseudoElement, VendorPrefix, ColorKeyword, ColorVariable
+// scss-lint:disable SelectorFormat
+// -------------------------- main.css --------------------------
+// Reset
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, caption {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    outline: 0;
-    font-size: 1em;
     background: transparent;
+    border: 0;
+    margin: 0;
+    outline: 0;
+    padding: 0;
 }
 
-/* Mobile Reset for Doubled Font Headers */
+body {
+    font-size: 16px;
+    line-height: 1.2em;
+}
+
+// Mobile Reset for Doubled Font Headers
 h1, h2, h3, h4, h5, h6, span, p {
     font-weight: normal;
 }
 
-/* Core */
-*:focus { outline: 0 !important; } /* hopefully fixes IE9's stupid little attitude */
+// Core
+*:focus {
+    // scss-lint:disable ImportantRule
+    // hopefully fixes IE9's stupid little attitude
+    outline: 0 !important;
+}
 
 
-/* ----------------------------- Media queries ----------------------------- */
+// ----------------------------- Media queries -----------------------------
 @media (max-width: 800px) {
-    /* Push the surround to the right a bit when space is squeezed. */
+    // Push the surround to the right a bit when space is squeezed.
     #page-surround {
         margin-left: 20px;
     }
 }
 
 @media (max-width: 980px) {
-    /* Reduce the font-size on android and other phones/tablets,
-       it's actually too big without this.
-    */
+    // Reduce the font-size on android and other phones/tablets,
+    // it's actually too big without this.
     body {
         font-size: 12px;
     }
 }
 
 html {
-    margin-bottom: 1px;
     height: 100%;
+    margin-bottom: 1px;
 }
 
 body {
-    min-width: 650px; // original: 960px (playing with responsive design)
+    background-attachment: fixed;
     background-color: black;
-    background-repeat:no-repeat;
-    background-attachment:fixed;
-    height: 100%;
-    margin-bottom: 1px;
+    background-repeat: no-repeat;
+    color: $greydark;
     font-family: $fontsnormal;
     font-weight: Normal;
-    color: $greydark;
-    }
+    height: 100%;
+    margin-bottom: 1px;
+    min-width: 650px; // original: 960px (playing with responsive design)
+}
 
 a {
+    @include transition((color .2s ease-out, color .2s ease-in));
     color: $bluelink;
     font-weight: normal;
     text-decoration: none;
-    @include transition((color 0.2s ease-out, color 0.2s ease-in));
 }
+
 a:hover { color: $greymain;}
+
 a:-webkite-any-link {
-    text-decoration: none;
     color: $bluelink;
+    text-decoration: none;
 }
 
 h1 {
     font-family: $fontsnormal;
-}
-h1.title {
-    margin-top: 0;
-    }
-h1, h2, .module-title h2, h3, h4, h5 {
-    font-family: $fontsnormal;
-    line-height: $lineheightnormal;
-    letter-spacing: inherit;
-    }
 
-.title, h3.title {
+    &.title {
+        margin-top: 0;
+    }
+}
+
+h1,
+h2,
+.module-title h2,
+h3,
+h4,
+h5 {
+    font-family: $fontsnormal;
+    letter-spacing: inherit;
+    line-height: $lineheightnormal;
+}
+
+.title,
+h3.title {
+    color: $greymain;
     font-family: $fontsnormal;
     font-size: 1em;
     margin-bottom: 2px;
-    color: $greymain;
+    padding-bottom: 5px;
     padding-left: 10px;
     padding-top: 5px;
-    padding-bottom: 5px;
     text-transform: lowercase;
-    }
+}
 
 
-h1.title {
-    font-size: $fontmedium;
-    margin-left: 0px;
-    margin-bottom: 5px;
-    margin-top: 10px;
+h1.title,
+%h1-title {
     color: $greylight;
-    text-transform: lowercase;
+    font-size: $fontmedium;
+    margin-bottom: 5px;
+    margin-left: 0;
+    margin-top: 10px;
     padding-left: 10px;
-    }
+    text-transform: lowercase;
+}
 
 h2.title {
     // H2's are used alone, not fitting in any box.
     // They need to be unindented to stand out.
-    @extend h1.title;
+    @extend %h1-title;
     font-size: $fontbigger;
     margin-left: -20px;
 }
 
 h4 {
-    text-transform: lowercase;
     font-family: $fontsnormal;
+    text-transform: lowercase;
 }
+
 h5 {
     font-family: $fontsnormal;
-    text-transform: lowercase;
     font-size: 100%;
+    text-transform: lowercase;
 }
+
 blockquote {
     background: none;
-    margin: 1em 3em;
-    color: $greymain;
     border-left: 2px solid $greymain;
+    color: $greymain;
+    margin: 1em 3em;
     padding-left: 2em;
+
+    p {
+        background: none;
+        margin: 10px;
     }
-blockquote p {
-    background: none;
-    margin: 10;
-    }
+}
 
 strong {
-    font-weight: bold; /* old-fonts used: 400 */
+    font-weight: bold; // old-fonts used: 400
 }
 
-p {
-    margin-top: 5px;
-    margin-bottom: 10px;
-}
-
-.clearfix {
-    display: block;
-}
-
+p,
 .paragraph {
     // Putting a div inside a p breaks some of the highlight-code formatting.
     // The fix is using a div, so the formatted div will flow correctly.
     // This style should make a div behave kinda like a paragraph,
     // minus that one flaw.
-    margin-top: 5px;
     margin-bottom: 10px;
+    margin-top: 5px;
 }
 
-ul {list-style-image: none;}
-ul.menu {padding-left: 0;}
+ul {
+    list-style-image: none;
+
+    &.menu {
+        padding-left: 0;
+    }
+}
 
 kbd {
     // Keyboard key element
-    display: inline-block;
-    @include box-shadow((0 1px 0 rgba(0,0,0,0.2), 0 0 0 2px #fff inset));
     @include border-radius(3px);
+    @include box-shadow((0 1px 0 rgba(0, 0, 0, .2), 0 0 0 2px #fff inset));
+    background-color: #f7f7f7;
     border: 1px solid #ccc;
-    text-shadow: 0 1px 0 #fff;
+    color: #333;
+    display: inline-block;
     font-family: $fontsmono;
     font-size: $fontsmall;
-    background-color: #f7f7f7;
-    color: #333;
     line-height: 1em;
-    padding: .3em .6em;
     margin: .1em .2em;
+    padding: .3em .6em;
+    text-shadow: 0 1px 0 #fff;
     white-space: nowrap;
 }
 
-/* Cj's Text Styles */
+.clearfix,
+%clearfix {
+    display: block;
+    overflow: auto;
+    zoom: 1;
+}
+
+// Cj's Text Styles
 .header {
-    text-shadow: $shadowtext;
-    font-family: $fontsnormal;
-    font-size: $fontlarge; /* big header for projects/main pages/sections */
     color: $bluemain;
+    font-family: $fontsnormal;
+    font-size: $fontlarge; // big header for projects/main pages/sections
+    text-shadow: $shadowtext;
     text-transform: lowercase;
-    }
+}
+
 a .header:hover, a .header.featured-name:hover {
     color: $bluelight;
 }
 
-.indented { margin-left: 15px;}
-.subtext { font-size: $fontsmall; }
-.indented-subtext { @extend .indented; @extend .subtext;}
+.indented,
+%indented { margin-left: 15px; }
+
+.subtext,
+%subtext {
+    font-size: $fontsmall;
+}
+
+.indented-subtext {
+    @extend %indented;
+    @extend %subtext;
+}
 
 .desc {
     padding-left: 40px;
@@ -199,34 +237,38 @@ a .header:hover, a .header.featured-name:hover {
 }
 
 .viewer-filename {
-    font-size: 1em;
     color: $greydark;
+    font-size: 1em;
     font-weight: bold;
 }
+
 .viewer-filename:hover {
     color: $bluelink;
 }
+
 .viewer-filename-box {
-    margin-left: 5px;
     margin-bottom: 5px;
+    margin-left: 5px;
 }
+
 .viewer-download-box {
-    display: inline-block;
     @include border-radius-thick(5px);
     background: $whitedull;
-    margin-left: 5px;
+    display: inline-block;
     margin-bottom: 5px;
+    margin-left: 5px;
     padding-left: 3px;
     padding-right: 3px;
     text-align: center;
 }
+
 .viewer-download-box:hover {
     border-color: $borderhover;
 }
 
 .viewer-download-text {
     color: $bluemain;
-    font-size:$fontsmall;
+    font-size: $fontsmall;
 }
 
 .update-title {
@@ -234,13 +276,19 @@ a .header:hover, a .header.featured-name:hover {
     font-weight: bold;
 }
 
-.italic, .I {
+.italic,
+.I {
     font-style: italic;
 }
-.bold, .B {
+
+.bold,
+.B {
     font-weight: bold;
 }
-.underline, .underlined, .U {
+
+.underline,
+.underlined,
+.U {
     text-decoration: underline;
 }
 
@@ -248,111 +296,113 @@ a .header:hover, a .header.featured-name:hover {
     font-size: $fontbigger;
 }
 
-/* Containers */
+// Containers
 .wp-container {
-    position: relative;
     @include border-radius(5px);
     background: transparent;
-    margin-top: 0;
     margin-bottom: 0;
     margin-left: 16%;
     margin-right: 5%;
+    margin-top: 0;
+    position: relative;
     width: auto;
-    }
+}
 
 .wp-block {
     // A generic div with a border radius and margin-top.
-    position: relative;
-    margin: 15px 0;
     @include border-radius(5px);
-    }
+    margin: 15px 0;
+    position: relative;
+}
 
 .contentbox {
-    padding: 10px;
-    margin-bottom: 10px;
-    background-color: $whitedull;
     @include border-radius(5px);
     @include box-shadow-normal();
-    }
+    background-color: $whitedull;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
 .bottom {
     background-color: $blackmain;
-    margin-top: -10px;
-    }
+    padding-top: 10px;
+}
 
 #bg-surround {
-    overflow: hidden;
-    position: relative;
     background-color: $greybg;
     height: auto;
-    padding-bottom: 20px;
-    }
+    overflow: hidden;
+    padding-bottom: 10px;
+    position: relative;
+}
 
 #page-surround {
-    position: relative;
     @include border-radius(5px);
     @include box-shadow-big();
     background-color: $greysurround;
-    padding: 10px;
-    overflow: hidden;
-    margin-top: 15px;
     margin-bottom: 20px;
+    margin-top: 15px;
     min-height: 240px; // helps with short pages that have a vertical menu
-    }
+    overflow: hidden;
+    padding: 10px;
+    position: relative;
+}
 
 
 .title-box {
     // fancy swoosh-loooking borders.
+    @include border-radius(15px);
+    border-bottom-color: $bordermain;
     border-bottom-style: solid;
     border-bottom-width: 2px;
-    border-bottom-color: $bordermain;
-    @include border-radius(15px);
+    border-left-color: $bordermain;
     border-left-style: solid;
     border-left-width: 2px;
-    border-left-color: $bordermain;
+    border-right-color: $bordermain;
     border-right-style: solid;
     border-right-width: 2px;
-    border-right-color: $bordermain;
     margin-bottom: 10px;
 
 }
 
 .screenshots-box {
-
+    // No styling here yet, but the class is being using in imageviewer.html.
 }
 
 .comments-box {
-    background: $whitedull;
-    padding: 5px;
     @include border-radius(5px);
     @include box-shadow-normal();
+    background: $whitedull;
+    padding: 5px;
 }
 
 .img-rounded {
     @include border-radius-thin(5px);
-    padding: 5px;
     background: $whitedull;
     height: auto;
+    padding: 5px;
     width: auto;
 }
 
-/* Floating message */
+// Floating message
 #floater {
-    position: fixed;
-    display: none;
     @include border-radius-thick(10px);
     @include box-shadow-floater();
-    width: 45%;
-    height: auto;
-    font-size: $fontnormal;
-    text-align: center;
-    color: $greydark;
     background: white;
+    color: $greydark;
+    display: none;
+    font-size: $fontnormal;
+    height: auto;
+    position: fixed;
+    text-align: center;
+    width: 45%;
     z-index: 30;
 }
 
 #floater-msg {
     font-family: $fontssmall;
     font-weight: normal;
+
     &.floater-msg-error {
         color: $redmain;
         font-size: $fontbigger;
@@ -361,35 +411,36 @@ a .header:hover, a .header.featured-name:hover {
 }
 
 #floater-smalltext {
-    font-size: $fontsmall;
-    font-family: $fontssmall;
-    font-weight: bold;
     color: $greymain;
+    font-family: $fontssmall;
+    font-size: $fontsmall;
+    font-weight: bold;
 }
 
-/* Jump-To Styles */
+// Jump-To Styles
 .jumpto {
+    @include border-radius-thin(5px);
+    margin-bottom: 20px;
     margin-left: 40px;
     margin-right: 40px;
     margin-top: 20px;
-    margin-bottom: 20px;
     padding-bottom: 10px;
-    @include border-radius-thin(5px);
     text-align: left;
 }
 
 .jumpto-title {
-    padding-left: 40px;
-    font-size:$fontsmall;
-    font-weight: 400;
     color: $greymain;
+    font-size: $fontsmall;
+    font-weight: 400;
+    padding-left: 40px;
 }
 
 .jumpto-nav {
-    text-align: center;
     margin-top: 5px;
+    text-align: center;
 }
 
+// scss-lint:disable MergeableSelector
 a.jumpto-nav {
     @include border-radius-thin(5px);
     border-bottom-color: $bluemain;
@@ -399,25 +450,24 @@ a.jumpto-nav {
     padding-left: 3px;
     padding-right: 3px;
 }
+// scss-lint:enable MergeableSelector
 
-/* Base for a button div.
-   (use @extend .wpbutton; to modify css properties for new button styles)
-*/
-.wpbutton {
-    display: inline;
+.wpbutton,
+%wpbutton {
+    // Base for a button div.
+    //  (use @extend %wpbutton; to modify css properties for new button styles)
     @include border-radius-thin-color(5px, $borderblue);
+    color: $bluelight;
+    display: inline;
+    font-size: $fontsmall;
+    font-weight: bold;
     margin-top: 10px;
     padding-left: 2px;
     padding-right: 2px;
-    // Text styles...
-    font-size: $fontsmall;
-    font-weight: bold;
-    color: $bluelight;
 
     span {
-        //font-size: $fontsmall;
-        font-weight: bold;
         color: $bluelight;
+        font-weight: bold;
 
         &:hover {
             border-color: $borderhover;
@@ -432,96 +482,91 @@ a.jumpto-nav {
 }
 
 .readmore-box {
-    @extend .wpbutton;
+    @extend %wpbutton;
     display: inline-block;
 }
 
 .comments-button {
-    @extend .wpbutton;
+    @extend %wpbutton;
     display: inline-block;
     margin-top: 5px;
 }
 
 .continued {
-    font-size:$fontsmall;
-    font-style: italic;
     color: $greymain;
+    font-size: $fontsmall;
+    font-style: italic;
 }
 
 
 
 
-/* Navigation */
+// Navigation
 .topbar {
-    margin-top: 0px;
+    margin-top: 0;
 }
+
 .menubar {
     display: inline-block;
-    position: relative;
     margin-top: 50px;
     padding: 0;
-    /*left: -60px; */ /* fix for fisheye being slightly off (see dock.css #dock) */
-    width: auto; /* set to 100% for centered menu, see dock.css for padding-left: 20px  */
-    text-transform: lowercase;
+    position: relative;
     text-align: left;
+    text-transform: lowercase;
+    width: auto; // set to 100% for centered menu, see dock.css for padding-left: 20px
 }
 
 .menu-spacer {
-    /* experimental */
-    width: 10px;
+    // experimental
     background: transparent;
     display: inline-block;
     position: relative;
+    width: 10px;
 
 }
+
 .menu-block {
     padding: 0;
-    /* Old Menu Style. Now using Dock...
-    background-image: url(/static/images/overlays/patterns/carbonfiber.png);
-    box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.45);
-    border-radius: 5px;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    */
+    // Old Menu Style. Now using Dock...
+    // background-image: url(/static/images/overlays/patterns/carbonfiber.png);
+    // box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.45);
+    // border-radius: 5px;
+    // -webkit-border-radius: 5px;
+    // -moz-border-radius: 5px;
 }
-/* Vertical Menu */
-/* Projects Vertical Menu */
+// Vertical Menu
+// Projects Vertical Menu
 .vertical-menu {
-    position: absolute;
-    z-index: 1;
-    left: 5px;
-    top: 220px;
     background: transparent;
-    /*background: $greymain;*/
+    left: 5px;
     padding: 5px;
+    position: absolute;
+    top: 220px;
     width: auto;
-    /*border-radius: 5px;
-    -webkit-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.45);*/
+    z-index: 1;
 }
 
 .vertical-menu-main {
-    /*background: $greydark;
-    border-radius: 4px;*/
     background: transparent;
-    padding: 5px;
     list-style: none;
     list-style-image: none;
+    padding: 5px;
 
 }
 
 .vertical-menu-item {
     @include border-radius(10px);
+    @include box-shadow(4px 4px 5px #000);
     background: white;
+    border-color: $borderwhite;
+    border-left-style: none;
+    border-right-style: none;
     border-style: solid;
     border-width: 2px;
-    border-color: $borderwhite;
-    margin-top: 10px;
     margin-bottom: 10px;
+    margin-top: 10px;
     padding-left: 6px;
     padding-right: 6px;
-    border-right-style: none;
-    border-left-style: none;
-    @include box-shadow(4px 4px 5px #000000);
 
     &:active {
         border-color: $borderblue;
@@ -558,118 +603,137 @@ a.jumpto-nav {
 }
 
 .vertical-menu-title {
+    color: $greymain;
     font-family: $fontsnormal;
     font-size: $fontmedium;
-    text-transform: lowercase;
     text-shadow: $shadowtextbig;
-    color: $greymain;
+    text-transform: lowercase;
 }
 
-/* Backgrounds */
+// Backgrounds
 .grad-bottom {
+    background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    bottom: 0;
+    height: 250px;
+    left: 0;
     position: absolute;
-    right: 0;left: 0;bottom: 0;height: 250px;
-    background: linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
-    background: -webkit-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
-    background: -moz-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
+    right: 0;
     }
 
 .pattern-gradient {
+    background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    bottom: 0;
+    height: 350px;
+    left: 0;
     position: absolute;
-    right: 0; left: 0; bottom: 0; height: 350px;
-    background: linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
-    background: -webkit-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
-    background: -moz-linear-gradient(top, rgba(49,49,49,0) 0px, rgba(49, 49, 49,1) 100%);
+    right: 0;
     }
 
 #bg-pattern {
-    position: absolute;
-    width: 100%;
     height: 350px;
-    top: 0;
     left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
     }
 
-/* Background Pattern */
+// Background Pattern
 .main-pattern {
-    background: url(/static/images/overlays/patterns/carbonfiber.png) 50% 0;
-    }
+    background: url('/static/images/overlays/patterns/carbonfiber.png') 50% 0;
+}
 
 
 
-/* Logo */
-#wp-logo {
-    width:516px;
-    height:101px;
-    background: url(/static/images/welbornprod-logo.png) 0 0 no-repeat;
+// Logo
+.logo {
+    background: url('/static/images/welbornprod-logo.png') 0 0 no-repeat;
     display: block;
+    height: 101px;
     margin: -8px 0 0 -20px;
     position: relative;
+    width: 516px;
     z-index: 2;
-    }
+}
 
-/* Copyright */
+.logo-full {
+    position: fixed;
+    right: 5px;
+    top: 5px;
+}
+
+// Copyright
 #copyright {
-    margin-left: 135px;
-    padding: 10px 15px;
-    text-align: inherit;
     background-color: $blackmain;
-    }
+    display: block;
+    padding: 10px 15px;
+    position: absolute;
+    right: 10px;
+    text-align: inherit;
+}
+
 .copytext {
-    padding: 0;
-    margin: 0;
-    font-size: smaller;
+    color: $greymain;
+    display: inline;
+    font-size: $fontsmall;
     font-weight: bold;
     line-height: 20px;
-    display: block;
+    margin: 0;
+    padding: 0;
     text-align: left;
-    color: $greymain;
     }
-/* Google Ads */
-.ad-google {
+
+// Google Ads
+.ad-google,
+%ad-google {
     display: block;
-    text-align: center;
-    margin-top: 10px;
     margin-bottom: 10px;
+    margin-top: 10px;
+    text-align: center;
 }
 
 .ad-article {
-    @extend .ad-google;
+    @extend %ad-google;
 }
 
 .ad-bottom {
-    @extend .ad-google;
+    @extend %ad-google;
 }
 
-/* Donations */
+// Donations
 .donations {
-    position: relative;
     margin-top: 30px;
+    position: relative;
     text-align: center;
 
 }
+
 .donations-desc {
-    font-size: $fontsmall;
     color: $greymain;
-}
-.donations-title {
-    font-size: 12px;
-    color: $greylight
+    font-size: $fontsmall;
 }
 
-/* ToTop */
+.donations-title {
+    color: $greylight;
+    font-size: 12px;
+}
+
+// ToTop
 .totop-block {
     text-align: center;
 }
+
 #wp-totop {
-    font-size: 100%;
-    line-height: 100%;
-    font-weight: lighter;
-    padding: 0px 0 4px 30px;
-    background-image: url(/static/images/overlays/dark/to-top.png);
-    /* single-image animation */
+    background-image: url('/static/images/overlays/dark/to-top.png');
     background-position: 0 1px;
     background-repeat: no-repeat;
+    font-size: 100%;
+    font-weight: lighter;
+    line-height: 100%;
+    padding: 0 0 4px 30px;
 
     &:hover {
         background-position: 0 -26px;
@@ -677,12 +741,12 @@ a.jumpto-nav {
 }
 
 
-/* Form Styles */
+// Form Styles
 .submit-button {
-    display: inline-block;
     @include border-radius-thin(5px);
     background: $whitemain;
     color: $bluemain;
+    display: inline-block;
     font-family: $fontsnormal;
     font-weight: bold;
     padding: 2px;
@@ -697,37 +761,43 @@ a.jumpto-nav {
     padding-left: 5px;
 }
 
-.input-text, .input-textbox {
+.input-text,
+.input-textbox,
+%input-text {
     @include border-radius-thin(5px);
     background: $whitemain;
     color: $greymain;
     font-family: $fontssmall;
-    width: 200px;
     padding-left: 5px;
+    width: 200px;
 }
 
 .input-checkbox {
-    @extend .input-text;
+    @extend %input-text;
     width: auto;
 }
 
-/* Inset Styles */
-span.inset-left {float: left;margin-right: 20px;}
-span.inset-right {float: right;margin-left: 20px;}
-span.inset-right-title, span.inset-left-title {display: block;font-size: 100%;font-weight: bold;}
-span.inset-left, span.inset-right {display: block;padding: 10px;width: 20%;font-size: 100%;font-style: italic;margin-top: 15px;position: relative;text-align: justify; margin-bottom: 15px;}
+// scss-lint:disable PropertySortOrder, MergeableSelector
+// These one-liners are from a very old CSS template.
+// I've sorted some of it out, but the rest will have to wait.
+// ...half of it isn't even used :(
+// Inset Styles
+span.inset-left {float: left; margin-right: 20px;}
+span.inset-right {float: right; margin-left: 20px;}
+span.inset-right-title, span.inset-left-title {display: block; font-size: 100%; font-weight: bold;}
+span.inset-left, span.inset-right {display: block; padding: 10px; width: 20%; font-size: 100%; font-style: italic;margin-top: 15px;position: relative;text-align: justify; margin-bottom: 15px;}
 
-/* List and Text Styles - Icons */
-ul.list-icon {padding: 0;margin: 0 0 15px 0;background: none;}
-ul.list-icon li {list-style: none;padding: 0 0 0 24px;margin: 0 0 5px 0;background-repeat: no-repeat;}
+// List and Text Styles - Icons
+ul.list-icon {padding: 0;margin: 0 0 15px;background: none;}
+ul.list-icon li {list-style: none; padding: 0 0 0 24px; margin: 0 0 5px; background-repeat: no-repeat;}
 ul.list-icon li a {font-size: 100%;line-height: 1.7em;}
 .text-icon {display: inline-block;line-height: 20px;font-size: 110%;background-repeat: no-repeat;padding-left: 24px;}
-span.email, span.phone, span.quote, span.cart, span.rss, span.tags, span.write, span.info, span.sound, .email li, .phone li, .quote li, .cart li, .rss li, .tags li, .write li, .info li, .sound li {background-image: url(/static/images/typography/dark/icon-set1.png);}
-.typography-style-light span.email, .typography-style-light span.phone, .typography-style-light span.quote, .typography-style-light span.cart, .typography-style-light span.rss, .typography-style-light span.tags, .typography-style-light span.write, .typography-style-light span.info, .typography-style-light span.sound, .typography-style-light .email li, .typography-style-light .phone li, .typography-style-light .quote li, .typography-style-light .cart li, .typography-style-light .rss li, .typography-style-light .tags li, .typography-style-light .write li, .typography-style-light .info li, .typography-style-light .sound li {background-image: url(/static/images/typography/light/icon-set1.png);}
-span.rightarrow, span.leftarrow, span.circlearrow, span.downarrow, span.uparrow, span.person, span.calendar, span.doc, span.bulb, .rightarrow li, .leftarrow li, .circlearrow li, .downarrow li, .uparrow li, .person li, .calendar li, .doc li, .bulb li {background-image: url(/static/images/typography/dark/icon-set2.png);}
-.typography-style-light span.rightarrow, .typography-style-light span.leftarrow, .typography-style-light span.circlearrow, .typography-style-light span.downarrow, .typography-style-light span.uparrow, .typography-style-light span.person, .typography-style-light span.calendar, .typography-style-light span.doc, .typography-style-light span.bulb, .typography-style-light .rightarrow li, .typography-style-light .leftarrow li, .typography-style-light .circlearrow li, .typography-style-light .downarrow li, .typography-style-light .uparrow li, .typography-style-light .person li, .typography-style-light .calendar li, .typography-style-light .doc li, .typography-style-light .bulb li {background-image: url(/static/images/typography/light/icon-set2.png);}
-span.twitter, span.youtube, span.skype, span.facebook, span.like, span.video, span.dropbox, span.vimeo, span.paypal, .twitter li, .youtube li, .skype li, .facebook li, .like li, .video li, .dropbox li, .vimeo li, .paypal li {background-image: url(/static/images/typography/dark/icon-set3.png);}
-.typography-style-light span.twitter, .typography-style-light span.youtube, .typography-style-light span.skype, .typography-style-light span.facebook, .typography-style-light span.like, .typography-style-light span.video, .typography-style-light span.dropbox, .typography-style-light span.vimeo, .typography-style-light span.paypal, .typography-style-light .twitter li, .typography-style-light .youtube li, .typography-style-light .skype li, .typography-style-light .facebook li, .typography-style-light .like li, .typography-style-light .video li, .typography-style-light .dropbox li, .typography-style-light .vimeo li, .typography-style-light .paypal li {background-image: url(/static/images/typography/light/icon-set3.png);}
+span.email, span.phone, span.quote, span.cart, span.rss, span.tags, span.write, span.info, span.sound, .email li, .phone li, .quote li, .cart li, .rss li, .tags li, .write li, .info li, .sound li {background-image: url('/static/images/typography/dark/icon-set1.png');}
+.typography-style-light span.email, .typography-style-light span.phone, .typography-style-light span.quote, .typography-style-light span.cart, .typography-style-light span.rss, .typography-style-light span.tags, .typography-style-light span.write, .typography-style-light span.info, .typography-style-light span.sound, .typography-style-light .email li, .typography-style-light .phone li, .typography-style-light .quote li, .typography-style-light .cart li, .typography-style-light .rss li, .typography-style-light .tags li, .typography-style-light .write li, .typography-style-light .info li, .typography-style-light .sound li {background-image: url('/static/images/typography/light/icon-set1.png');}
+span.rightarrow, span.leftarrow, span.circlearrow, span.downarrow, span.uparrow, span.person, span.calendar, span.doc, span.bulb, .rightarrow li, .leftarrow li, .circlearrow li, .downarrow li, .uparrow li, .person li, .calendar li, .doc li, .bulb li {background-image: url('/static/images/typography/dark/icon-set2.png');}
+.typography-style-light span.rightarrow, .typography-style-light span.leftarrow, .typography-style-light span.circlearrow, .typography-style-light span.downarrow, .typography-style-light span.uparrow, .typography-style-light span.person, .typography-style-light span.calendar, .typography-style-light span.doc, .typography-style-light span.bulb, .typography-style-light .rightarrow li, .typography-style-light .leftarrow li, .typography-style-light .circlearrow li, .typography-style-light .downarrow li, .typography-style-light .uparrow li, .typography-style-light .person li, .typography-style-light .calendar li, .typography-style-light .doc li, .typography-style-light .bulb li {background-image: url('/static/images/typography/light/icon-set2.png');}
+span.twitter, span.youtube, span.skype, span.facebook, span.like, span.video, span.dropbox, span.vimeo, span.paypal, .twitter li, .youtube li, .skype li, .facebook li, .like li, .video li, .dropbox li, .vimeo li, .paypal li {background-image: url('/static/images/typography/dark/icon-set3.png');}
+.typography-style-light span.twitter, .typography-style-light span.youtube, .typography-style-light span.skype, .typography-style-light span.facebook, .typography-style-light span.like, .typography-style-light span.video, .typography-style-light span.dropbox, .typography-style-light span.vimeo, .typography-style-light span.paypal, .typography-style-light .twitter li, .typography-style-light .youtube li, .typography-style-light .skype li, .typography-style-light .facebook li, .typography-style-light .like li, .typography-style-light .video li, .typography-style-light .dropbox li, .typography-style-light .vimeo li, .typography-style-light .paypal li {background-image: url('/static/images/typography/light/icon-set3.png');}
 .text-icon.email, .text-icon.rightarrow, .text-icon.twitter, .email li, .rightarrow li, .twitter li {background-position: 0 4px;}
 .text-icon.phone, .text-icon.leftarrow, .text-icon.youtube, .phone li, .leftarrow li, .youtube li {background-position: 0 -296px;}
 .text-icon.quote, .text-icon.circlearrow, .text-icon.skype, .quote li, .circlearrow li, .skype li {background-position: 0 -596px;}
@@ -738,62 +808,64 @@ span.twitter, span.youtube, span.skype, span.facebook, span.like, span.video, sp
 .text-icon.info, .text-icon.doc, .text-icon.vimeo, .info li, .doc li, .vimeo li {background-position: 0 -2096px;}
 .text-icon.sound, .text-icon.bulb, .text-icon.paypal, .sound li, .bulb li, .paypal li {background-position: 0 -2396px;}
 
-/* Standard List Styles */
-ul.checkmark, ul.circle-checkmark, ul.square-checkmark, ul.circle-small, ul.circle, ul.circle-large, ul.triangle-small, ul.triangle, ul.triangle-large, ul.bullet {margin: 0 0 25px 0;padding: 0;}
+// Standard List Styles
+ul.checkmark, ul.circle-checkmark, ul.square-checkmark, ul.circle-small, ul.circle, ul.circle-large, ul.triangle-small, ul.triangle, ul.triangle-large, ul.bullet {margin: 0 0 25px; padding: 0;}
 ul.checkmark li, ul.circle-checkmark li, ul.square-checkmark li, ul.circle-small li, ul.circle li, ul.circle-large li, ul.triangle-small li, ul.triangle li, ul.triangle-large li, ul.bullet li {list-style-type: none;padding: 0 0 0 30px;position: relative;margin-bottom: 8px;}
 ul.checkmark li a, ul.circle-checkmark li a, ul.square-checkmark li a, ul.circle-small li a, ul.circle li a, ul.circle-large li a, ul.triangle-small li a, ul.triangle li a, ul.triangle-large li {font-size: 100%;line-height: 1.7em;}
-ul.checkmark li:after {content:"";display:block;width: 4px;height: 8px;border-color: #74B1FF;border-style: solid;border-width: 0 3px 3px 0;position:absolute;left: 14px;top: 3px;-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);-o-transform: rotate(45deg);}
-ul.circle-checkmark li:before {content:"";display: block;border-color: #74B1FF;border-style: solid;border-width: 9px;border-radius: 9px;height: 0;width: 0;position: absolute;left: 7px;top: 1px;}
-ul.circle-checkmark li:after {content:"";display:block;width: 3px;height: 6px;border-color: #000;border-width: 0 2px 2px 0;border-style: solid;position:absolute;left: 14px;top: 5px;-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);-o-transform: rotate(45deg);}
-.typography-style-light ul.circle-checkmark li:after {border-color: #74B1FF;}
-ul.square-checkmark li:before {content:"";display: block;border-color: #74B1FF;border-width: 7px;border-style: solid;height: 0;width: 0;position: absolute;left: 9px;top: 3px;}
-ul.square-checkmark li:after {content:"";display:block;width: 3px;height: 6px;border-color: #000;border-width: 0 2px 2px 0;border-style: solid;position:absolute;left: 14px;top: 9px;margin-top: -4px;-webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);-o-transform: rotate(45deg);}
+ul.checkmark li:after {content: ''; display: block; width: 4px; height: 8px; border-color: #74b1ff; border-style: solid; border-width: 0 3px 3px 0; position: absolute; left: 14px; top: 3px; -webkit-transform: rotate(45deg); -moz-transform: rotate(45deg); -o-transform: rotate(45deg); }
+ul.circle-checkmark li:before {content: ''; display: block; border-color: #74b1ff; border-style: solid; border-width: 9px; border-radius: 9px; height: 0; width: 0; position: absolute; left: 7px; top: 1px; }
+ul.circle-checkmark li:after {content: ''; display: block; width: 3px; height: 6px; border-color: #000; border-width: 0 2px 2px 0; border-style: solid; position: absolute; left: 14px; top: 5px; -webkit-transform: rotate(45deg); -moz-transform: rotate(45deg); -o-transform: rotate(45deg); }
+.typography-style-light ul.circle-checkmark li:after {border-color: #74b1ff; }
+ul.square-checkmark li:before {content: '';display: block;border-color: #74b1ff;border-width: 7px; border-style: solid; height: 0;width: 0; position: absolute; left: 9px; top: 3px;}
+ul.square-checkmark li:after {content: '';display: block;width: 3px;height: 6px;border-color: #000; border-width: 0 2px 2px 0; border-style: solid; position: absolute; left: 14px; top: 9px; margin-top: -4px; -webkit-transform: rotate(45deg);-moz-transform: rotate(45deg);-o-transform: rotate(45deg);}
 .typography-style-light ul.square-checkmark li:after {border-color: #fff;}
-ul.triangle-small li:after {content:"";display:block;width: 0;height: 0;border-color: transparent transparent transparent #fff;border-style: solid;border-width: 3px;position:absolute;left: 18px;top: 7px;}
-ul.triangle li:after {content:"";display:block;width: 0;height: 0;border-color: transparent transparent transparent #fff;border-style: solid;border-width: 4px;position:absolute;left: 17px;top: 6px;}
-ul.triangle.green li:after {border-color: transparent transparent transparent #74924A;}
-ul.triangle.yellow li:after {border-color: transparent transparent transparent #D69839;}
-ul.triangle.red li:after {border-color: transparent transparent transparent #BD5151;}
-ul.triangle.blue li:after {border-color: transparent transparent transparent #488AAD;}
+ul.triangle-small li:after {content: '';display: block; width: 0; height: 0; border-color: transparent transparent transparent #fff; border-style: solid;border-width: 3px; position: absolute;left: 18px;top: 7px;}
+ul.triangle li:after {content: ''; display: block; width: 0; height: 0; border-color: transparent transparent transparent #fff; border-style: solid;border-width: 4px; position: absolute;left: 17px;top: 6px;}
+ul.triangle.green li:after {border-color: transparent transparent transparent #74924a;}
+ul.triangle.yellow li:after {border-color: transparent transparent transparent #d69839;}
+ul.triangle.red li:after {border-color: transparent transparent transparent #bd5151;}
+ul.triangle.blue li:after {border-color: transparent transparent transparent #488aad;}
 ul.triangle.white li:after {border-color: transparent transparent transparent #fff;}
 .typography-style-light ul.triangle.white li:after {border-color: transparent transparent transparent #ddd;}
 ul.triangle.black li:after {border-color: transparent transparent transparent #000;}
-ul.triangle-large li:after {content:"";display:block;width: 0;height: 0;border-color: transparent transparent transparent #fff;border-style: solid;border-width: 6px;position:absolute;left: 15px;top: 4px;}
-ul.circle-small li:after {content:"";display:block;width: 0;height: 0;border-color: #74B1FF;border-style: solid;border-width: 2px;border-radius: 2px;position:absolute;left: 16px;top: 8px;}
-ul.circle li:after {content:"";display:block;width: 0;height: 0;border-color: #74B1FF;border-style: solid;border-width: 3px;border-radius: 3px;position:absolute;left: 15px;top: 7px;}
-ul.circle-large li:after {content:"";display:block;width: 0;height: 0;border-color: #74B1FF;border-style: solid;border-width: 5px;border-radius: 5px;position:absolute;left: 12px;top: 5px;}
-ul.circle.green li:after, ul.checkmark.green li:after {border-color: #74924A;}
-ul.circle.yellow li:after, ul.checkmark.yellow li:after {border-color: #D69839;}
-ul.circle.red li:after, ul.checkmark.red li:after {border-color: #BD5151;}
-ul.circle.blue li:after, ul.checkmark.blue li:after {border-color: #488AAD;}
+ul.triangle-large li:after {content: ''; display: block; width: 0; height: 0; border-color: transparent transparent transparent #fff; border-style: solid; border-width: 6px; position: absolute; left: 15px;top: 4px;}
+ul.circle-small li:after {content: ''; display: block; width: 0; height: 0; border-color: #74b1ff; border-style: solid; border-width: 2px; border-radius: 2px; position: absolute; left: 16px; top: 8px;}
+ul.circle li:after {content: ''; display: block; width: 0; height: 0; border-color: #74b1ff; border-style: solid; border-width: 3px; border-radius: 3px; position: absolute; left: 15px; top: 7px;}
+ul.circle-large li:after {content: ''; display: block; width: 0; height: 0; border-color: #74b1ff; border-style: solid; border-width: 5px; border-radius: 5px; position: absolute; left: 12px; top: 5px;}
+ul.circle.green li:after, ul.checkmark.green li:after {border-color: #74924a;}
+ul.circle.yellow li:after, ul.checkmark.yellow li:after {border-color: #d69839;}
+ul.circle.red li:after, ul.checkmark.red li:after {border-color: #bd5151;}
+ul.circle.blue li:after, ul.checkmark.blue li:after {border-color: #488aad;}
 ul.circle.white li:after, ul.checkmark.white li:after {border-color: #fff;}
 .typography-style-light ul.circle.white li:after, .typography-style-light ul.checkmark.white li:after {border-color: #ddd;}
 ul.circle.black li:after, ul.checkmark.black li:after {border-color: #000;}
 ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
-/* List items with description text */
+// scss-lint:enable PropertySortOrder
+
+// List items with description text
 .listdesc {
-    display: block;
-    position: relative;
     @include border-radius-thin(5px);
+    display: block;
     font-size: $fontsmall;
+    margin-bottom: 10px;
+    margin-left: 30px;
     padding: 5px;
     padding-left: 20px;
-    margin-left: 30px;
-    margin-bottom: 10px;
+    position: relative;
 }
 
 // ---------- Alert / System Notice Styles -------------------
 #alert-box {
     // Main box containing alert/notice/attention/approved.
     display: none;
-    opacity: 0.85;
+    opacity: .85;
     z-index: 21;
 }
 
 #alert-title dd ul {
     @include border-radius(6px);
-    background-repeat: no-repeat;
     background-position: 10px 50%;
+    background-repeat: no-repeat;
 }
 
 .alert-message {
@@ -802,114 +874,138 @@ ul.bullet li {background-position: 15px 7px;background-repeat: no-repeat;}
 }
 
 .approved, .attention, .alert, .notice, .error {
-    padding: 10px 10px 10px 45px;
     @include border-radius(5px);
-    font-weight: bold;
     background-position: 10px 50%;
     background-repeat: no-repeat;
+    font-weight: bold;
+    padding: 10px 10px 10px 45px;
 }
 
 .approved a, .attention a, .alert a, .notice a, .error a {
+    // scss-lint:disable ImportantRule
+    // Left over from welbornprod v. 0.1 (old template style)
     color: #000 !important;
-    //text-decoration: underline;
 }
+
 .approved a:hover, .attention a:hover, .alert a:hover, .notice a:hover, .error a:hover {
-    color: #6F2D2D !important;
-    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
+    // scss-lint:disable ImportantRule
+    // Left over from welbornprod v. 0.1 (old template style)
+    color: #6f2d2d !important;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, .3);
 }
+
 .approved {
-    background-color: #74924A;
-    background-image: url(/static/images/typography/dark/approved.png);
-    color: #232F12;
-    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
-    border-top: 1px solid rgba(255,255,255,0.3);
+    background-color: #74924a;
+    background-image: url('/static/images/typography/dark/approved.png');
+    border-top: 1px solid rgba(255, 255, 255, .3);
+    color: #232f12;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, .3);
 }
+
 .attention, #alert-title dd.notice ul {
-    background-color: #D69839;
-    background-image: url(/static/images/typography/dark/attention.png);
-    color: #5A3800;
-    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
-    border-top: 1px solid rgba(255,255,255,0.3);
+    background-color: #d69839;
+    background-image: url('/static/images/typography/dark/attention.png');
+    border-top: 1px solid rgba(255, 255, 255, .3);
+    color: #5a3800;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, .3);
 }
+
 .alert, .error, #alert-title dd.error ul {
-    background-color: #BD5151;
-    background-image: url(/static/images/typography/dark/alert.png);
-    color: #4C1818;
-    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
-    border-top: 1px solid rgba(255,255,255,0.3);
+    background-color: #bd5151;
+    background-image: url('/static/images/typography/dark/alert.png');
+    border-top: 1px solid rgba(255, 255, 255, .3);
+    color: #4c1818;
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, .3);
 }
+
 .notice,  #alert-title dd ul {
-    background-color: #488AAD;
-    background-image: url(/static/images/typography/dark/notice.png);
+    background-color: #488aad;
+    background-image: url('/static/images/typography/dark/notice.png');
+    border-top: 1px solid rgba(255, 255, 255, .3);
     color: #133548;
-    text-shadow: 1px 1px 1px rgba(255,255,255,0.3);
-    border-top: 1px solid rgba(255,255,255,0.3);
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, .3);
 }
 
 
-/* Code wrap. Border with blueish text. (use pre for indention) */
-.codewrap,.sampwrap {
-    display: inline-block;
+// Code wrap. Border with blueish text. (use pre for indention)
+.codewrap,
+.sampwrap,
+%codewrap {
     @include border-radius-thin-color(3px, $bordercode);
+    color: $greydark;
+    display: inline-block;
+    font-family: $fontsmono;
+    font-size: $fontinline;
     margin: 2px;
     padding: 2px;
-    color: $greydark;
-    font-family: $fontsmono;
-    font-size:$fontinline;
 }
 
 // simple inline code highlight
-code, samp {
-    @extend .codewrap;
+code,
+samp {
+    @extend %codewrap;
     display: inline;
+}
+
+// ace code snippets.
+.ace-snippet {
+    @include border-radius(5px);
+    // Height is actually a max-height. Small snippets are shrunk to fit.
+    height: 300px;
+    margin-bottom: 10px;
+    margin-top: 5px;
+    width: 100%;
 }
 
 // styles for building command-help out of html instead of <pre>.
 .cmdhelp-box {
-    position: relative;
-    display: block;
     @include border-radius-thin-color(5px, $bordercode);
+    display: block;
     font-family: $fontsmono;
     font-size: $fontsmall;
+    margin-bottom: 10px;
+    margin-top: 5px;
     padding: 5px;
+    position: relative;
 }
 
 .cmditem {
+    @include border-radius(5px);
     display: block;
-    @include border-radius-thin-color(5px, $bordercode);
     margin-bottom: 5px;
     padding: 2px;
 
+    .cmdoption {
+        display: inline-block;
+        font-size: 1em;
+        margin-left: 10px;
+    }
+
+    .cmdvalue {
+        color: $greymain;
+        display: block;
+        font-size: .9em;
+        margin-left: 70px;
+    }
+
 }
 
-.cmdoption {
-    display: inline-block;
-    margin-left: 10px;
-    font-size: 1em;
-}
-
-.cmdvalue {
-    display: block;
-    margin-left: 70px;
-    color: $greymain;
-    font-size: 0.9em;
-}
 
 // apply monospace font to any element.
 .mono { font-family: $fontsmono; }
 
 
-/* email spam bot protection */
+// email spam bot protection
 .wp-address {
-    /* empty selector for tagging protected addresses (possibly) */
+    // No styles yet, but it is being used to tag base64 encoded emails.
 }
 
-/* 404 page styles */
+// 404 page styles
 .msg-framework-error {
     color: $redmain;
     display: block;
-    font-weight: bold;
     font-size: $fontmedium;
+    font-weight: bold;
 }
 
 .error-box {
@@ -922,32 +1018,33 @@ code, samp {
 
 .error-message {
     color: $blackmain;
-    font-weight: bold;
     font-size: $fontmedium;
+    font-weight: bold;
 }
 
 .error-noaccess-message {
     // Message displayed on the test site for anons.
     color: darkred;
-    font-weight: bold;
     font-size: 2em;
+    font-weight: bold;
     text-align: center;
     text-shadow: $shadowtextbig;
 }
+
 .error-path {
     color: $greydark;
-    font-weight: normal;
     font-size: $fontbigger;
+    font-weight: normal;
 }
 
 .error-home-message {
-    font-size: 0.9em;
+    font-size: .9em;
     margin-top: 10px;
 }
 
 .error-home-link {
-    font-size:0.9em;
-    margin-top:15px;
+    font-size: .9em;
+    margin-top: 15px;
 }
 
 .error-image-box {
@@ -956,27 +1053,27 @@ code, samp {
 
 .error-image {
     @include border-radius(30px);
-    border-width: 4px;
-    border-style: dashed;
     border-color: $bordermain;
+    border-style: dashed;
+    border-width: 4px;
+    height: auto;
     padding: 10px;
     width: 200px;
-    height: auto;
 }
 
-/* Debug Info Styles */
+// Debug Info Styles
 .debug-box {
     // Small debug box for every page is displayed with javascript.
-    display: none;
-    position: relative;
-    background-color: $whitedull;
-    padding-top: 5px;
-    padding-left: 5px;
     // Make a small box that scrolls the very long debug info.
-    width: 90%;
+    background-color: $whitedull;
+    display: none;
     height: 300px;
     overflow-x: scroll;
     overflow-y: scroll;
+    padding-left: 5px;
+    padding-top: 5px;
+    position: relative;
+    width: 90%;
 
 }
 
@@ -986,13 +1083,13 @@ code, samp {
     //     .debug-info-item
     //        .debug-info-label
     //        .debug-info-value
-    display: block;
     @include border-radius-thick(5px);
+    background: $whitedull;
+    display: block;
+    font-family: $fontsmono;
+    font-size: $fontnormal;
     margin-top: 10px;
     padding: 5px;
-    background: $whitedull;
-    font-size: $fontnormal;
-    font-family: $fontsmono;
 }
 
 .debug-info-item {
@@ -1000,66 +1097,67 @@ code, samp {
     display: block;
     padding-left: 20px;
 }
+
 .debug-info-label {
-    font-weight: normal;
-    font-size: $fontsmall;
     display: inline-block;
+    font-size: $fontsmall;
+    font-weight: normal;
 }
 
 .debug-info-value {
-    font-weight: bold;
-    font-size: $fontsmall;
     display: inline-block;
+    font-size: $fontsmall;
+    font-weight: bold;
 }
 
 .debug-page-box {
     // Entire debug info is layed out.
-    position: relative;
     @include border-radius-thick(5px);
     background-color: $whitedull;
-    padding: 5px;
     overflow-x: scroll;
+    padding: 5px;
+    position: relative;
 }
 
 .debug-button {
     @include border-radius-thick(5px);
+    background: white;
     padding-left: 2px;
     padding-right: 2px;
-    background: white;
-    width: 75px;
-    text-align: center;
     position: absolute;
-    right: 0px;
+    right: 0;
+    text-align: center;
+    width: 75px;
     z-index: 3;
 }
 
 #debug-button-top {
-    /* top debug button should not scroll */
+    // top debug button should not scroll
     position: fixed;
 }
 
 .debug-button-text {
     color: darkgray;
-    font-size:  $fontsmall;
+    font-size: $fontsmall;
 }
 
 
-/* Login Box Styles */
+// Login Box Styles
 .login-box {
-    position: absolute;
-    display: none;
-    top: 100px;
-    right: 33%; /* positioned by wptools.js */
-    z-index: 4;
     @include border-radius-thin(5px);
     background: $whitedull;
     color: $blackmain;
+    display: none;
     padding: 10px;
+    position: absolute;
+    right: 33%; // positioned by wptools.js
+    top: 100px;
+    z-index: 4;
 }
 
 .login-label {
     color: $greymain;
-    font-size:$fontsmall;
+    font-size: $fontsmall;
 }
 
 #login-user, #login-pw {
@@ -1067,61 +1165,61 @@ code, samp {
 }
 
 
-/* Test-site only stuff */
+// Test-site only stuff
 #test-site-box {
     @include border-radius-thick-color(15px, $borderred);
-    text-align: center;
     margin-bottom: 20px;
+    text-align: center;
 }
 
-/* Global Screenshots stuff */
+// Global Screenshots stuff
 .screenshots_box {
     margin-top: 10px;
 }
 
-/* Fancy Tooltip styles */
-.tooltip{
+// Fancy Tooltip styles
+.tooltip {
     display: inline;
     position: relative;
 }
 
-.tooltip:hover:after{
-    background: $greybg;
-    //background: rgba(0,0,0,.8);
+.tooltip:hover::after {
     @include border-radius(5px);
+    //background: rgba(0, 0, 0, .8);
+    background: $greybg;
     bottom: 26px;
     color: #fff;
     content: attr(title);
     left: 20%;
     padding: 5px 15px;
     position: absolute;
-    z-index: 4;
     width: 220px;
+    z-index: 4;
 }
 
-.tooltip:hover:before{
+.tooltip:hover::before {
     border: solid;
     border-color: $bordermain;
-    border-width: 6px 6px 0 6px;
+    border-width: 6px 6px 0;
     bottom: 20px;
-    content: "";
+    content: '';
     left: 50%;
     position: absolute;
     z-index: 4;
 }
 
 
-/* Global version style. */
+// Global version style.
 .version {
-    font-size:$fontsmall;
     color: $greydark;
-    font-weight: bold;
     font-family: $fontssmall;
-    text-align: right;
+    font-size: $fontsmall;
+    font-weight: bold;
     padding-left: 0%;
+    text-align: right;
 }
 
-/* Video related styles (video titles, video descriptions) */
+// Video related styles (video titles, video descriptions)
 .video-box {
     padding: 10px;
 }
@@ -1129,24 +1227,24 @@ code, samp {
 .video-info {
     // Container for both video-title and video-desc.
     @include border-radius-thin(5px);
-    padding: 5px;
     margin-bottom: 10px;
+    padding: 5px;
 }
 
 .video-title {
     // Title for video (seated above the video desc.)
+    color: $bluemain;
     font-family: $fontsnormal;
     font-size: $fontbigger;
-    color: $bluemain;
-    text-transform: lowercase;
     padding: 5px;
+    text-transform: lowercase;
 }
 
 .video-desc {
     // Short description for video (seated above the video)
+    border-color: $bordermain;
     font-family: $fontsnormal;
     font-size: $fontsmall;
-    border-color: $bordermain;
     padding: 5px;
 }
 
@@ -1156,41 +1254,46 @@ code, samp {
     font-weight: bold;
 }
 
-/* IP page styles */
+// IP page styles
 .ip-info-box {
-    text-align: center;
     @include border-radius-thin(5px);
     background: $whitedull;
     padding: 10px;
+    text-align: center;
 }
 
 .ip-box {
-    display: inline-block;
-    margin-top: 5px;
     @include border-radius-thin(5px);
-    padding: 5px;
     color: $redmain;
+    display: inline-block;
     font-size: 1.2em;
+    margin-top: 5px;
+    padding: 5px;
+
+    &.ip-host {
+        color: $bluemain;
+        font-size: .85em;
+    }
 }
 
-.ip-box.ip-host {
-    color: $bluemain;
-    font-size: 0.85em;
-}
 
-/* User agent page styles */
-.useragent-info-box {
-    text-align: center;
+// User agent, Text mode test, and other basic info page styles
+.info-box {
     @include border-radius-thin(5px);
     background: $whitedull;
     padding: 10px;
+    text-align: center;
 }
 
-.useragent-value {
-    display: inline-block;
-    margin-top: 5px;
+.info-label {
+    margin-top: 10px;
+}
+
+.info-value {
     @include border-radius-thin(5px);
-    padding: 5px;
     color: $redmain;
+    display: inline-block;
     font-family: $fontsmono;
+    margin-top: 5px;
+    padding: 5px;
 }

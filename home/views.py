@@ -20,12 +20,12 @@ from wp_main.utilities import (
     tweets
 )
 
-# logging
-log = logging.getLogger('wp.home')
-
 # Home tools
 from home import hometools
 from home.models import home_config
+
+# logging
+log = logging.getLogger('wp.home')
 
 
 def index(request):
@@ -42,14 +42,16 @@ def index(request):
 
     # render main page
     context = {
-        'request': request,
         'featured_blog_post': hometools.get_featured_blog(homeconfig),
         'featured_project': hometools.get_featured_project(homeconfig),
         'featured_app': hometools.get_featured_app(homeconfig),
         'welcome_message': homeconfig.welcome_message,
         'latest_tweet': latest_tweet,
     }
-    return responses.clean_response('home/index.html', context)
+    return responses.clean_response(
+        'home/index.html',
+        context=context,
+        request=request)
 
 
 def view_403(request):
@@ -71,12 +73,10 @@ def view_about(request):
     """ return the about page for welbornproductions. """
 
     # Pass link list for the about page
-    context = {
-        'request': request,
-    }
     return responses.clean_response(
         'home/about.html',
-        context,
+        context=None,
+        request=request,
         link_list=htmltools.auto_link_list,
         auto_link_args={'target': '_blank'}
     )
@@ -84,26 +84,29 @@ def view_about(request):
 
 def view_badlogin(request):
     """ show the bad login message """
+    return responses.clean_response(
+        'home/badlogin.html',
+        context=None,
+        request=request)
 
-    context = {
-        'request': request,
-    }
-    return responses.clean_response('home/badlogin.html', context)
 
-
+@never_cache
 @login_required(login_url='/login')
 def view_debug(request):
     """ return the django debug info page. """
     context = {
-        'request': request,
         'djangoversion': get_django_version(),
         'sysversion': getattr(settings, 'SYSVERSION', ''),
         'siteversion': getattr(settings, 'SITE_VERSION', ''),
         'siteversionnum': getattr(settings, 'WPVERSION', ''),
     }
-    return responses.clean_response('home/debug.html', context)
+    return responses.clean_response(
+        'home/debug.html',
+        context=context,
+        request=request)
 
 
+@never_cache
 def view_error(request, error_number):
     """  returns  appropriate error page when given the error code. """
 
@@ -111,27 +114,28 @@ def view_error(request, error_number):
     if request_path.startswith('/'):
         request_path = request_path[1:]
 
-    serror = str(error_number)
-    # if its not one of these I don't have a template for it,
+    # If its not one of these I don't have a template for it,
     # so it really would be a file-not-found error.
-    if serror not in ('403', '404', '500'):
-        serror = '404'
+    if error_number not in (403, 404, 500):
+        error_number = 404
+
     context = {
-        'request': request,
         'request_path': mark_for_escaping(request_path),
     }
-    return responses.clean_response_req('home/{}.html'.format(serror),
-                                        context,
-                                        request=request)
+    return responses.clean_response(
+        'home/{}.html'.format(error_number),
+        context=context,
+        request=request,
+        status=error_number)
 
 
 @never_cache
 def view_ip(request):
     """  returns the remote ip page. """
-    context = {
-        'request': request,
-    }
-    return responses.clean_response('home/ip.html', context)
+    return responses.clean_response(
+        'home/ip.html',
+        context=None,
+        request=request)
 
 
 @never_cache
@@ -148,8 +152,8 @@ def view_login(request):
     # I am using Django's auth.views with modified css right now.
     # maybe in the future I can do this right.
 
-    username = request.REQUEST.get('user', None)
-    pw = request.REQUEST.get('pw', None)
+    username = request.POST.get('user', request.GET.get('user', None))
+    pw = request.POST.get('pw', request.GET.get('pw', None))
 
     # log.debug("username: " + str(username) + ", pw: " + str(pw))
 
@@ -168,7 +172,7 @@ def view_login(request):
 
                 # log.debug("referer_view: " + str(referer_view))
 
-                # Change response based on whether or not prev. view was given.
+                # Change response based on whether prev. view was given.
                 if referer_view is None:
                     # Success
                     response = responses.redirect_response('/')
@@ -177,6 +181,15 @@ def view_login(request):
                     response = responses.redirect_response(referer_view)
 
     return response
+
+
+def view_no_javascript(request):
+    """ Return a page for bots trying to visit base64 or other links that
+        are supposed to be decoded with javascript.
+    """
+    return responses.basic_response(
+        'Sorry, you must have javascript enabled to follow that link.'
+    )
 
 
 def view_scriptkids(request):
@@ -203,14 +216,16 @@ def view_scriptkids(request):
     use_img = (scriptkid_img is not None)
 
     context = {
-        'request': request,
         'use_img': use_img,
         'scriptkid_img': scriptkid_img,
         'use_ip': use_ip,
         'ip_address': ip_address,
     }
     # return formatted template.
-    return responses.clean_response('home/scriptkids.html', context)
+    return responses.clean_response(
+        'home/scriptkids.html',
+        context=context,
+        request=request)
 
 
 def view_raiseerror(request):
@@ -227,12 +242,36 @@ def view_raiseerror(request):
 
 
 @never_cache
+def view_textmode(request):
+    """ Return the text mode test page in html (for testing). """
+    return responses.clean_response(
+        'home/textmode.html',
+        context=None,
+        request=request)
+
+
+@never_cache
+def view_textmode_simple(request):
+    """ Return textmode test page in plain text (for testing). """
+    ua = utilities.get_user_agent(request)
+    return responses.text_response(
+        '\n'.join((
+            'User-Agent: {useragent}',
+            'Textmode: {textmode}\n'
+        )).format(
+            useragent=getattr(ua, 'ua_string', '?'),
+            textmode=utilities.is_textmode(request)
+        )
+    )
+
+
+@never_cache
 def view_useragent(request):
     """  returns the user agent page. """
-    context = {
-        'request': request,
-    }
-    return responses.clean_response('home/useragent.html', context)
+    return responses.clean_response(
+        'home/useragent.html',
+        context=None,
+        request=request)
 
 
 @never_cache

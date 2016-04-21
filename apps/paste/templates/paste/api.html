@@ -1,5 +1,7 @@
 {% extends "home/main.html" %}
 {% load wp_tags %}
+{% load wp_nodes %}
+
 {% block title %}- Paste - API{% endblock %}
 
 {% block metainfo %}
@@ -9,6 +11,12 @@
 {% block extrastylelink %}
     <link type='text/css' rel='stylesheet' href='/static/css/paste.min.css'/>
     {{ block.super }}
+{% endblock %}
+
+{# Ace editor for code snippets #}
+{% block javascript %}
+    <script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
+    <script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
 {% endblock %}
 
 {% block content %}
@@ -40,12 +48,12 @@
                 <div class='paste-api-section-paragraph'>
                     Id format:
                     <div class='clearfix'>
-                        <pre class='codewrap'>
-&lt;paste_id&gt; : a valid paste id.
+{% acesnippet "id-format-example" ".txt" %}
+<paste_id> : a valid paste id.
 all        : same as 'latest'.
-latest     : list of all pastes sorted by reverse date. (last paste is first)
+latest     : list of all pastes sorted by reverse date. (latest paste is first)
 top        : list of all pastes sorted by view_count. (highest view count is first)
-                        </pre>
+{% endacesnippet %}
                     </div>
                 </div>
                 <div class='paste-api-section-paragraph'>
@@ -80,35 +88,36 @@ top        : list of all pastes sorted by view_count. (highest view count is fir
                     <div class='paste-api-section-codelabel'>
                         Single paste:
                         <div class='paste-api-section-json'>
-<pre class='codewrap'>
+{% acesnippet "good-response-example" ".js" %}
 {
-    'status': 'ok',
-    'id': 'asdf',
-    'views': 1,
-    'title': 'test',
-    'content': 'hmm..',
-    'author': '',
-    'language': 'Python',
-    'date': '2014-03-26 01:42:56.667001',
-    'message': 'Paste asdf retrieved.',
-    'replycount': 2,
-    'replies': ['ftrh', 'dfrt'], // Reply paste ids.
-    'replyto': 'fged' // Parent id
+    "status": "ok",
+    "id": "asdf",
+    "views": 1,
+    "title": "test",
+    "content": "hmm..",
+    "author": "Cj",
+    "language": "Python",
+    "date": "2014-03-26 01:42:56.667001",
+    "message": "Paste asdf retrieved.",
+    "replycount": 2,
+    "replies": ["ftrh", "dfrt"], // Reply paste ids.
+    "replyto": "fged" // Parent id
 }
-</pre>
+{% endacesnippet %}
                         </div>
                     </div>
                     <div class='paste-api-section-codelabel'>
                         Listing:
                         <div class='paste-api-section-json'>
-<pre class='codewrap'>
+{% acesnippet "listing-example" ".js" %}
 {
-    'status': 'ok',
-    'message': 'Pastes retrieved.',
-    'count': 2,
-    'pastes': [{ ..paste1 }, { ..paste2 }]
+    "status": "ok",
+    "message": "Pastes retrieved.",
+    "count": 2,
+    // pastes is a list of single paste data
+    "pastes": [{"paste1": ".."}, {"paste2": ".."}]
 }
-</pre>
+{% endacesnippet %}
                         </div>
                     </div>
                 </div>
@@ -117,15 +126,15 @@ top        : list of all pastes sorted by view_count. (highest view count is fir
                     <div class='paste-api-section-codelabel'>
                         Single paste or listing:
                         <div class='paste-api-section-json'>
-<pre class='codewrap'>
+{% acesnippet "bad-response-example" ".js" %}
 {
-    'status': 'error',
-    'message': 'Paste not found.',
-    'count':0,
-    'pastes':[],
-    ..all single-paste attributes (empty values)
+    "status": "error",
+    "message": "Paste not found.",
+    "count":0,
+    "pastes":[],
+    // ..all single-paste attributes (empty values)
 }
-</pre>
+{% endacesnippet %}
                         </div>
                     </div>
                 </div>

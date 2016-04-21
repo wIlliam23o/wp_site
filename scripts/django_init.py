@@ -11,7 +11,7 @@ import sys
 import os
 
 NAME = 'DjangoInit'
-_VERSION = '1.0.3'
+__version__ = '1.0.4'
 
 
 # Exportable attributes..
@@ -20,6 +20,11 @@ project_dir = ''
 settings_dir = ''
 scripts_dir = ''
 initialized = False
+# Path to django installation.
+django_path = '/usr/local/lib/python{}.{}/dist-packages/django'.format(
+    sys.version_info.major,
+    sys.version_info.minor
+)
 
 
 def get_root_parent(scriptpath):
@@ -28,10 +33,10 @@ def get_root_parent(scriptpath):
         paths. It has to do this without django.conf.settings.BASE_DIR.
     """
 
-    if not '/' in scriptpath:
+    if '/' not in scriptpath:
         return None
 
-    if not 'wp_site' in scriptpath:
+    if 'wp_site' not in scriptpath:
         # Maybe this is the parent (it is for remote-servers since 3.3)
         if os.path.isdir(os.path.join(scriptpath, 'wp_site')):
             # This is the parent.
@@ -52,10 +57,13 @@ def get_root_parent(scriptpath):
     return parent
 
 
-def initialize_django():
+def init_django():
+    """ Gets the django environment for wp_site up and running so django
+        modules can be used properly.
+    """
     global project_dir, settings_dir, scripts_dir, initialized
 
-    # Set environment variable (if not set already.)
+    # Set required environment variable (if not set already.)
     if not os.environ.get('DJANGO_SETTINGS_MODULE', False):
         os.environ['DJANGO_SETTINGS_MODULE'] = 'wp_main.settings'
 
@@ -81,16 +89,9 @@ def initialize_django():
         if not os.path.isdir(require_dir):
             print('\nUnable to find dir: {}'.format(require_dir))
             return False
-
-    # Insert paths for this project (if they aren't already in there)
-    # Insert main path.
-    if not project_dir in sys.path:
-        sys.path.insert(0, project_dir)
-    # Insert extra import paths.
-    if not settings_dir in sys.path:
-        sys.path.insert(0, settings_dir)
-    if not scripts_dir in sys.path:
-        sys.path.insert(0, scripts_dir)
+        # Insert into sys path if not already there.
+        if require_dir not in sys.path:
+            sys.path.insert(0, require_dir)
 
     # Required since 1.7
     import django
@@ -99,6 +100,3 @@ def initialize_django():
     # Success
     initialized = True
     return True
-
-# Aliases..
-init_django = initialize_django

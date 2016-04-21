@@ -15,7 +15,7 @@ from multiprocessing import Pool
 from docopt import docopt
 
 NAME = 'PhoneWords'
-VERSION = '1.0.4'
+VERSION = '1.0.5'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[1]
 
@@ -33,7 +33,8 @@ usage_str = """{verstr}
         <phonenumber>           : Phone number to check.
         <word>                  : Word to find phone number for.
         MAPFILE                 : File name to save pickle data to when
-                                  generating a map. Defaults to: phonewords.pkl
+                                  generating a map.
+                                  Default: phonewords.pkl
         WORDFILE                : File to grab dictionary words from.
                                   Defaults to local words file,
                                   or /usr/share/dict/words.
@@ -93,7 +94,7 @@ def main(argd):
     DEBUG = argd['--debug']
 
     reverse_mode = argd['--reverse']
-    wordfile = argd['WORDFILE'] if argd['WORDFILE'] else get_defaultwordsfile()
+    wordfile = argd['WORDFILE'] or get_defaultwordsfile()
 
     if argd['--generatemap']:
         # Generate the big map of all numbers/words/combos.
@@ -239,7 +240,10 @@ def ensure_nonexisting_filename(filepath):
     dirpath, filename = os.path.split(filepath)
     filestem, fileext = os.path.splitext(filename)
     while os.path.exists(filepath):
-        filename = '{name}.{n}{ext}'.format(name=filestem, n=fnum, ext=fileext)
+        filename = '{name}.{n}{ext}'.format(
+            name=filestem,
+            n=fnum,
+            ext=fileext)
         filepath = os.path.join(dirpath, filename)
         fnum += 1
     return filepath
@@ -389,7 +393,7 @@ def generate_map(filename=None, wordfile=None, start=2000000, statuscount=10):
     # Symbols for bad numbers, none-found numbers, and found numbers.
     # These stream across the console to show progress.
     symbols = {
-        #'bad': (color('!', fore='red', style='bold'), 'Impossible number.'),
+        # 'bad': (color('!', fore='red', style='bold'), 'Impossible number.'),
         'found': (color('.', fore='green'), 'Found words with this number.'),
         'none': (color('x', fore='red'), 'No words found.')
     }
@@ -425,10 +429,15 @@ def generate_map(filename=None, wordfile=None, start=2000000, statuscount=10):
     _statuscount = statuscount or 10
     # This is the actual counter for status updates.
     statuscount = _statuscount
-    # Calculates elapsed time.
-    statustime = lambda: str(datetime.now() - starttime)
-    # Transforms a plain status label into a colored/justified label.
-    colorlbl = lambda l: color(l.rjust(15), fore='green', style='bold')
+
+    def statustime():
+        """ Calculates elapsed time. """
+        return str(datetime.now() - starttime)
+
+    def colorlbl(l):
+        """ Transform a plain status label into a formatted label. """
+        return color(l.rjust(15), fore='green', style='bold')
+
     # Format for status updates.
     statuslabels = (
         (colorlbl('Time:'), '{time}'),
@@ -561,7 +570,7 @@ def get_lettercombos(snumber):
     numberlen = len(snumber)
     words = []
     # Using product() because the positions of the letters matter.
-    # This will create every possible letter combination while retaining order.
+    # This will create every possible letter combination while retaining order
     # Ex:
     #    numberset = [['a', 'b', 'c'], ['d', 'e', '']]
     #    ..reveals combinations like: 'abc', 'aec', 'dbc', 'dec'
@@ -625,7 +634,8 @@ def get_phonewords(number, wordfile=None, processes=2):
                 # foundwords == {'555hand': 'hand'}
                 # total == 156789
             * This total is't accurate, it is only an example of what
-            * you can find in foundwords and total when get_phonewords returns.
+            * you can find in foundwords and total when get_phonewords
+            * returns.
     """
 
     # Must be valid number.
@@ -644,7 +654,9 @@ def get_phonewords(number, wordfile=None, processes=2):
 
     try:
         # Get word list, which WordFinder will handle.
-        wordlist = [w for w in iter_filelines(wordfile, maxlength=len(number))]
+        wordlist = [
+            w for w in iter_filelines(wordfile, maxlength=len(number))
+        ]
     except ValueError:
         raise ValueError('Empty word list given: {}'.format(wordfile))
 
@@ -677,12 +689,11 @@ def iter_filelines(filename, maxlength=10):
     maxlen = (maxlength + 1)
     # Change args to test with stackless/pypy
     openargs = {'encoding': 'utf-8'} if sys.version_info.major == 3 else {}
-    good_line = lambda l: l and (2 < len(l) < maxlen)
     with open(filename, 'r', **openargs) as fread:
         for line in fread:
             # Strip newlines, then strip "
             line = line.strip('\n').strip('"')
-            if good_line(line):
+            if line and (2 < len(line) < maxlen):
                 yield line.lower()
     return
 
@@ -850,7 +861,7 @@ class ColorCodes(object):
             code = self.codes[stype].get(style, None)
             if code:
                 # Reset codes come first (or they will override other styles)
-                if style in ('none', 'normal', 'reset', 'reset_all'):
+                if style in {'none', 'normal', 'reset', 'reset_all'}:
                     codes.insert(0, self.codefmt(code))
                 else:
                     codes.append(self.codefmt(code))
@@ -871,9 +882,14 @@ class ColorCodes(object):
         """ Same as colorize, but adds a style->reset_all after it. """
         if text is None:
             text = ''
-        colorized = self.colorize(text=text, style=style, back=back, fore=fore)
-        s = '{colrtxt}{reset}'.format(colrtxt=colorized,
-                                      reset=self.color_code(style='reset_all'))
+        colorized = self.colorize(
+            text=text,
+            style=style,
+            back=back,
+            fore=fore)
+        s = '{colrtxt}{reset}'.format(
+            colrtxt=colorized,
+            reset=self.color_code(style='reset_all'))
         return s
 
 # Save a global instance of the ColorCodes, and the main function.

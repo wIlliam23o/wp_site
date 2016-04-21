@@ -1,33 +1,39 @@
 {% load wp_nodes %}
 {% load projects_tags %}
 
-<div class='wp-block feature-list' style='padding-top: 20px;'>
-    <!-- Description -->
-    Python evaluation bot for IRC. PyVal was made to evaluate python code
-    safely (without compromising your own system), and depends on
-    [l]pypy-sandbox | http://pypy.org[?l]
-    to block certain system calls.
-    <br><br>
-    Within the PyVal directory, there is also a handy little tool called
-    'PyValExec', which is used by 'PyValBot', but can be used as a standalone
-    sandbox for testing purposes.
-    <br>
-    <br>
-    The sandbox uses a 'fake' file system, that contains two directories:
-    [bash]/bin[?bash] and [bash]/tmp[?bash]
-    <br><br>
-    The [bash]/tmp[?bash] directory contains a helper script called
-    [bash]pyval_sandbox.py[/bash] which by itself does not offer any security.
-    It's main job is to take python code from [bash]stdin[/bash], and compile/run it.
-    The security comes from running this 'helper script' inside the sandbox.
-    <br><br>
-    The [bash]/bin[?bash] directory contains several libraries/modules needed to
-    run [l]pypy-sandbox | http://pypy.org[?l]
-    <br><br>
-    Read access is allowed in these two directories, but any [python]write()[/python]
-    calls are automatically blocked. The sandbox allows you to [python]import[/python]
-    many python modules, but will fail for certain 'critical' modules that are known
-    to be insecure for sandbox purposes.
+<div class='wp-block feature-list' id='about'>
+    {# Description #}
+    <div class='paragraph'>
+        Python evaluation bot for IRC. PyVal was made to evaluate python code
+        safely (without compromising your own system), and depends on
+        <a href='http://pypy.org'>pypy-sandbox</a>
+        to block certain system calls.
+    </div>
+    <div class='paragraph'>
+        Within the PyVal directory, there is also a handy little tool called
+        'PyValExec', which is used by 'PyValBot', but can be used as a standalone
+        sandbox for testing purposes.
+    </div>
+    <div class='paragraph'>
+        The sandbox uses a 'fake' file system, that contains two directories:
+        [bash]/bin[?bash] and [bash]/tmp[?bash]
+    </div>
+    <div class='paragraph'>
+        The [bash]/tmp[?bash] directory contains a helper script called
+        [bash]pyval_sandbox.py[/bash] which by itself does not offer any security.
+        It's main job is to take python code from [bash]stdin[/bash], and compile/run it.
+        The security comes from running this 'helper script' inside the sandbox.
+    </div>
+    <div class='paragraph'>
+        The [bash]/bin[?bash] directory contains several libraries/modules needed to
+        run <a href='http://pypy.org'>pypy-sandbox</a>.
+    </div>
+    <div class='paragraph'>
+        Read access is allowed in these two directories, but any [python]write()[/python]
+        calls are automatically blocked. The sandbox allows you to [python]import[/python]
+        many python modules, but will fail for certain 'critical' modules that are known
+        to be insecure for sandbox purposes.
+    </div>
 </div>
 
 <!-- Article Ad -->
@@ -35,7 +41,7 @@
 
 <div class='wp-block feature-list'>
     <!-- Requirements -->
-    <div id='requirements' class='title-box'>
+    <div class='title-box' id='requirements'>
         <h3 class='title'>Requirements</h3>
     </div>
     <ul class='circle blue'>
@@ -45,8 +51,10 @@
         <div class='listdesc'>
             Found in debian/ubuntu distros.<br>
             This package provides the prebuilt pypy-sandbox executable which is used
-            by <strong>PyVal</strong> to run code safely.<br>
-            <strong>PyVal</strong> looks for [bash]/usr/bin/pypy-sandbox[?bash].
+            by <strong>PyVal</strong> to run code safely.
+            <div class='paragraph'>
+                <strong>PyVal</strong> looks for [bash]/usr/bin/pypy-sandbox[?bash].
+            </div>
         </div>
         <li class='B'>
             Twisted python module
@@ -58,9 +66,11 @@
             <a class='B' href='http://python.org' target='_blank'>Python 2.7</a>
         </li>
         <div class='listdesc'>
-            When [l]Twisted | http://twistedmatrix.com[?l] fully supports
-            [l]Python 3 | http://python.org/download/releases/[?l], this project
-            may be ported over.
+            When
+            <a href='http://twistedmatrix.com'>Twisted</a>
+            fully supports
+            <a href='http://python.org/download/releases/'>Python 3</a>
+            , this project may be ported over.
         </div>
 
     </ul>
@@ -68,7 +78,7 @@
 
 <!-- Download -->
 <div class='wp-block feature-list'>
-    <div id='download' class='title-box'>
+    <div class='title-box' id='download'>
         <h3 class='title'>Download</h3>
     </div>
     {% downloads project %}
@@ -76,7 +86,7 @@
 
 <!-- Source -->
 <div class='wp-block feature-list' id='source'>
-    <div id='source-code' class='title-box'>
+    <div class='title-box' id='source'>
         <h3 class='title'>Source Code</h3>
     </div>
     <p>
@@ -84,139 +94,189 @@
             PyVal (github)
         </a>
         &nbsp;- current <strong>PyVal</strong> source code at
-        <a href='http://github.com' target="_blank">github</a>.
+        <a href='http://github.com' target='_blank'>github</a>.
     </p>
     {% source_view project request %}
 </div>
 
 <div class='wp-block feature-list'>
     <!-- Notes -->
-    <div id='notes' class='title-box'>
+    <div class='title-box' id='notes'>
         <h3 class='title'>Notes</h3>
     </div>
-    <div>
-        The bot connects to [python]irc.freenode.net[/python].
-        <br><br>
-        Joins [bash]##<bots_nick>[/bash] on successful connection.
-        <br>
-        You can set the auto-join channels with the [bash]--channels[/bash] command-line option.
-        <br><br>
-        Nickname is set to <span class='I'>pyval</span>,
-        which is registered to me so you will want to change that.
-        <br>
-        You can set the nick with the [bash]--nick[/bash] command-line option.
-        <br><br>
-        You are certainly free to take this code and start your own eval bot.
-        If you change the source in any way, please change the name from
-        <strong>PyVal</strong> / <strong>PyValBot</strong> to something else.
-        <br><br>
-        If you want to contribute to the original <strong>PyVal</strong>,
-        you can clone this project on
-        <a href='https://github.com/welbornprod/pyvalbot/tree/dev' target='_blank'>
-            github.com
-        </a> and send pull requests.
+    <div class='paragraph'>
+        <div class='paragraph'>
+            The bot connects to [python]irc.freenode.net[/python].
+        </div>
+        <div class='paragraph'>
+            <div>
+                Joins [bash]##<bots_nick>[/bash] on successful connection.
+            </div>
+            <div>
+                You can set the auto-join channels with the [bash]--channels[/bash] command-line option.
+            </div>
+        </div>
+        <div class='paragraph'>
+            Nickname is set to <span class='I'>pyval</span>,
+            which is registered to me so you will want to change that.
+            <div>
+                You can set the nick with the [bash]--nick[/bash] command-line option.
+            </div>
+        </div>
+        <div class='paragraph'>
+            You are certainly free to take this code and start your own eval bot.
+            If you change the source in any way, please change the name from
+            <strong>PyVal</strong> / <strong>PyValBot</strong> to something else.
+        </div>
+        <div class='paragraph'>
+            If you want to contribute to the original <strong>PyVal</strong>,
+            you can clone this project on
+            <a href='https://github.com/welbornprod/pyvalbot/tree/dev' target='_blank'>
+                github.com
+            </a>
+            and send pull requests.
+        </div>
     </div>
 </div>
 
 <div class='wp-block feature-list'>
     <!-- Bot Usage -->
-    <div id='pyvalbot-usage' class='title-box'>
+    <div class='title-box' id='pyvalbot_usage'>
         <h3 class='title'>PyValBot Usage</h3>
     </div>
-    <div>
-        To run the full pyval irc bot:
-        <br>
-        [code]./pyvalbot.py --nick MyBot --channels #mychan1,#mychan2[?code]
-        <br>
+    <div class='paragraph'>
+        <div>
+            To run the full pyval irc bot:
+        </div>
+        {% acesnippet "run-pyval-example" ".txt" %}
+            ./pyvalbot.py --nick MyBot --channels '#mychan1,#mychan2'
+        {% endacesnippet %}
+
         ...you can also use the [bash]pyval[/bash] symlink.
-        <br><br>
-        To view all options run this:
-        <br>
-        [code]./pyval --help[?code]
+    </div>
+    <div class='paragraph'>
+        <div>
+            To view all options run this:
+        </div>
+        {% acesnippet "run-pyval-help-example" ".txt" %}
+            ./pyval --help
+        {% endacesnippet %}
     </div>
 </div>
 
 <div class='wp-block feature-list'>
     <!-- Chat Usage Example -->
-    <div id='chat-usage' class='title-box'>
-        <h3 class='title'>Chat Usage</h3>
+    <div class='title-box' id='chat_usage'>
+        <h3 class='title'>
+            Chat Usage
+        </h3>
     </div>
     <div>
-        Send the [code]!py[/code] or [code]!python[/code] command followed with your code:<br>
-        <pre class='codewrap'>
+        Send the [code]!py[/code] or [code]!python[/code] command followed with your code:
+    </div>
+
+{% acesnippet "irc-py-cmd-example" ".txt" %}
     User1: How can I make a dict out of the first and last items in a list of lists?
 PyValUser: !py {l[0]:l[-1] for l in [['a', 'b', 'c', 'd'], ['e', 'f', 'g', 'h']]}
     pyval: PyValUser, {'a': 'd', 'e': 'h'}
-        </pre><br>
+{% endacesnippet %}
 
-        <!-- Chat Help -->
-        <h2 class='title'>chat help</h2>
-        To get a list of commands use [code]!help[/code] or [code]!py help()[/code]:<br>
-        <pre class='codewrap'>
+    <!-- Chat Help -->
+    <h2 class='title'>
+        chat help
+    </h2>
+    <div>
+        To get a list of commands use [code]!help[/code] or [code]!py help()[/code]:
+    </div>
+
+{% acesnippet "irc-help-cmd-example" ".txt" %}
 PyValUser: !help
     pyval: PyValUser, commands: help, py, python, pyval, uptime, version
 
 PyValUser: !py help()
     pyval: PyValUser, commands: help, py, python, pyval, uptime, version
-        </pre><br>
+{% endacesnippet %}
 
-        <!-- Builtins -->
-        <h2 class='title'>builtins</h2>
-        PyValBot also has a builtin [py]modules()[/py] function that lists builtin modules:<br>
-        <pre class='codewrap'>
+    <!-- Builtins -->
+    <h2 class='title'>
+        builtins
+    </h2>
+    <div>
+        PyValBot also has a builtin [py]modules()[/py] function that lists builtin modules:
+    </div>
+{% acesnippet "module-func-example" ".txt" %}
 PyValUser: !py modules()
     pyval: PyValUser, 'modules are: math, re'
-        </pre><br>
-
+{% endacesnippet %}
+    <div>
         This function will probably just return a [py]list[/py] of modules in the future,
         but for right now it returns a [py]str[/py].
-        <br>
+    </div>
+    <div>
         Only a few modules are available by default, but you can always [py]import[/py] more.
     </div>
 </div>
 
 <div class='wp-block feature-list'>
     <!-- Advanced Chat Usage Example -->
-    <div id='advanced-chat-usage' class='title-box'>
-        <h3 class='title'>Advanced Chat Usage</h3>
+    <div class='title-box' id='advanced_chat_usage'>
+        <h3 class='title'>
+            Advanced Chat Usage
+        </h3>
     </div>
-    <div>
 
-        <!-- NewLines -->
-        <h2 class='title'>NewLines</h2>
+    <!-- NewLines -->
+    <h2 class='title'>
+        NewLines
+    </h2>
+    <div>
         To insert newlines in more advanced code:
-        <br>
-        <pre class='codewrap'>
+    </div>
+{% acesnippet "irc-newline-example" ".txt" %}
 PyValUser: !py x = 5\nfor i in range(x):\n    print(str(i))
     pyval: PyValUser,  0\n1\n2\n3\n4
-        </pre><br>
+{% endacesnippet %}
 
+    <div>
         [py]print()[/py] must be used because this is not simple [py]eval()[/py] code.
         Even with lines like [py]x=5\nprint(x)[/py].
+    </div>
+    <!-- Escaped NewLines -->
+    <h2 class='title'>
+        Escaped NewLines
+    </h2>
+    <div>
+        To escape newlines in more advanced code:
+    </div>
 
-        <!-- Escaped NewLines -->
-        <h2 class='title'>Escaped NewLines</h2>
-        To escape newlines in more advanced code:<br>
-        <pre class='codewrap'>
+{% acesnippet "irc-newline-advanced-example" ".txt" %}
 PyValUser: !py print('\\n'.join(['test', 'this']))
     pyval: PyValUser, test\nthis
-        </pre><br>
+{% endacesnippet %}
 
-        <!-- Long Output -->
-        <h2 class='title'>Long Output</h2>
-        To get long output (there is a time limit on executing code):<br>
-        <pre class='codewrap'>
+    <!-- Long Output -->
+    <h2 class='title'>
+        Long Output
+    </h2>
+    <div class='paragraph'>
+        <div>
+            To get long output (there is a time limit on executing code):
+        </div>
+{% acesnippet "irc-long-output-example" ".txt" %}
 PyValUser: !py for i in range(65):\n    print('test' * 55)
     pyval: PyValUser, testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
            - goto: http://welbornprod.com/paste?id=xxxx
-        </pre><br>
-
-        Long output is sent to a paste bin, but even then it is truncated.
-        You can get up to 65 lines of output, each line must not exceed ~240 characters.
-        <br><br>
+{% endacesnippet %}
+        <div>
+            Long output is sent to a paste bin, but even then it is truncated.
+            You can get up to 65 lines of output, each line must not exceed ~240 characters.
+        </div>
+    </div>
+    <div class='paragraph'>
         This limit is to ease the bandwidth used on my paste site.
         I don't want 1000+ lines of junk in my database.
-        <br><br>
+    </div>
+    <div class='paragraph'>
         If you are trying to evaluate honest code in the sandbox and must have the full output,
         then you should probably download PyVal and run PyValExec yourself with
         [bash]--raw[/bash] on your own machine.
@@ -224,130 +284,274 @@ PyValUser: !py for i in range(65):\n    print('test' * 55)
 </div>
 
 <div class='wp-block feature-list'>
-    <div id='admin-chat-usage' class='title-box'>
+    <div class='title-box' id='admin_chat_usage'>
         <h3 class='title'>Admin Chat Usage</h3>
     </div>
     <div>
         Administrators of PyValBot have a bigger set of commands to work with.
+    </div>
+    <!-- Admin Help -->
+    <h2 class='title'>
+        Admin Help
+    </h2>
+    <div class='paragraph'>
+        <div>
+            To get a list of admin-commands you must be an admin and type [code]!adminhelp[/code]:
+        </div>
 
-        <!-- Admin Help -->
-        <h2 class='title'>Admin Help</h2>
-        To get a list of admin-commands you must be an admin and type [code]!adminhelp[/code]:<br>
-        <pre class='codewrap'>
+{% acesnippet "irc-adminhelp-example" ".txt" %}
 PyValAdmin: !adminhelp
      pyval: PyValAdmin, commands: adminadd, adminhelp, adminlist, adminreload,
             adminrem, adminremove, ban, banned, blacklist, channels, getattr, identify, join,
             limitrate, msg, part, partall, say, sendline, setattr, shutdown, stats, unban
-        </pre>
-        <br>
-        <br>
-        Admin command help:<br>
+{% endacesnippet %}
+    </div>
+    <div class='paragraph'>
+        <div>
+            Admin command help:
+        </div>
         <div class='cmdhelp-box'>
             <div class='cmditem'>
-                [copt]adminadd &lt;nick&gt;[/copt]
-                [cval]Add an administrator by nick.[/cval]
+                <div class='cmdoption'>
+                    adminadd &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Add an administrator by nick.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminhelp &#91;cmd&#93;[/copt]
-                [cval]List admin commands, or show description for a command.[/cval]
+                <div class='cmdoption'>
+                    adminhelp &#91;cmd&#93;
+                </div>
+                <div class='cmdvalue'>
+                    List admin commands, or show description for a command.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminlist[/copt]
-                [cval]List all admin nicks.[/cval]
+                <div class='cmdoption'>
+                    adminlist
+                </div>
+                <div class='cmdvalue'>
+                    List all admin nicks.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminmsg &lt;msg&gt;[/copt]
-                [cval]Send msg to all bot admins.[/cval]
+                <div class='cmdoption'>
+                    adminmsg &lt;msg&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Send msg to all bot admins.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminreload[/copt]
-                [cval]Reload the admin list from the pyval_admins.lst file.[/cval]
+                <div class='cmdoption'>
+                    adminreload
+                </div>
+                <div class='cmdvalue'>
+                    Reload the admin list from the pyval_admins.lst file.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminrem &lt;nick&gt;[/copt]
-                [cval]Remove an admin (shortcut for adminremove)[/cval]
+                <div class='cmdoption'>
+                    adminrem &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Remove an admin (shortcut for adminremove)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]adminremove &lt;nick&gt;[/copt]
-                [cval]Remove an admin by nick.[/cval]
+                <div class='cmdoption'>
+                    adminremove &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Remove an admin by nick.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]ban &lt;nick&gt;[/copt]
-                [cval]Ban a nick from sending commands. (commands will be ignored)[/cval]
+                <div class='cmdoption'>
+                    ban &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Ban a nick from sending commands. (commands will be ignored)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]banned[/copt]
-                [cval]Show currently banned nicks.[/cval]
+                <div class='cmdoption'>
+                    banned
+                </div>
+                <div class='cmdvalue'>
+                    Show currently banned nicks.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]banwarns[/copt]
-                [cval]Show ban warnings count.[/cval]
+                <div class='cmdoption'>
+                    banwarns
+                </div>
+                <div class='cmdvalue'>
+                    Show ban warnings count.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]blacklist &#91;on, off, ?&#93;[/copt]
-                [cval]Turn PyValExec's blacklist option on/off, or show its status.[?cval]
+                <div class='cmdoption'>
+                    blacklist &#91;on, off, ?&#93;
+                </div>
+                <div class='cmdvalue'>
+                    Turn PyValExec's blacklist option on/off, or show its status.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]channels[/copt]
-                [cval]List all current channels pyval is in.[/cval]
-            </div>
-            <div class="cmditem">
-                [copt]chanmsg &lt;msg&gt;[/copt]
-                [cval]Send msg to all channels pyval is in.[/cval]
-            </div>
-            <div class='cmditem'>
-                [copt]configget &lt;option&gt;[/copt]
-                [cval]Get a config option's value. Certain options are hidden from chat.[/cval]
+                <div class='cmdoption'>
+                    channels
+                </div>
+                <div class='cmdvalue'>
+                    List all current channels pyval is in.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]configlist[/copt]
-                [cval]List current config.[/cval]
+                <div class='cmdoption'>
+                    chanmsg &lt;msg&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Send msg to all channels pyval is in.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]configsave[/copt]
-                [cval]Save current command-line options to permanent config.[/cval]
+                <div class='cmdoption'>
+                    configget &lt;option&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Get a config option's value. Certain options are hidden from chat.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]configset &lt;option&gt; &lt;value&gt;[/copt]
+                <div class='cmdoption'>
+                    configlist
+                </div>
+                <div class='cmdvalue'>
+                    List current config.
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    configsave
+                </div>
+                <div class='cmdvalue'>
+                    Save current command-line options to permanent config.
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    configset &lt;option&gt; &lt;value&gt;
+                </div>
                 <div class='cmdvalue'>
                     Set a config option's value. String values only for now.
                     Remove options by passing - as the value.
                 </div>
             </div>
             <div class='cmditem'>
-                [copt]getattr &lt;attribute&gt;[/copt]
-                [cval]Show the value of a CommandHandler attribute (ex: admin.blacklist)[/cval]
+                <div class='cmdoption'>
+                    deop [#channel] [nick]
+                </div>
+                <div class='cmdvalue'>
+                    Request deop from ChanServ.
+                    Default channel is ##&lt;botnick&gt;.
+                    Default nick is the bot.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]id &lt;password&gt;[/copt]
-                [cval]Shortcut to the identify command.[/cval]
+                <div class='cmdoption'>
+                    deopme [#channel]
+                </div>
+                <div class='cmdvalue'>
+                    Shortcut to 'deop [#channel] &lt;yournick&gt;'.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]identify &lt;password&gt;[/copt]
-                [cval]Identify the bot with NickServ.[/cval]
+                <div class='cmdoption'>
+                    getattr &lt;attribute&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Show the value of a CommandHandler attribute (ex: admin.blacklist)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]join &lt;#channel&gt;[/copt]
-                [cval]Make the bot join a channel, or a comma-separated list of channels.[/cval]
+                <div class='cmdoption'>
+                    id &lt;password&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Shortcut to the identify command.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]limitrate &#91;on, off, ?&#93;[/copt]
-                [cval]Turn the limit-rate option on/off, or show its status.[?cval]
+                <div class='cmdoption'>
+                    identify &lt;password&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Identify the bot with NickServ.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]me &lt;channel&gt; &lt;action&gt;[/copt]
-                [cval]Perform an irc action as pyval. (/me &lt;action&gt;)[?cval]
+                <div class='cmdoption'>
+                    join &lt;#channel&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Make the bot join a channel, or a comma-separated list of channels.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]msg &lt;target&gt; &lt;message&gt;[/copt]
-                [cval]Send a message to a channel or nick.[/cval]
+                <div class='cmdoption'>
+                    limitrate &#91;on, off, ?&#93;
+                </div>
+                <div class='cmdvalue'>
+                    Turn the limit-rate option on/off, or show its status.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]part &lt;channel&gt;[/copt]
-                [cval]Part (leave) a channel, or a comma-separated list of channels[/cval]
+                <div class='cmdoption'>
+                    me &lt;channel&gt; &lt;action&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Perform an irc action as pyval. (/me &lt;action&gt;)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]partall[/copt]
+                <div class='cmdoption'>
+                    msg &lt;target&gt; &lt;message&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Send a message to a channel or nick.
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    op [#channel] [nick]
+                </div>
+                <div class='cmdvalue'>
+                    Request ops from ChanServ.
+                    Default channel is ##&lt;botnick&gt;.
+                    Default nick is the bot.
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    opme [#channel]
+                </div>
+                <div class='cmdvalue'>
+                    Shortcut to 'op [#channel] &lt;yournick&gt;'.
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    part &lt;channel&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Part (leave) a channel, or a comma-separated list of channels
+                </div>
+            </div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    partall
+                </div>
                 <div class='cmdvalue'>
                     Part all channels the pyval is currently in.
                     The only way to re-join channels is to send a message to pyval
@@ -355,15 +559,25 @@ PyValAdmin: !adminhelp
                 </div>
             </div>
             <div class='cmditem'>
-                [copt]say &lt;message&gt;[/copt]
-                [cval]Make PyValBot mention you with a message (PyValUser, message)[/cval]
+                <div class='cmdoption'>
+                    say &lt;message&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Make PyValBot mention you with a message (PyValUser, message)
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]sendline &lt;data&gt;[/copt]
-                [cval]Send a raw message to the irc server.[/cval]
+                <div class='cmdoption'>
+                    sendline &lt;data&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Send a raw message to the irc server.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]setattr &lt;attr&gt; &lt;value&gt;[/copt]
+                <div class='cmdoption'>
+                    setattr &lt;attr&gt; &lt;value&gt;
+                </div>
                 <div class='cmdvalue'>
                     Set an attribute of CommandHandler. (ex: admin.blacklist False)
                     PyValBot will try to parse the string value into the
@@ -374,90 +588,147 @@ PyValAdmin: !adminhelp
                 </div>
             </div>
             <div class='cmditem'>
-                [copt]shutdown[/copt]
-                [cval]Shutdown the bot cleanly and disconnect.[/cval]
+                <div class='cmdoption'>
+                    shutdown
+                </div>
+                <div class='cmdvalue'>
+                    Shutdown the bot cleanly and disconnect.
+                </div>
             </div>
             <div class='cmditem'>
-                [copt]stats[/copt]
+                <div class='cmdoption'>
+                    stats
+                </div>
                 <div class='cmdvalue'>
                     Show 'handled-count' (number of handled commands),
                     uptime (time since startup), and other counts.
                 </div>
             </div>
             <div class='cmditem'>
-                [copt]unban &lt;nick&gt;[/copt]
-                [cval]Unban (remove from banned-list) a nick.[/cval]
+                <div class='cmdoption'>
+                    topic [&lt;#channel&gt;] &lt;message&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Change the topic for a channel.
+                    Defaults to the bot's channel and default pyval topic.
+                </div>
             </div>
-        </div>
-    </div>
-</div>
+            <div class='cmditem'>
+                <div class='cmdoption'>
+                    unban &lt;nick&gt;
+                </div>
+                <div class='cmdvalue'>
+                    Unban (remove from banned-list) a nick.
+                </div>
+            </div>
+        </div> {# end cmdhelp-box #}
+    </div> {# end paragraph #}
+</div> {# end feature-list #}
 
 <div class='wp-block feature-list'>
     <!-- PyValExec Usage -->
-    <div id='pyvalexec-usage' class='title-box'>
-        <h3 class='title'>PyValExec Usage</h3>
+    <div class='title-box' id='pyvalexec_usage'>
+        <h3 class='title'>
+            PyValExec Usage
+        </h3>
     </div>
-    <div>
+    <div class='paragraph'>
         The pyval-exec module can be executed by itself from the command line.
-        <br><br>
-        To test the functionality of the sandbox without connecting to irc:
-        <br>
-        <div class='codewrap'>
-            $ ./pyval_exec.py "s = 'test\\\\n';print(s * 3)"<br>
-            Content: s = 'test\\n';print(s * 3)<br>
-            <br>
-            Results (safe_output()):<br>
-            test\ntest\ntest<br>
+    </div>
+    <div class='paragraph'>
+        <div>
+            To test the functionality of the sandbox without connecting to irc:
         </div>
-        <br><br>
+
+{% acesnippet "sandbox-text-example" ".txt" %}
+$ ./pyval_exec.py "s = 'test\\\\n';print(s * 3)"
+Content: s = 'test\\n';print(s * 3)
+Results (safe_output()):
+test\ntest\ntest
+{% endacesnippet %}
+    </div>
+    <div class='paragraph'>
         Notice the [python]safe_output()[/python]. Newlines are replaced with the
         escaped [python]\\n[/python], and long output is truncated.
-        <br>
-        If you want full output, run it with the [bash]-r[/bash] or [bash]--raw[/bash] flag.
-
-        <!-- PyValExec NewLines -->
-        <h2 class='title'>NewLines</h2>
-        When the input is a string (as opposed to a file),
-        special handling is needed to use the [python]\n[/python] character.<br>
-        PyValExec reads [python]\n[/python] as a literal newline
-        (as if you pressed Enter.)<br>
-        To use the newline character, you actually have to double-escape it with [py]\\n[/py].<br>
-        This is how you should treat newlines when sending input to the bot.
-        <br><br>
+        <div>
+            If you want full output, run it with the [bash]-r[/bash] or [bash]--raw[/bash] flag.
+        </div>
+    </div>
+    <!-- PyValExec NewLines -->
+    <h2 class='title'>
+        NewLines
+    </h2>
+    <div class='paragraph'>
+        <div>
+            When the input is a string (as opposed to a file),
+            special handling is needed to use the [python]\n[/python] character.
+        </div>
+        <div>
+            PyValExec reads [python]\n[/python] as a literal newline
+            (as if you pressed Enter.)
+        </div>
+        <div>
+            To use the newline character, you actually have to double-escape it with [py]\\n[/py].
+        </div>
+        <div>
+            This is how you should treat newlines when sending input to the bot.
+        </div>
+    </div>
+    <div>
         However, when running from the shell, it needs even more escaping.
-        <br>
+    </div>
+    <div>
         This is why the above code uses [py]\\\\n[/py],
         so PyValExec actually receives [py]\\n[/py],
         which is then converted to [py]\n[/py].
-
-        <!-- PyValExec Symlink / Multi-line Code -->
-        <h2 class='title'>PyValExec Symlink / Multi-line Code</h2>
-        PyValExec also has a symlink, you can use [bash]pyvalexec[/bash] like this:
-        <br>
-        <div class='codewrap'>
-            $ ./pyvalexec "for i in range(3):\\n&nbsp;&nbsp;&nbsp;&nbsp;print(str(i))" -r<br>
-            Content: for i in range(3):\n&nbsp;&nbsp;&nbsp;&nbsp;print(str(i))<br>
-            <br>
-            Results (raw output):<br>
-            0<br>
-            1<br>
-            2<br>
+    </div>
+    <!-- PyValExec Symlink / Multi-line Code -->
+    <h2 class='title'>
+        PyValExec Symlink / Multi-line Code
+    </h2>
+    <div class='paragraph'>
+        <div>
+            PyValExec also has a symlink, you can use [bash]pyvalexec[/bash] like this:
         </div>
-        <br><br>
-        Notice the [python]\\n[/python] which was escaped in the shell to send the two characters
-        [python]\[/python] and [python]n[/python] (an escaped newline in python).<br>
-        PyValExec reads this as an actual newline, and interprets the code as if you
-        had pressed Enter. Four spaces were added here to indent the next line.
+{% acesnippet "pyval-multiline-example" ".txt" %}
+$ ./pyvalexec "for i in range(3):\\n    print(str(i))" -r
+Content: for i in range(3):\n    print(str(i))
 
-        <!-- Script Files -->
-        <h2 class='title'>Script Files</h2>
-        PyValExec will also read code from a file and run it. However, the
-        [python]__name__[/python] is not set to [python]'__main__'[/python],<br>
-        it is instead set to [py]'__pyval__'[/py].
-        This allows you to block scripts from running outside of the sandbox.<br><br>
+Results (raw output):
+0
+1
+2
+{% endacesnippet %}
+    </div>
+    <div class='paragraph'>
+        <div>
+            Notice the [python]\\n[/python] which was escaped in the shell to send the two characters
+            [python]\[/python] and [python]n[/python] (an escaped newline in python).
+        </div>
+        <div>
+            PyValExec reads this as an actual newline, and interprets the code as if you
+            had pressed Enter. Four spaces were added here to indent the next line.
+        </div>
+    </div>
+    <!-- Script Files -->
+    <h2 class='title'>
+        Script Files
+    </h2>
+    <div class='paragraph'>
+        <div>
+            PyValExec will also read code from a file and run it. However, the
+            [python]__name__[/python] is not set to [python]'__main__'[/python],
+        </div>
+        <div>
+            it is instead set to [py]'__pyval__'[/py].
+            This allows you to block scripts from running outside of the sandbox.
+        </div>
+    </div>
+    <div>
+        So you can do things like this:
+    </div>
 
-        So you can do things like this:<br>
-        <pre class='python'>
+{% acesnippet "pyval-main-example" ".py" %}
 import sys
 if __name__ == '__main__':
     print('Script cannot be ran outside of the PyValExec sandbox!')
@@ -467,36 +738,49 @@ elif __name__ == '__pyval__':
 else:
     print('This script is not meant to be imported!')
     sys.exit(1)
-        </pre><br>
+{% endacesnippet %}
 
-        Or just this:<br>
-        <pre class='python'>
+    <div>
+        Or just this:
+    </div>
+
+{% acesnippet "pyval-simple-main-example" ".py" %}
 import sys
 if __name__ != '__pyval__':
     print('Script cannot run outside of PyValExec!')
     sys.exit(1)
-        </pre><br>
-
+{% endacesnippet %}
+    <div class='paragraph'>
         I suggest writing code especially for the sandbox, instead of sending your
         scripts as-is to the sandbox.
-        <br><br>
-        To run code from a file just pass the file name to PyValExec:
-        <br>
-        [code]$ ./pyvalexec myscript.py[?code]
     </div>
+    <div>
+        To run code from a file just pass the file name to PyValExec:
+    </div>
+
+    {% acesnippet "pyvalexec-runfile-example" ".txt" %}
+        $ ./pyvalexec myscript.py
+    {% endacesnippet %}
+
 </div>
 
 <div class='wp-block feature-list'>
     <div id='tests' class='title-box'>
         <h3 class='title'>Tests</h3>
     </div>
-    <div>
-        PyVal does have tests, although there isn't a lot of coverage right now.<br>
-        The tests will confirm basic functionality and check for missing dependencies.
-        <br><br>
+    <div class='paragraph'>
+        <div>
+            PyVal does have tests, although there isn't a lot of coverage right now.
+        </div>
+        <div>
+            The tests will confirm basic functionality and check for missing dependencies.
+        </div>
+    </div>
+    <div class='paragraph'>
         PyVal's tests are [py]unittest[/py]-based, and you can run them with your favorite
         Python test-runner ([py]pytest[/py], [py]nose[/py], etc.).
-        <br><br>
+    </div>
+    <div class='paragraph'>
         The tests will check for the existence of [bash]pypy-sandbox[/bash],
         test the execution of code inside the sandbox, and test IRC input / output.
     </div>
@@ -504,10 +788,36 @@ if __name__ != '__pyval__':
 
 <!-- Updates -->
 <div class='wp-block feature-list'>
-    <div id='updates' class='title-box'>
+    <div class='title-box' id='updates'>
         <h3 class='title'>
             Updates
         </h3>
+    </div>
+
+    <!-- Update: 1.1.1 -->
+    <div class='update-box'>
+        <span class='update-title'>
+            Update: version 1.1.1
+        </span>
+        <ul class='circle blue'>
+            <li>
+                New op-related commands were added ([code]op/deop[?code], [code]opme/deopme[?code]).
+            </li>
+            <div class='listdesc'>
+                If the bot has ops through chanserv, these commands can be used
+                to op/deop the bot or any other nick. The [code]opme/deopme[?code]
+                commands are just shortcuts to the [code]op/deop[?code] commands
+                without having to type your nick.
+            </div>
+            <li>
+                [code]topic[?code] command added.
+            </li>
+            <div class='listdesc'>
+                The bot can now change channel topics. The channel defaults to
+                ##&lt;botnick&gt;, and when no topic is given the default
+                message is used.
+            </div>
+        </ul>
     </div>
 
     <!-- Update: 1.0.7-7 -->
@@ -669,7 +979,7 @@ if __name__ != '__pyval__':
 
 <!-- Demo Video -->
 <div class='wp-block feature-list'>
-    <div id='demo' class='title-box'>
+    <div class='title-box' id='demo'>
         <h3 class='title'>demo</h3>
     </div>
     <div class='video-box'>
@@ -687,5 +997,3 @@ if __name__ != '__pyval__':
         </video>
     </div>
 </div>
-
-

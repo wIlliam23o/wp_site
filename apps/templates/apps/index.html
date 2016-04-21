@@ -35,7 +35,7 @@
                     <!-- Header -->
                     <div class='apps-header-box'>
                         <a href='/apps/{{ app.alias }}'>
-                            <span class='header apps-name'>{{ app.name }}</span>
+                            <span class='header apps-name {% if app.admin_only %}apps-admin-name{% endif %}'>{{ app.name }}</span>
                         </a>
                         <br>
                         <span class='version'>version {{ app.version }}</span>

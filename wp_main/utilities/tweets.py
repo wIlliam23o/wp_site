@@ -39,18 +39,29 @@ except ImportError as eximp:
 SETTINGSFILE = os.path.join(settings.BASE_DIR, 'secret_settings.json')
 SETTINGS = {}
 if os.path.isfile(SETTINGSFILE):
+    lines = []
     try:
         with open(SETTINGSFILE, 'r') as f:
-            try:
-                SETTINGS = json.loads(f.read())
-            except (ValueError) as exjson:
-                errmsgfmt = 'Error loading JSON from: {}\n{}'
-                log.error(errmsgfmt.format(SETTINGSFILE, exjson))
-                available = False
+            for line in f:
+                l = line.strip()
+                if l.startswith(('#', '//')):
+                    continue
+                lines.append(l)
     except EnvironmentError as exread:
         errmsgfmt = 'Error read api key file: {}\n{}'
         log.error(errmsgfmt.format(SETTINGSFILE, exread))
         available = False
+    else:
+        if not lines:
+            raise ValueError(
+                'No data in api key file: {}'.format(SETTINGSFILE)
+            )
+        try:
+            SETTINGS = json.loads(''.join(lines))
+        except (ValueError) as exjson:
+            errmsgfmt = 'Error loading JSON from: {}\n{}'
+            log.error(errmsgfmt.format(SETTINGSFILE, exjson))
+            available = False
 else:
     log.error('No api key file found: {}'.format(SETTINGSFILE))
     available = False

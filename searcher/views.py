@@ -22,10 +22,10 @@ def view_index(request):
 
     # no query, show search form.
     if not query:
-        context = {
-            'request': request,
-        }
-        return responses.clean_response('searcher/searchform.html', context)
+        return responses.clean_response(
+            'searcher/searchform.html',
+            context=None,
+            request=request)
     else:
         # pass it to view_results
         return view_results(request, query)
@@ -46,14 +46,16 @@ def view_results(request, query):
             start=0,
             max_items=25)
     context = {
-        'request': request,
         'search_warning': search_warning,
         'results_list': results_slice,
         'query_text': query,
         'query_safe': mark_for_escaping(query),
         'results_count': len(results_list)
     }
-    return responses.clean_response('searcher/results.html', context)
+    return responses.clean_response(
+        'searcher/results.html',
+        context=context,
+        request=request)
 
 
 def view_paged(request):
@@ -101,10 +103,8 @@ def view_paged(request):
     hasnxt = (page_args['start_id'] < (results_count - page_args['max_items']))
     hasprv = (page_args['start_id'] > 0)
     context = {
-        'request': request,
         'search_warning': search_warning,
         'results_list': results_slice,
-        'query_text': query,
         'query_safe': query_safe,
         'start_id': (page_args['start_id'] + 1),
         'end_id': end_id,
@@ -114,4 +114,7 @@ def view_paged(request):
         'has_prev': hasprv,
         'has_next': hasnxt,
     }
-    return responses.clean_response('searcher/results_paged.html', context)
+    return responses.clean_response(
+        'searcher/results_paged.html',
+        context=context,
+        request=request)

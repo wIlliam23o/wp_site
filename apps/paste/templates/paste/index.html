@@ -15,7 +15,7 @@
 
 {% block extrastyle %}
     <style type='text/css'>
-        <!-- Height must be set inline here (for Ace) -->
+        {# Height must be set inline here (for Ace) #}
         #paste-content {
             height: 500px;
         }
@@ -24,7 +24,7 @@
 
 <!-- Ace/Editor JS -->
 {% block javascript %}
-    <script type='text/javascript' src='/static/js/wppaste.min.js'></script>
+    <script type='text/javascript' src='/static/js/wppaste-0.0.3.min.js'></script>
     <script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
     <script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
     <script type='text/javascript' src='/static/js/ace/ext-themelist.js' charset='utf-8'></script>
@@ -104,6 +104,8 @@
             {% else %}
                 {% if paste.onhold %}
                     This paste is on hold.
+                {% elif paste|is_expired %}
+                    This paste is expired, and will be deleted very soon.
                 {% else %}
                     This paste will be deleted in about one day.
                 {% endif %}
@@ -128,7 +130,7 @@
                             Title:
                         </span>
                         <div class='paste-title-date'>
-                            <span class='header paste-title'>
+                            <span class='header paste-title  {% if paste|is_expired %}paste-item-expired{% endif %}'>
                                 {% if paste.title %}
                                     {{ paste.title }}
                                 {% else %}

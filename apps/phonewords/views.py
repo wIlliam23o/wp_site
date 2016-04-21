@@ -28,21 +28,19 @@ def view_index(request):
 
     reqargs = responses.get_request_args(
         request,
-        requesttype='request',
-        default='')
+        requesttype='request')
     if reqargs:
         # This request came with args, send it to view_results()
         return view_results(request, args=reqargs)
     else:
         # Basic index view.
         context = {
-            'request': request,
             'version': app_version,
             'hasargs': False,
         }
-        return responses.clean_response_req(
+        return responses.clean_response(
             'phonewords/index.html',
-            context,
+            context=context,
             request=request)
 
 
@@ -106,7 +104,6 @@ def view_results(request, args=None):
 
     # Return response.
     context = {
-        'request': request,
         'version': app_version,
         'hasargs': True,
         'query': args['query'],
@@ -115,9 +112,9 @@ def view_results(request, args=None):
         'total': total,
     }
 
-    return responses.clean_response_req(
+    return responses.clean_response(
         'phonewords/index.html',
-        context,
+        context=context,
         request=request)
 
 

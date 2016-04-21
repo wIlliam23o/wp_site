@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Version for welbornprod.com
-WPVERSION = '2.2.5'
 
 # file/path (path joining)
 import os.path
 import sys
-SYSVERSION = sys.version
 
 import settings_local
+
+SYSVERSION = sys.version
+# Version for welbornprod.com
+WPVERSION = '2.3.2'
+
 TEMPLATE_DEBUG, DEBUG = settings_local.TEMPLATE_DEBUG, settings_local.DEBUG
 
 # Django messages framework, message-levels
@@ -40,7 +42,7 @@ SERVER_LOCATION = SECRETS.site_info['location']
 STATIC_PARENT, STATIC_ROOT = SECRETS.static_parent, SECRETS.static_root
 STATIC_URL = SECRETS.static_url
 MEDIA_URL = SECRETS.site_info['media_url']
-MEDIA_ROOT = os.path.join(STATIC_ROOT, "media")
+MEDIA_ROOT = os.path.join(STATIC_ROOT, 'media')
 
 # Email info.
 EMAIL_HOST = SECRETS.settings['email']['host']
@@ -63,6 +65,7 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
+
 # Set which cache to use.
 if 'webapps' in BASE_PARENT and ('test' not in BASE_PARENT):
     # Use db cache for live site.
@@ -70,10 +73,12 @@ if 'webapps' in BASE_PARENT and ('test' not in BASE_PARENT):
 else:
     # Use dummy cache for local development, and test site.
     CACHES['default'] = CACHES['cache_dummy']
+# Tell django_user_agents which cache to use.
+USER_AGENTS_CACHE = 'default'
 
 # main app (location of settings.py)
-MAIN_DIR = os.path.join(BASE_DIR, "wp_main")
-TEMPLATES_BASE = os.path.join(MAIN_DIR, "templates")
+MAIN_DIR = os.path.join(BASE_DIR, 'wp_main')
+TEMPLATES_BASE = os.path.join(MAIN_DIR, 'templates')
 
 # IP's debug_toolbar should be shown to.
 INTERNAL_IPS = tuple(SECRETS.settings.get('internal_ips', []))
@@ -108,7 +113,10 @@ USE_TZ = False
 
 # Additional locations of static files
 STATICFILES_DIRS = (
+    # Local js/sass that has been built.
     os.path.join(BASE_DIR, 'built'),
+    # Global, or third-party resources (js, css, images, fonts, etc.).
+    os.path.join(BASE_DIR, 'static'),
 )
 
 # List of finder classes that know how to find static files in
@@ -163,11 +171,11 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     # django debug tools
     'debug_toolbar.middleware.DebugToolbarMiddleware',
+
     # special user-agent middleware...
-    'wp_user_agents.middleware.UserAgentMiddleware',
+    'django_user_agents.middleware.UserAgentMiddleware',
 
 )
 
@@ -195,12 +203,13 @@ INSTALLED_APPS = (
     'solo',
 
     # for making get_user_agent(request) available.
-    'wp_user_agents',
+    'django_user_agents',
     # local apps
     'wp_main',  # contains global template tags (wp_tags)
     'apps',  # handles urls for all sub-apps.
     'apps.phonewords',
     'apps.paste',
+    'apps.timekeeper',
     'blogger',
     'downloads',
     'home',
@@ -269,7 +278,6 @@ if SERVER_LOCATION == 'remote':
 
     }
 
-# Disable redirect panel (per new debug_toolbar method.)
 DEBUG_TOOLBAR_CONFIG = {
     'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'}
 }
@@ -278,10 +286,10 @@ DEBUG_TOOLBAR_PATCH_SETTINGS = False
 
 # default login url
 # (regex for wp_main.urls, put here to avoid future mismatches)
-LOGIN_URL = "/login"
-LOGIN_URL_REGEX = "^login/?.+"
+LOGIN_URL = '/login'
+LOGIN_URL_REGEX = '^login/?.+'
 
 # default page to visit after login (if 'next url' is not specified)
-LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = '/'
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'

@@ -22,12 +22,6 @@ from misc import tools as misctools
 log = logging.getLogger('wp.viewer')
 
 
-def logdebug(s):
-    """ Write log message only if settings.DEBUG. """
-    if settings.DEBUG:
-        log.debug(s)
-
-
 @csrf_protect
 def ajax_contents(request):
     """ retrieves file contents per an ajax request. """
@@ -39,7 +33,7 @@ def ajax_contents(request):
 
     file_info = {}
     if get_data.get('file', False):
-        logdebug('Loading info for file: {}'.format(get_data['file']))
+        log.debug('Loading info for file: {}'.format(get_data['file']))
 
         try:
             file_info = get_file_info(get_data['file'])
@@ -54,9 +48,6 @@ def ajax_contents(request):
 
         # Grab DEBUG and send it.
         file_info['debug'] = settings.DEBUG
-
-        # Send raw file content in response (ace will load it and highlight it)
-        file_info['file_content'] = file_info['file_content']
 
         # override non-serializable project
         project = file_info['project']
@@ -100,18 +91,22 @@ def view_loader(request):
         with the help of wpviewer.js.
         raises 404 on error or file not found..
     """
-
-    if request.REQUEST.get('file', False):
-        file_path = request.REQUEST['file'].strip("'").strip('"')
+    rawpath = request.POST.get('file', request.GET.get('file', ''))
+    if rawpath:
+        file_path = utilities.strip_chars(rawpath, ('"', "'"))
         context = {
             'file': file_path,
         }
 
-        return responses.clean_response_req('viewer/loader.html',
-                                            context=context,
-                                            request=request)
-    else:
-        raise Http404('No file passed to request.')
+        return responses.clean_response(
+            'viewer/loader.html',
+            context=context,
+            request=request)
+
+    log.error('Empty file name given: {}'.format(
+        utilities.get_remote_ip(request))
+    )
+    raise Http404('No file name given.')
 
 
 def get_source_files(project):
@@ -197,9 +192,10 @@ def get_file_info(file_path):
     # Directory was passed, get files to use. (based on project, dir listing)
     if os.path.isdir(absolute_path):
         if project:
-            static_path, absolute_path = get_using_paths(static_path,
-                                                         absolute_path,
-                                                         project)
+            static_path, absolute_path = get_using_paths(
+                static_path,
+                absolute_path,
+                project)
             if static_path is None or absolute_path is None:
                 # Raise error which will display a 404.
                 raise Http404('Sorry, there was an error viewing that file.')
@@ -214,7 +210,7 @@ def get_file_info(file_path):
     else:
         # Not a project, may be a Misc Object.
         miscobj = misctools.get_by_filename(file_path)
-        logdebug('Found Misc Object: {}'.format(repr(miscobj)))
+        log.debug('Found Misc Object: {}'.format(repr(miscobj)))
 
         # Update misc view count tracker
         if miscobj:
@@ -237,7 +233,6 @@ def get_file_info(file_path):
             filetracker.save()
 
     # Get file content
-    file_content = ""
     try:
         with open(absolute_path) as fread:
             file_content = fread.read()

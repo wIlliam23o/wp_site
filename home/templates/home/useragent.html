@@ -9,14 +9,14 @@
 
 {% block content %}
     <div class='home-welcome-box'>
-        <div class='useragent-info-box'>
-            <span class='useragent-label'>
+        <div class='info-box'>
+            <span class='info-label'>
                 Your User Agent:
             </span>
             <br>
             {% with request|get_user_agent as useragent %}
                 {% if useragent.ua_string %}
-                    <div class='useragent-value'>
+                    <div class='info-value'>
                         {{ useragent.ua_string }}
                     </div>
                 {% else %}

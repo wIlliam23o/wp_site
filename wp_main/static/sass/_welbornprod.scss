@@ -1,49 +1,54 @@
 // Global colors/settings for Welborn Productions
 // Every .scss file should import this, if it uses the common colors/styles.
 
+// scss-lint:disable ColorVariable, VendorPrefix
+
 // Borders
-$bordermain: rgba(202,217,224,0.5);
-$borderfaint: rgba(202, 217, 224, 0.25);
+$bordermain: rgba(202, 217, 224, .5);
+$borderfaint: rgba(202, 217, 224, .25);
 // this is not actually 'light', bordermain is lighter than this.
-$borderlight: #AFAFAF;
-$borderhover: #B5CEFF;
-$borderblue: #74AFEE;
-$borderwhite: #FFFFFF;
-$borderred: #B90000;
-$bordercode: rgba(202,217,224,0.5);
-$border-featured-desc: rgba(202, 217, 224, 0.95);
+$borderlight: #afafaf;
+$borderhover: #b5ceff;
+$borderblue: #74afee;
+$borderwhite: #fff;
+$borderred: #b90000;
+$bordercode: rgba(202, 217, 224, .5);
+$border-featured-desc: rgba(202, 217, 224, .95);
 
 // Colors
 // blackmain and whitemain seem stupid, but if they are used everywhere instead
-// of #FFFFFF and #000000 then changing the 'white' everywhere would be really easy.
-$blackmain: #000000;
-$whitemain: #FFFFFF;
+// of #ffffff and #000000 then changing the 'white' everywhere would be really easy.
+$blackmain: #000;
+$whitemain: #fff;
 // dim the white a little so it doesn't hurt your eyes.
-$whitedull: #FAFAFA;
+$whitedull: #fafafa;
 // $greybg Matches rgb(49, 49, 49) for linear-gradient used in main bg gradient.
 $greybg: #313131;
-$greysurround: #E7E7E7;
+$greysurround: #e7e7e7;
 $greydark: #4d4d4d;
 $greymain: #919191;
-$greylight: #AFAFAF;
-$bluelink: #2358A6;
-$bluemain: #26A1F4;
-$bluelight: #74AFEE;
-$bluehover: #007DD1;
-$redmain: #B90000;
-$greenmain: #01941E;
+$greylight: #afafaf;
+$bluelink: #2358a6;
+$bluemain: #26a1f4;
+$bluelight: #74afee;
+$bluehover: #007dd1;
+$redlight: rgb(206, 154, 154);
+$redmain: #b90000;
+$redhover: #f00;
+$greenmain: #01941e;
 
 // Shadows
-$shadowfloater: 6px 6px 7px rgba(0, 0, 0, 0.52);
-$shadowbig:  #EEEEEE 0px 0px 20px;
-$shadowmedium: #bac2c7 0px 0px 15px;
-$shadownormal: 4px 4px 4px rgba(0, 0, 0, 0.07);
-$shadowbox: 2px 2px 3px rgba(0, 0, 0, 0.4);
+$shadowfloater: 6px 6px 7px rgba(0, 0, 0, .52);
+$shadowbig:  #eee 0 0 20px;
+$shadowmedium: #bac2c7 0 0 15px;
+$shadownormal: 4px 4px 4px rgba(0, 0, 0, .07);
+$shadowbox: 2px 2px 3px rgba(0, 0, 0, .4);
+$shadowboxmed: 4px 4px 5px rgba(5, 5, 5, .66);
 $shadowsmall: #bac2c7 1px 1px 4px;
 $shadowtext: 2px 2px 4px rgba(0, 0, 0, 1);
-$shadowtextsmall:  #999999 1px 1px 3px;
-$shadowtextmedium: 1px 1px 2px rgba(0, 0, 0, 0.5);
-$shadowtextbig: 2px 2px 3px rgba(0, 0, 0, 0.5);
+$shadowtextsmall:  #999 1px 1px 3px;
+$shadowtextmedium: 1px 1px 2px rgba(0, 0, 0, .5);
+$shadowtextbig: 2px 2px 3px rgba(0, 0, 0, .5);
 
 // Font Stacks
 $fontssmall: "Source Sans Pro", "Arial Black", "Liberation Sans", Arial, sans-serif;
@@ -51,20 +56,22 @@ $fontsnormal: "Ubuntu", "Open Sans", "Century Gothic", "Arial Black", "Liberatio
 $fontsmono: "Ubuntu Mono", "DejaVu Sans Mono", monospace;
 
 // Font Sizes
-$fonttiny: 0.6em;
-$fontsmaller: 0.75em;
-$fontsmall: 0.8em;
-$fontinline: 0.9em;
-$fontmono: 0.9em;
+$fonttiny: .6em;
+$fontsmaller: .75em;
+$fontsmall: .8em;
+$fontinline: .9em;
+$fontmono: .9em;
 $fontnormal: 1em;
 $fontbigger: 1.2em;
 $fontmedium: 1.5em;
-$fontbig: 2.0em;
+$fontbig: 2em;
 $fontbig2: 2.5em;
 $fontlarge: 3.5em;
 
 // Line Heights
 $lineheightnormal: 1.1em;
+
+// scss-lint:disable Indentation
 
 // mixins (not everything uses this yet.)
 @mixin border-radius($radius) {
@@ -79,14 +86,14 @@ $lineheightnormal: 1.1em;
 @mixin border-radius-none($radius) {
     @include border-radius($radius);
     border-style: none;
-    border-width: 0px;
+    border-width: 0;
 }
 
 @mixin border-radius-thin($radius) {
     @include border-radius($radius);
     border-style: solid;
     border-width: 1px;
-    border-color:$bordermain;
+    border-color: $bordermain;
 }
 
 @mixin border-radius-thin-color($radius, $color) {
@@ -166,3 +173,5 @@ $lineheightnormal: 1.1em;
       -ms-user-select: $sel;
           user-select: $sel;
 }
+
+// scss-lint:enable Indentation

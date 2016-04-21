@@ -2,7 +2,7 @@
 {% load projects_tags %}
 
 <!-- Description -->
-<div class="wp-block feature-list">
+<div class='wp-block feature-list' id='about'>
 	<p>
 		A Python script I wrote to count various lines in my scripts. This script counts up all the code,
 		comment, &amp; blank lines. It also counts inline-comments, classes, functions, ifs, trys, and
@@ -19,30 +19,30 @@
 {% ad_article %}
 
 <!-- Download Module -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Download</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='download'>
+		<h3 class='title'>Download</h3>
 	</div>
 	{% downloads project %}
 </div>
 
 <!-- Source View -->
-<div class="feature-list">
-	<div class="title-box">
-		<h3 class="title">
+<div class='wp-block feature-list'>
+	<div class='title-box' id='source'>
+		<h3 class='title'>
 			Source Code
 		</h3>
 	</div>
 	{% source_view project request %}
 </div>
 <!-- Sample Output -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">
+<div class='wp-block feature-list'>
+	<div class='title-box' id='output'>
+		<h3 class='title'>
 			Sample Output
 		</h3>
 	</div>
-	<h2 class="title">Basic Run</h2>
+	<h2 class='title'>Basic Run</h2>
 	<p>
 	This is the output of codecount.py when ran on an older version of itself:
 	</p>
@@ -79,13 +79,13 @@ Finished analyzing: codecount.py...
 
 
 	<!-- Sample Output: Variables -->
-	<h2 class="title">
+	<h2 class='title'>
 		Variables List
 	</h2>
 	<p>
 		With <strong>-v</strong> passed as an argument codecount.py will output all variables found in the script like this:
 	</p>
-	<pre class="none">
+	<pre class='none'>
  Finished analyzing: codecount.py...
   52 variables (127 assignments) found in codecount.py:
          bDocString
@@ -102,13 +102,13 @@ Finished analyzing: codecount.py...
     <span>...(too many to list here)</span>
 
 	<!-- Sample Output: Imports -->
-	<h2 class="title">
+	<h2 class='title'>
 		Imports
 	</h2>
 	<p>
 		With <strong>-i</strong> passed as an argument codecount.py will output all imports in the script like this:
 	</p>
-	<pre class="none">
+	<pre class='none'>
 Finished analyzing: codecount.py...
   4 imports found in codecount.py:
          os
@@ -124,7 +124,7 @@ Finished analyzing: codecount.py...
 	<p>
 		With <strong>-e</strong> passed as an argument codecount.py will output all exceptions caught with <strong>except</strong>:
 	</p>
-	<pre class="none">
+	<pre class='none'>
  Finished analyzing: codecount.py...
    1 of 1 unique exceptions found in codecount.py:
          IOError
@@ -133,13 +133,13 @@ Finished analyzing: codecount.py...
 
 
 	<!-- Sample Output: DocStrings -->
-	<h2 class="title">
+	<h2 class='title'>
 		DocStrings
 	</h2>
 	<p>
 		With <strong>-s</strong> passed as an argument codecount.py will output all <strong>docstring</strong> lines:
 	</p>
-	<pre class="none">
+	<pre class='none'>
 Finished analyzing: codecount.py...
   10 docstrings found in codecount.py:
         * Counts:
@@ -168,15 +168,15 @@ Finished analyzing: codecount.py...
 </div>
 
 <!-- Updates -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">
+<div class='wp-block feature-list'>
+	<div class='title-box' id='updates'>
+		<h3 class='title'>
 			Updates
 		</h3>
 	</div>
 	<div class='update-box'>
         <!-- Update 2.0.1 -->
-    	<span class="update-title">
+    	<span class='update-title'>
     		Update: version 2.0.1
     	</span>
     	<ul class='blue circle'>
@@ -186,7 +186,7 @@ Finished analyzing: codecount.py...
         </ul>
 
         <!-- Update 2.0 -->
-    	<span class="update-title">
+    	<span class='update-title'>
     		Update: version 2.0
     	</span>
     	<ul class='blue circle'>
@@ -194,7 +194,7 @@ Finished analyzing: codecount.py...
     		  Completely refactored code! Module is now importable, and can be used like this:
     	    </li>
             <div class='listdesc'>
-    	       <pre class="python">
+    	       <pre class='python'>
 import codecount
 cc = codecount.codecounter()
 myresults = cc.filechecker("myscript_to_check.py")
@@ -211,7 +211,7 @@ cc.printimports(myresults)
         </ul>
 
         <!--Update 1.8 -->
-    	<span class="update-title">
+    	<span class='update-title'>
     		Update: version 1.8
     	</span>
     	<ul class='blue circle'>
@@ -219,7 +219,7 @@ cc.printimports(myresults)
         	   Fixed import detection, now recognizes all import styles like:
     	    </li>
             <div class='listdesc'>
-    	        <pre class="python">
+    	        <pre class='python'>
 import sys
 import sys,os,re
 import pango as p
@@ -230,7 +230,7 @@ from sys import path,platform
         </ul>
 
         <!-- Update 1.6 -->
-    	<span class="update-title">
+    	<span class='update-title'>
     		Update: version 1.6
     	</span>
         <ul class='blue circle'>
@@ -252,7 +252,7 @@ This is my multi-line DocString
         </ul>
 
         <!-- Update 1.5 -->
-    	<span class="update-title">
+    	<span class='update-title'>
     		Update: version 1.5
     	</span>
         <ul class='blue circle'>
@@ -270,18 +270,18 @@ This is my multi-line DocString
 </div>
 
 <!-- Usage -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">
+<div class='wp-block feature-list'>
+	<div class='title-box' id='usage'>
+		<h3 class='title'>
 			Usage
 		</h3>
 	</div>
 	<p>
-		This script was designed using Linux (<a href="http://www.linuxmint.com/" target="_blank" title="LinuxMint.com">Linux Mint</a>),
-		but will also work for <a href="http://www.windows.com" target="_blank" title="Windows.com">Windows</a>.
-		Obviously you must have <a href="http://www.python.org/" target="_blank" title="Python.org">Python</a> installed,
+		This script was designed using Linux (<a href='http://www.linuxmint.com/' target='_blank' title='LinuxMint.com'>Linux Mint</a>),
+		but will also work for <a href='http://www.windows.com' target='_blank' title='Windows.com'>Windows</a>.
+		Obviously you must have <a href='http://www.python.org/' target='_blank' title='Python.org'>Python</a> installed,
 		if you do not have python installed you may find instructions on how to download it
-		<a href="http://www.python.org/download/" target="_blank" title="Python.org">here</a>.
+		<a href='http://www.python.org/download/' target='_blank' title='Python.org'>here</a>.
 		To run the script locate your python executable (python.exe, or pythonw.exe in Windows,
 		/usr/bin/python in Linux) and run it like this (Linux method shown):
 	</p>

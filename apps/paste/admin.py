@@ -6,6 +6,7 @@
 import logging
 from django.contrib import admin, messages
 from apps.paste.models import wp_paste
+from home.admin import admin_site
 log = logging.getLogger('wp.apps.paste.admin')
 
 
@@ -148,4 +149,4 @@ class wp_pasteAdmin(admin.ModelAdmin):  # noqa
     ]
 
 
-admin.site.register(wp_paste, wp_pasteAdmin)
+admin_site.register(wp_paste, wp_pasteAdmin)

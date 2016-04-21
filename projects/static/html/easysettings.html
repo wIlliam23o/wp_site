@@ -1,123 +1,126 @@
 {% load wp_nodes %}
 {% load projects_tags %}
 
-<div class='wp-block feature-list'>
+<div class='wp-block feature-list' id='about'>
 	<!-- Description -->
-	<p>
+	<div class='paragraph'>
 		Python module for easily setting, getting, saving, &amp; retrieving python
-		application settings. Tested with Python 2.7 and 3.2.<br/>
-	</p>
-	<p>
+		application settings. Tested with Python 2.7 and 3.2.
+	</div>
+	<div class='paragraph'>
 		EasySettings allows you to easily save and retrieve simple application settings.
 		Handles non-string types like [python]bool[/python], [python]int[/python], [python]long[/python],
 		[python]list[/python], as well as normal [python]str[/python] settings. No sections needed,
 		just [python]es.set()[/python], [python]es.get()[/python], and [python]es.save()[/python].
-	</p>
+	</div>
+	<div class='paragraph'>
+		A JSONSettings object is also included to allow easily saving/retrieving
+		settings in JSON format.
+	</div>
 </div>
 <!-- Article Ad -->
 {% ad_article %}
 
 <!-- Download -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Download</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='download'>
+		<h3 class='title'>Download</h3>
 	</div>
 	{% downloads project %}
 </div>
 
 <!-- Source View -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Source Code</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='source'>
+		<h3 class='title'>Source Code</h3>
 	</div>
 	<span>
-		<a href="http://github.com/welbornprod/easysettings.git" target="_blank">
+		<a href='http://github.com/welbornprod/easysettings.git' target='_blank'>
 			EasySettings (github)
 		</a>
-		&nbsp;- Source code hosted at <a href="http://github.com" target="_blank">github.</a>
+		&nbsp;- Source code hosted at <a href='http://github.com' target='_blank'>github.</a>
 	</span>
 	{% source_view project request %}
 </div>
 
 <!-- Installation -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Installation</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='installation'>
+		<h3 class='title'>Installation</h3>
 	</div>
-	<p>
+	<div class='paragraph'>
 		Once the package is downloaded and extracted, open a terminal and [code]cd[?code] to
 		the directory containing [code]setup.py[?code]. Type:
-	</p>
-	<div class="sampwrap">
-			sudo python setup.py install<br/>
 	</div>
-	<br/>
-	<br/>
-	<p>
+
+	{% acesnippet "py2-setup" ".bash" %}
+			sudo python setup.py install
+	{% endacesnippet %}
+
+	<div class='paragraph'>
 		For Python 3+ installation you may need to specify the [code]python3[?code] command:
-	</p>
-	<div class="sampwrap">
-			sudo python3 setup.py install
 	</div>
-	<br/>
-	<br/>
-	<p>
+
+	{% acesnippet "py3-setup" ".bash" %}
+			sudo python3 setup.py install
+	{% endacesnippet %}
+
+	<div class='paragraph'>
 		This should install the EasySettings package into the appropriate directory, and
 		allow you to import it into your projects using:
-	</p>
-	<div class="codewrap">
-			from easysettings import EasySettings<br/>
-			mysettings = EasySettings('myconfigfile.conf')<br/>
 	</div>
-	</p>
+
+	{% acesnippet "basic-import" ".py" %}
+from easysettings import EasySettings
+mysettings = EasySettings('myconfigfile.conf')
+	{% endacesnippet %}
 </div>
 
 <!-- PYPI Package -->
-<div class="wp-block feature-list">
+<div class='wp-block feature-list'>
 
-	<div class="title-box">
-		<h3 class="title">PyPi Package</h3>
+	<div class='title-box' id='pypi_package'>
+		<h3 class='title'>PyPi Package</h3>
 	</div>
-	<p>
-		PyPi package available at:<br/>
+	<div class='paragraph'>
+		PyPi package available at:
+		<br>
 		<a href='http://pypi.python.org/pypi/EasySettings'>pypi.python.org/pypi/EasySettings</a><br/><br/>
-		You can download and install EasySettings right from your terminal using 'pip'.<br/>
+		You can download and install EasySettings right from your terminal using 'pip'.
+		<br>
 		To use pip to install Easy Settings, first make sure it's installed.
-	</p>
-	<p>
+	</div>
+
+	<div class='paragraph'>
 		Ubuntu instructions to install pip:
-	</p>
-	<div class="sampwrap">
+	</div>
+	{% acesnippet "py2-pip-install" ".bash" %}
 			sudo apt-get install python-pip
-	</div>
-	<br/>
-	<br/>
-	<p>
+	{% endacesnippet %}
+
+	<div class='paragraph'>
 		For Python 3 pip installation:
-	</p>
-	<div class="sampwrap">
+	</div>
+	{% acesnippet "py3-pip-install" ".bash" %}
 			sudo apt-get install python3-pip
-	</div>
-	<br/>
-	<br/>
-	<p>
+	{% endacesnippet %}
+
+	<div class='paragraph'>
 		After that you should be able to install Easy Settings by typing:
-	</p>
-	<div class="sampwrap">
+	</div>
+	{% acesnippet "easysettings-install" ".bash" %}
 			sudo pip install easysettings
+	{% endacesnippet %}
+
+	<div class='paragraph'>
+		For Python 3 installation you may need to specify the [code]pip-3[?code] command:
 	</div>
-	<br/>
-	<br/>
-	<p>
-		For Python 3 installation you may need to specify the [code]pip-3[?code] command:<br/>
-	</p>
-	<p>
-		# 3.2 should be substituted with whatever version you use. (3.2, 3.3, etc.)<br/>
-	</p>
-	<div class="sampwrap">
-			sudo pip-3.2 install easysettings<br/>
-	</div>
-	<div>
+	{% acesnippet "pip3-easysettings-install" ".bash" %}
+# 3.4 should be substituted with whatever version you use. (3.2, 3.3, etc.)
+sudo pip-3.4 install easysettings
+	{% endacesnippet %}
+
+	<div class='paragraph'>
 		[code]easy_install[?code] also works for people that prefer the [code]easy_install[?code]
 		method.
 		<br>
@@ -127,11 +130,48 @@
 </div>
 
 <!-- Updates -->
-<div class="wp-block feature-list">
-	<div id='updates' class="title-box">
-		<h3 class="title">Updates</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='updates'>
+		<h3 class='title'>Updates</h3>
 	</div>
     <div class='update-box'>
+		<!-- 2.0.3 -->
+		<span class='update-title'>Update: Version 2.0.3</span>
+		<ul class='circle blue'>
+			<li>
+				Added [code]JSONSettings[?code] and [code]JSONMixin[?code].
+			</li>
+			<div class='listdesc'>
+				[code]JSONSettings[?code] is a [code]UserDict[?code] that uses
+				[code]JSONMixin[?code] to easily save and retrieve settings in
+				JSON format. Example use:
+				{% acesnippet "jsonsettings-example" ".py" %}
+from easysettings import JSONSettings
+settings = JSONSettings.from_file('myfile.json')
+settings['option1'] = 'value'
+settings.save()
+				{% endacesnippet %}
+			</div>
+			<li>
+				Several documentation changes were made, cleaning up a bit really.
+			</li>
+			<li>
+				Main modules were restructured, but it should have no affect on
+				existing code.
+			</li>
+			<li>
+				A couple of undocumented features were added.
+			</li>
+			<div class='listdesc'>
+				The [code]EasySettings.copy()[?code] method will provide a new
+				copy of an [code]EasySettings[?code] instance.
+				<br>
+				[code]__getitem__()[?code] is implemented now.
+				It acts like [code]get()[?code] but a [code]KeyError[?code] is raised
+				when the option cannot be found.
+			</div>
+		</ul>
+
     	<!-- 1.9.3 -->
     	<span class='update-title'>Update: Version 1.9.3</span>
     	<ul class='circle blue'>
@@ -145,7 +185,10 @@
     			Added initialization args for [code]name[?code], [code]version[?code], and [code]header[?code].
     		</li>
     		<div class='listdesc'>
-    			You can now do: [code]es = EasySettings('myfile.conf', name='MyApp', version='1.0.0', header='Helps you do stuff.')[?code].
+    			You can now do:
+				{% acesnippet "header-attr-example" ".py" %}
+					es = EasySettings('myfile.conf', name='MyApp', version='1.0.0', header='Helps you do stuff.')
+				{% endacesnippet %}
     		</div>
     	</ul>
 
@@ -194,8 +237,10 @@
 			</li>
 			<div class='listdesc'>
 				The method has been enhanced so debug printing will be
-				'prettier'. Example of 'debug printing' settings:
-				<pre class='python'>
+				'prettier'.
+				<br>
+				Example of 'debug printing' settings:
+				{% acesnippet "debug-print-example" ".py" %}
 from easysettings import EasySettings
 settings = EasySettings('myconfigfile.conf')
 settings.set('option', True)
@@ -205,12 +250,13 @@ print(settings)
 #       {'option': True, 'option2', ['cjw', 'amy', 'joseph']}
 # instead of pickle's messed up looking strings like:
 #       {'option': I01\n.  (for a True boolean value), ... }
-               </pre>
-               <br>
+				{% endacesnippet %}
 
 				This fix also allows you to save values with the newline
-				character in them. So code like this will work:
-				<pre class='python'>
+				character in them.
+				<br>
+				So code like this will work:
+				{% acesnippet "newline-settings-example" ".py" %}
 settings.set('mytext', 'this\nstring\n\has\nnewlines.')
 print settings.get('mytext')
 # this will result in:
@@ -218,23 +264,23 @@ print settings.get('mytext')
 #       string
 #       has
 #       newlines.
-				</pre>
+				{% endacesnippet %}
 			</div>
 		</ul>
     </div>
 </div>
 
 <!-- Example Usage -->
-<div class="wp-block feature-list">
-	<div class="title-box">
-		<h3 class="title">Example Usage</h3>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='usage'>
+		<h3 class='title'>Example Usage</h3>
 	</div>
 
 	<h2 class='title'>
 		Basic Usage
 	</h2>
 
-	<pre class='python'>
+	{% acesnippet "basic-usage-example" ".py" %}
 #!/usr/bin/env python
 # --------------- Creation ----------------
 
@@ -267,13 +313,12 @@ settings.save()
 
 # you may also set & save in one line...
 settings.setsave("homedir", "/myuserdir")
- 	</pre>
+	{% endacesnippet %}
 
-
-	<h2 class="title">
+	<h2 class='title'>
 		Other Features
 	</h2>
-    <pre class='python'>
+	{% acesnippet "other-features-example" ".py" %}
 # check if setting exists if you want
 if settings.has_option('username'):
 	print "Yes, settings has 'username'"
@@ -291,13 +336,12 @@ settings.clear()
 
 # clear all values, leave option names.
 settings.clear_values()
-	</pre>
+	{% endacesnippet %}
 
-
-	<h2 class="title">
+	<h2 class='title'>
 		Comparison
 	</h2>
-	<pre class='python'>
+	{% acesnippet "comparison-example" ".py" %}
 # compare two settings objects
 settings2 = EasySettings('myconfigfile2.conf')
 
@@ -316,42 +360,43 @@ if settings > settings2:
 # all of them work ==, !=, <=, >= , > , <
 # ... the < > features are based on amount of options.
 #     the = features are based on option names and values.
-	</pre>
+	{% endacesnippet %}
 
-
-	<h2 class="title">
+	<h2 class='title'>
 		Features
 	</h2>
 
-	<p>
+	<div class='paragraph'>
 		Easy Settings has the basic features you would expect out of a settings module,
 		and it's very easy to use. If your project needs to save simple settings without
 		the overhead and complication of other modules then this is for you. Save, load, set, &amp;
 		get are very easy to grasp. The more advanced features are there for you to use,
 		but don't get in the way. Settings, options, &amp; values can be listed, searched,
 		detected, removed, &amp; cleared.
-	</p>
-	<p>
+	</div>
+	<div class='paragraph'>
 		Easy Settings uses a dictionary to store settings before writing to disk, so you can
 		also access settings like a dictionary object using [python]mysettings.settings[/python]. The
-		[python]setsave()[/python] function will save every time you set an option, and [python]is_saved()[/python] will
-		tell you whether or not the file has been saved to disk yet. Code is documented for a
-		newbie, so a [python]help('easysettings')[/python] in the python console will get you started.
-	</p>
-	<p>
-		The search_query argument in the list functions lets you find settings, options, and values by search string:
-	</p>
-	<pre class='python'>
+		[python]setsave()[/python] function will save every time you set an option,
+		and [python]is_saved()[/python] will tell you whether or not the file has
+		been saved to disk yet. Code is documented for a newbie, so a
+		[python]help('easysettings')[/python] in the python console will get you started.
+	</div>
+	<div class='paragraph'>
+		The search_query argument in the list functions lets you find settings, options,
+		and values by search string:
+	</div>
+	{% acesnippet "search-example" ".py" %}
 mydebugoptions = settings.list_options('debug')
 # clear all debug values..
 settings.clear_values(mydebugoptions)
-	</pre>
-	<p>
-	Non-string types were added, so any type that can be pickled can be used as an
-	option's value. This includes all the major types like int, long, float, boolean, and list.
-	All of these values will be retrieved as the same type that was set:
-	</p>
-	<pre class='python'>
+	{% endacesnippet %}
+	<div class='paragraph'>
+		Non-string types were added, so any type that can be pickled can be used as an
+		option's value. This includes all the major types like int, long, float, boolean, and list.
+		All of these values will be retrieved as the same type that was set:
+	</div>
+	{% acesnippet "non-str-example" ".py" %}
 es = EasySettings('myconfigfile.conf)
 
 # Boolean
@@ -373,43 +418,43 @@ for suser in es.get('users'):
 	print "retrieved user name: " + suser
 
 # i won't do them all, but if you can pickle it, you can use it with EasySettings.
-	</pre>
+	{% endacesnippet %}
 
 <!-- Errors -->
 	<p>
 		Errors are more descriptive and can be caught using their proper names:
 	</p>
-	<pre class='python'>
+	{% acesnippet "custom-error-example" ".py" %}
 try:
 	es.get('option_with_a_possibly_illegal_value')
 except esGetError as exErr:
 	print "Error getting option!"
 except Exception as exEx:
 	print "General Error!"
-	</pre>
+	{% endacesnippet %}
 
 <!-- Automatic Creation -->
 	<h2 class='title'>
 		Automatic Creation
 	</h2>
 
-	<p>
+	<div class='paragraph'>
 		If you pass a file name to EasySettings(), the [python]configfile_exists()[/python] function is called. This
 		function will create a blank config file if the file doesn't exist, otherwise it will return [python]True[/python].
 		To use the 'automatic creation' do this:
-	</p>
-	<pre class='python'>
+	</div>
+	{% acesnippet "auto-creation-example" ".py" %}
 settings = EasySettings('myconfigfile.conf')
 # if file exists, all settings were loaded.
 # if file did not exist, it was created.
 # No permissions, disk-full, and other errors are still possible of course
 # depending on the machine, or the current directory permissions.
-	</pre>
+	{% endacesnippet %}
 	<p>
 		You can disable the 'automatic creation' features by not passing a file name, and loading seperately
 		like this:
 	</p>
-	<pre class='python'>
+	{% acesnippet "disable-auto-creation-example" ".py" %}
 settings = EasySettings()
 settings.configfile = 'myconfigfile.conf'
 # file has not been created or loaded.
@@ -418,11 +463,11 @@ if settings.load_file():
 	# all settings were loaded.
 else:
 	# unable to load file for some reason.
-	</pre>
+	{% endacesnippet %}
 	<p>
 		This will work in the same way to disable the automatic creation:
 	</p>
-	<pre class='python'>
+	{% acesnippet "disable-auto-creation-example2" ".py" %}
 settings = EasySettings()
 # file has not been created or loaded.
 # file 'myconfigfile.conf' must exist before calling load_file()
@@ -431,11 +476,12 @@ if settings.load_file('myconfigfile.conf'):
 	# settings.configfile was set by the load_file() function
 else:
 	# file could not be loaded.
-	</pre>
+	{% endacesnippet %}
+
 	<p>
 		To check if the file exists without creating it automatically you can do this:
 	</p>
-	<pre class='python'>
+	{% acesnippet "file-exists-example" ".py" %}
 if not settings.configfile_exists(False):
 	print 'config file does not exist, and was not created.'
 # I actually prefer the os.path.isfile() method if you're not going to automatically
@@ -443,5 +489,5 @@ if not settings.configfile_exists(False):
 import os.path
 if not os.path.isfile(settings.configfile):
 	print 'config file does not exist, and was not created.'
-	</pre>
+	{% endacesnippet %}
 </div>

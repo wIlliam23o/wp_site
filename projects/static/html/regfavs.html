@@ -2,7 +2,7 @@
 {% load projects_tags %}
 
 <!-- Description -->
-<div class='wp-block feature-list'>
+<div class='wp-block feature-list' id='about'>
 	<p>
 		I wrote this program because RegEdit's favorites feature is, in my opinion, too limited.
 		RegEdit favorites are displayed in the order they are created and are not moveable or sortable by default.
@@ -13,30 +13,31 @@
 		You can sort by ascending/descending alphabetical order, or just move things around any way you see fit.
 		<strong>RegFavs</strong> has never lost my favorites, or corrupted anything,
 		but it's always a good idea for you to backup your favorites using RegEdit or <strong>RegFavs</strong> before you start editing.
-		You can use the Export/Import functionality of either application to do so.<br />All features are self-explanatory,
-		all keyboard shortcuts are shown on the menu.
+		You can use the Export/Import functionality of either application to do so.
+		<br>
+		All features are self-explanatory, and all keyboard shortcuts are shown on the menu.
 	</p>
 	<p>
 		Contact me at <span class='wp-address'>cj@welbornprod.com</span> if you run into any problems.
 		If you've never installed a Visual Basic .Net application before, you might need the runtime libraries.
 		They're easily installed from microsoft.com.
-	<p>
+	</p>
 </div>
 <!-- InArticle Ad -->
 {% ad_article %}
 
 <!-- Download -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
-		<h3 class='title' id='download'>Download</h3>
+	<div class='title-box' id='download'>
+		<h3 class='title'>Download</h3>
 	</div>
 	{% downloads project %}
 </div>
 
 <!-- Screenshots -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
-		<h3 class='title' id='screenshots'>Screenshots</h3>
+	<div class='title-box' id='screenshots'>
+		<h3 class='title'>Screenshots</h3>
 	</div>
 	{% image_viewer project.screenshot_dir %}
 </div>

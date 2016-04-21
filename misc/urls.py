@@ -12,7 +12,7 @@ from misc import views as miscviews
 urlpatterns = patterns(
     '',
     # misc index
-    url(r'^/?$', miscviews.view_index),
+    url(r'^$', miscviews.view_index),
     # specific misc item
-    url(r'/(?P<identifier>.+/?)', miscviews.view_misc_any),
+    url(r'(?P<identifier>[^/]+)', miscviews.view_misc_any),
 )

@@ -7,19 +7,27 @@
 
 {% block extrastylelink %}
     <link type='text/css' rel='stylesheet' href='/static/css/about.min.css' />
-    <link type='text/css' rel='stylesheet' href='http://cdn.jsdelivr.net/octobadge.github/0.0.1/badge.min.css'/>
+    {# Local github badge, disabled (will be removed) #}
+    <link type='text/css' rel='stylesheet' href='/static/css/github-badge.min.css' />
+    {# Font-Awesome for octobadge. #}
+    <link type='text/css' rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css'/>
+    {# Octicons for octobadge #}
+    <link type='text/css' rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/octicons/2.4.1/octicons.min.css'/>
+    {# deviant.io badge css, disabled until bug fix. #}
+    {# <link type='text/css' rel='stylesheet' href='https://deviant.io/badge/badge.min.css'/> #}
     {{ block.super }}
 {% endblock %}
 
 {% block javascript %}
-    <script type='text/javascript' src='/static/js/github-badge.min.js'></script>
+    {# This is the local welbornprod github badge, enabled when deviant.io fails  #}
+    <script type='text/javascript' src='/static/js/github-badge-0.0.3.min.js'></script>
 {% endblock %}
 
 {% block content %}
     <div class='about-box'>
         <!-- Image -->
         <div id='about-pic-box'>
-            <img id='about-img' src='/static/images/self-portrait.png' border='0' alt='Christopher Welborn'/>
+            <img id='about-img' src='/static/images/cj-avatar-suit-128px.png' alt='Christopher Welborn'/>
             <div id='about-contact'>
                 <address>
                     <span>Christopher Welborn</span><br/>
@@ -33,13 +41,13 @@
                         </div>
                     </a>
                     <!-- Facebook -->
-                    <a href='http://facebook.com/welbornprod' target='_blank'>
+                    <a href='https://facebook.com/welbornprod' target='_blank'>
                         <div class='about-contact-button'>
                             <span>facebook</span>
                         </div>
                     </a>
                     <!-- Twitter -->
-                    <a href='http://twitter.com/cjwelborn' target='_blank'>
+                    <a href='https://twitter.com/cjwelborn' target='_blank'>
                         <div class='about-contact-button'>
                             <span>twitter</span>
                         </div>
@@ -50,30 +58,35 @@
 
         <!-- Bio -->
         <div id='about-bio'>
-            <h3 class='title'>
+            <h2 id='about-biography' class='about-title title'>
                 Biography
-            </h3>
-            <p>
-                My name is Christopher Welborn, I am a 32 year old programmer
-                from Jasper, Al.
+            </h2>
+            <p class='about-paragraph'>
+                My name is Christopher Welborn, I am a <span id='age'>32</span>
+                year old programmer from Jasper, Al.
                 I have been working with computers and code since childhood.
                 I started out with Q-BASIC in Windows 3.1 and have progressed
                 significantly over the years as the technology has also
                 progressed.
                 I spent most of my years focusing on Windows, however lately I
                 work in different variations of the Linux operating system.
-                My favorite programming languages include Python, Rust,
-                JavaScript, Haskell, and Visual Basic .Net
+                My favorite programming languages include Python,
+                Rust,
+                JavaScript,
+                Haskell,
+                and Visual Basic .Net
                 (I tought myself to code with VB), and anything from the C language
                 family. I also enjoy working with microcontrollers and
                 single-board computers such as the Arduino, ATTiny, and
                 Raspberry Pi.
             </p>
+        </div>
+        <div id='about-more'>
             <!-- Projects -->
             <br/>
-            <h3 class='title'>
+            <h2 id='about-projects' class='about-title title'>
                 Projects
-            </h3>
+            </h2>
             <p>
                 I mostly write tools that make my everyday tasks quicker or easier, but like many coders I sometimes
                 write code just to learn from it and teach myself new concepts. Some projects I use on a daily basis,
@@ -83,57 +96,59 @@
             </p>
 
             <!-- Contact -->
-            <h3 class='title'>
+            <h2 id='about-contact' class='about-title title'>
                 Contact
-            </h3>
+            </h2>
             <p>
                 If you need to contact me for any reason, for help with your PC or help concerning one of my projects,
                 please feel free to email me.
             </p>
-
+            <!--Services -->
+            <div id='about-specialties'>
+                <h2 class='about-title title'>
+                    Specialties
+                </h2>
+                <ul class='checkmark'>
+                    <li>Software Design</li>
+                    <li>Web Design</li>
+                    <li>PC Repair/Optimization</li>
+                    <li>System/Software Installation</li>
+                    <li>&amp; More (Just Ask)</li>
+                </ul>
+            </div>
         </div>
         <!-- END div:bio -->
     </div>
 
     <div class='about-box-extras'>
-        <!--Services -->
-        <div id='about-specialties'>
-            <h3 class='title'>
-                Specialties
-            </h3>
-            <ul class='checkmark'>
-                <li>Software Design</li>
-                <li>Web Design</li>
-                <li>PC Repair/Optimization</li>
-                <li>System/Software Installation</li>
-                <li>&amp; More (Just Ask)</li>
-            </ul>
-        </div>
-
         <div id='about-contrib'>
-            <h3 class='title'>
+            <h2 class='about-title title'>
                 additional info:
-            </h3>
+            </h2>
             <div id='about-contrib-box'>
                 <!-- Github -->
                 <div id='github-badge-wrapper' class='about-contrib-item'>
-                    <github-badge user="welbornprod" show_repos="true" show_languages="true" />
+                    {# deviant.io badge. #}
+                    {# Ditched for welbornprod until they straighten out. #}
+                    {# <github-badge class='github-badge' user='welbornprod' show_repos='true' show_languages='true'> #}
+                    {#     Loading github badge... #}
+                    {# </github-badge> #}
                 </div>
                 <!-- Daniweb -->
                 <div class='about-contrib-item'>
-                    <a href='http://www.daniweb.com/members/572777/chriswelborn' target='_blank'>
-                        <img src='http://www.daniweb.com/stats/badge/572777/solved.jpg' width='120' height='90' alt='chriswelborn Contributes to DaniWeb' border='0' target='_blank' />
+                    <a href='https://www.daniweb.com/members/572777/chriswelborn' target='_blank'>
+                        <img src='https://www.daniweb.com/stats/badge/572777/solved.jpg' width='120' height='90' alt='chriswelborn Contributes to DaniWeb' border='0' target='_blank' />
                     </a>
                 </div>
                 <!-- Django Powered -->
                 <div class='about-contrib-item'>
-                    <a href='http://www.djangoproject.com/' target='_blank'>
+                    <a href='https://www.djangoproject.com/' target='_blank'>
                         <img src='/static/images/badges/djangopowered_grey.gif' border='0' alt='Powered by Django.' title='Powered by Django.' />
                     </a>
                 </div>
                 <!-- Python Powered -->
                 <div class='about-contrib-item'>
-                    <a href='http://www.python.org' target='_blank'>
+                    <a href='https://www.python.org' target='_blank'>
                         <img src='/static/images/badges/python-powered-anim.gif' style='border-radius: 15px;-moz-border-radius: 15px;-webkit-border-radius: 15px;width: 256px;height: 64px;' alt='Python Powered' title='Python Powered' border='0'/>
                     </a>
                 </div>
@@ -145,9 +160,24 @@
 {% endblock %}
 
 {% block bodyend %}
-        {# Load the github octo badge #}
-        {# Old method #}
-        {# <script type='text/javascript' src='http://cdn.jsdelivr.net/octobadge.github/0.0.1/badge.min.js'></script> #}
-        <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script>
+    {# deviant.io badge. #}
+    {# <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script> #}
+    <script type='text/javascript'>
+        $(document).ready(function () {
+            github_badge.build(
+                'welbornprod',
+                function success(div) {
+                    $('#github-badge-wrapper').html(div);
+                },
+                function error(error_message) {
+                    $('#github-badge-wrapper').css({display: 'none'});
+                }
+            );
 
+            /* No more yearly edits :) */
+            var now = new Date();
+            $('#age').text(now.getYear() - (now.getMonth() > 8 ? 82 : 83));
+        });
+
+    </script>
 {% endblock %}

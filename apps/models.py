@@ -17,6 +17,13 @@ class wp_app(models.Model):  # noqa
         blank=False,
         max_length=100,
         help_text='Name of the app. (Must be unique)')
+    # whether only admins can view this app.
+    admin_only = models.BooleanField(
+        verbose_name='admin only',
+        blank=False,
+        default=False,
+        help_text='Whether this app can only be used by admins.'
+    )
     # alias for acessing apps by name
     # ...should be lowercase-no-spaces app name
     alias = models.CharField(
@@ -54,7 +61,8 @@ class wp_app(models.Model):  # noqa
         blank=True,
         default='',
         max_length=512,
-        help_text=('Html file for this app, containing the long description.'))
+        help_text=('Html file for this app, containing the long description.')
+    )
     # directory for screenshot images
     screenshot_dir = models.CharField(
         blank=True,

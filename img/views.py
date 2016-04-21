@@ -1,13 +1,15 @@
 """ Welborn Productions - img - views
-    Handles requests for the img app, returns HttpRequests with proper content.
+    Handles requests for the img app, returns HttpRequests with proper
+    content.
     -Christopher Welborn 2-2-15
 """
 
 import logging
-log = logging.getLogger('wp.img')
 
 from wp_main.utilities import responses, utilities
 from img.models import wp_image
+
+log = logging.getLogger('wp.img')
 
 
 def handle_files(request):
@@ -21,10 +23,10 @@ def handle_files(request):
         try:
             newimage = wp_image(
                 image=f,
-                title=request.REQUEST.get('title', ''),
-                description=request.REQUEST.get('description', ''),
-                album=request.REQUEST.get('album', ''),
-                private=request.REQUEST.get('private', False)
+                title=request.POST.get('title', ''),
+                description=request.POST.get('description', ''),
+                album=request.POST.get('album', ''),
+                private=request.POST.get('private', False)
             )
             newimage.save()
         except Exception as ex:
@@ -88,13 +90,12 @@ def view_index(request):
             images = images.order_by('album')
 
     context = {
-        'request': request,
         'images': images,
         'album': album,
         'alert_message': alert_msg,
         'alert_class': alert_class
     }
-    return responses.clean_response_req(
+    return responses.clean_response(
         template_name='img/index.html',
         context=context,
         request=request)
@@ -107,11 +108,10 @@ def view_image_id(request, imageid):
     if not images:
         return responses.error404(
             request,
-            ['I can\'t find an image with that id.']
+            'Image not found: {}'.format(imageid)
         )
 
     image = images[0]
-    alert_msg, alert_class = None, None
     image.view_count += 1
     image.save()
     log.debug('Image view_count incremented to {}: {}'.format(
@@ -120,14 +120,11 @@ def view_image_id(request, imageid):
     # Reusing part of the index view template.
     # Needs to be more refined, in it's own template.
     context = {
-        'request': request,
         'image': image,
         'images': (image,),
         'album': None,
-        'alert_message': alert_msg,
-        'alert_class': alert_class
     }
-    return responses.clean_response_req(
+    return responses.clean_response(
         template_name='img/image.html',
         context=context,
         request=request)

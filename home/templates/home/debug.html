@@ -2,10 +2,6 @@
 {% load wp_tags %}
 {% block title %}- Debug Info{% endblock %}
 
-{% block debug-box %}
-	<!-- No debug box needed for this page. -->
-{% endblock %}
-
 {% block content %}
 	{% if request|debug_allowed %}
 		<!-- Show Debugging Info -->
@@ -69,9 +65,9 @@
 	{% endif %}
 {% endblock %}
 
+{# Load client-side debug info. #}
 {% block bodyend %}
 	<script type='text/javascript'>
-		{# Load client-side debug info. #}
 		$(document).ready(function () {
 			var b = $('body');
 			$('#debug-width').text($(b).css('width'));

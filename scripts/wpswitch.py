@@ -1460,8 +1460,9 @@ def read_lines(lines):
             incommentblock = True
         # Group
         elif groupline:
-            groupname = get_groupname_from_line(trimmedline)
-
+            newgroupname = get_groupname_from_line(trimmedline)
+            if newgroupname is not None:
+                groupname = newgroupname
         # Start of switch data
         # (not a comment/group declaration, has data separators...)
         if ((not incommentblock) and (not commentline) and (not groupline) and

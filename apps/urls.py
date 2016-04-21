@@ -6,11 +6,19 @@ from apps import views as appviews
 urlpatterns = patterns(
     '',
     # apps index
-    url(r'^/?$', appviews.view_index),
+    url(
+        r'^$',
+        appviews.view_index),
     # phonewords
-    url(r'^/[Pp]hone[Ww]ords',
+    url(
+        r'^[Pp]hone[Ww]ords/?',
         include('apps.phonewords.urls')),
     # paste
-    url(r'^/[Pp]aste',
+    url(
+        r'^[Pp]aste/?',
         include('apps.paste.urls')),
+    # timekeeper
+    url(
+        r'^[Tt]ime[Kk]eep(er)?/?',
+        include('apps.timekeeper.urls'))
 )

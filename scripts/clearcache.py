@@ -5,7 +5,7 @@
     Clears django's cache for the Welborn Productions site.
     wprefresh.py can do this while refreshing the site,
     but sometimes all you need is a cache-clear.
-    
+
     -Christopher Welborn 02-13-2014
 """
 
@@ -15,7 +15,7 @@ import sys
 from docopt import docopt
 
 NAME = 'WpClearCache'
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[-1]
 
@@ -51,7 +51,7 @@ from django.core.cache import cache
 
 def main(argd):
     """ Main entry point, expects doctopt arg dict as argd """
-    
+
     if not argd['--force']:
         print('\nThis will remove everything from Django\'s cache.')
         if not confirm('Are you sure you want to clear it?'):
@@ -69,12 +69,7 @@ def main(argd):
 def confirm(s=None):
     """ Confirm a yes/no answer. Returns True/False for Yes/No. """
 
-    if s:
-        s = '{} (y/n): '.format(s)
-    else:
-        s = 'Continue? (y/n): '
-
-    answer = input(s).strip().lower()
+    answer = input('{} (y/N): '.format(s)).strip().lower()
     return answer.startswith('y')
 
 if __name__ == '__main__':

@@ -1,7 +1,6 @@
 from django.contrib import admin
 from projects.models import wp_project
-
-# actions for admin page
+from home.admin import admin_site
 
 
 def enable_projects(modeladmin, request, queryset):
@@ -25,4 +24,4 @@ class wp_projectAdmin(admin.ModelAdmin):  # noqa
         enable_projects,
         disable_projects]
 
-admin.site.register(wp_project, wp_projectAdmin)
+admin_site.register(wp_project, wp_projectAdmin)

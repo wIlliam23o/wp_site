@@ -19,14 +19,14 @@ from django.conf import settings
 from django.utils.module_loading import import_module
 
 # User-Agent helper...
-from wp_user_agents.utils import get_user_agent
+from django_user_agents.utils import get_user_agent
 
 log = logging.getLogger('wp.utilities')
 
 
 class _NoValue(object):
-
-    """ Something other than 'None' to represent no value, or missing attr. """
+    """ Something other than 'None' to represent no value, or missing attr.
+    """
 
     def __bool__(self):
         """ NoValue is falsey. """
@@ -60,9 +60,16 @@ def debug_allowed(request):
     if getattr(settings, 'TEST', False):
         return False
 
+    # If this is local development, we allow it.
+    if settings.SERVER_LOCATION.lower() == 'local':
+        return bool(settings.DEBUG)
+
     # If user is admin/authenticated we're okay.
     if request.user.is_authenticated() and request.user.is_staff:
-        return True
+        return bool(settings.DEBUG)
+    else:
+        if 'test' in settings.SITE_VERSION.lower():
+            return False
 
     # Non-authenticated users:
     # Get ip for this user
@@ -125,7 +132,7 @@ def get_absolute_path(relative_file_path):
 
 def get_apps(
         exclude=None, include=None, name_filter=None,
-        child=None, no_django=True):
+        child=None, no_django=True, debug=False):
     """ Returns a list of modules (apps) from INSTALLED_APPS.
         Arguments:
             exclude     : A function to exclude modules from being added.
@@ -151,6 +158,9 @@ def get_apps(
             no_django   : True/False. Whether to exclude modules
                           starting with 'django'.
                           Default: True
+
+            debug       : Print ImportErrors to the log.
+                          (some are usually expected)
     """
     apps = []
     for appname in settings.INSTALLED_APPS:
@@ -169,8 +179,10 @@ def get_apps(
             elif include and include(app):
                 apps.append(app)
         except ImportError as ex:
-            log.debug('Module wasn\'t imported: {}\n  {}'.format(
-                childname, ex))
+            if debug:
+                log.debug('Module wasn\'t imported: {}\n  {}'.format(
+                    childname,
+                    ex))
 
     return apps
 
@@ -405,83 +417,105 @@ def get_time(time=None, shorttime=False,):
     return time.strftime('%I:%M:%S %p')
 
 
-def get_time_since(date, humanform=True, limit=False):
+def get_time_fromsecs(seconds, label=True):
+    """ Return a time string from total seconds.
+        Calculates hours, minutes, and seconds.
+        Returns '0d:1h:2m:3s' if label is True, otherwise just: '0:1:2:3'
+
+        Output is only as big as the time.
+            get_time_fromsecs(30) == '30s'
+            get_time_fromsecs(61) == '1m:1s'
+            get_time_fromsecs(3661) == '1h:1m:1s'
+            get_time_fromsecs(90061) == '1d:1h:1m:1s'
+
+            get_time_fromsecs(90062, label=False) = '1:1:1:2'
+
+        * Exact precision is not guaranteed.
+    """
+    secs = float(seconds)
+    if secs < 60:
+        # Seconds only.
+        return '{:.0f}s'.format(secs) if label else str(int(secs))
+
+    minutes, seconds = divmod(secs, 60)
+    if minutes < 60:
+        # Minutes and seconds only.
+        if label:
+            fmtstr = '{:.0f}m:{:.0f}s'
+        else:
+            fmtstr = '{:.0f}:{:.0f}'
+        return fmtstr.format(minutes, seconds)
+
+    hours, minutes = divmod(minutes, 60)
+    if hours < 24:
+        # Hours, minutes, and seconds only.
+        if label:
+            fmtstr = '{:.0f}h:{:.0f}m:{:.0f}s'
+        else:
+            fmtstr = '{:.0f}:{:.0f}:{:.0f}'
+        return fmtstr.format(hours, minutes, seconds)
+
+    days, hours = divmod(hours, 24)
+    # Days, hours, minutes, and seconds.
+    if label:
+        fmtstr = '{:.0f}d:{:.0f}h:{:.0f}m:{:.0f}s'
+    else:
+        fmtstr = '{:.0f}:{:.0f}:{:.0f}:{:.0f}'
+    return fmtstr.format(days, hours, minutes, seconds)
+
+
+def get_time_since(date, limit=None):
     """ Parse a datetime object,
         return human-readable time-elapsed.
         Arguments:
             date       : datetime object to work with.
             humanform  : Use minutes, seconds, etc. instead of m, s, etc.
-            limit      : If True, uses get_datetime() when it's been over one
-                         week.
+            limit      : If not None, uses get_datetime() when it's been over
+                         `limit` days.
     """
-
     secs = (datetime.now() - date).total_seconds()
     if secs < 60:
-        if humanform:
-            # Right now.
-            if secs < 0.1:
-                return ''
-            # Seconds (decimal format)
-            return '{:0.1f} seconds'.format(secs)
-        else:
-            # Seconds only.
-            return '{:0.1f}s'.format(secs)
+        # Right now.
+        if secs < 0.1:
+            return ''
+        # Seconds (decimal format)
+        return '{:0.1f} seconds'.format(secs)
 
-    minutes = secs / 60
-    seconds = int(secs % 60)
+    minutes, seconds = divmod(secs, 60)
     minstr = 'minute' if int(minutes) == 1 else 'minutes'
     secstr = 'second' if seconds == 1 else 'seconds'
     if minutes < 60:
         # Minutes and seconds only.
-        if humanform:
-            if seconds == 0:
-                # minutes
-                return '{} {}'.format(int(minutes), minstr)
-            # minutes, seconds
-            fmtstr = '{} {}, {} {}'
-            return fmtstr.format(int(minutes), minstr, seconds, secstr)
-        else:
-            # complete minutes, seconds
-            fmtstr = '{}m:{}s'
-            return fmtstr.format(int(minutes), seconds)
+        if seconds == 0:
+            # minutes
+            return '{:.0f} {}'.format(minutes, minstr)
+        # minutes, seconds
+        return '{:.0f} {}, {:.0f} {}'.format(minutes, minstr, seconds, secstr)
 
-    hours = minutes / 60
-    minutes = int(minutes % 60)
+    hours, minutes = divmod(minutes, 60)
     hourstr = 'hour' if int(hours) == 1 else 'hours'
     minstr = 'minute' if minutes == 1 else 'minutes'
     if hours < 24:
         # Hours, minutes, and seconds only.
-        if humanform:
-            if minutes == 0:
-                # hours
-                return '{} {}'.format(int(hours), hourstr)
-            # hours, minutes
-            fmtstr = '{} {}, {} {}'
-            return fmtstr.format(int(hours), hourstr, minutes, minstr)
-        else:
-            # complete hours, minutes, seconds
-            fmtstr = '{}h:{}m:{}s'
-            return fmtstr.format(int(hours), hourstr, minutes, seconds)
+        if minutes == 0:
+            # hours
+            return '{:.0f} {}'.format(hours, hourstr)
+        # hours, minutes
+        return '{:.0f} {}, {:.0f} {}'.format(hours, hourstr, minutes, minstr)
 
-    days = int(hours / 24)
-    hours = int(hours % 24)
-    if limit and (days > 7):
+    days, hours = divmod(hours, 24)
+    if (limit is not None) and (days > limit):
         return get_datetime(date)
 
     # Days, hours
     daystr = 'day' if days == 1 else 'days'
     hourstr = 'hour' if hours == 1 else 'hours'
-    if humanform:
-        if hours == 0:
-            # days
-            return '{} {}'.format(days, daystr)
-        # days, hours
-        fmtstr = '{} {}, {} {}'
-        return fmtstr.format(days, daystr, hours, hourstr)
-    else:
-        # complete days, hours, minutes, seconds
-        fmtstr = '{}d:{}h:{}m:{}s'
-        return fmtstr.format(days, hours, minutes, seconds)
+    if hours == 0:
+        # days
+        return '{:.0f} {}'.format(days, daystr)
+
+    # days, hours
+    return '{:.0f} {}, {:.0f} {}'.format(days, daystr, hours, hourstr)
 
 
 def is_file_or_dir(spath):
@@ -491,7 +525,7 @@ def is_file_or_dir(spath):
 
 
 def is_mobile(request):
-    """ determine if the client is a mobile phone/tablet
+    """ Determine if the client is a mobile phone/tablet
         actually, determine if its not a pc.
     """
 
@@ -501,6 +535,20 @@ def is_mobile(request):
         return False
 
     return (not get_user_agent(request).is_pc)
+
+
+def is_textmode(request):
+    """ Return True if the User Agent is a known text mode browser. """
+    if request is None:
+        # An error would cause this.
+        return False
+    ua = getattr(get_user_agent(request), 'ua_string', '').lower()
+    return (
+        ('curl' in ua) or
+        ('textmode' in ua) or
+        ('elinks' in ua) or
+        ('lynx' in ua)
+    )
 
 
 def logtraceback(log=None, message=None):
@@ -549,9 +597,7 @@ def parse_bool(s):
         Values for True: '1', 'T[rue]', 't[rue]', 'Y[es]', 'y[es]'
         Values for False: ..everything else.
     """
-    if s:
-        return s.lower().startswith(('1', 't', 'y'))
-    return False
+    return s and str(s).lower().startswith(('1', 't', 'y'))
 
 
 def remove_list_dupes(lst, max_allowed=1):
@@ -579,12 +625,6 @@ def remove_list_dupes(lst, max_allowed=1):
     return copy
 
 
-def safe_arg(url):
-    """ basically just trims one / from the POST args right now """
-    s = url[:-1] if url.endswith('/') else url
-    return s[1:] if s.startswith('/') else s
-
-
 def slice_list(lst, start=0, max_items=-1):
     """ slice a list starting at: starting index.
         if max_items > 0 then only that length of items is returned.
@@ -595,6 +635,22 @@ def slice_list(lst, start=0, max_items=-1):
     if max_items > 0:
         return lst[start: start + max_items]
     return lst[start:]
+
+
+def strip_chars(s, chars):
+    """ Like .strip(), but removes all occurrences no matter the order.
+        Example:
+            '$$%%$%$test$%%$%$'.strip('$') == '%%$%$test$%%$%'
+            strip_chars('$$%%$%$test$%%$%$', '$%') == 'test'
+        Arguments:
+            s      : String to strip characters from.
+            chars  : Iterable of characters or strings to remove.
+    """
+    chars = tuple(chars)
+    while s.startswith(chars) or s.endswith(chars):
+        for c in chars:
+            s = s.strip(c)
+    return s
 
 
 def trim_special(source):

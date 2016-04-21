@@ -26,7 +26,7 @@
 	{% fav_icons %}
 
 	{# CSS Links #}
- 	<link type='text/css' rel='stylesheet' href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400|Open+Sans:400italic,600italic,700italic,800italic,400,800,600,700|Ubuntu+Mono:400,700,400italic,700italic'/>
+ 	<link type='text/css' rel='stylesheet' href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400|Open+Sans:400italic,600italic,700italic,800italic,400,800,600,700|Ubuntu+Mono:400,700,400italic,700italic'/>
  	<link type='text/css' rel='stylesheet' href='/static/css/main.min.css'/>
 	<link type='text/css' rel='stylesheet' href='/static/css/dock.min.css' media='screen'/>
 	<link type='text/css' rel='stylesheet' href='/static/css/wt-rotator.min.css'/>
@@ -53,41 +53,26 @@
 		{% endif %}
 	{% endblock %}
 
-	{# Dock (No Javascript/Mobile Site)#}
-	{% if request|is_mobile %}
+	{# Dock (No Javascript) #}
+	<noscript>
 		<style type='text/css'>
-			{# Fixes mobile view of menus #}
-			#dock { margin-top: 0px; }
+			#dock { margin-top: 0; }
 			a.dock-item { position: relative; float: left; margin-right: 30px; }
 			a.dock-item:hover { color: #9c9c9c; }
 			a.dock-item:active { color: #9c9c9c; }
 			.dock-item span { display: block; }
-
-			.vertical-menu { top: 200px; }
-
 		</style>
-	{% else %}
-		<noscript>
-			<style type='text/css'>
-				#dock { margin-top: 0px; }
-				a.dock-item { position: relative; float: left; margin-right: 30px; }
-				a.dock-item:hover { color: #9c9c9c; }
-				a.dock-item:active { color: #9c9c9c; }
-				.dock-item span { display: block; }
-			</style>
-		</noscript>
-	{% endif %}
+	</noscript>
+
 
 	{# Using latest jQuery #}
-	<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
+	<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
 	<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js'></script>
 	<script type='text/javascript' src='/static/js/jquery.cookie.min.js'></script>
 
 	{# Javascript: Fisheye Dock #}
-	{% if request|is_mobile %}
+	{% if not request|is_mobile %}
 		{# No dock js loaded on mobile site. It doesn't work well with touch screens. #}
-	{% else %}
-		<script type='text/javascript' src='/static/js/dock.min.js'></script>
 		<script type='text/javascript' src='/static/js/fisheye-iutil.min.js'></script>
 	{% endif %}
 
@@ -95,7 +80,10 @@
 	<script type='text/javascript' src='/static/js/jquery.wt-rotator-wp.min.js'></script>
 	<script type='text/javascript' src='/static/js/jquery.easing.1.3.min.js'></script>
 	{# Javascript: Local Tools (email protection) #}
-	<script type='text/javascript' src='/static/js/wptools.min.js'></script>
+	<script type='text/javascript' src='/static/js/wptools-0.2.1.min.js'></script>
+
+	{# Google Tracking - Universal Analytics code #}
+	{% tracking_google %}
 
 	{# Extra JavaScript (per page) #}
 	{% block javascript %}
@@ -108,41 +96,10 @@
 
 {# MAIN PAGE #}
 <body>
-	{% block body-javascript %}
-	{% endblock %}
-
 	{# RSS Feed #}
-	{# <link href='http://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' /> #}
+	{# <link href='https://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' /> #}
 
-   	{# Debug box #}
-	{% block debug-box %}
-	   	{% if request|debug_allowed and request|is_test_site and request.user.is_staff %}
-	   		{# show/hide debug btn (top button) #}
-	   		<div class='debug-button' id='debug-button-top'>
-	   			<a href='#' onclick='javascript: wptools.toggle_debug();'>
-	   				<span class='debug-button-text'>
-	   					show debug
-	   				</span>
-	   			</a>
-	   		</div>
-	   		<div class='debug-box'>
-	   			{# debug info #}
-	   			{% filter highlight_python %}
-	   				{% debug %}
-	   			{% endfilter %}
-	   			{# hide debug btn #}
-	   			<div class='debug-button' id='debug-button-bottom'>
-	   				<a href='#' onclick='javascript: wptools.toggle_debug();'>
-	   					<span class='debug-button-text'>
-	   						hide debug
-	   					</span>
-	  				</a>
-	   			</div>
-	   		</div>
-	   	{% endif %}
-	{% endblock %}
-
-	{% if request|is_test_site and not request.user.is_staff %}
+	{% if not request|is_viewable %}
 		{# Build alert_message for test site. #}
 		<div id='alert-box' class='alert'>
 			<div id='alert-title'>
@@ -168,6 +125,13 @@
 					{% endif %}
 					<span class='alert-message'>{{ alert_message|safe }}</span>
 				</div>
+			{% else %}
+				{# Display noscript alert message if no other alert is present. #}
+				<noscript id='alert-box' class='alert alert-title' style='display: block;'>
+					You have JavaScript disabled!
+					This site uses JavaScript to enhance the experience.
+					Some apps may not work, or they may appear buggy.
+				</noscript>
 			{% endif %}
 		{% endwith %}
 	{% endif %}
@@ -178,8 +142,7 @@
 		</div>
 
 		{# Content based on live/test site and access. #}
-		{#{% if false %} {# <-- TESTING PURPOSES #}
-		{% if request|is_test_site and not request.user.is_staff %}
+		{% if not request|is_viewable %}
 		    {# Show no access msg for non-admins on test site. #}
 			<div id='page-surround'>
 				<div class='error-noaccess-message'>
@@ -203,52 +166,53 @@
 			<div class='wp-container'>
 				{# LOGO #}
 				<a href='/'>
-					<div class='wp-block' id='wp-logo'></div>
+					<div id='wp-logo' class='logo'></div>
 				</a>
 
 
 		        {# Navigation #}
-		        <div id='dock'>
-					<div class='dock-container' id='dock-box'>
-						<a class='dock-item' id='dock-home' href='/'>
-							<span>Home</span>
-							<img src='/static/images/dock/wp-home.png' alt='home'/>
-						</a>
-						<a class='dock-item' id='dock-projects' href='/projects'>
-							<span>Projects</span>
-							<img src='/static/images/dock/wp-projects.png' alt='projects'/>
-						</a>
-						<a class='dock-item' id='dock-apps' href='/apps'>
-							<span>Apps</span>
-							<img src='/static/images/dock/wp-apps.png' alt='apps'/>
-						</a>
-						<a class='dock-item' id='dock-misc' href='/misc'>
-						    <span>Misc.</span>
-						    <img src='/static/images/dock/wp-misc.png' alt='misc'/>
-						</a>
-						<a class='dock-item' id='dock-paste' href='/paste'>
-							<span>Paste</span>
-							<img src='/static/images/dock/wp-paste.png' alt='paste'/>
-						</a>
-						<a class='dock-item' id='dock-img' href='/img'>
-							<span>Images</span>
-							<img src='/static/images/dock/wp-img.png' alt='images'/>
-						</a>
-						<a class='dock-item' id='dock-blog' href='/blog'>
-							<span>Blog</span>
-							<img src='/static/images/dock/wp-blog.png' alt='blog'/>
-						</a>
-						<a class='dock-item' id='dock-about' href='/about'>
-							<span>About</span>
-							<img src='/static/images/dock/wp-about.png' alt='about'/>
-						</a>
-						<a class='dock-item' id='dock-search' href='/search'>
-							<span>Search</span>
-							<img src='/static/images/dock/wp-search.png' alt='search'/>
-						</a>
+				{% with feature_nofisheye=request|feature:"nofisheye" feature_mobile=request|is_mobile %}
+			        <div id='dock' {% if feature_mobile or feature_nofisheye %}class='noscript'{% endif %}>
+						<div id='dock-box' class='dock-container {% if feature_mobile or feature_nofisheye %}noscript{% endif %}'>
+							<a id='dock-home' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/'>
+								<span>Home</span>
+								<img src='/static/images/dock/wp-home.png' alt='home'/>
+							</a>
+							<a id='dock-projects' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/projects'>
+								<span>Projects</span>
+								<img src='/static/images/dock/wp-projects.png' alt='projects'/>
+							</a>
+							<a id='dock-apps' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/apps'>
+								<span>Apps</span>
+								<img src='/static/images/dock/wp-apps.png' alt='apps'/>
+							</a>
+							<a id='dock-misc' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/misc'>
+							    <span>Misc.</span>
+							    <img src='/static/images/dock/wp-misc.png' alt='misc'/>
+							</a>
+							<a id='dock-paste' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/paste'>
+								<span>Paste</span>
+								<img src='/static/images/dock/wp-paste.png' alt='paste'/>
+							</a>
+							<a id='dock-img' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/img'>
+								<span>Images</span>
+								<img src='/static/images/dock/wp-img.png' alt='images'/>
+							</a>
+							<a id='dock-blog' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/blog'>
+								<span>Blog</span>
+								<img src='/static/images/dock/wp-blog.png' alt='blog'/>
+							</a>
+							<a id='dock-about' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/about'>
+								<span>About</span>
+								<img src='/static/images/dock/wp-about.png' alt='about'/>
+							</a>
+							<a id='dock-search' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/search'>
+								<span>Search</span>
+								<img src='/static/images/dock/wp-search.png' alt='search'/>
+							</a>
+						</div>
 					</div>
-				</div>
-
+				{% endwith %}
 
 				{# Child page content #}
 		        <div id='page-surround'>
@@ -274,6 +238,7 @@
 	 						</div>
 							{# Comments Javascript #}
 	    					<script type='text/javascript'>
+	    						/* jshint ignore: start */
 	      						var disqus_shortname = 'welbornproductions';
 								{% block disqusvariables %}
 								{% endblock %}
@@ -288,12 +253,13 @@
 	        						s.src = '//' + disqus_shortname + '.disqus.com/count.js';
 	       				 			(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
 	    							}());
+	        					/* jshint ignore: end */
 	    					</script>
 
 	    					<noscript>
-	    						Please enable JavaScript to view the <a href='http://disqus.com/?ref_noscript'>comments powered by Disqus.</a>
+	    						Please enable JavaScript to view the <a href='https://disqus.com/?ref_noscript'>comments powered by Disqus.</a>
 	    					</noscript>
-	   				 		<a href='http://disqus.com' class='dsq-brlink'>
+	   				 		<a href='https://disqus.com' class='dsq-brlink'>
 	   				 			comments powered by <span class='logo-disqus'>Disqus</span>
 	   				 		</a>
 						</div>
@@ -325,7 +291,9 @@
 	</div>
 	<div class='wp-block bottom'>
 		<div id='copyright'>
-			<span class='copytext'>copyright 2013-2015 welborn productions</span>
+			<span class='copytext'>copyright 2013 -</span>
+			<span id='copyright-year' class='copytext'>2016</span>
+			<span class='copytext'>welborn productions</span>
 		</div>
 		<div class='totop-block'>
 			<a href='#' id='wp-totop' style='outline: none;'>
@@ -336,45 +304,68 @@
 
 	{# Email protection (reveal base64 encoded addresses with the wp-address class.)#}
 	<script type='text/javascript'>
+		/* jshint ignore: start */
 		$(document).ready( function () {
+			{# Dock initialize (non-mobile clients) #}
+			{% if not request|is_mobile and not request|feature:"nofisheye" %}
+				var $dock = $('#dock');
+				if ((typeof $dock.Fisheye) == 'function') {
+					$dock.Fisheye(
+						{
+							maxWidth: 30,
+							items: 'a',
+							itemsText: 'span',
+							container: '.dock-container',
+							itemWidth: 60, /* 60 */
+							proximity: 60, /* 60 */
+							alignment : 'left', /* left */
+							valign: 'bottom', /* top */
+							halign : 'center' /* left */
+						}
+					);
+				}
+			{% endif %}
+			{# Fix the copyright year. #}
+			var $copyyear = $('#copyright-year');
+			if ($copyyear.length) {
+				$copyyear.text((new Date()).getFullYear() || '2016');
+			}
 			{# Fix any base64 encoded email addresses. #}
 			wptools.wpreveal('.wp-address');
 
 			{# Make alert messages clickable. #}
 			{% if alert_message or alert_content %}
-				var alertbox = $('#alert-box');
-				$(alertbox).slideDown();
-				$(alertbox).click(function () {
-					$('#alert-box').slideUp();
+				var $alertbox = $('#alert-box');
+				$alertbox.slideDown();
+				$alertbox.click(function () {
+					$(this).slideUp();
 				});
-				setTimeout(function () { $(alertbox).slideUp(); }, 5000);
+				setTimeout(function () { $alertbox.slideUp(); }, 5000);
 
 			{% elif request|is_test_site and not request.user.is_staff %}
-				var alertbox = $('#alert-box');
-				$(alertbox).slideDown();
-				$(alertbox).click(function () {
-					$('#alert-box').slideUp();
+				var $alertbox = $('#alert-box');
+				$alertbox.slideDown();
+				$alertbox.click(function () {
+					$(this).slideUp();
 				});
 			{% endif %}
 
 			{# Make all floaters destroyable and self-centering #}
-			var floater = $('#floater');
-			if (floater.length) {
-				$(floater).click(function () { $(floater).fadeOut(); });
+			var $floater = $('#floater');
+			if ($floater.length) {
+				$floater.click(function () { $(this).fadeOut(); });
 				wptools.center('#floater', true);
 				window.onresize = function () {
 					wptools.center('#floater', true);
 				};
 			}
 		});
+		/* jshint ignore: end */
 	</script>
 
 	{# For views inserting JS that should run before the body closes. #}
 	{% block bodyend %}
 	{% endblock %}
-
-	{# Google Tracking - Universal Analytics code #}
-	{% tracking_google %}
 
 </body>
 </html>

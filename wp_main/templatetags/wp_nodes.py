@@ -2,6 +2,7 @@
     Provides renderable nodes for templates.
     -Christopher Welborn 09-03-14
 """
+import base64
 import logging
 import os
 from django import template
@@ -13,11 +14,33 @@ log = logging.getLogger('wp.templatenodes')
 register = template.Library()
 
 
+@register.tag(name='acesnippet')
+def ace_snippet(parser, token):
+    try:
+        tagname, elementid, fileext = token.split_contents()
+    except ValueError:
+        try:
+            tagname, elementid = token.split_contents()
+            fileext = '.txt'
+        except ValueError:
+            raise ValueError(
+                'Invalid arguments for acesnippet tag: {}'.format(
+                    token.contents
+                )
+            )
+    # Grab contents (actually a NodeList) from block.
+    # This can be nodelist.render(context)'d to get the text.
+    nodelist = parser.parse(('endacesnippet',))
+    parser.delete_first_token()
+    return AceSnippet(elementid=elementid, fileext=fileext, nodelist=nodelist)
+
+
 @register.tag
 def ad_article(parser, token):
     """ Renders an ArticleAd node in place.
         Replaces soon-to-be-deprecated article_ad
     """
+
     return AdArticle()
 
 
@@ -27,6 +50,11 @@ def ad_bottom(parser, token):
         A google ad for the bottom of every page.
     """
     return AdBottom()
+
+
+def b64encode(s):
+    """ Encode string as bas64. """
+    return base64.encodebytes(s.encode('utf-8')).decode('utf-8').strip()
 
 
 @register.tag
@@ -72,6 +100,17 @@ def image_viewer(parser, token):
     return ImageViewer(images_dir)
 
 
+def parse_arg(value, context):
+    """ Parse an argument for template tags. Will try using a context variable,
+        but fall back to a string value.
+    """
+    try:
+        parsedvalue = template.Variable(value).resolve(context)
+    except template.VariableDoesNotExist:
+        return value
+    return parsedvalue
+
+
 @register.tag
 def tracking_google(parser, token):
     """ Renders the google tracking code. """
@@ -92,6 +131,33 @@ def var_quotes(s, varname=None):
             return s[1:-1]
     # Not a quoted string.
     return s
+
+
+class AceSnippet(template.Node):
+    """ Renders an Ace Editor snippet.
+        Usage:
+            {% acesnippet "myelementid" ".txt" %}
+                content here.
+            {% endacesnippet %}
+    """
+    def __init__(self, elementid=None, fileext=None, nodelist=None):
+        self.elementid = elementid
+        self.fileext = fileext
+        self.nodelist = nodelist
+
+    def render(self, context):
+        elementid = parse_arg(self.elementid, context)
+        fileext = parse_arg(self.fileext, context)
+        text = self.nodelist.render(context).strip()
+
+        context = context or {}
+        context.update({
+            'elementid': elementid,
+            'fileext': fileext,
+            'text': b64encode(text) if text else ''
+        })
+
+        return htmltools.render_clean('home/acesnippet.html', context=context)
 
 
 class AdArticle(template.Node):

@@ -1,3 +1,6 @@
+""" Welborn Productions - Apps - Paste - Models
+    Holds information for the paste app.
+"""
 import logging
 from datetime import datetime
 

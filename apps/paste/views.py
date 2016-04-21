@@ -37,11 +37,23 @@ def invalidate_submit(submitdata):
         Do not allow fast, multiple, duplicate, pastes.
         Returns None (Falsey) if the ip is okay, otherwise a string
         containing the reason the paste failed (Truthy).
+        Example:
+            invalid_reason = invalidate_submit({
+                'author_ip': '127.0.0.1',
+                'content': 'Test',
+                'publish_date': datetime.today()})
+            if invalid_reason:
+                reject_the_paste('Not allowed: {}'.format(invalid_reason))
+            else:
+                save_the_paste()
+
+        Arguments:
+            submitdata  : A dict of paste data, usually from JSON.
     """
 
     ipaddr = submitdata.get('author_ip', None)
     if not ipaddr:
-        # None, or '' was passed (unable to get ip,  give the benefit of doubt)
+        # None, or '' was passed (unable to get ip,  give'em a break)
         return None
 
     userpastes = wp_paste.objects.filter(author_ip=ipaddr)
@@ -54,8 +66,9 @@ def invalidate_submit(submitdata):
     try:
         elapsed = (datetime.now() - lastpaste.publish_date).total_seconds()
     except Exception as ex:
-        log.error('Error getting elapsed paste-time for: '
-                  '{}\n{}'.format(lastpaste, ex))
+        log.error('Error getting elapsed paste-time for: {}\n{}'.format(
+            lastpaste,
+            ex))
         # Don't fault a possibly good user for our error.
         return None
 
@@ -74,6 +87,63 @@ def invalidate_submit(submitdata):
 
     # Paste passed the gauntlet.
     return None
+
+
+def json_paste(request, pasteidarg):
+    """ Get a single paste in JSON format.
+        Returns an HttpResponse with application/json.
+    """
+    # Try getting a single paste object.
+    pasteobj = get_object(wp_paste.objects, paste_id=pasteidarg)
+    if pasteobj is None:
+        # No paste found.
+        respdata = paste_err_data('Paste not found: {}'.format(pasteidarg))
+        return responses.json_response(respdata)
+
+    # Have paste object, make sure it's not disabled.
+    if pasteobj.disabled:
+        respdata = paste_err_data('Paste is disabled.')
+        return responses.json_response(respdata)
+    elif (not request.user.is_staff) and pasteobj.is_expired():
+        respdata = paste_err_data('Paste is expired.')
+        return responses.json_response(respdata)
+
+    # Valid paste, build the response data.
+    respdata = paste_data(pasteobj)
+    respdata['status'] = 'ok'
+    respdata['message'] = 'Paste id: {} retrieved.'.format(respdata['id'])
+
+    return responses.json_response(respdata)
+
+
+def json_paste_listing(groupby=None):
+    """ Get a paste listing in JSON format.
+        Returns an HttpResponse with application/json.
+        Arguments:
+            groupby  : None, 'all', 'latest': Sort by date.
+                       'top' : Sort by view count.
+    """
+    # List all paste items (with custom orderby)
+    pastes = wp_paste.objects.filter(disabled=False, private=False)
+    respdata = {'count': 0, 'pastes': []}
+    if groupby == 'top':
+        orderby = '-view_count'
+    else:
+        orderby = '-publish_date'
+
+    # Build pastes data. Only public and unexpired pastes should show.
+    respdata['pastes'] = [
+        paste_data(p) for p in pastes.order_by(orderby)
+        if not p.is_expired()
+    ]
+    respdata['count'] = len(respdata['pastes'])
+    respdata['status'] = 'ok'
+    if respdata['count'] == 0:
+        respdata['message'] = 'No pastes to retrieve.'
+    else:
+        respdata['message'] = (
+            '{} pastes retrieved.'.format(respdata['count']))
+    return responses.json_response(respdata)
 
 
 def list_view(request, title=None, filterkw=None, orderby=None):
@@ -107,11 +177,62 @@ def list_view(request, title=None, filterkw=None, orderby=None):
         p = p[:LISTINGMAX]
 
     context = {
-        'request': request,
         'pastes': p,
         'listing_title': title,
     }
-    return responses.clean_response('paste/listing.html', context)
+    return responses.clean_response(
+        'paste/listing.html',
+        context=context,
+        request=request)
+
+
+def paste_err_data(msg=None):
+    """ Build Paste JSON data for an error. """
+    return {
+        'status': 'error',
+        'title': '',
+        'author': '',
+        'date': '',
+        'content': '',
+        'language': '',
+        'id': '',
+        'pastes': [],
+        'views': 0,
+        'count': 0,
+        'replies': [],
+        'replycount': 0,
+        'replyto': '',
+        'message': msg if msg else '',
+    }
+
+
+def paste_data(paste, doreplies=True, doparent=True):
+    """ Build Paste JSON data for a valid paste. """
+    resp = {
+        'title': paste.title,
+        'author': paste.author,
+        'date': str(paste.publish_date),
+        'content': paste.content,
+        'id': paste.paste_id,
+        'views': paste.view_count,
+        'language': paste.language,
+    }
+    if doreplies:
+        replies = paste.children.filter(disabled=False)
+        replies = replies.order_by('-publish_date')
+        resp['replies'] = [p.paste_id for p in replies]
+    else:
+        replies = []
+    resp['replycount'] = len(replies)
+
+    if doparent:
+        if paste.parent:
+            resp['replyto'] = paste.parent.paste_id
+        else:
+            resp['replyto'] = ''
+    else:
+        resp['replyto'] = ''
+    return resp
 
 
 def process_submit(submitdata, apisubmit=False):
@@ -145,16 +266,22 @@ def process_submit(submitdata, apisubmit=False):
     replytoid = submitdata.get('replyto', None)
     replytoobj = None
     if replytoid:
-        replytoobj = get_object(wp_paste.objects,
-                                paste_id=replytoid)
+        replytoobj = get_object(
+            wp_paste.objects,
+            paste_id=replytoid
+        )
         if replytoobj is None:
             # Trying to reply to a dead paste.
-            exc = ValueError('No paste with that id: {}'.format(replytoid))
+            errmsg = 'No paste with that id: {}'.format(replytoid)
+            exc = ValueError(errmsg)
+            log.debug(errmsg)
             return responses.json_response_err(exc)
         else:
             # Check for disabled replyto paste.
             if replytoobj.disabled:
-                exc = ValueError('Paste is disabled: {}'.format(replytoid))
+                errmsg = 'Paste is disabled or expired: {}'.format(replytoid)
+                exc = ValueError(errmsg)
+                log.debug(errmsg)
                 return responses.json_response_err(exc)
 
     newpaste = wp_paste(
@@ -233,6 +360,8 @@ def submit_public(request):
     # Try using GET/POST..
     if not submitdata:
         submitdata = responses.get_request_args(request)
+        # Using multiple content args, but first for the rest.
+        submitdata['content'] = '\n'.join(submitdata.getlist('content', []))
         # Parse a few args that string values would break.
         onhold = parse_bool(submitdata.get('onhold', ''))
         private = parse_bool(submitdata.get('private', ''))
@@ -260,15 +389,20 @@ def submit_public(request):
 
 def view_api(request):
     """ Landing page for api help. """
-
-    context = {'request': request}
-    return responses.clean_response('paste/api.html', context)
+    return responses.clean_response(
+        'paste/api.html',
+        context=None,
+        request=request)
 
 
 @csrf_protect
 @ensure_csrf_cookie
 def view_index(request):
-    """  Main page for pastebin. Add a new paste. """
+    """ Main page for pastebin. Add a new paste.
+        Arguments:
+            request        : Django's Request object.
+            template_name  : Template to render.
+    """
     # Update the view count for the paste app.
     app = get_object(wp_app.objects, alias='paste')
     if app:
@@ -276,81 +410,28 @@ def view_index(request):
         app.save()
 
     # If the request has args pass it on down to view_paste()
-    try:
-        reqargs = request.REQUEST
-    except AttributeError:
-        reqargs = None
-    finally:
-        if reqargs:
-            return view_paste(request)
+    if request.GET or request.POST:
+        return view_paste(request)
 
     # New Paste.
     context = {
-        'request': request,
         'paste': None,
         'replyto': None,
         'replies': None,
         'replycount': None,
         'replymax': REPLYMAX,
     }
-    return responses.clean_response('paste/index.html', context)
+    return responses.clean_response(
+        'paste/index.html',
+        context=context,
+        request=request)
 
 
 @never_cache
 def view_json(request):
     """ View a paste, return info in JSON form. """
 
-    def err_data(msg=None):
-        """ Build JSON data for an error. """
-        return {
-            'status': 'error',
-            'title': '',
-            'author': '',
-            'date': '',
-            'content': '',
-            'language': '',
-            'id': '',
-            'pastes': [],
-            'views': 0,
-            'count': 0,
-            'replies': [],
-            'replycount': 0,
-            'replyto': '',
-            'message': msg if msg else '',
-        }
-
-    def paste_data(paste, doreplies=True, doparent=True):
-        """ Build JSON data for a paste. """
-        resp = {
-            'title': paste.title,
-            'author': paste.author,
-            'date': str(paste.publish_date),
-            'content': paste.content,
-            'id': paste.paste_id,
-            'views': paste.view_count,
-            'language': paste.language,
-        }
-        if doreplies:
-            replies = paste.children.filter(disabled=False)
-            replies = replies.order_by('-publish_date')
-            resp['replies'] = [p.paste_id for p in replies]
-        else:
-            replies = []
-        resp['replycount'] = len(replies)
-
-        if doparent:
-            if paste.parent:
-                resp['replyto'] = paste.parent.paste_id
-            else:
-                resp['replyto'] = ''
-        else:
-            resp['replyto'] = ''
-        return resp
-
-    try:
-        reqargs = request.REQUEST
-    except AttributeError:
-        reqargs = None
+    reqargs = request.POST or request.GET
     if not reqargs:
         # No args passed with request, show landing page.
         return view_api(request)
@@ -358,53 +439,17 @@ def view_json(request):
     # Request has args, get paste id.
     pasteidarg = responses.get_request_arg(request, 'id')
     if pasteidarg is None:
-        respdata = err_data('No paste id given.')
+        respdata = paste_err_data('No paste id given.')
         return responses.json_response(respdata)
-
-    if pasteidarg.lower() in ('all', 'latest', 'top'):
-        # List all paste items (with custom orderby)
-        pastes = wp_paste.objects.filter(disabled=False, private=False)
-        respdata = {'count': 0, 'pastes': []}
-        if pasteidarg.lower() == 'top':
-            orderby = '-view_count'
-        else:
-            orderby = '-publish_date'
-
-        # Build pastes data. Only public and unexpired pastes should show.
-        respdata['pastes'] = [
-            paste_data(p) for p in pastes.order_by(orderby)
-            if not p.is_expired()
-        ]
-        respdata['count'] = len(respdata['pastes'])
-        respdata['status'] = 'ok'
-        if respdata['count'] == 0:
-            respdata['message'] = 'No pastes to retrieve.'
-        else:
-            respdata['message'] = (
-                '{} pastes retrieved.'.format(respdata['count']))
     else:
-        # Try getting a single paste object.
-        pasteobj = get_object(wp_paste.objects, paste_id=pasteidarg)
-        if pasteobj is None:
-            # No paste found.
-            respdata = err_data('Paste not found: {}'.format(pasteidarg))
-            return responses.json_response(respdata)
+        pasteidarg = pasteidarg.lower()
 
-        # Have paste object, make sure it's not disabled.
-        if pasteobj.disabled:
-            respdata = err_data('Paste is disabled.')
-            return responses.json_response(respdata)
-        elif (not request.user.is_staff) and pasteobj.is_expired():
-            respdata = err_data('Paste is expired.')
-            return responses.json_response(respdata)
+    if pasteidarg in {'all', 'latest', 'top'}:
+        # Paste listing.
+        return json_paste_listing(pasteidarg)
 
-        # Valid paste, build the response data.
-        respdata = paste_data(pasteobj)
-        respdata['status'] = 'ok'
-        respdata['message'] = 'Paste id: {} retrieved.'.format(respdata['id'])
-
-    # Valid paste, send its data in JSON form.
-    return responses.json_response(respdata)
+    # Try retrieving a single paste.
+    return json_paste(request, pasteidarg)
 
 
 @never_cache
@@ -489,7 +534,6 @@ def view_paste(request):
             replies = replies[:REPLYMAX]
 
     context = {
-        'request': request,
         'paste': pasteobj,
         'replyto': replytoobj,
         'replylast': replylast,
@@ -497,7 +541,10 @@ def view_paste(request):
         'replycount': replycount,
         'replymax': REPLYMAX,
     }
-    return responses.clean_response('paste/index.html', context)
+    return responses.clean_response(
+        'paste/index.html',
+        context=context,
+        request=request)
 
 
 def view_paste_raw(request):
@@ -520,6 +567,7 @@ def view_paste_raw(request):
     if pasteobj is None:
         return responses.error404(request, 'Paste content not found.')
     elif (not request.user.is_staff) and pasteobj.is_expired():
+        # Staff may view expired pastes.
         return responses.error404(request, 'Paste is expired.')
 
     try:
@@ -555,12 +603,14 @@ def view_replies(request):
 
     replies = pasteobj.children.order_by('-publish_date')
     context = {
-        'request': request,
         'paste': pasteobj,
         'replies': replies,
     }
 
-    return responses.clean_response('paste/replies.html', context)
+    return responses.clean_response(
+        'paste/replies.html',
+        context=context,
+        request=request)
 
 
 @never_cache

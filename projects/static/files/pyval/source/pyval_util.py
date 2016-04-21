@@ -8,56 +8,39 @@
 import re
 
 NAME = 'PyVal'
-VERSION = '1.0.7-7'
+VERSION = '1.1.1'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
-DAYS = {i: v for i, v in enumerate([
-        'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])}
-
-DAYS_SHORT = {i: v for i, v in enumerate(['Mon', 'Tue', 'Wed', 'Thur', 'Fri'])}
-
-MONTHS = {i + 1: v for i, v in enumerate([
-    'January', 'February', 'March', 'April',
-    'May', 'June', 'July', 'August',
-    'Septemer', 'October', 'November', 'December'])}
-MONTHS_SHORT = {i + 1: v for i, v in enumerate([
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Nov', 'Dec'])}
 
 
 def humantime(d, short=False):
-    """ Parse a datetime.datetime() into a human readable string.
-        Ex: d = datetime(2014, 2, 5, 13, 5, 6)
-            print(humantime(d))
-            # prints: Wednesday, February 5 1:5:6pm
+    """ Formats a datetime.datetime() into a human readable string.
 
-        If no time is included in the datetime() (time zeroed out),
-        only the date string is returned.
+        Date, Time, and DateTime objects are accepted.
+        If a time or date portion is zeroed out, it is not printed.
+
+        Example:
+            humantime(datetime.time(datetime.now()))
+            # '09:26:18PM'
+            humantime(datetime.date(datetime.now()))
+            # 'Wednesday, May 27 2015'
+            humantime(datetime.now())
+            # 'Wednesday, May 27 2015 09:26:31PM'
 
         Arguments:
             d      :  A datetime() object with or without time included.
             short  : Use abbreviations if True, otherwise use proper names.
                      Default: False
     """
-    if short:
-        monthstr = '{}.'.format(MONTHS_SHORT[d.month])
-        daystr = '{}.'.format(DAYS_SHORT[d.weekday()])
+    if d.strftime('%m%d%y') == '010100':
+        date = ''
     else:
-        monthstr = MONTHS[d.month]
-        daystr = DAYS[d.weekday()]
-    datestr = '{}, {} {} {}'.format(daystr,
-                                    monthstr,
-                                    d.day,
-                                    d.year)
-
-    # Return only the date if no time is set.
-    if not any([d.hour, d.minute, d.second]):
-        return datestr
-    # Parse human readable time. (12-Hour am/pm)
-    shift = 'am' if d.hour < 13 else 'pm'
-    hourstr = str(d.hour) if d.hour < 13 else str(d.hour - 12)
-    timestr = ':'.join([hourstr, str(d.minute), str(d.second)])
-    timestr = '{}{}'.format(timestr, shift)
-    return ' '.join([datestr, timestr])
+        date = d.strftime('%a, %b %d %Y' if short else '%A, %B %d %Y')
+    if d.strftime('%H%M%S') == '000000':
+        time = ''
+    else:
+        time = d.strftime('%I:%M:%S%p')
+    # This prevents a leading/trailing space in date/time-only mode.
+    return ' '.join((s for s in (date, time) if s))
 
 
 def timefromsecs(secs, label=True):

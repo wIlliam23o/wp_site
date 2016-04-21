@@ -26,10 +26,10 @@ def view_index(request):
     """
     if not request.user.is_authenticated():
         # Not authenticated, return the bad login page. No stats for you!
-        context = {
-            'request': request,
-        }
-        return responses.clean_response('home/badlogin.html', context)
+        return responses.clean_response(
+            'home/badlogin.html',
+            context=context,
+            request=request)
 
     # Build the stats page for all known models.
     modelinf = {
@@ -65,8 +65,10 @@ def view_index(request):
         }
     }
     context = {
-        'request': request,
         'label': 'all models',
         'stats': tools.get_models_info(modelinf),
     }
-    return responses.clean_response('stats/index.html', context)
+    return responses.clean_response(
+        'stats/index.html',
+        context=context,
+        request=request)

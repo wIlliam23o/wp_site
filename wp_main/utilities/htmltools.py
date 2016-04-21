@@ -14,6 +14,17 @@ from sys import version as sysversion
 
 # Fixing html fragments (from shortening blog posts and other stuff)
 from tidylib import tidy_fragment
+
+# Django template loaders
+from django.template import RequestContext, Context, loader
+from django.template.base import TemplateDoesNotExist
+from django.conf import settings
+
+# Basic utilities and highlighting
+from wp_main.utilities import (highlighter, utilities)
+
+log = logging.getLogger('wp.utilities.htmltools')
+
 TIDYLIB_IGNORE = (
     # These errors from tidylib will not be logged ever.
     # They apply mostly to whole html docs, not fragments.
@@ -30,19 +41,7 @@ TIDYLIB_IGNORE = (
     'missing <!DOCTYPE> declaration',
     'plain text isn\'t allowed in <head> elements'
 )
-# Django template loaders
-from django.template import RequestContext, Context, loader
-from django.template.base import TemplateDoesNotExist
-from django.conf import settings
 
-# Basic utilities and highlighting
-from wp_main.utilities import (highlighter, utilities)
-
-log = logging.getLogger('wp.utilities.htmltools')
-
-# Fix for python 3 in strip_()
-if sysversion[0] == '3':
-    unicode = str
 
 # RegEx for finding an email address
 # (not compiled, because it gets compiled with additional
@@ -54,367 +53,6 @@ re_closing_incomplete = re.compile(r'[\074]/\w+')
 re_opening_complete = re.compile(r'[\074][\w "\'=\-\/]+[\076]{1}')
 re_opening_incomplete = re.compile(r'[\074][\w "\'=\-]+')
 re_start_tag = re.compile(r'[\074]\w+')
-
-
-class html_content(object):  # noqa
-
-    """ class to hold html content, and perform various operations on it.
-        set self.content on initialization, set(), set_if(content, True),
-        or through self.content = "stuff".
-        functions modify the content and return the modified html_content
-        object.
-
-        ex:
-            html_stuff = htmltools.html_content("<span>This link.</span>")
-            html_link = html_stuff.wrap_link("http://mylink.com")
-            html_nolines = html_stuff.remove_newlines()
-            # original is still at: html_stuff, or html_stuff.content
-    """
-
-    def __init__(self, content=''):
-        self.content = content
-
-    def __repr__(self):
-        """ return content from this class """
-
-        return str(self.content)
-
-    def __str__(self):
-        """ return content from this class """
-
-        return str(self.content)
-
-    def __unicode__(self):
-        """ return content from this class """
-
-        return self.__str__(self.content)
-
-    def __add__(self, other):
-        """ concatenate content to this one """
-
-        return html_content(self.content + other)
-
-    def __len__(self):
-        """ returns the length of the content string """
-
-        return len(self.content)
-
-    def __iter__(self):
-        """ provides iteration of the content by character """
-
-        for character_ in self.content:
-            yield character_
-
-    def __contains__(self, other):
-        """ provides the 'if in' method for content """
-
-        return (other in self.content)  # (self.content.find(other) > -1)
-
-    def __lt__(self, other):
-        """ comparison on the content """
-
-        return (self.content < other)
-
-    def __gt__(self, other):
-        """ comparison on the content """
-
-        return (self.content > other)
-
-    def __le__(self, other):
-        """ comparison on the content """
-
-        return (self.content <= other)
-
-    def __ge__(self, other):
-        """ comparison on the content """
-
-        return (self.content >= other)
-
-    def __eq__(self, other):
-        """ comparison on the content """
-
-        return (self.content == other)
-
-    def __ne__(self, other):
-        """ comparison on the content """
-
-        return (self.content != other)
-
-    def __call__(self):
-        """ Calling an html object returns it's content.
-            Is this too much hackery?
-            ex:
-                myhtml = html_content('testing')
-                print(myhtml())
-                # prints: testing
-        """
-        return self.content
-
-    def set(self, content):
-        """ sets self.content,
-            if another html_content object is passed,
-            it copies the .content from it.
-        """
-
-        if isinstance(content, (html_content)):
-            # another html_content instance
-            # (causes recursion with __contains__)
-            self.content = content.content
-        elif isinstance(content, str):
-            # regular string
-            self.content = content
-        else:
-            # I don't know, but content needs to be a string.
-            self.content = str(content)
-
-    def set_if(self, condition_, content):
-        """ sets self.content if condition_ is True """
-
-        if condition_:
-            self.set(content)
-
-    def append(self, append_text):
-        """ appends text to the end of content (just like __add__).. """
-
-        self.content = '{}{}'.format(self.content, append_text)
-        return self
-
-    def append_line(self, append_line):
-        """ appends a new line of text to content. """
-
-        self.content = '{}\n{}'.format(self.content, append_line)
-        return self
-
-    def append_lines(self, lines_):
-        """ appends a list/tuple of lines to content """
-
-        if isinstance(lines_, (list, tuple)):
-            self.content = '{}\n{}'.format(self.content, '\n'.join(lines_))
-        else:
-            raise TypeError('append_lines expects a list/tuple.')
-        return self
-
-    def prepend(self, prepend_text):
-        """ prepends text to the beginning of content """
-
-        self.content = '{}{}'.format(prepend_text, self.content)
-        return self
-
-    def prepend_line(self, prepend_line):
-        """ prepends a line of text to content. """
-
-        self.content = '{}\n{}'.format(prepend_line, self.content)
-        return self
-
-    def prepend_lines(self, lines_):
-        """ prepends a list/tuple of lines to content """
-
-        if isinstance(lines_, (list, tuple)):
-            self.content = '{}\n{}'.format('\n'.join(lines_), self.content)
-        else:
-            raise TypeError('prepend_lines expects a list or tuple.')
-        return self
-
-    def split(self, split_by=' '):
-        """ just like str.split() """
-
-        return self.content.split(split_by)
-
-    def replace(self, replace_what, replace_with):
-        """ just like str.replace(), except it modifies the content """
-
-        self.content = self.content.replace(replace_what, replace_with)
-        return self
-
-    def replace_if(self, replace_what, replace_with):
-        """ runs replace() if replace_what equates to true. """
-
-        if replace_what:
-            self.replace(replace_what, replace_with)
-        return self
-
-    def tostring(self):
-        """ returns string represenation of content.
-            (like str(html_content()))
-        """
-
-        return str(self.content)
-
-    def contains(self, contains_what):
-        """ returns True if contains_what in content.
-            if a List or Tuple of strings is passed, it will return True
-            if ANY of the strings are found.
-        """
-
-        # list/tuple of strings to check
-        if isinstance(contains_what, (list, tuple)):
-            for str_itm in contains_what:
-                if str_itm in self.content:
-                    return True
-            return False
-
-        # regular string check
-        return (contains_what in self.content)
-
-    def wrap_link(self, link_url='', alt_text=''):
-        """ wrap content in an <a href=link_url> """
-
-        self.content = wrap_link(self.content, link_url, alt_text)
-        return self
-
-    def auto_link(self, link_list, **kwargs):
-        """ auto link specific words in the content.
-            see: htmltools.auto_link()
-        """
-
-        self.content = auto_link(self.content, link_list, **kwargs)
-        return self
-
-    def check_replacement(self, target_replacement):
-        """ fixes target replacement string in inject functions.
-            if {{ }} was ommitted, it adds it.
-            if "{{target}}" is in source_string instead of "{{ target }}",
-            it fixes the target to match.
-            if nothing is needed,
-            it returns the original target_replacement string.
-            if the target_replacement isn't in the source_string,
-            it returns false.
-            so use [if check_replacement()],
-            not [if check_replacement() in source_string].
-        """
-
-        return check_replacement(self.content, target_replacement)
-
-    def remove_comments(self):
-        """ splits source_string by newlines and
-            removes any line starting with <!-- and ending with -->.
-        """
-
-        self.content = remove_comments(self.content)
-        return self
-
-    def remove_newlines(self):
-        """ remove all newlines from a string
-            skips some tags, leaving them alone. like 'pre', so
-            formatting doesn't get messed up.
-        """
-
-        self.content = remove_newlines(self.content)
-        return self
-
-    def remove_whitespace(self):
-        """ removes leading and trailing whitespace from lines,
-            and removes blank lines.
-        """
-
-        self.content = remove_whitespace(self.content)
-        return self
-
-    def highlight(self):
-        """ runs all highlighting functions (inline/embedded) """
-
-        # self.highlight_embedded()
-        self.highlight_inline()
-        self.highlight_codes()
-
-        return self
-
-    def highlight_codes(self):
-        """ highlight all wp highlight codes. """
-
-        self.content = highlighter.highlight_codes(self.content)
-        return self
-
-    def highlight_inline(self):
-        """ highlight all inline 'pre class=[language]' content (if any) """
-
-        if self.contains(("<pre class=", "<pre class =")):
-            self.content = highlighter.highlight_inline(self.content)
-
-        return self
-
-    def hide_email(self):
-        """ base64 encodes all email addresses for use with
-            wptool.js reveal functions.
-            for semi-spam-protection.
-            (providing the email-harvest-bot doesn't try to decode Base64)
-        """
-
-        if '\n' in self.content:
-            slines = self.content.split('\n')
-        else:
-            # single line
-            slines = [self.content]
-
-        # Fixing python 3 until i remove py2 completely
-        if hasattr(base64, 'encodebytes'):
-            encode = base64.encodebytes
-        else:
-            encode = base64.encodestring
-
-        final_output = []
-        # encode/decode has been added for py3 (until i remove py2)
-        for sline in slines:
-            mailtos_ = find_mailtos(sline)
-            for mailto_ in mailtos_:
-
-                b64_mailto = encode(mailto_.encode('utf-8')).replace('\n', '')
-                sline = sline.replace(mailto_, b64_mailto.decode('utf-8'))
-
-            emails_ = find_email_addresses(sline)
-            for email_ in emails_:
-                b64_addr = encode(email_.encode('utf-8')).replace('\n', '')
-                sline = sline.replace(email_, b64_addr.decode('utf-8'))
-
-            # add line (encoded or not)
-            final_output.append(sline)
-        self.content = '\n'.join(final_output)
-        return self
-
-    def find_mailtos(self):
-        """ finds all instances of:
-                <a class='wp-address' href='mailto:email@adress.com'></a>
-            for hide_email().
-            returns a list of href targets:
-                ['mailto:name@test.com', 'mailto:name2@test2.com'],
-            returns empty list on failure.
-
-        """
-
-        # regex pattern for finding href tag with
-        # 'mailto:??????' and a wp-address class
-        s_mailto = ''.join([r'<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]wp-address[\'"]',
-                            r'[ ]href[ ]?\=[ ]?["\']((mailto:)?',
-                            re_email_address,
-                            ')',
-                            ])
-
-        re_pattern = re.compile(s_mailto)
-        raw_matches = re.findall(re_pattern, self.content)
-        mailtos_ = []
-        for groups_ in raw_matches:
-            # first item is the mailto: line we want.
-            mailtos_.append(groups_[0])
-        return mailtos_
-
-    def find_email_addresses(self):
-        """ finds all instances of email@addresses.com inside a
-            wp-address classed tag. for hide_email()
-        """
-
-        # regex pattern for locating an email address.
-        s_addr = ''.join([r'(<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]',
-                          r'wp-address[\'"])(.+)?[ >](',
-                          re_email_address,
-                          ')',
-                          ])
-        re_pattern = re.compile(s_addr)
-        raw_matches = re.findall(re_pattern, self.content)
-        addresses_ = []
-        for groups_ in raw_matches:
-            # the last item is the address we want
-            addresses_.append(groups_[-1])
-        return addresses_
 
 
 # These are used on the About page,
@@ -447,6 +85,82 @@ auto_link_list = (
 # Module Functions (not everything can be an html_content(), or should be.)
 
 
+def apply_link_line(link_pat, link_href, attr_string, line):
+    """ Try applying an auto-link pattern and href to a single line.
+        If the link_pat matches, apply the auto-link and return it.
+        If the pattern does not match, return None.
+        On errors, log the error and return None.
+        Arguments:
+            link_pat     : Non-compiled regex pattern to match with.
+                           Example:
+            link_href    : Link href for the auto-link.
+                           Example: "https://welbornprod.com"
+            attr_string  : Fully formed attribute string for the link element.
+                           Example: 'target="_blank"'
+            line         : Line to test and auto-link.
+    """
+    link_pat = r'[^\>]' + link_pat + r'[^\<]'
+    try:
+        re_pat = re.compile(link_pat)
+    except re.error as exre:
+        log.error(
+            'Invalid auto-link pattern: {}\n{}'.format(link_pat, exre)
+        )
+        return None
+
+    try:
+        re_match = re_pat.search(line)
+        if re_match is None:
+            return None
+
+        if not re_match.groups():
+            # use only 1 group
+            link_text = strip_all(
+                re_match.group(),
+                ' .,\'";:?/\\`~!@#$%^&*()_+-={}[]|')
+        else:
+            matchgroupdict = re_match.groupdict()
+            # use first group dict key if found
+            if matchgroupdict:
+                first_key = list(matchgroupdict)[0]
+                link_text = matchgroupdict[first_key]
+            else:
+                # use first non-named group
+                link_text = re_match.groups()[0]
+
+        # Replace the text with a link
+        new_link = ''.join([
+            '<a href="{}" '.format(link_href),
+            'title="{}" '.format(link_text),
+            '{}>'.format(attr_string),
+            '{}</a>'.format(link_text),
+        ])
+        newline = line.replace(link_text, new_link)
+        return newline
+    except Exception as ex:
+        log.error(
+            'Error in apply_link_line(): {}\n{}'.format(link_pat, ex))
+        return None
+
+
+def attrstr_from_dict(d):
+    """ Return a string of element attributes from dict keys and values.
+        Example:
+            s = attrstr_from_dict({'class': 'test', 'target': '_blank'})
+            # Returns: 'class="test" target="blank"'
+        Leading underscores (_) are trimmed from key names to make this
+        possible:
+            def func(**kwargs):
+                print(attrstr_from_dict(kwargs))
+            func(_class='test', target='_blank')
+            # ..where 'class' is a reserved word, and can't be used like this.
+    """
+    # If used in case None is passed in.
+    if d:
+        return ''.join((' {}="{}"'.format(k.lstrip('_'), d[k]) for k in d))
+    return ''
+
+
 def auto_link(content, link_list, **kwargs):
     """ Grabs words from HTML content and makes them links.
         see: auto_link_line()
@@ -456,7 +170,7 @@ def auto_link(content, link_list, **kwargs):
             All keyword arguments are added as attributes to the link.
             For python keywords like 'class',
             just put a _ in front or behind it.
-            So _class="my-link-class" becomes <a href="" class="my-link-class">
+            So _class="my-link-class" -> <a href="" class="my-link-class">
             You can also just pass a dict as keyword args like this:
                 my_attrs = {"target": "_blank", "class": "my-class"}
                 auto_link(mycontent, my_link_list, **my_attrs)s
@@ -526,46 +240,13 @@ def auto_link_line(line, link_list, **kwargs):
         return line
 
     # build attributes, accepts '_class' as a 'class' attribute.
-    make_attrstr = lambda k, v: ' {}="{}"'.format(k.strip('_'), v)
-
-    attr_strings = [make_attrstr(k, v) for k, v in kwargs.items()]
-    attr_string = ''.join(attr_strings) if len(attr_strings) > 0 else ''
+    attr_string = attrstr_from_dict(kwargs)
     # replace text with links
     for link_pat, link_href in link_list:
-        try:
-            link_pat = r'[^\>]' + link_pat + r'[^\<]'
-            re_pat = re.compile(link_pat)
-            re_match = re_pat.search(line)
-            if re_match is None:
-                continue
-
-            if not re_match.groups():
-                # use only 1 group
-                link_text = strip_all(
-                    re_match.group(),
-                    ' .,\'";:?/\\`~!@#$%^&*()_+-={}[]|')
-            else:
-                matchgroupdict = re_match.groupdict()
-                # use first group dict key if found
-                if matchgroupdict:
-                    first_key = list(matchgroupdict)[0]
-                    link_text = matchgroupdict[first_key]
-                else:
-                    # use first non-named group
-                    link_text = re_match.groups()[0]
-
-            # Replace the text with a link
-            new_link = ''.join([
-                '<a href="{}" '.format(link_href),
-                'title="{}" '.format(link_text),
-                '{}>'.format(attr_string),
-                '{}</a>'.format(link_text),
-            ])
-            line = line.replace(link_text, new_link)
-        except Exception as ex:
-            log.error('Error in auto_link_line(): {}\n{}'.format(link_pat,
-                                                                 ex))
-            return line
+        newline = apply_link_line(link_pat, link_href, attr_string, line)
+        if newline is not None:
+            return newline
+    # No matches, the line is untouched.
     return line
 
 
@@ -576,8 +257,8 @@ def check_replacement(source_string, target_replacement):
         it fixes the target to match.
         if nothing is needed,
         it returns the original target_replacement string.
-        if the target_replacement isn't in the source_string, it returns false,
-        so use [if check_replacement()],
+        if the target_replacement isn't in the source_string,
+        it returns false, so use [if check_replacement()],
         not [if check_replacement() in source_string].
     """
 
@@ -605,6 +286,9 @@ def clean_html(source_string):
     if source_string is None:
         log.debug('Final HTML for page was None!')
         return ''
+    elif not source_string:
+        log.debug('Final HTML for page was empty!')
+        return ''
 
     return remove_whitespace(
         remove_comments(
@@ -619,19 +303,18 @@ def fatal_error_page(message=None):
         Arguments:
             message  : Optional extra message for response.
     """
-    s = ('<html><head><title>Welborn Prod. - Fatal Error</title>',
-         '<style>body {{font-family: Arial, sans-serif}}'
-         '.header {{font-size:3em; color: blue;}}'
-         '.msg {{font-size:1em; color: darkgrey;}}</style>'
-         '<body><div class="header">',
-         'Welborn Productions',
-         '</div>',
-         '<div class="msg">',
-         '{}',
-         '</div>')
-    if message is None:
-        message = 'Something has gone horribly wrong with the site.'
-    return '\n'.join(s).format(message)
+    return '\n'.join((
+        '<html><head><title>Welborn Prod. - Fatal Error</title>',
+        '<style>body {{font-family: Arial, sans-serif}}'
+        '.header {{font-size:3em; color: blue;}}'
+        '.msg {{font-size:1em; color: darkgrey;}}</style>'
+        '<body><div class="header">',
+        'Welborn Productions',
+        '</div>',
+        '<div class="msg">',
+        '{}',
+        '</div>')).format(
+            message or 'Something has gone horribly wrong with the site.')
 
 
 def filter_tidylib_errors(errortext):
@@ -684,18 +367,19 @@ def find_mailtos(source_string):
 
     # regex pattern for finding href tag with 'mailto:??????'
     # and a wp-address class
-    s_mailto = ''.join([r'<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]wp-address',
-                        r'[\'"][ ]href[ ]?\=[ ]?["\']((mailto:)?',
-                        re_email_address,
-                        ')',
-                        ])
+    s_mailto = ''.join([
+        r'<\w+(?!>)[ ]class[ ]?\=[ ]?[\'"]wp-address',
+        r'[\'"][ ]href[ ]?\=[ ]?["\']((mailto:)?',
+        re_email_address,
+        ')',
+    ])
     re_pattern = re.compile(s_mailto)
     raw_matches = re.findall(re_pattern, source_string)
-    mailtos_ = []
+    mailtos = []
     for groups_ in raw_matches:
         # first item is the mailto: line we want.
-        mailtos_.append(groups_[0])
-    return mailtos_
+        mailtos.append(groups_[0])
+    return mailtos
 
 
 def fix_open_tags(source):
@@ -722,9 +406,7 @@ def fix_p_spaces(source_string):
     # no nones allowed
     if source_string is None:
         return source_string
-    # fix for html_content()
-    if isinstance(source_string, html_content):
-        source_string = source_string.content
+
     # get lines
     if '\n' in source_string:
         slines = source_string.split('\n')
@@ -761,6 +443,46 @@ def fix_p_spaces(source_string):
 
     # finished
     return '\n'.join(modified_lines)
+
+
+def get_context(context, request=None):
+    """ Return a Context() object from a dict.
+        If request is passed in, a RequestContext() is used.
+        On errors, log the error and return None.
+    """
+    # This is already a Context or RequestContext?
+    # It wouldn't hurt to return a Context(Context(context)),
+    # but there is no reason for all of this processing if that's the case.
+    if isinstance(context, (Context, RequestContext)):
+        return context
+
+    # Try creating a request context.
+    try:
+        if not context:
+            # Blank context object, with or without a request.
+            if request is not None:
+                return RequestContext(request, {})
+            return Context({'request': request})
+
+        if not request:
+            # Context with content, no Request.
+            if context.get('request', None) is None:
+                context['request'] = request
+            return Context(context)
+
+        # RequestContext with content.
+        return RequestContext(request, context)
+    except Exception as ex:
+        log.error('\n'.join((
+            'Error creating request context!',
+            '  Context: {c}',
+            '  Request: {r}',
+            '    Error: {e}'
+        )).format(
+            c=context,
+            r=request,
+            e=ex))
+        return None
 
 
 def get_html_file(wpobj):
@@ -832,8 +554,11 @@ def get_screenshots(images_dir, noscript_image=None):
         return None
 
     # Help functions for building screenshots.
-    relative_img = lambda filename: os.path.join(relative_dir, filename)
-    good_format = lambda filename: (filename[-4:] in formats)
+    def relative_img(filename):
+        return os.path.join(relative_dir, filename)
+
+    def good_format(filename):
+        return filename[-4:] in formats
 
     # Build acceptable pics list
     good_pics = [relative_img(f) for f in all_files if good_format(f)]
@@ -855,6 +580,18 @@ def get_screenshots(images_dir, noscript_image=None):
     return screenshots
 
 
+def get_template(template_name):
+    """ Return a Template by name.
+        On errors, log the error and return None.
+    """
+    try:
+        tmplate = loader.get_template(template_name)
+    except TemplateDoesNotExist:
+        log.error('Unknown template name: {}'.format(template_name))
+        return None
+    return tmplate
+
+
 def hide_email(source_string):
     """ base64 encodes all email addresses for use with wptool.js
         reveal functions.
@@ -873,17 +610,17 @@ def hide_email(source_string):
 
     final_output = []
     for sline in slines:
-        mailtos_ = find_mailtos(sline)
-        for mailto_ in mailtos_:
-            b64_mailto = encode(mailto_.encode('utf-8'))
-            sline = sline.replace(mailto_,
-                                  b64_mailto.decode('utf-8').replace('\n', ''))
+        for mailto in find_mailtos(sline):
+            b64_mailto = encode(mailto.encode('utf-8'))
+            sline = sline.replace(
+                mailto,
+                b64_mailto.decode('utf-8').replace('\n', ''))
 
-        emails_ = find_email_addresses(sline)
-        for email_ in emails_:
-            b64_addr = encode(email_.encode('utf-8'))
-            sline = sline.replace(email_,
-                                  b64_addr.decode('utf-8').replace('\n', ''))
+        for email in find_email_addresses(sline):
+            b64_addr = encode(email.encode('utf-8'))
+            sline = sline.replace(
+                email,
+                b64_addr.decode('utf-8').replace('\n', ''))
 
         # add line (encoded or not)
         final_output.append(sline)
@@ -897,82 +634,67 @@ def highlight(content):
             content))
 
 
-def load_html_file(sfile, request=None, context=None, template=None):
-    """ Trys loading a template by name,
-        If context is passed it is used to render the template.
-        If a request was passed then RequestContext is used,
-        otherwise Context is used.
-        If no template is found, it trys loading html content from file.
-        returns string with html content.
-
+def load_html_file(filename, request=None, context=None, template=None):
+    """ Try rendering a file as a Template, if that fails return the raw
+        file content.
         This can all be short-circuited by passing in a pre-loaded template
-        with: template=load.get_template(templatename)
+        with: template=loader.get_template(templatename)
+        Arguments:
+            filename  : File name for template/html file.
+            request   : Request() to build RequestContext()
+            context   : Context(), RequestContext() or dict for template.
+                        If request is passed with a dict, a RequestContext()
+                        is built.
+                        If a dict is passed a Context() is built.
+            template  : Overrides all template loading and file opening.
+                        (filename is useless if template is passed)
+                        The template is rendered with context and request.
     """
 
-    if template is None:
-        try:
-            template = loader.get_template(sfile)
-        except TemplateDoesNotExist:
-            # It wasn't a template name.
-            log.debug('Not a template: {}'.format(sfile))
-
     if template:
-        # Found template for this file, use it.
-        if context:
-            if request:
-                # Try creating a request context.
-                try:
-                    contextobj = RequestContext(request, context)
-                except Exception as ex:
-                    log.error((
-                        'Error creating request context from: {}\n{}'
-                    ).format(request, ex))
-                    return ''
-            else:
-                # No request, use normal context.
-                contextobj = Context(context)
-        else:
-            # No context dict given, use empty context.
-            contextobj = Context({})
-
-        # Have context, try rendering.
-        try:
-            content = template.render(contextobj)
-            # Good content, return it.
-            return content
-        except Exception as ex:
-            log.error(''.join([
-                'Error rendering template: {} '.format(sfile),
-                'Context: {}'.format(context),
-                '\n{}'.format(ex),
-            ]))
-            return ''
+        # A template was already passed in.
+        return render_template(template, context=context, request=request)
+    # Try rendering file as a template.
+    content = load_html_template(filename, request=request, context=context)
+    if content:
+        return content
 
     # no template, probably a filename. check it:
-    log.debug('No template, falling back to HTML: {}'.format(sfile))
-    if not os.path.isfile(sfile):
+    log.debug('No template, falling back to HTML: {}'.format(filename))
+    if not os.path.isfile(filename):
         # try getting absolute path
-        spath = utilities.get_absolute_path(sfile)
+        spath = utilities.get_absolute_path(filename)
         if os.path.isfile(spath):
-            sfile = spath
+            filename = spath
         else:
             # no file found.
-            log.debug('No file found at: {}'.format(sfile))
+            log.debug('No file found at: {}'.format(filename))
             return ''
 
     try:
-        with open(sfile) as fhtml:
+        with open(filename) as fhtml:
             # Successful file open, return the contents.
             return fhtml.read()
     except IOError as exIO:
-        log.error('Cannot open file: {}\n{}'.format(sfile, exIO))
+        log.error('Cannot open file: {}\n{}'.format(filename, exIO))
     except OSError as exOS:
         log.error((
             'Possible bad permissions opening file: {}\n{}'
-        ).format(sfile, exOS))
+        ).format(filename, exOS))
     except Exception as ex:
-        log.error('General error opening file: {}\n{}'.format(sfile, ex))
+        log.error('General error opening file: {}\n{}'.format(filename, ex))
     return ''
+
+
+def load_html_template(sfile, request=None, context=None):
+    """ Try rendering an html file as a Template.
+        Return the content on success, or None on failure.
+    """
+
+    tmplate = get_template(sfile)
+    if tmplate is not None:
+        return render_template(tmplate, context=context, request=request)
+    return None
 
 
 def remove_comments(source_string):
@@ -1002,10 +724,13 @@ def remove_newlines(source):
         Skips <pre> and <script> blocks.
         DEPRECATED
     """
-    is_skipstart = lambda s: ('<pre' in s) or ('<script' in s)
-    is_skipend = lambda s: ('</pre>' in s) or ('</script>' in s)
+    def is_skipstart(s):
+        return ('<pre' in s) or ('<script' in s)
+
+    def is_skipend(s):
+        return ('</pre>' in s) or ('</script>' in s)
     newline = '{}\n'.format
-    noline = lambda s: s.replace('\n', '')
+
     in_skip = False
     output = []
     for sline in source.split('\n'):
@@ -1014,7 +739,7 @@ def remove_newlines(source):
         if is_skipstart(sline_lower):
             in_skip = True
         # Add with newline if its a skipped tag, otherwise no newlines.
-        output.append(newline(sline) if in_skip else noline(sline))
+        output.append(newline(sline) if in_skip else sline.replace('\n', ''))
         # end of skipped tag
         if is_skipend(sline_lower):
             in_skip = False
@@ -1027,8 +752,12 @@ def remove_whitespace(source):
         and removes blank lines.
         This ignores <pre> blocks, to keep <pre> formatting.
     """
-    is_skipstart = lambda s: '<pre' in s
-    is_skipend = lambda s: '</pre>' in s
+    def is_skipstart(s):
+        return '<pre' in s
+
+    def is_skipend(s):
+        return '</pre>' in s
+
     in_skip = False
     output = []
     for line in source.split('\n'):
@@ -1047,29 +776,31 @@ def remove_whitespace(source):
 
 
 def render_clean(template_name, **kwargs):
-    """ runs render_html() through clean_html().
-        renders template by name and context dict,
-        RequestContext is used if 'request' kwarg is present.
+    """ Runs render_html() through clean_html().
+        Renders template by name and context dict,
+        RequestContext is used if 'request' kwarg is passed in.
         Keyword Arguments (same as render_html()):
-              context      : dict to be used by Context() or RequestContext()
-                   request : HttpRequest() object passed on to RequestContext()
+                   context : dict to be used by Context() or RequestContext()
+                   request : HttpRequest() object passed to RequestContext()
                  link_list : link_list to be used with htmltools.auto_link()
                              Default: False
             auto_link_args : A dict containing kw arguments for auto_link()
                              Default: {}
             For these arguments, see: htmltools.render_html()
         passes resulting html through clean_html(),
-        returns resulting html string.
+        Returns resulting html string.
     """
 
     return clean_html(render_html(template_name, **kwargs))
 
 
 def render_html(template_name, **kwargs):
-    """ renders template by name and context dict,
-        returns the resulting html.
+    """ Renders template by name and context dict,
+        Returns the resulting html.
+        This differs from load_html_file(), where render_html() must use a
+        template name, load_html_file() will fall back to raw file content.
         Keyword arguments are:
-            context      : Context or RequestContext dict to be used
+                 context : Context or RequestContext dict to be used
                            RequestContext is used if a request is passed in
                            with 'request' kwarg.
                            Default: {}
@@ -1081,11 +812,14 @@ def render_html(template_name, **kwargs):
                            Default: False (disables auto_link())
           auto_link_args : dict containing arguments for auto_link()
                            ex:
-                           render_html("mytemplate",
-                                       link_list=my_link_list,
-                                       auto_link_args={"target":"_blank",
-                                                       "class":"my-link-class",
-                                                       })
+                           render_html(
+                                'path/mytemplate.html',
+                                link_list=my_link_list,
+                                auto_link_args={
+                                    'target':'_blank',
+                                    'class':'my-link-class',
+                                }
+                            )
                            Default: {}
     """
     context = kwargs.get('context', kwargs.get('context_dict', {}))
@@ -1093,29 +827,48 @@ def render_html(template_name, **kwargs):
     link_list = kwargs.get('link_list', None)
     auto_link_args = kwargs.get('auto_link_args', {})
 
-    try:
-        tmplate = loader.get_template(template_name)
-        if isinstance(context, dict):
-            if request:
-                contextobj = RequestContext(request, context)
-            else:
-                contextobj = Context(context)
-        else:
-            # whole Context was passed
-            contextobj = context
-
-        rendered = tmplate.render(contextobj)
-        if link_list:
-            rendered = auto_link(rendered, link_list, **auto_link_args)
-        return rendered
-    except Exception:
-        errstr = 'Unable to render html template'
-        if request:
-            errstr = '{} with request context'.format(errstr)
-        message = '{}: {}'.format(errstr, template_name)
-        utilities.logtraceback(log.error, message=message)
-
+    tmplate = get_template(template_name)
+    if tmplate is None:
         return None
+
+    content = render_template(tmplate, context=context, request=request)
+    if content:
+        if link_list:
+            content = auto_link(content, link_list, **auto_link_args)
+        return content
+
+    return None
+
+
+def render_template(tmplate, context=None, request=None):
+    """ Render a Template object with a context.
+        If a request is passed in, a RequestContext is used.
+        On errors, log the error and return None.
+    """
+    contextobj = get_context(context, request=request)
+    if contextobj is None:
+        # There was an error grabbing a Context, bail out.
+        return None
+    # Have context, try rendering.
+    try:
+        content = tmplate.render(contextobj)
+    except Exception as ex:
+        errmsg = '\n'.join((
+            'Error rendering template: {name} ',
+            '  Context: {context}',
+            '  Request: {request}'
+            '    Error: {err}'
+        )).format(
+            name=tmplate.origin.name,
+            context=context,
+            request=request,
+            err=ex
+        )
+        utilities.logtraceback(log.error, errmsg)
+        return None
+    else:
+        # Good content, return it.
+        return content
 
 
 def strip_all(s, strip_chars):
@@ -1125,7 +878,7 @@ def strip_all(s, strip_chars):
         strip_all('xzythisyxz', 'zyx') == 'this'
 
         # The f and d are blocking the middle o's from being removed.
-        strip_all('omnfoodnmo', 'mno') == 'food'
+        strip_all('omnfoodnmom', 'mno') == 'food'
     """
     if not s:
         return s

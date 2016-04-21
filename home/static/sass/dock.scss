@@ -1,32 +1,52 @@
 @import 'welbornprod';
 
+// scss-lint:disable QualifyingElement
 a.dock-item {
-    position: absolute;
-    display: block;
-    width: 50px;
     bottom: 0;
+    color: $whitemain;
+    display: block;
     font-family: $fontsnormal;
     font-weight: bold;
+    position: absolute;
     text-align: center;
     text-decoration: none;
-    color: white;
     text-shadow: $shadowtext;
+    width: 50px;
+
+    &.noscript {
+        float: left;
+        margin-right: 30px;
+        position: relative;
+    }
+
+    &.noscript:hover,
+    &.noscript:active {
+        color: $greymain;
+    }
+}
+
+.dock-item.noscript span {
+    display: block;
 }
 
 .dock-item span {
     display: none;
-    text-transform: lowercase;
     padding-left: 20px;
+    text-transform: lowercase;
 }
 
 .dock-item img {
     border: 0;
-    margin: 5px 10px 0px;
+    margin: 5px 10px 0;
     width: 100%;
 }
 
 #dock {
+    display: inline-block;
     margin-top: 110px;
     position: relative;
-    display: inline-block;
+
+    &.noscript {
+        margin-top: 0;
+    }
 }

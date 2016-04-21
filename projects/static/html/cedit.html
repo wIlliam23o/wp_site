@@ -1,7 +1,7 @@
 {% load wp_nodes %}
 {% load projects_tags %}
 
-<div class='wp-block feature-list'>
+<div class='wp-block feature-list' id='about'>
 	<!-- Description -->
 	<p>
 		Linux command-line tool that opens files with your favorite editor,
@@ -22,15 +22,15 @@
 
 <!-- Download -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='download'>
 		<h3 class='title'>Download</h3>
 	</div>
 	{% downloads project %}
 </div>
 
 <!-- Source -->
-<div class='wp-block feature-list' id='source'>
-	<div class='title-box'>
+<div class='wp-block feature-list'>
+	<div class='title-box' id='source'>
 		<h3 class='title'>Source Code</h3>
 	</div>
 	<p>
@@ -45,11 +45,11 @@
 
 <!-- Usage -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='usage'>
 		<h3 class='title'>Usage</h3>
 	</div>
 
-	<pre class='bash'>
+	{% acesnippet "cedit-usage-example" ".bash" %}
 cedit <filename>
 # ...to open a file.
 
@@ -59,20 +59,20 @@ cedit --list
 cedit --editor path_to_editor
 cedit --elevcmd path_to_elevcmd
 # ...sets your favorite commands so cedit will remember what to use.
-	</pre>
+	{% endacesnippet %}
 
 	<p>
 		If your favorite editor isn't in the same directory as cedit or /usr/bin, then
 		you will need to set the editor like this:
-		<pre class='bash'>
+		{% acesnippet "cedit-abspath-example" ".bash" %}
 cedit -e /my/path/to/myeditor
-		</pre>
+		{% endacesnippet %}
 	</p>
 </div>
 
 <!-- Installation -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='installation'>
 		<h3 class='title'>Installation</h3>
 	</div>
 	<p>
@@ -81,27 +81,27 @@ cedit -e /my/path/to/myeditor
 	<p>
 		To install cedit in /usr/bin (for all users) run:
     </p>
-    <pre class='bash'>
+    {% acesnippet "cedit-install-example" ".bash" %}
 sudo ./cedit.py -i
-	</pre>
+	{% endacesnippet %}
 
 	<p>
 		To install cedit for a single user run:
    	</p>
-   	<pre class='bash'>
+   	{% acesnippet "cedit-install-user-example" ".bash" %}
 ./cedit.py --install --user
 
 # this will try to install cedit to /home/USERNAME/.local/bin
 # you will need this directory to exist, and be included in your PATH variable.
-	</pre>
+	{% endacesnippet %}
 	<p>
 		If everything went well, or you manually created the symlink yourself, you should be able to run
 		cedit like this from anywhere:
     </p>
-    <pre class='bash'>
+    {% acesnippet "cedit-run-example" ".bash" %}
 cedit <filename>
 # with no .py extension or ./ prefix...
-	</pre>
+	{% endacesnippet %}
 </div>
 
 <!-- With no settings -->
@@ -135,16 +135,20 @@ cedit <filename>
 		Without any settings, if you have both <span class='B'>kate</span> and
 		<span class='B'>kdesudo</span> installed, cedit will
 		open your 'root-permissions' file by running:<br>
-		[bash]kdesudo kate filename[/bash]
+		{% acesnippet "root-perm-example" ".txt" %}
+			kdesudo kate filename
+		{% endacesnippet %}
 		<br>
 		If the file doesn't require root permissions then just:<br>
-		[bash]kate filename[/bash]
+		{% acesnippet "normal-perm-example" ".txt" %}
+			kate filename
+		{% endacesnippet %}
 	</p>
 </div>
 
 <!-- Updates -->
 <div class='wp-block feature-list'>
-	<div class='title-box'>
+	<div class='title-box' id='updates'>
 		<h3 class='title'>Updates</h3>
 	</div>
 	<div class='update-box'>
@@ -186,20 +190,3 @@ cedit <filename>
 		</ul>
 	</div>
 </div>
-
-<!-- Future -->
-<div class='wp-block feature-list'>
-	<div class='title-box'>
-		<h3 class='title'>Future</h3>
-	</div>
-	<p>
-		There may be plans to allow different editors to be chosen for different file-types.
-		Right now cedit works as expected, as long as you only use one editor most often.
-		I may add the ability to set favorite editors for favorite file-types like:
-	</p>
-	<pre class='bash'>
-cedit --set .py,geany
-	</pre>
-</div>
-
-

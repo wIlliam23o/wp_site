@@ -20,15 +20,15 @@ import lxml.html
 # Local tools
 from wp_main.utilities import utilities
 from wp_main.utilities import htmltools
-log = logging.getLogger('wp.blog.tools')
 # Blog Info
 from blogger.models import wp_blog
+log = logging.getLogger('wp.blog.tools')
 
 # Fix Python3 (until I remove py2 completely)
 if settings.SYSVERSION[0] == '3':
     unicode = str
 
-# Defaults (if nothing is passed to these functions)
+# Defaults (if nothing is passed to the listing functions)
 DEFAULT_ORDERBY = '-posted_datetime'
 # number of posts per page.
 DEFAULT_MAXPOSTS = 25
@@ -166,70 +166,69 @@ def get_post_body_short(post, max_text_length=None, max_text_lines=None):
     return new_body
 
 
-def get_post_byany(_identifier):
+def get_post_byany(identifier):
     """ retrieve blog post by any identifier, returns None on failure """
 
     # by id
     try:
-        id_ = int(_identifier)
-        post_ = utilities.get_object_safe(wp_blog.objects, id=id_)
+        postid = int(identifier)
+        post = utilities.get_object_safe(wp_blog.objects, id=postid)
     except ValueError:
-        post_ = None
+        post = None
 
     # by title
-    if post_ is None:
-        post_ = utilities.get_object_safe(wp_blog.objects, title=_identifier)
+    if post is None:
+        post = utilities.get_object_safe(wp_blog.objects, title=identifier)
 
     # by slug
-    if post_ is None:
+    if post is None:
         # id and title failed, try slug.
         # remove html ending
-        if _identifier.lower().endswith(".html"):
-            _identifier = _identifier[:-5]
-        if _identifier.lower().endswith(".htm"):
-            _identifier = _identifier[:-4]
+        if identifier.lower().endswith('.html'):
+            identifier = identifier[:-5]
+        if identifier.lower().endswith('.htm'):
+            identifier = identifier[:-4]
 
-        # try quick slug id. (Case-insensitive because all slugs are lowercase)
-        post_ = utilities.get_object_safe(wp_blog.objects,
-                                          slug=_identifier.lower())
+        # try quick slug id. (Case-insensitive because slugs are lowercase)
+        post = utilities.get_object_safe(
+            wp_blog.objects,
+            slug=identifier.lower())
 
-    if post_ is None:
-        return post_
-    else:
-        return post_ if not post_.disabled else None
+    if post is None:
+        return post
+
+    return post if not post.disabled else None
 
 
-def get_posts_by_tag(_tag, starting_index=0, max_posts=-1, order_by=None):
-    """ retrieve all posts with tag_ as a tag. """
+def get_posts_by_tag(tag, starting_index=0, max_posts=-1, order_by=None):
+    """ Retrieve all non-disaabled posts with a certain tag.
+        Returns a list of wp_blog.
+        Arguments:
+                      tag  : Tag to search for (str).
+            starting_index : Index to start list at (triming for pagination).
+                 max_posts : Maximum length for post list (for pagination).
+                  order_by : How to order the posts (DEFAULT_ORDERBY).
+    """
 
     if order_by is None:
         order_by = DEFAULT_ORDERBY
-    if ',' in _tag:
-        _tag = _tag.replace(',', ' ')
+    if ',' in tag:
+        tag = tag.replace(',', ' ')
 
-    _tag = utilities.trim_special(_tag)
-
-    if ' ' in _tag:
-        tag_queries = _tag.split(' ')
-    else:
-        tag_queries = [_tag]
+    tag = utilities.trim_special(tag)
+    tag_queries = tag.split()
 
     # get all posts with these tags.
     found = []
-    for post_ in wp_blog.objects.order_by(order_by):
-        if post_.disabled:
-            continue
-        post_tags = post_.tags.replace(',', ' ')
+    for post in wp_blog.objects.filter(disabled=False).order_by(order_by):
+        post_tags = post.tags.replace(',', ' ')
         # get list of post tags
-        if ' ' in post_tags:
-            post_tag_list = post_tags.split(' ')
-        else:
-            post_tag_list = [post_tags]
+        post_tag_list = post_tags.split()
+
         # find tag queries: whole word, case sensative match.
         for tag_name in tag_queries:
-            if tag_name in post_tag_list:
-                if post_ not in found:
-                    found.append(post_)
+            if (tag_name in post_tag_list) and (post not in found):
+                found.append(post)
 
     # trim for optional pagination.
     return utilities.slice_list(found, starting_index, max_posts)
@@ -312,9 +311,19 @@ def get_tag_list(post_object_or_tag_string):
     return tag_list
 
 
-def get_tags_post_count():
-    """ retrieve the number of posts each tag has.
-        returns a dict containing tag_name:count
+def get_tags():
+    """ Retrieve a list of all WpTags, with counts and font sizes for each.
+    """
+    # build list of tags and info for tags.html template
+    return [
+        WpTag(name=name, count=count)
+        for name, count in get_tags_count().items()
+    ]
+
+
+def get_tags_count():
+    """ Retrieve the number of posts each tag has.
+        Returns a dict containing {'tag_name': count}
     """
 
     tag_counts = {}
@@ -322,25 +331,20 @@ def get_tags_post_count():
     for post in wp_blog.objects.filter(disabled=False):
         tags = get_tag_list(post)
         for tag in tags:
-            if tag in tag_counts.keys():
-                tag_counts[tag] += 1
-            else:
-                tag_counts[tag] = 1
+            existingcnt = tag_counts.get(tag, 0)
+            tag_counts[tag] = existingcnt + 1
 
     return tag_counts
 
 
-def get_tags_fontsizes(tags_dict=None):
-    """ returns all tag name with font size according to post count.
-        for listing all tags on the tags.html page.
-        returns a dict with {tag_name:font size} (in em's)
-    """
+class WpTag():
 
-    if not tags_dict:
-        tags_dict = get_tags_post_count()
-
-    sizemap_max = '2em'
-    # Sizes adjusted for small post count :) Can be changed later.
+    """ tag class for use with the tags.html template and view. """
+    # Maximum font size for a tag.
+    sizemax = '2.0em'
+    # Mininum font size for a tag.
+    sizemin = '0.7em'
+    # Font sizes for count ranges.
     sizemap = {
         (0, 5): '0.7em',
         (4, 10): '0.8em',
@@ -349,29 +353,21 @@ def get_tags_fontsizes(tags_dict=None):
         (69, 100): '1.4em',
         (99, 200): '1.7em',
     }
-    tag_sizes = {}
-    # Loop over all tag names, setting their css size.
-    for tag_name in tags_dict:
-        tag_count = tags_dict[tag_name]
-        # Match the tags count with the proper css size.
-        for minval, maxval in sizemap:
-            sizecss = sizemap[(minval, maxval)]
-            if minval < tag_count < maxval:
-                # Found the proper range, set it and move to the next tag.
-                tag_sizes[tag_name] = sizecss
-                break
-        else:
-            # Count exceeds the current size map, set to max size.
-            tag_sizes[tag_name] = sizemap_max
-    # Return the map of {tag_name: css_size}
-    return tag_sizes
-
-
-class WpTag():
-
-    """ tag class for use with the tags.html template and view. """
 
     def __init__(self, name=None, count=None, size=None):
+        # The tag string (name).
         self.name = name or ''
+        # Number of times this tag has been used.
         self.count = count or 0
-        self.size = size or '1em'
+        # Font size, set manually or automatically by count.
+        self.size = size if (size is not None) else self.get_fontsize(count)
+
+    def get_fontsize(self, count):
+        """ Get the appropriate font size for a tag, based on count. """
+        if count < 0:
+            # Should never happen. :P
+            return self.sizemin
+        for rangeargs in self.sizemap:
+            if count in range(*rangeargs):
+                return self.sizemap[rangeargs]
+        return self.sizemax

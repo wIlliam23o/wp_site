@@ -10,11 +10,10 @@
 
    start date: Mar 29, 2013
 '''
-# For insert_video, building a mimetype from file extension.
 import os
-
 import base64
 import logging
+from collections import Iterable
 
 # Django stuff
 from django import template
@@ -24,6 +23,7 @@ from django.utils.safestring import mark_safe
 
 # Local tools
 from wp_main.utilities import utilities
+from wp_main.utilities.responses import get_request_arg
 from wp_main.utilities.highlighter import WpHighlighter, highlight_codes
 
 # for admin site filtering
@@ -35,15 +35,16 @@ from apps.models import wp_app
 from apps.phonewords.models import pw_result
 from apps.paste.models import wp_paste
 
-log = logging.getLogger('wp.wp_main.tags')
-
-register = template.Library()
 
 # for admin change_list filtering.
 import re
 #                               adminpage type  id     str()
 disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
+
+log = logging.getLogger('wp.wp_main.tags')
+
+register = template.Library()
 
 
 @register.filter
@@ -58,7 +59,7 @@ def b64encode(s):
     return base64.encodebytes(s.encode('utf-8')).decode('utf-8').strip()
 
 
-@register.filter
+@register.filter  # noqa
 def colorize_admin_css(item):
     """ applies class='item-disabled' to admin change_list.results.item
         if the object has .disabled attribute and it is set to True.
@@ -231,6 +232,16 @@ def exceeds_min(value, min_):
 
 
 @register.filter
+def feature(request, featurename):
+    """ Check for feature enabled by request arg.
+        These features are available to all users!
+    """
+    return utilities.parse_bool(
+        get_request_arg(request, featurename, default='')
+    )
+
+
+@register.filter
 def get_browser_style(request):
     """ Get specific browser style based on the user agent. """
     try:
@@ -282,10 +293,10 @@ def get_remote_ip(request):
 
 @register.filter
 def get_time_since(date):
-    """ Shortcut to utilities.get_time_since(date, limit=True). """
+    """ Shortcut to utilities.get_time_since(date, limit=7). """
     if not date:
         return date
-    since = utilities.get_time_since(date, limit=True)
+    since = utilities.get_time_since(date, limit=7)
     return since if ':' in since else '{} ago'.format(since)
 
 
@@ -332,6 +343,8 @@ def insert_video(videourl, posterimg=None, id_=None):
         the project, blog, etc. pages use template-rendering to load.
         see: htmltools.load_html_file()
     """
+    # TODO: This is not used anywhere, and probably shouldn't be.
+    # TODO: Use a Node instead of a Filter, test with PyVal page.
     if not videourl:
         return ''
     # Build arg dict for basehtml.format()
@@ -416,9 +429,15 @@ def is_expired(paste_obj):
 
 @register.filter
 def is_false(value):
-    """ checks python value for false """
+    """ Whether a value is False, not just falsey. """
 
     return (value is False)
+
+
+@register.filter
+def is_localdev(request):
+    """ Return True if the site is running locally. """
+    return settings.SERVER_LOCATION.lower() == 'local'
 
 
 @register.filter
@@ -485,26 +504,73 @@ def is_test_site(request):
 
 
 @register.filter
+def is_textmode(request):
+    """ Return True if the User Agent is from a known text mode browser. """
+    return utilities.is_textmode(request)
+
+
+@register.filter
 def is_true(value):
-    """ checks python value for true """
+    """ Whether a value is actually True, not just truthy. """
 
     return (value is True)
 
 
 @register.filter
-def log_debug(data):
-    """ writes something to the log. str(data) is used on objects,
-        returns original object.
+def is_viewable(request):
+    """ Returns True for the production site and local development.
+        Returns False if:
+            This is a test site and the user is not authenticated.
     """
+    if is_localdev(request):
+        # Local dev is always allowed.
+        return True
+    if is_test_site(request):
+        # Staff only for test site.
+        return is_staff(request)
+    # Production requires no login.
+    return True
 
-    if hasattr(data, 'encode'):
-        s = data
-    elif isinstance(data, (list, tuple)):
-        s = '\n'.join(data)
-    else:
-        s = str(data)
-    log.debug(s)
-    return data
+
+@register.filter
+def log_debug(data):
+    """ Writes something to the debug log. str(data) is used on objects,
+        returns an empty string.
+    """
+    log.debug(log_safe(data))
+    return ''
+
+
+@register.filter
+def log_error(data):
+    """ Writes something to the error log. str(data) is used on objects,
+        returns and empty string.
+    """
+    log.error(log_safe(data))
+    return ''
+
+
+def log_safe(data):
+    """ Ensure an object is stringified for log output.
+        Lists/Tuples are separated by a newline.
+    """
+    if isinstance(data, str):
+        return data.lstrip()
+    elif isinstance(data, bytes):
+        try:
+            s = data.decode()
+        except UnicodeDecodeError:
+            s = repr(data)
+            log.error('Invalid unicode passed in: {}'.format(s))
+        return s
+    elif isinstance(data, Iterable):
+        return '\n'.join(str(x) for x in data)
+
+    log.error('Unsupported type passed: {}\n  {}'.format(
+        type(data).__name__,
+        data
+    ))
+    return str(data).lstrip()
 
 
 @register.filter
@@ -516,6 +582,12 @@ def meta_value(request_object, dictkey):
     except (AttributeError, KeyError):
         val = ''
     return val
+
+
+@register.filter
+def replace(s, replacestr, replacement):
+    """ Replace occurrences of `replacestr` with `replacement`. """
+    return str(s).replace(str(replacestr), str(replacement))
 
 
 @register.filter
@@ -545,18 +617,12 @@ def sortitems(o):
 
 
 @register.filter
-def starts(str_, val_to_check):
-    """ uses str_.startswith() to check a value.
-        returns True if str_.startswith(val_to_check)
+def starts(s, val_to_check):
+    """ uses str.startswith() to check a value.
+        returns True if s.startswith(val_to_check)
     """
 
-    return (str_.startswith(val_to_check))
-
-
-@register.filter
-def str_(object_):
-    """ returns str(object_) to the template. """
-    return str(object_)
+    return s.startswith(val_to_check)
 
 
 @register.filter

@@ -2,17 +2,15 @@
 # -*- coding: utf-8 -*-
 
 '''
-      project: Welborn Productions - Downloads - Admin page
-     @summary: Provides admin site for Downloads app (for things like file_tracker)
-    
-      @author: Christopher Welborn <cj@welbornprod.com>
-@organization: welborn productions <welbornprod.com>
- 
-   start date: May 25, 2013
+    Welborn Productions - Downloads - Admin page
+    Provides admin site for Downloads app (for things like file_tracker)
+
+    -Christopher Welborn 5-25-2013
 '''
 
 from django.contrib import admin
 from downloads.models import file_tracker
+from home.admin import admin_site
 
 
 class wp_downloadsAdmin(admin.ModelAdmin):
@@ -20,5 +18,5 @@ class wp_downloadsAdmin(admin.ModelAdmin):
     #                      }
     pass
 
-    
-admin.site.register(file_tracker, wp_downloadsAdmin)
+
+admin_site.register(file_tracker, wp_downloadsAdmin)
