@@ -325,7 +325,7 @@ var wppaste = {
         wp_content.$blockScrolling = Infinity;
         wp_content.setHighlightActiveLine(true);
         wp_content.setAnimatedScroll(true);
-        wp_content.setFontSize(14);
+        wp_content.setOptions({fontSize: '14px'});
         wp_content.getSession().setUseSoftTabs(true);
         // ensure read-only access to content
         if (doreadonly) {
