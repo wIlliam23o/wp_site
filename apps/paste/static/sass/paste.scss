@@ -7,14 +7,15 @@
 }
 
 .paste-content-full {
-    position: fixed;
-    top: 0;
     bottom: 0;
     left: 0;
+    position: fixed;
     right: 0;
+    top: 0;
 }
 
-#langselect {
+#langselect,
+%langselect {
     @include border-radius-thick(3px);
     background-color: $whitedull;
     color: $greymain;
@@ -23,7 +24,7 @@
 }
 
 #themeselect {
-    @extend #langselect;
+    @extend %langselect;
     color: $greymain;
 }
 
@@ -95,7 +96,8 @@
     display: inline-block;
 }
 
-.paste-lang-label {
+.paste-lang-label,
+%paste-lang-label {
     color: $greylight;
     display: inline-block;
     font-size: $fontsmaller;
@@ -116,7 +118,7 @@
 }
 
 .paste-title-label {
-    @extend .paste-lang-label;
+    @extend %paste-lang-label;
 }
 
 .paste-title-date {
@@ -139,18 +141,19 @@
 }
 
 .paste-author-label {
-    @extend .paste-lang-label;
+    @extend %paste-lang-label;
 }
 
 .paste-private-box {
-  display: inline-block;
+    display: inline-block;
 }
 
 .paste-private-label {
-  @extend .paste-lang-label;
+    @extend %paste-lang-label;
 }
 
-#paste-private-opt {
+#paste-private-opt,
+%paste-private-opt {
     height: 15px;
     margin-left: 0;
     vertical-align: middle;
@@ -173,18 +176,20 @@
 }
 
 .paste-onhold-label {
-    @extend .paste-lang-label;
+    @extend %paste-lang-label;
 }
 
 #paste-onhold-opt {
-    @extend #paste-private-opt;
+    @extend %paste-private-opt;
 }
 
-.paste-date-box {
+.paste-date-box,
+%paste-date-box {
     display: block;
 }
 
-.paste-date {
+.paste-date,
+%paste-date {
     color: $greylight;
     font-family: $fontssmall;
     font-size: $fontsmall;
@@ -192,7 +197,7 @@
 }
 
 .paste-date-label {
-    @extend .paste-lang-label;
+    @extend %paste-lang-label;
 }
 
 .paste-replyto-box {
@@ -200,7 +205,7 @@
 }
 
 .paste-replyto-label {
-    @extend .paste-lang-label;
+    @extend %paste-lang-label;
 }
 
 .paste-replyto-title {
@@ -223,7 +228,7 @@
 }
 
 .paste-theme-label {
-    @extend .paste-lang-label;
+    @extend %paste-lang-label;
     color: $greymain;
     width: auto;
 }
@@ -231,7 +236,7 @@
 
 // * Replies menu styles */
 .vertical-menu-reply-date {
-    @extend .paste-date;
+    @extend %paste-date;
     font-weight: normal;
     padding-left: 5px;
     padding-right: 5px;
@@ -288,7 +293,7 @@
 }
 
 .replies-date-box {
-    @extend .paste-date-box;
+    @extend %paste-date-box;
     margin-left: 10px;
 }
 
@@ -327,7 +332,8 @@
     }
 }
 
-.paste-item-title {
+.paste-item-title,
+%paste-item-title {
     // Title for single reply item.
     color: $bluemain;
     display: inline-block;
@@ -340,12 +346,14 @@
     }
 }
 
-.paste-item-author-label {
-    @extend .paste-item-lang-label;
+.paste-item-author-label,
+%paste-item-author-label {
+    @extend %paste-item-lang-label;
 }
 
-.paste-item-author {
-    @extend .paste-item-lang;
+.paste-item-author,
+%paste-item-author {
+    @extend %paste-item-lang;
 }
 
 .paste-item-replyto-label {
@@ -356,28 +364,32 @@
     margin-left: 10px;
 }
 
-.paste-item-replyto {
-    @extend .paste-item-title;
+.paste-item-replyto,
+%paste-item-replyto {
+    @extend %paste-item-title;
     display: inline-block;
     font-size: $fontsmaller;
 
 }
 
-.paste-item-lang-label {
+.paste-item-lang-label,
+%paste-item-lang-label {
     color: $greylight;
     display: block;
     font-size: $fontsmaller;
 }
 
-.paste-item-lang {
+.paste-item-lang,
+%paste-item-lang {
     color: $bluemain;
     display: inline;
     font-size: $fontsmall;
 }
 
-.paste-item-date {
+.paste-item-date,
+%paste-item-date {
     // Date for single reply item.
-    @extend .paste-date;
+    @extend %paste-date;
     display: block;
 }
 
@@ -433,20 +445,20 @@
 
 .paste-item-reply-title {
     // Title/Link for a reply.
-    @extend .paste-item-replyto;
+    @extend %paste-item-replyto;
 }
 
 .paste-item-reply-author-label {
-    @extend .paste-item-author-label;
+    @extend %paste-item-author-label;
 }
 
 .paste-item-reply-author {
-    @extend .paste-item-author;
+    @extend %paste-item-author;
 }
 
 .paste-item-reply-date {
     // Date of reply.
-    @extend .paste-item-date;
+    @extend %paste-item-date;
     font-size: $fonttiny;
 }
 
