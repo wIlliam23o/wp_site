@@ -451,7 +451,7 @@ var misctools = { //eslint-disable-line no-unused-vars
 **/
 
 /* This code works, despite whatever warnings jshint was spouting. */
-/* eslint: disable */
+/* eslint-disable */
 /* jshint ignore:start */
 var Base64 = {
 
@@ -577,11 +577,11 @@ var Base64 = {
 };
 
 /* jshint ignore:end */
-/*eslint: enable */
+/* eslint-enable */
 /* ------------------------------------------------------------------------- */
 
 /* Rotator settings specific to welbornprod.... */
-var wprotator_settings = { //eslint-disable-line no-unused-vars
+var wprotator_settings = { // eslint-disable-line no-unused-vars
     width: '100%',
     height: 300,
     thumb_width: 24,
