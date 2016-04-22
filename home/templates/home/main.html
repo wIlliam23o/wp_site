@@ -238,10 +238,13 @@
 	 						</div>
 							{# Comments Javascript #}
 	    					<script type='text/javascript'>
-	    						/* jshint ignore: start */
 	      						var disqus_shortname = 'welbornproductions';
+								/* eslint-disable */
+								/* jshint ignore: start */
 								{% block disqusvariables %}
 								{% endblock %}
+								/* jshint ignore: end */
+								/* eslint-enable */
 	        					(function() {
 	          						var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
 	          	 					dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
@@ -253,7 +256,6 @@
 	        						s.src = '//' + disqus_shortname + '.disqus.com/count.js';
 	       				 			(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
 	    							}());
-	        					/* jshint ignore: end */
 	    					</script>
 
 	    					<noscript>
@@ -316,11 +318,11 @@
 							items: 'a',
 							itemsText: 'span',
 							container: '.dock-container',
-							itemWidth: 60, /* 60 */
-							proximity: 60, /* 60 */
-							alignment : 'left', /* left */
-							valign: 'bottom', /* top */
-							halign : 'center' /* left */
+							itemWidth: 60,
+							proximity: 60,
+							alignment : 'left',
+							valign: 'bottom',
+							halign : 'center'
 						}
 					);
 				}
