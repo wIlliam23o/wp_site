@@ -114,11 +114,13 @@ var wptools = {
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     },
 
-    is_hidden : function is_hidden(selector_) {
-        /* determines if element is hidden
-         * by checking the display property */
-        var box_display = $(selector_).css('display');
-        return (box_display === '' || box_display === 'none');
+    is_hidden : function is_hidden(selector) {
+        /*  Determines if element is hidden
+            by checking the display property
+        */
+        var $elem = selector instanceof jQuery ? selector : $(selector);
+        var box_display = $elem.css('display');
+        return (!box_display || box_display === 'none');
     },
 
     is_address : function is_address(input_) {
@@ -129,23 +131,22 @@ var wptools = {
 
     is_emptystr : function is_emptystr(s) {
         if (s) {
-            // we have a string or something. Try replacing whitespace.
-            if (s.replace && (s.replace(/\s/g, '') === '')) {
+            // We have a string or something. Try replacing whitespace.
+            if ((typeof s.replace === 'function') && (s.replace(/\s/g, '') === '')) {
                 // It was an empty string (whitespace doesn't count)
                 return true;
             }
         } else {
-            if (!s) {
-                // Falsey values pass as empty string.
-                return true;
-            }
+            // Falsey values pass as empty string.
+            // A more explicit test would be if (typeof s == 'string' && !s).
+            return true;
         }
         // Was not empty string, or it is some other truthy object.
         return false;
     },
 
     is_mailto : function is_mailto(s) {
-        /* checks for mailto: email address */
+        /* Checks for mailto: email address */
         var mailtopat = /^mailto:[\d\w\.]+@[\d\w\.]+.[\d\w\.]+$/;
         return s.search(mailtopat) > -1;
     },
@@ -210,7 +211,7 @@ var wptools = {
         var $elem = selector instanceof jQuery ? selector : $(selector),
             elpos = $elem.offset().top;
         $(window).scroll(function () {
-            if (!wptools.element_is_hidden(selector)) {
+            if (!wptools.is_hidden(selector)) {
                 var y = $(this).scrollTop();
                 if (y < elpos) {
                     $elem.stop().animate({'top': toppos}, 500);
@@ -337,8 +338,7 @@ var wptools = {
             This also changes the label text for it through
             show_debug() and hide_debug().
         */
-        var $debugbox = $('.debug-box');
-        if (wptools.is_hidden($debugbox)) {
+        if (wptools.is_hidden('.debug-box')) {
             wptools.show_debug();
         } else {
             wptools.hide_debug();
@@ -348,10 +348,10 @@ var wptools = {
 
     trim_whitespace : function trim_whitespace(s) {
         /* Trim all whitespace from a string. */
-        if (s.replace) {
+        if (s.replace && typeof s.replace === 'function') {
             return s.replace(/\s/g, '');
         }
-        // not a string.
+        // Not a string.
         return s;
     },
 
@@ -381,28 +381,30 @@ var wptools = {
         */
         // use default welbornprod address class if no selector is passed.
         selector = selector || '.wp-address';
-        var elems = document.querySelectorAll(selector);
-        var length = elems.length;
-        var i = 0;
-        var href, target;
-        //var i=0;
-        if (length > 0) {
-            for (i; i < length; i++) {
-               // fix href target
-                href = elems[i].getAttribute('href');
-                if (href) {
-                    target = href.valueOf();
-                    if (target) {
-                        elems[i].setAttribute('href', this.wpaddress(target));
-                    }
+        var elems = document.querySelectorAll(selector),
+            length = elems.length,
+            i = 0,
+            href,
+            target;
+        if (!length) {
+            return false;
+        }
+
+        for (i; i < length; i++) {
+           // fix href target
+            href = elems[i].getAttribute('href');
+            if (href) {
+                target = href.valueOf();
+                if (target) {
+                    elems[i].setAttribute('href', this.wpaddress(target));
                 }
-                // fix inner html..
-                //elems[i].innerHTML = this.wpaddress(elems[i].innerHTML);
-                var $e = $(elems[i]);
-                $e.html(this.wpaddress($e.html()));
             }
+            // fix inner html
+            var $e = $(elems[i]);
+            $e.html(this.wpaddress($e.html()));
         }
         return true;
+
     }
 
 
