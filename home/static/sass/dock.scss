@@ -1,52 +1,64 @@
 @import 'welbornprod';
 
 // scss-lint:disable QualifyingElement
-a.dock-item {
-    bottom: 0;
-    color: $whitemain;
-    display: block;
-    font-family: $fontsnormal;
-    font-weight: bold;
-    position: absolute;
-    text-align: center;
-    text-decoration: none;
-    text-shadow: $shadowtext;
-    width: 50px;
+@media screen {
+    a.dock-item {
+        bottom: 0;
+        color: $whitemain;
+        display: block;
+        font-family: $fontsnormal;
+        font-weight: bold;
+        position: absolute;
+        text-align: center;
+        text-decoration: none;
+        text-shadow: $shadowtext;
+        width: 50px;
 
-    &.noscript {
-        float: left;
-        margin-right: 30px;
+        &.noscript {
+            float: left;
+            margin-right: 30px;
+            position: relative;
+        }
+
+        &.noscript:hover,
+        &.noscript:active {
+            color: $greymain;
+        }
+    }
+
+    .dock-item.noscript span {
+        display: block;
+    }
+
+    .dock-item span {
+        display: none;
+        padding-left: 20px;
+        text-transform: lowercase;
+    }
+
+    .dock-item img {
+        border: 0;
+        margin: 5px 10px 0;
+        width: 100%;
+    }
+
+    #dock {
+        display: inline-block;
+        margin-top: 110px;
+        opacity: 0;
         position: relative;
+
+        &.noscript {
+            margin-top: 0;
+        }
     }
 
-    &.noscript:hover,
-    &.noscript:active {
-        color: $greymain;
+    @keyframes fadein {
+        0% { opacity: 0; }
+        100% { opacity: 100%; }
     }
 }
 
-.dock-item.noscript span {
-    display: block;
-}
-
-.dock-item span {
-    display: none;
-    padding-left: 20px;
-    text-transform: lowercase;
-}
-
-.dock-item img {
-    border: 0;
-    margin: 5px 10px 0;
-    width: 100%;
-}
-
-#dock {
-    display: inline-block;
-    margin-top: 110px;
-    position: relative;
-
-    &.noscript {
-        margin-top: 0;
-    }
+@media print {
+    #dock { display: none; }
 }

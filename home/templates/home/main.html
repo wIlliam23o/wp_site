@@ -28,7 +28,7 @@
 	{# CSS Links #}
  	<link type='text/css' rel='stylesheet' href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400|Open+Sans:400italic,600italic,700italic,800italic,400,800,600,700|Ubuntu+Mono:400,700,400italic,700italic'/>
  	<link type='text/css' rel='stylesheet' href='/static/css/main.min.css'/>
-	<link type='text/css' rel='stylesheet' href='/static/css/dock.min.css' media='screen'/>
+	<link type='text/css' rel='stylesheet' href='/static/css/dock.min.css'/>
 	<link type='text/css' rel='stylesheet' href='/static/css/wt-rotator.min.css'/>
 	<link type='text/css' rel='stylesheet' href='/static/css/highlighter.min.css'/>
 	<link type='text/css' rel='stylesheet' href='https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css'/>
@@ -56,11 +56,24 @@
 	{# Dock (No Javascript) #}
 	<noscript>
 		<style type='text/css'>
-			#dock { margin-top: 0; }
-			a.dock-item { position: relative; float: left; margin-right: 30px; }
-			a.dock-item:hover { color: #9c9c9c; }
-			a.dock-item:active { color: #9c9c9c; }
-			.dock-item span { display: block; }
+			@media print {
+				#dock { display: none; }
+			}
+			@media screen {
+				#dock {
+					animation-duration: 1s;
+			        animation-iteration-count: 1;
+			        animation-name: fadein;
+			        animation-timing-function: ease-in;
+					display: inline-block;
+					margin-top: 0;
+					opacity: 1;
+				}
+				a.dock-item { position: relative; float: left; margin-right: 30px; }
+				a.dock-item:hover { color: #9c9c9c; }
+				a.dock-item:active { color: #9c9c9c; }
+				.dock-item span { display: block; }
+			}
 		</style>
 	</noscript>
 
@@ -308,9 +321,9 @@
 	<script type='text/javascript'>
 		/* jshint ignore: start */
 		$(document).ready( function () {
+			var $dock = $('#dock');
 			{# Dock initialize (non-mobile clients) #}
 			{% if not request|is_mobile and not request|feature:"nofisheye" %}
-				var $dock = $('#dock');
 				if ((typeof $dock.Fisheye) == 'function') {
 					$dock.Fisheye(
 						{
@@ -327,6 +340,13 @@
 					);
 				}
 			{% endif %}
+			{# Fade the dock in, now that it has been built. #}
+			{# This does not apply to printed pages. #}
+			if (!window.matchMedia('print').matches) {
+				$dock.animate({'opacity': 1}, 1000, 'linear');
+				$dock.css({'display': 'inline-block'});
+			}
+
 			{# Fix the copyright year. #}
 			var $copyyear = $('#copyright-year');
 			if ($copyyear.length) {
