@@ -61,17 +61,20 @@
 // Custom items (from wp_tags filters or other)
 .item-disabled {
     // Disabled items are grey!
-    color: $greylight;
+    // scss-lint:disable ImportantRule
+    color: $greylight !important;
 
     &.item-expired {
         // expired, already disabled items are red/grey.
-        color: $redlight;
+        // scss-lint:disable ImportantRule
+        color: $redlight !important;
     }
 }
 
 .item-expired {
     // expired pastes/items are red
-    color: $redmain;
+    // scss-lint:disable ImportantRule
+    color: $redmain !important;
 }
 
 .item-onhold {
