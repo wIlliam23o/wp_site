@@ -15,6 +15,7 @@ import traceback
 from datetime import datetime
 
 from django.conf import settings
+from django.db import connection
 # Import modules within this project.
 from django.utils.module_loading import import_module
 
@@ -330,6 +331,28 @@ def get_object_safe(objects, **kwargs):
 
 # Alias for function.
 get_object = get_object_safe
+
+
+def get_postgres_version():
+    """ Retrieve PostgreSQL version from settings if set,
+        otherwise get it from the database and set it in settings.
+    """
+    # May have already fetched it.
+    ver = getattr(settings, 'POSTGRESQL_VERSION', None)
+    if ver:
+        return ver
+    # Grab it from the DB and set it in settings.
+    cur = connection.cursor()
+    cur.execute('SELECT version();')
+    db_ver = cur.fetchone()
+    if db_ver is None:
+        log.error('Unable to retrieve postgres version from database!')
+        settings.POSTGRESQL_VERSION = 'Unknown'
+    else:
+        # Have version from db.
+        settings.POSTGRESQL_VERSION = db_ver[0]
+        log.debug('Postgres version: {}'.format(settings.POSTGRESQL_VERSION))
+    return settings.POSTGRESQL_VERSION
 
 
 def get_relative_path(spath):

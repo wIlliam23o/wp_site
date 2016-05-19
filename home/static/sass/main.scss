@@ -12,8 +12,17 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 }
 
 body {
+    background-attachment: fixed;
+    background-color: black;
+    background-repeat: no-repeat;
+    color: $greydark;
+    font-family: $fontsnormal;
     font-size: 16px;
+    font-weight: normal;
+    height: 100%;
     line-height: 1.2em;
+    margin-bottom: 1px;
+    min-width: 650px; // original: 960px (playing with responsive design)
 }
 
 // Mobile Reset for Doubled Font Headers
@@ -48,18 +57,6 @@ h1, h2, h3, h4, h5, h6, span, p {
 html {
     height: 100%;
     margin-bottom: 1px;
-}
-
-body {
-    background-attachment: fixed;
-    background-color: black;
-    background-repeat: no-repeat;
-    color: $greydark;
-    font-family: $fontsnormal;
-    font-weight: Normal;
-    height: 100%;
-    margin-bottom: 1px;
-    min-width: 650px; // original: 960px (playing with responsive design)
 }
 
 a {
@@ -1210,13 +1207,34 @@ samp {
 
 
 // Global version style.
+.version-info-box {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.version-info-label {
+    color: $bluemain;
+    display: flex;
+    font-size: .9em;
+    padding-right: 5px;
+    text-align: right;
+
+    &:after {
+        color: $blackmain;
+        content: ':';
+    }
+}
+
 .version {
     color: $greydark;
+    display: inline;
     font-family: $fontssmall;
     font-size: $fontsmall;
     font-weight: bold;
     padding-left: 0%;
-    text-align: right;
 }
 
 // Video related styles (video titles, video descriptions)

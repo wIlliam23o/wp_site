@@ -96,6 +96,7 @@ def view_debug(request):
     """ return the django debug info page. """
     context = {
         'djangoversion': get_django_version(),
+        'postgresversion': utilities.get_postgres_version(),
         'sysversion': getattr(settings, 'SYSVERSION', ''),
         'siteversion': getattr(settings, 'SITE_VERSION', ''),
         'siteversionnum': getattr(settings, 'WPVERSION', ''),

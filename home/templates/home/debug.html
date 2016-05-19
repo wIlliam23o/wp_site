@@ -9,18 +9,38 @@
 				<span class="welcome-message-text">
 					Debugging Info:
 				</span>
-				<br>
-				<span class='version'>
-					Django {{ djangoversion }}
-				</span>
-				<br>
-				<span class='version'>
-					Python {{ sysversion }}
-				</span>
-				<br>
-				<span class='version'>
-					Site Version: {{ siteversion }} {% if siteversionnum %}v. {{ siteversionnum }}{% endif %}
-				</span>
+				<div class='version-info-box'>
+					<div class='version-info-label'>
+						Django
+					</div>
+					<div class='version'>
+						{{ djangoversion }}
+					</div>
+				</div>
+				<div class='version-info-box'>
+					<div class='version-info-label'>
+						Python
+					</div>
+					<div class='version'>
+						{{ sysversion }}
+					</div>
+				</div>
+				<div class='version-info-box'>
+					<div class='version-info-label'>
+						Postgres
+					</div>
+					<div class='version'>
+						{{ postgresversion }}
+					</div>
+				</div>
+				<div class='version-info-box'>
+					<div class='version-info-label'>
+						Site Version
+					</div>
+					<div class='version'>
+						{{ siteversion }} {% if siteversionnum %}v. {{ siteversionnum }}{% endif %}
+					</div>
+				</div>
 
 				{# Extra pieces of debug info. #}
 				<div class='debug-info-box'>
