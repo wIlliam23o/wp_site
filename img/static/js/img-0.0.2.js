@@ -42,5 +42,5 @@ var imgtools = { // eslint-disable-line no-unused-vars
             wptools.center($uploadfloater, true);
         }
         $uploadfloater.fadeToggle();
-    }
+    },
 };

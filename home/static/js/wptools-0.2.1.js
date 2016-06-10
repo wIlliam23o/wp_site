@@ -193,7 +193,7 @@ var wptools = {
                 if (!wptools.csrf_safe_method(settings.type)) {
                     xhr.setRequestHeader('X-CSRFToken', csrftoken);
                 }
-            }
+            },
         };
 
         $.ajaxSettings.traditional = true;
@@ -405,7 +405,7 @@ var wptools = {
         }
         return true;
 
-    }
+    },
 
 
 };
@@ -439,7 +439,7 @@ var misctools = { //eslint-disable-line no-unused-vars
         $('#misclongdesc-' + alias).slideToggle();
         $('#miscusage-' + alias).slideToggle();
         this.fixLongDescBtn(alias);
-    }
+    },
 };
 
 
@@ -621,5 +621,5 @@ var wprotator_settings = { // eslint-disable-line no-unused-vars
     horz_size: 50,
     block_delay: 25,
     vstripe_delay: 75,
-    hstripe_delay: 180
+    hstripe_delay: 180,
 };

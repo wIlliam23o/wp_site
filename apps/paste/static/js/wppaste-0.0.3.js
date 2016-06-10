@@ -235,7 +235,7 @@ var wppaste = {
         var cookieinfo = JSON.stringify({
             'lang': wppaste.get_selected_lang(),
             'author': wppaste.get_paste_author(),
-            'theme': wppaste.get_selected_theme_name()
+            'theme': wppaste.get_selected_theme_name(),
         });
 
         return $.cookie('pastesettings', cookieinfo, {expires: 365, path: '/'});
@@ -391,8 +391,8 @@ var wppaste = {
             dataType: 'json',
             status: {
                 404: function () { console.log('Page not found.'); },
-                500: function () { console.log('A major error occurred.'); }
-            }
+                500: function () { console.log('A major error occurred.'); },
+            },
         })
             .fail(function (xhr, status, err) {
                 var msg = err.message || 'The error was unknown.';
@@ -528,7 +528,7 @@ var wppaste = {
         }
         // return the modified old object.
         return tmpobj;
-    }
+    },
 
 
 };
