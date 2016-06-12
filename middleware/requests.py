@@ -62,11 +62,14 @@ class WpBanIpMiddleware(object):
         if not self.configraw:
             return None
 
-        self.banpatterns = [p for p in self.iter_compile() if p]
+        self.banpatterns = [p for p in self.iter_compile() if p is not None]
         if self.banpatterns:
             banlen = len(self.banpatterns)
             ipstr = 'IP is' if banlen == 1 else 'IPs are'
             self.log.debug('{} {} in the banned list.'.format(banlen, ipstr))
+            self.log.debug('{}    '.format(
+                '\n    '.join(p.pattern for p in self.banpatterns)
+            ))
         else:
             self.log.debug('No IPs are in the ban list.')
 
