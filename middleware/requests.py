@@ -115,11 +115,13 @@ class WpBanIpMiddleware(object):
             if banpat.match(remote_ip):
                 # Return the most basic 403 possible.
                 # Nothing fancy for people I don't even want on my site.
+                self.log.error('Refused banned ip: {}'.format(remote_ip))
                 return HttpResponse('Forbidden.',
                                     content_type='text/plain',
                                     status=403,
                                     reason='Invalid Permissions')
 
+        self.log.debug('IP okay: {}'.format(remote_ip))
         # Success.
         return None
 
