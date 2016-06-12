@@ -222,6 +222,9 @@ def view_scriptkids(request):
         'use_ip': use_ip,
         'ip_address': ip_address,
     }
+    # Try banning the ip.
+    if use_ip and not utilities.ban_add(request):
+        log.error('Could not ban script kid: {}'.format(ip_address))
     # return formatted template.
     return responses.clean_response(
         'home/scriptkids.html',

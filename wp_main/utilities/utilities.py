@@ -52,6 +52,50 @@ def append_path(*args):
     return spath
 
 
+def ban_add(request):
+    """ Ban an IP by adding it to the banned.lst file (if not already banned)
+    """
+    remote_ip = get_remote_ip(request)
+    if not remote_ip:
+        log.error('Unable to ban, no ip available!')
+        return None
+    try:
+        with open(settings.SECRET_BAN_FILE, 'r') as f:
+            banpats = set(s.strip() for s in f)
+    except EnvironmentError as ex:
+        log.error(
+            'Unable to read ban file: {}\n  {}  \n{} was not banned!'.format(
+                settings.SECRET_BAN_FILE,
+                ex,
+                remote_ip
+            )
+        )
+        return None
+    banip = remote_ip.replace('.', '\.')
+    banpats.add(banip)
+    banpats = sorted(banpats)
+    try:
+        with open(settings.SECRET_BAN_FILE, 'w') as f:
+            f.write('\n'.join(sorted(banpats)))
+    except EnvironmentError as ex:
+        log.error(
+            '\n    '.join((
+                'Unable to write banned.lst: {fname}',
+                '{ex}',
+                'IPs need banning!:\n      {banpats}',
+                'Happened while banning: {banip}'
+            )).format(
+                fname=settings.SECRET_BAN_FILE,
+                ex=ex,
+                banpats='\n      '.join(banpats),
+                banip=banip
+            )
+        )
+        return None
+    log.debug('Banned ip pattern: {}'.format(banip))
+    return banip
+
+
 def debug_allowed(request):
     """ returns True if the debug info is allowed for this ip/request.
         inspired by debug_toolbar's _show_toolbar() method.
