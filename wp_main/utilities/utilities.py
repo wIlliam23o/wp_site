@@ -73,10 +73,11 @@ def ban_add(request):
         return None
     banip = remote_ip.replace('.', '\.')
     banpats.add(banip)
-    banpats = sorted(banpats)
+    banpats = sorted(s for s in banpats if s)
     try:
         with open(settings.SECRET_BAN_FILE, 'w') as f:
-            f.write('\n'.join(sorted(banpats)))
+            f.write('\n'.join(banpats))
+            f.write('\n')
     except EnvironmentError as ex:
         log.error(
             '\n    '.join((
