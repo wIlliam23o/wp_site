@@ -20,7 +20,7 @@ body {
     font-size: 16px;
     font-weight: normal;
     height: 100%;
-    line-height: 1.2em;
+    line-height: $lineheightnormal;
     margin-bottom: 1px;
     min-width: 650px; // original: 960px (playing with responsive design)
 }
@@ -1003,6 +1003,7 @@ samp {
     display: block;
     font-size: $fontmedium;
     font-weight: bold;
+    line-height: $lineheightmedium;
 }
 
 .error-box {

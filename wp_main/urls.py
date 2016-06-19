@@ -34,7 +34,10 @@ urlpatterns = patterns(
     url(r'^500\.html?$',
         homeviews.view_500),
     # error raiser (for testing)
-    url(r'^raise.html$',
+    url(r'^raise.html?$',
+        homeviews.view_raiseerror),
+    # error raiser (for testing)
+    url(r'^[Rr]aise$',
         homeviews.view_raiseerror),
     # debug info
     url(r'^debug\.html?$',

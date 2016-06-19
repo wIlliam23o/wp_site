@@ -193,6 +193,20 @@ def view_no_javascript(request):
     )
 
 
+def view_raiseerror(request):
+    """ Purposely raise an error while loading this view, for testing.
+        Custom error msgs can be passed as GET arguments.
+    """
+    viewfunc = {
+        403: responses.error403,
+        404: responses.error404,
+        500: responses.error500,
+    }.get(responses.get_request_arg(request, 'errno', default=500))
+    # Pass message args on to the error view.
+    reqargs = responses.get_request_args(request)
+    return viewfunc(request, msgs=reqargs.getlist('msg', None))
+
+
 def view_scriptkids(request):
     """ return my script kiddie view
         for people trying to access wordpress-login pages and stuff like that.
@@ -233,20 +247,6 @@ def view_scriptkids(request):
         'home/scriptkids.html',
         context=context,
         request=request)
-
-
-def view_raiseerror(request):
-    """ Purposely raise an error while loading this view, for testing.
-        Custom error msgs can be passed as GET arguments.
-    """
-    viewfunc = {
-        403: responses.error403,
-        404: responses.error404,
-        500: responses.error500,
-    }.get(responses.get_request_arg(request, 'errno', default=500))
-    # Pass messages on to the error view.
-    reqargs = responses.get_request_args(request)
-    return viewfunc(request, msgs=reqargs.getlist('msgs', None))
 
 
 @never_cache
