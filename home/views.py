@@ -239,13 +239,14 @@ def view_raiseerror(request):
     """ Purposely raise an error while loading this view, for testing.
         Custom error msgs can be passed as GET arguments.
     """
-
+    viewfunc = {
+        403: responses.error403,
+        404: responses.error404,
+        500: responses.error500,
+    }.get(responses.get_request_arg(request, 'errno', default=500))
+    # Pass messages on to the error view.
     reqargs = responses.get_request_args(request)
-    if reqargs['msgs']:
-        msgs = reqargs['msgs'].split('|')
-    else:
-        msgs = None
-    return responses.error500(request, msgs=msgs)
+    return viewfunc(request, msgs=reqargs.getlist('msgs', None))
 
 
 @never_cache

@@ -328,12 +328,15 @@ def submit_ajax(request):
         if not remoteip:
             remoteip = '<Unknown IP>'
         log.error('Received non-ajax request from: {}'.format(remoteip))
-        errormsgs = ['Invalid request.']
-        usermsg = ''.join((
-            'Try entering a valid url, or using the forms/buttons provided.',
-            ' -Cj'
-        ))
-        return responses.error500(request, msgs=errormsgs, user_error=usermsg)
+        return responses.error500(
+            request,
+            msgs=('Invalid request.', ),
+            user_error=' '.join((
+                'Try entering a valid url,',
+                'or using the forms/buttons provided.',
+                '-Cj'
+            ))
+        )
 
     # Get the request args for this submit (JSON only).
     submitdata = responses.json_get_request(request)

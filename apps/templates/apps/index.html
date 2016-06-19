@@ -56,6 +56,35 @@
                     </a>
                 </div>
             {% endfor %}
+
+            {# Build simple agent tools links... #}
+            {% for toolname, toolinfo in agenttools.items %}
+                <div class='apps-listing-item-box'>
+                    <div class='apps-header-box'>
+                        <a href='{{ toolinfo.url }}'>
+                            <span class='header apps-name apps-admin-name'>
+                                {{ toolname }}
+                            </span>
+                        </a>
+                    </div>
+                    <div class='apps-desc apps-index'>
+                        <div class='desc'>{{ toolinfo.description|safe }}</div>
+                    </div>
+                    <a href='{{ toolinfo.url }}'>
+                        <div class='apps-button'>
+                            Go to {{ toolname }}
+                        </div>
+                    </a>
+                    {% if toolinfo.simple_url %}
+                        <a href='{{ toolinfo.simple_url }}'>
+                            <div class='apps-button'>
+                                Text Mode
+                            </div>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
         {% else %}
             <!-- No Apps -->
             <p>

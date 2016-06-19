@@ -5,10 +5,11 @@ from django.utils.safestring import mark_for_escaping
 # Local tools
 from wp_main.utilities import responses
 from wp_main.utilities import utilities
-log = logging.getLogger('wp.search')
 
 # Search tools
 from searcher import searchtools
+
+log = logging.getLogger('wp.search')
 
 
 def view_index(request):
@@ -94,13 +95,17 @@ def view_paged(request):
             results_slice = []
     # No args provided?
     if not page_args:
-        errmsgs = ['No arguments provided.']
-        friendly = 'That page needs more info to work correctly.'
-        return responses.error500(request, msgs=errmsgs, user_error=friendly)
+        return responses.error500(
+            request,
+            msgs=('No arguments provided.', ),
+            user_error='That page needs more info to work correctly.'
+        )
 
     # get last index.
     end_id = str(page_args['start_id'] + len(results_slice))
-    hasnxt = (page_args['start_id'] < (results_count - page_args['max_items']))
+    hasnxt = (
+        page_args['start_id'] < (results_count - page_args['max_items'])
+    )
     hasprv = (page_args['start_id'] > 0)
     context = {
         'search_warning': search_warning,

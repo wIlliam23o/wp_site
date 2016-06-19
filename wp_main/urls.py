@@ -58,15 +58,21 @@ urlpatterns = patterns(
     url(r'^sitemap\.xml$',
         sitemaps.view_byserver),
     # textmode test
-    url(r'^textmode$',
+    url(r'^[Tt]ext[Mm]ode$',
         homeviews.view_textmode_simple),
-    url(r'^textmode\.html?$',
+    url(r'^[Tt]ext[Mm]ode\.html?$',
         homeviews.view_textmode),
     # useragent simple
-    url(r'^u(ser)?a(gent)/?$',
+    url(r'^[Uu]ser[Aa]gent/?$',
+        homeviews.view_useragent_simple),
+    # useragent simple
+    url(r'^[Uu][Aa]/?$',
         homeviews.view_useragent_simple),
     # useragent html
-    url(r'^useragent\.html?$',
+    url(r'^[Uu]ser[Aa]gent\.html?$',
+        homeviews.view_useragent),
+    # useragent html
+    url(r'^[Uu][Aa]\.html?$',
         homeviews.view_useragent),
     # home (index)
     url(r'^$',
