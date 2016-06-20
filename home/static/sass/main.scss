@@ -599,27 +599,21 @@ a.jumpto-nav {
 // Backgrounds
 .grad-bottom {
     @include linear-gradient(rgba(49, 49, 49, 0), rgba(49, 49, 49, 1));
-    // background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    // background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    // background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
     bottom: 0;
     height: 250px;
     left: 0;
     position: absolute;
     right: 0;
-    }
+}
 
 .pattern-gradient {
     @include linear-gradient(rgba(49, 49, 49, 0), rgba(49, 49, 49, 1));
-    // background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    // background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    // background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
     bottom: 0;
     height: 350px;
     left: 0;
     position: absolute;
     right: 0;
-    }
+}
 
 #bg-pattern {
     height: 350px;
@@ -627,7 +621,7 @@ a.jumpto-nav {
     position: absolute;
     top: 0;
     width: 100%;
-    }
+}
 
 // Background Pattern
 .main-pattern {

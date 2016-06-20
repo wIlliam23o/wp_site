@@ -170,7 +170,8 @@ $lineheightnormal: 1.1em;
     // W3C
     background: linear-gradient(to bottom, $top 0%, $bottom 100%);
     // IE6-9
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#{$top}', endColorstr='#{$bottom}', GradientType=0);
+    // Forget ie6-9, they don't need a gradient.
+    // filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#{$top}', endColorstr='#{$bottom}', GradientType=0);
 }
 
 @mixin transform($trans) {
