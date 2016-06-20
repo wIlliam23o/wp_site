@@ -312,14 +312,6 @@ a .header:hover, a .header.featured-name:hover {
     position: relative;
 }
 
-.contentbox {
-    @include border-radius(5px);
-    @include box-shadow-normal();
-    background-color: $whitedull;
-    margin-bottom: 10px;
-    padding: 10px;
-}
-
 .bottom {
     background-color: $blackmain;
     padding-top: 10px;
@@ -499,9 +491,6 @@ a.jumpto-nav {
 
 
 // Navigation
-.topbar {
-    margin-top: 0;
-}
 
 .menubar {
     display: inline-block;
