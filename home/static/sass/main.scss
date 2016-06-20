@@ -609,9 +609,10 @@ a.jumpto-nav {
 
 // Backgrounds
 .grad-bottom {
-    background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    @include linear-gradient(rgba(49, 49, 49, 0), rgba(49, 49, 49, 1));
+    // background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    // background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    // background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
     bottom: 0;
     height: 250px;
     left: 0;
@@ -620,9 +621,10 @@ a.jumpto-nav {
     }
 
 .pattern-gradient {
-    background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    @include linear-gradient(rgba(49, 49, 49, 0), rgba(49, 49, 49, 1));
+    // background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    // background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    // background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
     bottom: 0;
     height: 350px;
     left: 0;
