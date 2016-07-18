@@ -9,10 +9,12 @@
 """
 
 __module_name__ = 'xhighlights'
-__module_version__ = '0.4.0'
-__module_description__ = 'Highlights URLs and Nicks in the chat window.'
+__module_version__ = '0.4.1'
+__module_description__ = (
+    'Highlights URLs, nicks, and custom patterns in the chat window.')
 VERSIONSTR = '{} v. {}'.format(__module_name__, __module_version__)
 import logging
+import pickle
 import os
 import re
 
@@ -27,7 +29,7 @@ class logger(object):
                 logname  : Name for this logger (shows in logfile)
 
             Keyword Arguments:
-                filename  : File name to use, defaults to: 
+                filename  : File name to use, defaults to:
                             logname.lower().replace(' ', '-')
                 level     : Logging level, defaults to: logging.DEBUG
                 maxbytes  : Delete old logfile on init if bigger than maxbytes.
@@ -42,11 +44,11 @@ class logger(object):
         else:
             self.filename = '{}.log'.format(logname.lower().replace(' ', '-'))
         # Check existing log size if available...
-        self.rotate_logfile(maxbytes=maxbytes)
+        if self.rotate_logfile(maxbytes=maxbytes):
+            print('xhighlights: log was rotated.')
         # Set logging level.
-        self.level = level if level else logging.DEBUG
-        self.log.setLevel(self.level)
-        
+        self.setlevel(logging.DEBUG if level is None else level)
+
         # prepare file handler.
         # build handler
         self.filehandler = logging.FileHandler(self.filename)
@@ -81,11 +83,17 @@ class logger(object):
         self.log.setLevel(self.level)
 
 # File for config. CWD is used, it usually defaults to /home/username
-CONFIGFILE = os.path.join(os.getcwd(), 'xhighlights.conf')
-LOGFILE = os.path.join(os.getcwd(), 'xhighlights.log')
+try:
+    CWD = os.path.split(__file__)[0]
+except Exception:
+    CWD = os.getcwd()
+CONFIGFILE = os.path.join(CWD, 'xhighlights.conf')
+LOGFILE = os.path.join(CWD, 'xhighlights.log')
+CUSTOMFILE = os.path.join(CWD, 'xhighlights.pkl')
+
 
 # Logger for xhighlights main.
-_log = logger('xhighlights', level=logging.WARNING).log
+_log = logger('xhighlights', level=logging.DEBUG).log
 _log.debug('{} loaded.'.format(VERSIONSTR))
 
 # Regex for matching a link..
@@ -121,6 +129,71 @@ link_re = re.compile(linkpattern)
 #  try to 'filter' my own emit_print())
 # See emit_highlighted() and message_filter().
 EMITTING = False
+
+
+def add_custom_pattern(cmdargs):
+    """ Add a custom pattern to highlight/replace.
+        Based on user arguments from --add command.
+        Expects: 'pattern style template'
+    """
+
+    # Parse user args for --add.
+    argparts = cmdargs.split(' ')
+    if len(argparts) == 3:
+        pattxt, style, template = argparts
+    elif len(argparts) == 2:
+        pattxt, style = argparts
+        template = '{}'
+    else:
+        errmsg = 'Invalid arguments for --add: {}'.format(cmdargs)
+        print_error(errmsg, boldtext=cmdargs)
+        return None
+    # Make sure pattern is valid.
+    try:
+        custompat = re.compile(pattxt)
+    except re.error as exre:
+        errmsg = 'Invalid pattern for --add: {}'.format(pattxt)
+        print_error(errmsg, exc=exre, boldtext=pattxt)
+        return None
+    # Test template.
+    try:
+        fmted = template.format('test')
+    except (KeyError, ValueError) as extmp:
+        errmsgs = [str(extmp)]
+        try:
+            keypat = re.compile(r'\{(\w+)[:\}]')
+            keynames = keypat.findall(template)
+            fmted = template.format(**{k: 'test' for k in keynames})
+        except KeyError as exdict:
+            errmsgs.append(str(exdict))
+            errheader = 'Invalid template for --add: {}'.format(template)
+            errmsgs.insert(0, errheader)
+            errmsg = '\n'.join(errmsgs)
+            print_error(errmsg, boldtext=template)
+            return None
+    # Make sure the template wasn't empty.
+    if not fmted:
+        errmsg = 'Invalid (empty) template for --add!'
+        print_error(errmsg)
+        return None
+    # Test style.
+    style = style.lower().strip()
+    stylecodes = get_stylecodes(style)
+    if not stylecodes:
+        # get_stylecodes() will already print the error. Just return here.
+        return None
+
+    # We have a successful pattern, style, and template.
+    custompat = {
+        'pattern': custompat,
+        'patterntext': pattxt,
+        'stylecodes': stylecodes,
+        'style': style,
+        'template': template
+    }
+    Codes.custom.append(custompat)
+    save_user_patterns()
+    return None
 
 
 def build_color_table():
@@ -165,12 +238,32 @@ def cmd_xhighlights(word, word_eol, userdata):
     """
 
     # Clean word and get flags for command.
-    word, argd = get_flag_args(word, [('-c', '--colors', False),
-                                      ('-h', '--help', False),
-                                      ('-l', '--link', False),
-                                      ('-n', '--nick', False),
-                                      ])
-    cmdargs = get_cmd_rest(word).lower().strip()
+    word, argd = get_flag_args(
+        word, [
+            ('-a', '--add', False),
+            ('-c', '--colors', False),
+            ('-h', '--help', False),
+            ('-l', '--link', False),
+            ('-n', '--nick', False),
+            ('-p', '--patterns', False),
+            ('-r', '--remove', False),
+        ])
+    cmdargsraw = get_cmd_rest(word).strip()
+    cmdargs = cmdargsraw.lower()
+    # Add a custom pattern.
+    if argd['--add']:
+        add_custom_pattern(cmdargsraw)
+        return xchat.EAT_ALL
+
+    # Remove a custom pattern.
+    if argd['--remove']:
+        remove_custom_pattern(cmdargs)
+        return xchat.EAT_ALL
+
+    # Print custom patterns.
+    if argd['--patterns']:
+        print_custom_patterns()
+        return xchat.EAT_ALL
 
     # Just print styles..
     if argd['--colors']:
@@ -348,6 +441,17 @@ def get_flag_args(word, arglist):
     return newword, arginfo
 
 
+def get_stylecodes(userstyle):
+    """ Parse and return the actual style codes from a users style string. """
+    stylenames = parse_styles(userstyle)
+    stylecodes = try_stylecodes(stylenames)
+    if not stylecodes:
+        print_error('Invalid style code: {}'.format(userstyle),
+                    boldtext=userstyle)
+        return None
+    return stylecodes
+
+
 def emit_highlighted(*emitargs):
     """ Emits a print by unhooking, emitting, and rehooking to prevent
         recursion.
@@ -361,6 +465,47 @@ def emit_highlighted(*emitargs):
     xchat.get_context().emit_print(*emitargs)
     EMITTING = False
     return xchat.EAT_ALL
+
+
+def highlight_custom(word, patterninfo):
+    """ Highlight a custom word. """
+    template = patterninfo['template']
+    codes = patterninfo['stylecodes']
+    # Wraps a word with the user styles and a reset.
+    colorize = lambda s: '{}{}{}'.format(codes, s, Codes.normal)
+
+    rematch = patterninfo['pattern'].match(word)
+    if not rematch:
+        return word
+
+    matchgroupdict = rematch.groupdict()
+    if matchgroupdict:
+        # User is using named groups.
+        try:
+            newword = colorize(template.format(**matchgroupdict))
+        except Exception as ex:
+            errfmt = 'Unable to use .groupdict(): {}\n    with: {}\n    {}'
+            errmsg = errfmt.format(matchgroupdict, template, ex)
+            _log.error(errmsg)
+            return word
+        else:
+            return newword
+
+    matchgroups = rematch.groups()
+    if matchgroups:
+        # User is using groups with the template.
+        try:
+            newword = template.format(*(colorize(w) for w in matchgroups))
+        except Exception as ex:
+            errfmt = 'Unable to use .groups(): {}\n    with: {}\n    {}'
+            _log.error(errfmt.format(matchgroups, template, ex))
+            return word
+        else:
+            # Return colorized groups.
+            return newword
+
+    # Simple single word highlight.
+    newword = template.format(colorize(word))
 
 
 def highlight_word(s, style='link', ownmsg=False):
@@ -412,6 +557,24 @@ def load_user_color(stylename):
     return True
 
 
+def load_user_patterns():
+    """ Load custom user patterns from the pickle file.
+        If it doesn't exist, then do nothing.
+    """
+    if not os.path.isfile(CUSTOMFILE):
+        Codes.custom = []
+        return False
+
+    try:
+        with open(CUSTOMFILE, 'r') as f:
+            data = pickle.load(f)
+    except EnvironmentError as ex:
+        errmsg = 'Unable to load custom patterns!'
+        print_error(errmsg, exc=ex)
+        return False
+    Codes.custom = data[:]
+
+
 def message_filter(word, word_eol, userdata):
     """ Filter all messages coming into the chat window.
         Arguments:
@@ -458,17 +621,33 @@ def message_filter(word, word_eol, userdata):
         # Word is any user name?
         nickword = (eachword in userslist) or (eachword[:-1] in userslist)
 
+        # Custom patterns.
+        for custompat in Codes.custom:
+            if custompat['pattern'].match(eachword):
+                msgwords[i] = highlight_custom(eachword, custompat)
+                # Set eachword to the newly highlighted custom pattern
+                # If it was turned into a link, it will be highlighted.
+                eachword = msgwords[i]
+                highlighted = True
+                break
+
         # Link highlighting
         linkmatch = link_re.search(eachword)
         if linkmatch:
             # Highlight it
-            msgwords[i] = highlight_word(eachword, 'link', ownmsg=userownmsg)
+            msgwords[i] = highlight_word(
+                eachword,
+                'link',
+                ownmsg=userownmsg)
             highlighted = True
 
         # Nick highlighting
         # (Don't highlight your own nick, thats for Channel Msg Hilight)
         elif (normalmsg and (not ownnick)) and nickword:
-            msgwords[i] = highlight_word(eachword, 'nick', ownmsg=userownmsg)
+            msgwords[i] = highlight_word(
+                eachword,
+                'nick',
+                ownmsg=userownmsg)
             highlighted = True
 
     # Replace old message.
@@ -483,6 +662,15 @@ def message_filter(word, word_eol, userdata):
     else:
         # Nothing was done to this message
         return xchat.EAT_NONE
+
+
+def parse_styles(txt):
+    """ Parses comma - separated styles. """
+    if ',' in txt:
+        return [s.strip() for s in txt.split(',')]
+    else:
+        # single item
+        return [txt.strip()]
 
 
 def pref_get(opt):
@@ -601,6 +789,23 @@ def print_currentstyles(link=True, nick=True):
         print('    {}Nick'.format(Codes.nick))
 
 
+def print_custom_patterns():
+    """ Print all of the custom patterns to the window. """
+    if not Codes.custom:
+        print_error('No custom patterns have been set. Set them with --add.')
+        return None
+
+    print_status('Current custom patterns:')
+    patfmt = '{index}: {txt} {style} {template}'
+    for i, custompat in enumerate(Codes.custom):
+        patstr = patfmt.format(
+            index=color_text('blue', str(i), bold=True),
+            txt=color_text('green', custompat['patterntext']),
+            style=custompat['style'],
+            template=color_text('red', custompat['template']))
+        print(patstr)
+
+
 def print_error(msg, exc=None, boldtext=None):
     """ Prints a red formatted error msg.
         Arguments:
@@ -671,17 +876,19 @@ def print_help(cmdname):
         elif line.strip().startswith('*'):
             # Notes line..
             print('    {}'.format(color_text('blue', line)))
-        
+
         else:
             # Usage or other line.
             print('    {}'.format(line))
 
     # Debug info (file locations)
     loglevel = str(_log.getEffectiveLevel())
-    debuglines = ['    Configuration File: {}'.format(str(CONFIGFILE)),
-                  '              Log File: {}'.format(str(LOGFILE)),
-                  '             Log Level: {}'.format(loglevel),
-                  ]
+    debuglines = [
+        '    Configuration File: {}'.format(str(CONFIGFILE)),
+        '   Custom Pattern File: {}'.format(str(CUSTOMFILE)),
+        '              Log File: {}'.format(str(LOGFILE)),
+        '             Log Level: {}'.format(loglevel),
+    ]
     for line in debuglines:
         print(color_text('grey', line))
 
@@ -708,6 +915,29 @@ def print_styles():
     print('')
 
 
+def remove_custom_pattern(index):
+    """ Remove a custom pattern from the list, by index. """
+
+    try:
+        index = int(index)
+    except (TypeError, ValueError):
+        errmsg = 'Invalid index for custom pattern: {}'.format(index)
+        print_error(errmsg, boldtext=str(index))
+        return None
+    try:
+        item = Codes.custom.pop(index)
+    except IndexError as exindex:
+        errmsg = 'Error removing custom pattern: {}'.format(index)
+        print_error(errmsg, exc=exindex, boldtext=str(index))
+        return None
+    itempat = item['patterntext']
+    print_status('Removed: {}'.format(itempat))
+    if save_user_patterns():
+        return item
+    # Error saving.
+    return None
+
+
 def remove_mirc_color(text, _resubpat=mirc_sub_pattern):
     """ Removes color code from text
         (idea borrowed from nosklos clutterless.py)
@@ -717,39 +947,29 @@ def remove_mirc_color(text, _resubpat=mirc_sub_pattern):
     return _resubpat('', text)
 
 
+def save_user_patterns():
+    """ Save CUSTOMPATS to a pickle file.
+        Returns True on success, False on failure.
+        Prints status/error messages.
+    """
+    try:
+        with open(CUSTOMFILE, 'w') as f:
+            pickle.dump(Codes.custom, f)
+    except EnvironmentError as expickle:
+        errmsg = 'Unable to save custom patterns!'
+        print_error(errmsg, exc=expickle)
+        return False
+    print_status('Custom patterns were saved. [{}]'.format(len(Codes.custom)))
+    return True
+
+
 def set_style(userstyle, stylename=None, silent=False):
     """ Sets the current style for 'link' or 'nick' """
 
     userstyle = userstyle.lower().strip()
     stylename = stylename.lower().strip() if stylename else 'link'
 
-    def parse_styles(txt):
-        """ Parses comma - separated styles. """
-        if ',' in txt:
-            return [s.strip() for s in txt.split(',')]
-        else:
-            # single item
-            return [txt.strip()]
-
-    def try_stylecodes(styles):
-        """ Trys to retrieve multiple style codes, and returns a string
-            containing them.
-        """
-
-        final = ''
-        for style in styles:
-            stylecode = color_code(style, suppresswarning=True)
-            if not stylecode:
-                return None
-            final = final + stylecode
-        return final
-
-    stylenames = parse_styles(userstyle)
-    stylecodes = try_stylecodes(stylenames)
-    if not stylecodes:
-        print_error('Invalid style code: {}'.format(userstyle),
-                    boldtext=userstyle)
-        return False
+    stylecodes = get_stylecodes(userstyle)
 
     if stylename == 'link':
         Codes.link = stylecodes
@@ -771,6 +991,22 @@ def set_style(userstyle, stylename=None, silent=False):
                                                      userstyle))
     return True
 
+
+def try_stylecodes(styles):
+    """ Trys to retrieve multiple style codes, and returns a string
+        containing them.
+        Returns None if one of them fails.
+    """
+
+    final = ''
+    for style in styles:
+        stylecode = color_code(style, suppresswarning=True)
+        if not stylecode:
+            return None
+        final = final + stylecode
+    return final
+
+
 # START OF SCRIPT
 # Load colors (must be loaded before class Codes()).
 COLORS = build_color_table()
@@ -785,24 +1021,41 @@ class Codes:
     nick = defaultnick
     ownmsg = color_code('darkgrey')
     normal = color_code('reset')
+    custom = []
 
 # Load user preferences.
 for stylename in ('link', 'nick'):
     load_user_color(stylename)
+load_user_patterns()
 
 
 # Commands and command help strings.
-cmd_help = {'xhighlights':
-            ('Usage: /XHIGHLIGHTS [-n [style] | -l [style]]\n'
-             'Options:\n'
-             '    -c,--colors            : Show available styles.\n'
-             '    -h,--help              : Show this message.\n'
-             '                             (and some debugging info)\n'
-             '    -l style,--link style  : Set link style by name/number.\n'
-             '    -n style,--nick style  : Set nick style by name/number.\n'
-             '\n    * style can be comma separated style names/numbers.\n'
-             '    * if no style is given, the current style will be shown.\n'),
-            }
+cmd_help = {
+    'xhighlights': (
+        'Usage: /XHIGHLIGHTS [-n [style] | -l [style]]\n'
+        '       /XHIGHLIGHTS -a <pattern> <style> [template]\n'
+        '       /XHIGHLIGHTS -r <index>\n'
+        'Options:\n'
+        '    -a p s t,--add p s t   : Add a custom pattern/word to\n'
+        '                             highlight. Its needs a pattern or\n'
+        '                             word to match, a color/style in the\n'
+        '                             same format as -c, and a replacement\n'
+        '                             template.\n'
+        '                             The template must at least consist of:\n'
+        '                             "{}" ..but advanced use would be like:\n'
+        '                             "http://google.com?q={}"\n'
+        '                             If the { or } characters must be used,\n'
+        '                             they should be doubled ({{ and }}).\n'
+        '    -c,--colors            : Show available styles.\n'
+        '    -h,--help              : Show this message.\n'
+        '                             (and some debugging info)\n'
+        '    -l style,--link style  : Set link style by name/number.\n'
+        '    -n style,--nick style  : Set nick style by name/number.\n'
+        '    -p,--patterns          : Show current custom patterns.\n'
+        '    -r num,--remove num    : Remove custom pattern by index.\n'
+        '\n    * style can be comma separated style names/numbers.\n'
+        '    * if no style is given, the current style will be shown.\n'),
+}
 
 commands = {'xhighlights': {'desc': 'Gets and sets options for xhighlights.',
                             'func': cmd_xhighlights,
