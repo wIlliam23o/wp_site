@@ -17,29 +17,21 @@
 
 .misc-header-box {
     text-align: left;
-    width: 100%
+    width: 100%;
 }
 
 .misc-header {
-    text-shadow: $shadowtext;
-    font-family: $fontsnormal;
-    font-size: $fontlarge; /* big header for projects/sections */
+    // big header for projects/sections
     color: $bluemain;
+    font-family: $fontsnormal;
+    font-size: $fontlarge;
+    text-shadow: $shadowtext;
     text-transform: lowercase;
     }
 
 .misc-name {
     font-size: $fontmedium;
     text-shadow: $shadowtextsmall;
-}
-
-.version {
-    font-size:$fontsmall;
-    color: $greydark;
-    font-weight: bold;
-    font-family: $fontssmall;
-    text-align: right;
-    padding-left: 0%;
 }
 
 .misc-desc {
@@ -54,13 +46,14 @@
 .misc-download-box-wrapper {
     text-align: center;
 }
+
 .misc-download-box {
-    display: inline-block;
-    position: relative;
     @include border-radius-thick(5px);
     background: $whitemain;
-    padding: 5px;
+    display: inline-block;
     font-size: $fontsmall;
+    padding: 5px;
+    position: relative;
 }
 
 .misc-download-button {

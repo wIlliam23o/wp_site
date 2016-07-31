@@ -210,6 +210,11 @@ a .header:hover, a .header.featured-name:hover {
 .indented,
 %indented { margin-left: 15px; }
 
+.inline {
+    display: inline;
+    margin: 0;
+}
+
 .subtext,
 %subtext {
     font-size: $fontsmall;
@@ -1097,6 +1102,7 @@ samp {
     // Entire debug info is layed out.
     @include border-radius-thick(5px);
     background-color: $whitedull;
+    font-size: $fontmono;
     overflow-x: scroll;
     padding: 5px;
     position: relative;
@@ -1193,6 +1199,18 @@ samp {
 
 
 // Global version style.
+%version,
+.version {
+    color: $greydark;
+    display: block;
+    font-family: $fontssmall;
+    font-size: $fontsmall;
+    font-weight: bold;
+    margin-left: 10px;
+    margin-top: 3px;
+    padding-left: 0;
+}
+
 .version-info-box {
     display: flex;
     flex-direction: row;
@@ -1204,6 +1222,7 @@ samp {
 .version-info-label {
     color: $bluemain;
     display: flex;
+    flex-basis: 15%;
     font-size: .9em;
     padding-right: 5px;
     text-align: right;
@@ -1214,13 +1233,11 @@ samp {
     }
 }
 
-.version {
-    color: $greydark;
-    display: inline;
-    font-family: $fontssmall;
-    font-size: $fontsmall;
-    font-weight: bold;
-    padding-left: 0%;
+.version-info-value {
+    @extend %version;
+    display: flex;
+    flex-basis: 85%;
+    margin: 0;
 }
 
 // Video related styles (video titles, video descriptions)

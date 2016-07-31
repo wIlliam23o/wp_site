@@ -37,10 +37,6 @@ form {
     text-shadow: $shadowtextsmall;
 }
 
-.version {
-    padding-left: 5px;
-}
-
 // Results
 .phonewords-results-box {
     @include border-radius-thick(5px);

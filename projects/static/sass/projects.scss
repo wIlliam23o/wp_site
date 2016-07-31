@@ -33,15 +33,6 @@
     text-shadow: $shadowtextsmall;
 }
 
-.version {
-    font-size:$fontsmall;
-    color: $greydark;
-    font-weight: bold;
-    font-family: $fontssmall;
-    text-align: right;
-    padding-left: 0%;
-}
-
 .project-desc {
     @include border-radius-thick(10px);
     margin-top: 10px;
