@@ -62,7 +62,10 @@
                 Biography
             </h2>
             <p class='about-paragraph'>
-                My name is Christopher Welborn, I am a <span id='age'>32</span>
+                {# The messed up linebreaks are for the stupid auto linker #}
+                {# It's in wp_main.utilities.htmltools, and only runs for  #}
+                {# this about page.                                        #}
+                My name is Christopher Welborn, I am a <span id='age'>33</span>
                 year old programmer from Jasper, Al.
                 I have been working with computers and code since childhood.
                 I started out with Q-BASIC in Windows 3.1 and have progressed
@@ -71,14 +74,19 @@
                 I spent most of my years focusing on Windows, however lately I
                 work in different variations of the Linux operating system.
                 My favorite programming languages include Python,
-                Rust,
                 JavaScript,
-                Haskell,
-                and Visual Basic .Net
-                (I tought myself to code with VB), and anything from the C language
-                family. I also enjoy working with microcontrollers and
-                single-board computers such as the Arduino, ATTiny, and
-                Raspberry Pi.
+                Rust,
+                C,
+                and Visual Basic .Net.
+                (VB was my second language and it served me well before
+                moving on to other domains.)
+                I've dabbled in
+                C++ and
+                C# a little, and I also enjoy working
+                with microcontrollers and single-board computers such as the
+                Arduino,
+                ATTiny,
+                and Raspberry Pi.
             </p>
         </div>
         <div id='about-more'>
@@ -163,6 +171,7 @@
     {# deviant.io badge. #}
     {# <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script> #}
     <script type='text/javascript'>
+        /* global github_badge: false */
         $(document).ready(function () {
             github_badge.build(
                 'welbornprod',
@@ -170,11 +179,14 @@
                     $('#github-badge-wrapper').html(div);
                 },
                 function error(error_message) {
+                    if (error_message) {
+                        console.error('Unable to build github badge:\n  ' + error_message);
+                    }
                     $('#github-badge-wrapper').css({display: 'none'});
                 }
             );
 
-            /* No more yearly edits :) */
+            /* No more manditory yearly edits :) */
             var now = new Date();
             $('#age').text(now.getYear() - (now.getMonth() > 8 ? 82 : 83));
         });
