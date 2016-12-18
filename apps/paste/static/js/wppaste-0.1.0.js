@@ -15,6 +15,14 @@
 var wppaste = {
     // Modules and file names are versioned to "break" the cache on updates.
     version: '0.1.0',
+
+    // Paste settings to use when none are saved.
+    default_paste_settings : {
+        'paste_author': '',
+        'paste_lang': wptools.default_ace_langname || 'Python',
+        'paste_theme': wptools.default_ace_themename || 'Solarized Dark',
+    },
+
     build_lang_menu : function () {
         /* Build language options. */
         $('#langselect').append(
@@ -108,8 +116,53 @@ var wppaste = {
     },
 
     get_paste_settings : function () {
+        /*  Retrieve saved paste settings from localStorage, or cookies
+            if that fails.
+        */
+        if (!wptools.has_localstorage()) {
+            return wppaste.get_paste_settings_cookie();
+        }
+        // Use localStorage settings.
+        var pastesettings = wppaste.default_paste_settings,
+            pasteauthor=window.localStorage.getItem('paste_author'),
+            pastelang=window.localStorage.getItem('paste_lang'),
+            pastetheme=window.localStorage.getItem('paste_theme');
+        if (pasteauthor !== null) {
+            pastesettings.paste_author = pasteauthor;
+        }
+        if (pastelang !== null) {
+            pastesettings.paste_lang = pastelang;
+        }
+        if (pastetheme !== null) {
+            pastesettings.paste_theme = pastetheme;
+        }
+        return pastesettings;
+    },
+
+    get_paste_settings_cookie : function () {
+        /*  Retrieve paste settings from cookie, but fall back to
+            default_paste_settings if that fails.
+            Returns an object of {
+                'paste_author': author,
+                'paste_lang': langname,
+                'paste_theme': themename,
+            }
+        */
         var cookiejson = $.cookie('pastesettings');
-        return cookiejson ? JSON.parse(cookiejson) : {};
+        var pastesettings = cookiejson ? JSON.parse(cookiejson) : {};
+        return wppaste.update_object(
+            wppaste.default_paste_settings,
+            pastesettings
+        );
+    },
+
+    get_paste_setting_info : function () {
+        /*  Returns currently selected paste settings from the UI. */
+        return {
+            'paste_author': wppaste.get_paste_author(),
+            'paste_lang': wppaste.get_selected_lang(),
+            'paste_theme': wppaste.get_selected_theme_name(),
+        };
     },
 
     get_paste_title : function () {
@@ -174,26 +227,19 @@ var wppaste = {
     },
 
     load_paste_settings: function (options) {
-        /* Load user's paste settings from cookie. */
-        var cookieraw = $.cookie('pastesettings');
-        var author = '';
-        var userlang = wptools.default_ace_langname || 'Python';
-        var usertheme = wptools.default_ace_themename || 'Solarized Dark';
+        /*  Load user's paste settings from localStorage or cookie,
+            and set the UI.
+        */
         var opts = options || {'nolangset': false};
-        if (cookieraw) {
-            var cookieinfo = JSON.parse(cookieraw);
-            author = cookieinfo.author || '';
-            userlang = cookieinfo.lang || userlang;
-            usertheme = cookieinfo.theme || usertheme;
-        }
+        var pastesettings = wppaste.get_paste_settings();
         if (!opts.nolangset) {
             // set language from cookie
-            wppaste.set_selected_mode(userlang);
+            wppaste.set_selected_mode(pastesettings.paste_lang);
         }
         // Set theme
-        wppaste.set_selected_theme(usertheme);
+        wppaste.set_selected_theme(pastesettings.paste_theme);
 
-        $('#paste-author-entry').val(author);
+        $('#paste-author-entry').val(pastesettings.paste_author);
     },
 
     object_length: function object_length (o) {
@@ -216,7 +262,16 @@ var wppaste = {
         return size;
     },
 
-    on_mode_change: function (opts) {
+    on_author_change : function () {
+        /*  Handles the paste-author-entry.onblur event, to save the author.
+        */
+        // Allowing null to erase the author.
+        wppaste.update_paste_settings(
+            {'paste_author': wppaste.get_paste_author() || null}
+        );
+    },
+
+    on_mode_change : function (opts) {
         /* Change Ace mode when language is selected.
             Arguments:
                 opts  : object containing options for this functions.
@@ -234,7 +289,9 @@ var wppaste = {
 
         // Save user language to a cookie for next time.
         if (opts && opts.save) {
-            wppaste.update_paste_settings({'lang': wppaste.get_selected_lang()});
+            wppaste.update_paste_settings(
+                {'paste_lang': wppaste.get_selected_lang()}
+            );
         }
     },
 
@@ -251,19 +308,64 @@ var wppaste = {
 
         // Save user theme to a cookie for next time.
         if (opts && opts.save) {
-            wppaste.update_paste_settings({'theme': wppaste.get_selected_theme_name()});
+            wppaste.update_paste_settings(
+                {'paste_theme': wppaste.get_selected_theme_name()}
+            );
         }
     },
 
-    save_paste_settings : function () {
-        /* Save current UI settings to a cookie. */
-        var cookieinfo = JSON.stringify({
-            'lang': wppaste.get_selected_lang(),
-            'author': wppaste.get_paste_author(),
-            'theme': wppaste.get_selected_theme_name(),
-        });
+    save_paste_settings : function (newsettings) {
+        /*  Save paste settings to localStorage if available, otherwise use
+            a cookie.
+            Arguments:
+                newsettings  : Paste settings to save.
+                               Default: get_paste_setting_info()
+        */
+        var pastesettings = (
+            typeof(newsettings) === 'undefined' ?
+            wppaste.get_paste_setting_info() :
+            newsettings
+        );
 
-        return $.cookie('pastesettings', cookieinfo, {expires: 365, path: '/'});
+        if (!wptools.has_localstorage()) {
+            return wppaste.save_paste_settings_cookie(pastesettings);
+        }
+        // Use localStorage.
+        if (pastesettings.paste_author) {
+            window.localStorage.setItem('paste_author', pastesettings.paste_author);
+        } else if (pastesettings.paste_author === null) {
+            // Allow null to erase the author name.
+            window.localStorage.setItem('paste_author', '');
+        }
+        if (pastesettings.paste_lang) {
+            window.localStorage.setItem('paste_lang', pastesettings.paste_lang);
+        }
+        if (pastesettings.paste_theme) {
+            window.localStorage.setItem('paste_theme', pastesettings.paste_theme);
+        }
+    },
+
+    save_paste_settings_cookie : function (newsettings) {
+        /*  Save current UI settings to a cookie.
+            Arguments:
+                newsettings  : Paste settings to save.
+                               Default: get_paste_setting_info()
+        */
+        var pastesettings = (
+            typeof(newsettings) === 'undefined' ?
+            self.get_paste_setting_info() :
+            newsettings
+        );
+        // Allow null to erase the paste author.
+        if (pastesettings.paste_author === null) {
+            pastesettings.paste_author = '';
+        }
+        var cookieinfo = JSON.stringify(pastesettings);
+        return $.cookie(
+            'pastesettings',
+            cookieinfo,
+            {expires: 365, path: '/'}
+        );
     },
 
     set_editor_size: function (csssize) {
@@ -516,16 +618,16 @@ var wppaste = {
         var newkey;
         for (newkey in newobj) {
             // See if the old key even exists.
-            if (!tmpobj[newkey]) {
-                // add the new key.
-                tmpobj[newkey] = newobj[newkey];
-            } else {
+            if (tmpobj[newkey]) {
                 // old key exists, make sure new value is good.
-                if (newobj[newkey]) {
+                if (typeof(newobj[newkey]) !== 'undefined') {
                     // new key is truthy, update the old one.
                     tmpobj[newkey] = newobj[newkey];
                 }
                 // otherwise the old key/value is kept.
+            } else {
+                // add the new key.
+                tmpobj[newkey] = newobj[newkey];
             }
         }
         // return the modified old object.
@@ -544,10 +646,7 @@ var wppaste = {
         var settings = wppaste.get_paste_settings();
         // update the old settings and convert to JSON
         var updated = wppaste.update_object(settings, newsettings);
-        var updatedjson = JSON.stringify(updated);
-
-        // save updated settings to cookie.
-        return $.cookie('pastesettings', updatedjson, {expires: 365, path: '/'});
+        return wppaste.save_paste_settings(updated);
     },
 
 };
