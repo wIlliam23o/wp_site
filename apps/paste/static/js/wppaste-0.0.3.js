@@ -14,7 +14,7 @@
 
 var wppaste = {
     // Modules and file names are versioned to "break" the cache on updates.
-    version: '0.0.3',
+    version: '0.1.0',
     build_lang_menu : function () {
         /* Build language options. */
         $('#langselect').append(
@@ -107,6 +107,11 @@ var wppaste = {
         return $('#paste-author-entry').val();
     },
 
+    get_paste_settings : function () {
+        var cookiejson = $.cookie('pastesettings');
+        return cookiejson ? JSON.parse(cookiejson) : {};
+    },
+
     get_paste_title : function () {
         return $('#paste-title-entry').val();
     },
@@ -191,6 +196,26 @@ var wppaste = {
         $('#paste-author-entry').val(author);
     },
 
+    object_length: function object_length (o) {
+        /* Returns the key count for a plain object. */
+        if (typeof(o) === 'undefined') {
+            return 0;
+        }
+
+        if (Object.keys) {
+            // 2016 and above.
+            return Object.keys(o).length;
+        }
+        // Old-style.
+        var size=0, key;
+        for (key in o) {
+            if (o.hasOwnProperty(key)) {
+                size += 1;
+            }
+        }
+        return size;
+    },
+
     on_mode_change: function (opts) {
         /* Change Ace mode when language is selected.
             Arguments:
@@ -251,23 +276,23 @@ var wppaste = {
         }
     },
 
-    set_selected_mode : function (name) {
+    set_selected_mode : function (modename) {
         /* set selected mode by name
             Arguments:
-                name  : Name of mode to select.
+                modename  : Name of mode to select.
         */
         var langselect = document.getElementById('langselect');
         var langlen = langselect.options.length;
         var i = 0;
         for (i; i < langlen; i++) {
-            if (name === $(langselect.options[i]).text()) {
+            if (modename === $(langselect.options[i]).text()) {
                 langselect.selectedIndex = i;
                 wppaste.on_mode_change();
                 return true;
             }
         }
         // no mode by that name.
-        console.log('No mode named: "' + name + '"');
+        console.log('No mode named: "' + modename + '"');
         langselect.selectedIndex = 0;
         wppaste.on_mode_change();
         return false;
@@ -298,20 +323,20 @@ var wppaste = {
 
     },
 
-    set_selected_theme : function (name) {
+    set_selected_theme : function (themename) {
         /* set selected theme by name. */
         var themeselect = document.getElementById('themeselect');
         var themelen = themeselect.options.length;
         var i = 0;
         for (i; i < themelen; i++) {
-            if (name === $(themeselect.options[i]).text()) {
+            if (themename === $(themeselect.options[i]).text()) {
                 themeselect.selectedIndex = i;
                 wppaste.on_theme_change();
                 return true;
             }
         }
         // no theme by that name.
-        console.log('No theme named: "' + name + '"');
+        console.log('No theme named: "' + themename + '"');
         themeselect.selectedIndex = 0;
         wppaste.on_theme_change();
         return false;
@@ -394,15 +419,15 @@ var wppaste = {
                 500: function () { console.log('A major error occurred.'); },
             },
         })
-            .fail(function (xhr, status, err) {
+            .fail(function (xhr, xhrstatus, err) {
                 var msg = err.message || 'The error was unknown.';
                 console.log('failure: ' + status + '\n    msg:' + msg);
                 msg = 'An error occurred while submitting. ' + msg;
                 wppaste.show_error_msg('<span class="warning-msg"> ' + msg + '</span>');
             })
-            .done(function (data, status, xhr) {
+            .done(function (data, xhrstatus, xhr) {
                 // handle errors...
-                if (status === 'error') {
+                if (xhrstatus === 'error') {
                     console.log('wp-error response: ' + xhr.responseText);
                     if (xhr.responseText) {
                         // This will probably be an ugly message.
@@ -440,7 +465,7 @@ var wppaste = {
         }
     },
 
-    updatejson : function (jsondata, newdata) {
+    update_json : function (jsondata, newdata) {
         /* Update JSON object data with new keys/values.
             Arguments:
                 jsondata : JSON string with object inside.
@@ -454,7 +479,7 @@ var wppaste = {
 
         var oldobj = JSON.parse(jsondata);
         if (!oldobj) { return jsondata; }
-        var newobj = wppaste.updateobject(oldobj, newdata);
+        var newobj = wppaste.update_object(oldobj, newdata);
         return JSON.stringify(newobj);
     },
 
@@ -465,29 +490,7 @@ var wppaste = {
         $('#floater').fadeIn();
     },
 
-    update_paste_settings : function (newsettings) {
-        /* Update current cookie info with new keys/values,
-           and save the cookie.
-
-            Arguments:
-                newsettings  : Object with json-friendly key/value pairs to
-                               save as settings in the cookie.
-        */
-
-        var cookiejson = $.cookie('pastesettings');
-        var settings = cookiejson ? JSON.parse(cookiejson) : {};
-
-
-        // update the old settings and convert to JSON
-        var updated = wppaste.updateobject(settings, newsettings);
-        var updatedjson = JSON.stringify(updated);
-
-        // save updated settings to cookie.
-        return $.cookie('pastesettings', updatedjson, {expires: 365, path: '/'});
-    },
-
-
-    updateobject : function (oldobj, newobj) {
+    update_object : function (oldobj, newobj) {
         /* Update an object based on another objects values.
             Arguments:
                 oldobj  : Old object to update with simple keys/values.
@@ -495,16 +498,15 @@ var wppaste = {
 
             Returns updated object, does not modify the original object.
         */
-
-        if (!oldobj) { return newobj; }
-        if (!newobj) { return oldobj; }
+        if (wppaste.object_length(newobj) === 0) { return oldobj; }
+        if (wppaste.object_length(oldobj) === 0) { return newobj; }
 
         // Make a shallow copy of the old object, so we don't modify it later.
         /*jslint forin:true*/
         var tmpobj = {};
         var oldkey;
         for (oldkey in oldobj) {
-            if (tmpobj.hasOwnProperty(oldkey)) {
+            if (oldobj.hasOwnProperty(oldkey)) {
                 tmpobj[oldkey] = oldobj[oldkey];
             }
         }
@@ -530,5 +532,22 @@ var wppaste = {
         return tmpobj;
     },
 
+    update_paste_settings : function (newsettings) {
+        /* Update current cookie info with new keys/values,
+           and save the cookie.
+
+            Arguments:
+                newsettings  : Object with json-friendly key/value pairs to
+                               save as settings in the cookie.
+        */
+
+        var settings = wppaste.get_paste_settings();
+        // update the old settings and convert to JSON
+        var updated = wppaste.update_object(settings, newsettings);
+        var updatedjson = JSON.stringify(updated);
+
+        // save updated settings to cookie.
+        return $.cookie('pastesettings', updatedjson, {expires: 365, path: '/'});
+    },
 
 };
