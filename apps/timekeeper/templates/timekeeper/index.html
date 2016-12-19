@@ -1,27 +1,23 @@
 {% extends "home/main.html" %}
 {% load wp_tags %}
-
 {% block metainfo %}
-    <meta name='description' content='View welborn productions time keeper app data.'>
+<meta name='description' content='View welborn productions time keeper app data.'>
 {% endblock %}
-
 {% block content %}
-
 {% for job, sessions in jobsessions.items %}
-    {% with forloop.counter as jobnum %}
-        <div id='{{ job.name|slugify }}' class='timekeeper-job-listing'>
-            <h4>{{ job.name }}</h4>
-            <div id='session-list-{{ jobnum }}' class='timekeeper-session-listing'>
-                {% for session in sessions %}
-                    <div id='session-{{ jobnum }}-{{ forloop.counter }}' class='timekeeper-session-box'>
-                        <span>{{ session }} == {{ session.pay }}</span>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endwith %}
-{% empty %}
-    <span>Sorry, nothing here yet.</span>
+{% with forloop.counter as jobnum %}
+<div id='{{ job.name|slugify }}' class='timekeeper-job-listing'>
+<h4>{{ job.name }}</h4>
+<div id='session-list-{{ jobnum }}' class='timekeeper-session-listing'>
+{% for session in sessions %}
+<div id='session-{{ jobnum }}-{{ forloop.counter }}' class='timekeeper-session-box'>
+<span>{{ session }} == {{ session.pay }}</span>
+</div>
 {% endfor %}
-
+</div>
+</div>
+{% endwith %}
+{% empty %}
+<span>Sorry, nothing here yet.</span>
+{% endfor %}
 {% endblock %}

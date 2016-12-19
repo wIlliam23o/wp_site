@@ -669,8 +669,7 @@ def xml_response(template_name, context=None):
     try:
         tmplate = loader.get_template(template_name)
         contextobj = Context(contextdict)
-        clean_render = htmltools.remove_whitespace(
-            htmltools.remove_comments(tmplate.render(contextobj)))
+        clean_render = tmplate.render(contextobj)
         response = HttpResponse(clean_render, content_type='application/xml')
     except Exception as ex:
         errmsg = 'Error: {}'.format(ex)

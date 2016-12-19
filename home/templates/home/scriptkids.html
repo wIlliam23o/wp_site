@@ -1,32 +1,28 @@
 {% extends "home/main.html" %}
 {% load wp_tags %}
 {% block title %}- Scr1pt K1dd13s{% endblock %}
-
 {% block metainfo %}
-	<meta name="robots" content="nofollow">
-	<meta name="descroption" content="A joke page that catches attempted access to wordpress, joomla, or other script-kiddie urls.">
+<meta name="robots" content="nofollow">
+<meta name="descroption" content="A joke page that catches attempted access to wordpress, joomla, or other script-kiddie urls.">
 {% endblock %}
-
 {% block content %}
-	<div class='home-welcome-box'>
-		{% if use_img %}
-			<div class="img-rounded centered">
-				<img src="{{ scriptkid_img }}">
-			</div>
-		{% endif %}
-		
-		<div class='home-welcome-text'>
-			I hope your bot chokes on this page, or your script crashes.
-			Whatever you were looking for isn't here.
-			
-			{% if use_ip %}
-				<div style="margin-top: 15px;">
-					Your ip has been logged: {{ ip_address }}
-				</div>
-			{% endif %}
-		</div>
-		
-	</div>
+<div class='home-welcome-box'>
+{% if use_img %}
+<div class="img-rounded centered">
+<img src="{{ scriptkid_img }}">
+</div>
+{% endif %}
+
+<div class='home-welcome-text'>
+I hope your bot chokes on this page, or your script crashes.
+Whatever you were looking for isn't here.
+
+{% if use_ip %}
+<div style="margin-top: 15px;">
+Your ip has been logged: {{ ip_address }}
+</div>
+{% endif %}
+</div>
+
+</div>
 {% endblock %}
-
-

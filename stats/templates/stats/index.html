@@ -1,70 +1,63 @@
 {% extends "home/main.html" %}
 {% load wp_tags %}
-
 {% block title %}- Stats{% endblock %}
-
 {% block metainfo %}
-    <meta name='description' content='Stats for welborn productions projects, apps, files, etc.'>
+<meta name='description' content='Stats for welborn productions projects, apps, files, etc.'>
 {% endblock %}
-
 {% block extrastylelink %}
-    {{ block.super }}
-    <link type='text/css' rel='stylesheet' href='/static/css/stats.min.css'/>
+{{ block.super }}
+<link type='text/css' rel='stylesheet' href='/static/css/stats.min.css'/>
 {% endblock %}
-
-<!-- Build Stats Overview -->
 {% block content %}
-    {% if stats %}
-        <div class='stats-header'>
-            <h3 class='header'>
-                Stats {% if label %}for {{ label }}{% endif %}
-            </h3>
-        </div>
-        {% for statgroup in stats %}
-            <div id='group-{{ statgroup.id }}' class='stats-group'>
-                <a href='javascript: void(0);' onclick='javascript: $("#group-{{ statgroup.id }}-items").slideToggle();' title='Click to toggle visibility.'>
-                    <div class='stats-group-name'>
-                        {{ statgroup.name }}
-                    </div>
-                </a>
-                <div id='group-{{ statgroup.id }}-items' class='stats-group-items'>
-                    {% for statitem in statgroup.items %}
-                        <div class='stats-item'>
-                            <div class='stats-item-name'>
-                                {{ statitem.name }}
-                            </div>
-                            <div class='stats-item-attrs'>
-                                {% if statitem.download_count or statitem.download_count == 0%}
-                                    <div class='stats-item-attr'>
-                                        <div class='stats-item-attr-label'>
-                                           downloads:
-                                        </div>
-                                        <div class='stats-item-attr-value'>
-                                            {{ statitem.download_count }}
-                                        </div>
-                                    </div>
-                                {% endif %}
-                                {% if statitem.view_count or statitem.view_count == 0 %}
-                                    <div class='stats-item-attr'>
-                                        <div class='stats-item-attr-label'>
-                                            views:
-                                        </div>
-                                        <div class='stats-item-attr-value'>
-                                            {{ statitem.view_count }}
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-        {% endfor %}
-
-    {% else %}
-        <h3 class='header'>
-            No stats available.
-        </h3>
-    {% endif %}
+{% if stats %}
+<div class='stats-header'>
+<h3 class='header'>
+Stats {% if label %}for {{ label }}{% endif %}
+</h3>
+</div>
+{% for statgroup in stats %}
+<div id='group-{{ statgroup.id }}' class='stats-group'>
+<a href='javascript: void(0);' onclick='javascript: $("#group-{{ statgroup.id }}-items").slideToggle();' title='Click to toggle visibility.'>
+<div class='stats-group-name'>
+{{ statgroup.name }}
+</div>
+</a>
+<div id='group-{{ statgroup.id }}-items' class='stats-group-items'>
+{% for statitem in statgroup.items %}
+<div class='stats-item'>
+<div class='stats-item-name'>
+{{ statitem.name }}
+</div>
+<div class='stats-item-attrs'>
+{% if statitem.download_count or statitem.download_count == 0%}
+<div class='stats-item-attr'>
+<div class='stats-item-attr-label'>
+downloads:
+</div>
+<div class='stats-item-attr-value'>
+{{ statitem.download_count }}
+</div>
+</div>
+{% endif %}
+{% if statitem.view_count or statitem.view_count == 0 %}
+<div class='stats-item-attr'>
+<div class='stats-item-attr-label'>
+views:
+</div>
+<div class='stats-item-attr-value'>
+{{ statitem.view_count }}
+</div>
+</div>
+{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+</div>
+{% endfor %}
+{% else %}
+<h3 class='header'>
+No stats available.
+</h3>
+{% endif %}
 {% endblock %}

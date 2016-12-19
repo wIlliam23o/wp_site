@@ -1,95 +1,79 @@
 {% extends 'home/main.html' %}
 {% load wp_tags %}
-
 {% block title %}- Apps{% endblock %}
-
 {% block metainfo %}
-    <meta name='description' content='Listing for all welborn productions web applications.'>
+<meta name='description' content='Listing for all welborn productions web applications.'>
 {% endblock %}
-
 {% block extrastylelink %}
-    <link type='text/css' rel='stylesheet' href='/static/css/apps.min.css' />
-    {{ block.super }}
+<link type='text/css' rel='stylesheet' href='/static/css/apps.min.css' />
+{{ block.super }}
 {% endblock %}
-
-<!-- Build Apps Listing -->
 {% block content %}
-    <!-- Apps Header -->
-    <div class='apps-header'>
-        <div class='apps-header-title'>
-            <a href='/apps'>
-                <h3 class='header'>Apps</h3>
-            </a>
-        </div>
-
-        <div class='apps-header-text'>
-                <span class='title'>Welborn productions web apps...</span>
-        </div>
-    </div>
-
-    <!-- Apps Listing -->
-    <div class='apps-listing-box'>
-        {% if apps %}
-            {% for app in apps %}
-                <div class='apps-listing-item-box'>
-                    <!-- Header -->
-                    <div class='apps-header-box'>
-                        <a href='/apps/{{ app.alias }}'>
-                            <span class='header apps-name {% if app.admin_only %}apps-admin-name{% endif %}'>{{ app.name }}</span>
-                        </a>
-                        <br>
-                        <span class='version'>version {{ app.version }}</span>
-                    </div>
-                    <!-- Description -->
-                    <div class='apps-desc apps-index'>
-                        <div class='desc'>{{ app.description|safe }}</div>
-                        <br>
-                        <div class='desc'>
-                            {{ app.longdesc|safe }}
-                        </div>
-                    </div>
-                    <!-- Goto Button -->
-                    <a href='/apps/{{ app.alias }}'>
-                        <div class='apps-button'>
-                            Go to {{ app.name }}
-                        </div>
-                    </a>
-                </div>
-            {% endfor %}
-
-            {# Build simple agent tools links... #}
-            {% for toolname, toolinfo in agenttools.items %}
-                <div class='apps-listing-item-box'>
-                    <div class='apps-header-box'>
-                        <a href='{{ toolinfo.url }}'>
-                            <span class='header apps-name apps-admin-name'>
-                                {{ toolname }}
-                            </span>
-                        </a>
-                    </div>
-                    <div class='apps-desc apps-index'>
-                        <div class='desc'>{{ toolinfo.description|safe }}</div>
-                    </div>
-                    <a href='{{ toolinfo.url }}'>
-                        <div class='apps-button'>
-                            Go to {{ toolname }}
-                        </div>
-                    </a>
-                    {% if toolinfo.simple_url %}
-                        <a href='{{ toolinfo.simple_url }}'>
-                            <div class='apps-button'>
-                                Go to {{ toolname}} (simple)
-                            </div>
-                        </a>
-                    {% endif %}
-                </div>
-            {% endfor %}
-
-        {% else %}
-            <!-- No Apps -->
-            <p>
-                Sorry, no apps are available right now.
-            </p>
-        {% endif %}
-    </div>
+<div class='apps-header'>
+<div class='apps-header-title'>
+<a href='/apps'>
+<h3 class='header'>Apps</h3>
+</a>
+</div>
+<div class='apps-header-text'>
+<span class='title'>Welborn productions web apps...</span>
+</div>
+</div>
+<div class='apps-listing-box'>
+{% if apps %}
+{% for app in apps %}
+<div class='apps-listing-item-box'>
+<div class='apps-header-box'>
+<a href='/apps/{{ app.alias }}'>
+<span class='header apps-name {% if app.admin_only %}apps-admin-name{% endif %}'>{{ app.name }}</span>
+</a>
+<br>
+<span class='version'>version {{ app.version }}</span>
+</div>
+<div class='apps-desc apps-index'>
+<div class='desc'>{{ app.description|safe }}</div>
+<br>
+<div class='desc'>
+{{ app.longdesc|safe }}
+</div>
+</div>
+<a href='/apps/{{ app.alias }}'>
+<div class='apps-button'>
+Go to {{ app.name }}
+</div>
+</a>
+</div>
+{% endfor %}
+{% for toolname, toolinfo in agenttools.items %}
+<div class='apps-listing-item-box'>
+<div class='apps-header-box'>
+<a href='{{ toolinfo.url }}'>
+<span class='header apps-name apps-admin-name'>
+{{ toolname }}
+</span>
+</a>
+</div>
+<div class='apps-desc apps-index'>
+<div class='desc'>{{ toolinfo.description|safe }}</div>
+</div>
+<a href='{{ toolinfo.url }}'>
+<div class='apps-button'>
+Go to {{ toolname }}
+</div>
+</a>
+{% if toolinfo.simple_url %}
+<a href='{{ toolinfo.simple_url }}'>
+<div class='apps-button'>
+Go to {{ toolname}} (simple)
+</div>
+</a>
+{% endif %}
+</div>
+{% endfor %}
+{% else %}
+<p>
+Sorry, no apps are available right now.
+</p>
+{% endif %}
+</div>
 {% endblock %}

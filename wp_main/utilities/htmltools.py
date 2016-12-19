@@ -280,8 +280,8 @@ def clean_html(source_string):
     """ runs the proper remove_ functions. on the source string
     """
 
-    # these things have to be done in a certain order to work correctly.
-    # hide_email, highlight, remove_comments, remove_whitespace
+    # This used to do more, but build_template.sh is cleaning everything
+    # before running.
     if source_string is None:
         log.debug('Final HTML for page was None!')
         return ''
@@ -289,11 +289,11 @@ def clean_html(source_string):
         log.debug('Final HTML for page was empty!')
         return ''
 
-    return remove_whitespace(
-        remove_comments(
-            highlight(
-                hide_email(
-                    source_string))))
+    return highlight(
+        hide_email(
+            remove_whitespace(source_string)
+        )
+    )
 
 
 def fatal_error_page(message=None):
@@ -696,9 +696,16 @@ def load_html_template(sfile, request=None, context=None):
     return None
 
 
+def remove_blanklines(source_string):
+    """ Removes blank lines from a string. """
+    return '\n'.join([l for l in source_string.splitlines() if l])
+
+
 def remove_comments(source_string):
     """ splits source_string by newlines and
         removes any line starting with <!-- and ending with -->.
+
+        DEPRECATED: build_template.sh removes comments before running.
     """
 
     def is_comment(line):

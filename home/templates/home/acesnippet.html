@@ -1,28 +1,24 @@
 {% load wp_tags %}
-
-{# Produce an embedded Ace editor snippet. #}
-{# The contents will be grabbed from this element before being replaced by Ace. #}
 {% if elementid and fileext and text %}
-    <div id='{{ elementid }}' class='ace-snippet' style='opacity: 0;'>
-        {% if request|is_textmode %}
-            {# Textmode browsers don't run javascript, so we will help them. #}
-            <pre>
+<div id='{{ elementid }}' class='ace-snippet' style='opacity: 0;'>
+{% if request|is_textmode %}
+<pre>
 {{ text | b64decode }}
-            </pre>
-        {% else %}
-            {{ text }}
-        {% endif %}
-    </div>
-    <script type='text/javascript'>
-        $(document).ready(function () {
-            wptools.setup_ace_snippet('{{ elementid }}', '{{ fileext }}');
-        });
-    </script>
+</pre>
 {% else %}
-    {% filter log_debug %}
-    Missing arguments in acesnippet.html.
-      elementid: {{ elementid }}
-        fileext: {{ fileext }}
-    text length: {{ text|length }}
-    {% endfilter %}
+{{ text }}
+{% endif %}
+</div>
+<script type='text/javascript'>
+$(document).ready(function () {
+wptools.setup_ace_snippet('{{ elementid }}', '{{ fileext }}');
+});
+</script>
+{% else %}
+{% filter log_debug %}
+Missing arguments in acesnippet.html.
+elementid: {{ elementid }}
+fileext: {{ fileext }}
+text length: {{ text|length }}
+{% endfilter %}
 {% endif %}

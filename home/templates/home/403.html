@@ -1,49 +1,44 @@
 {% extends "home/main.html" %}
 {% block title %}- Forbidden{% endblock %}
-
 {% block metainfo %}
-    <meta name="description" content="A denied access error.">
+<meta name="description" content="A denied access error.">
 {% endblock %}
-
 {% block content %}
-	<div class='error-box'>
-		{# Show messages from the messages framework #}
-		{% if messages %}
-			    {% for message in messages %}
-			    	{% if message.tags == 'error' %}
-			    		<div class="msg-framework-error">
-			    			{{ message }}
-			    		</div>
-			    	{% endif %}
-			    {% endfor %}
-		{% else %}
-			{% if request.path %}
-				<div class='error-message'>
-					Not allowed:
-				</div>
-				<div class='error-path'>
-					{{ request.path }}
-				</div>
-			{% endif %}
-		{% endif %}
-			<div class='error-home-message'>
-				{% if user_error %}
-					{{ user_error|safe }}
-				{% else %}
-					<span>You don't have permission to go there.</span>
-				{% endif %}
-
-				<div class='error-home-link'>
-					<a href='/'>Click here to go to the home page</a>,
-				</div>
-				<div class='error-home-message'>
-					or try my
-					<a href='/projects'>projects</a>,
-					<a href='/blog'>blog</a>,
-					<a href='/misc'>misc. stuff</a>,
-					or <a href='/apps'>apps</a> page.
-				</div>
-
-			</div>
-	</div>
+<div class='error-box'>
+{% if messages %}
+{% for message in messages %}
+{% if message.tags == 'error' %}
+<div class="msg-framework-error">
+{{ message }}
+</div>
+{% endif %}
+{% endfor %}
+{% else %}
+{% if request.path %}
+<div class='error-message'>
+Not allowed:
+</div>
+<div class='error-path'>
+{{ request.path }}
+</div>
+{% endif %}
+{% endif %}
+<div class='error-home-message'>
+{% if user_error %}
+{{ user_error|safe }}
+{% else %}
+<span>You don't have permission to go there.</span>
+{% endif %}
+<div class='error-home-link'>
+<a href='/'>Click here to go to the home page</a>,
+</div>
+<div class='error-home-message'>
+or try my
+<a href='/projects'>projects</a>,
+<a href='/blog'>blog</a>,
+<a href='/misc'>misc. stuff</a>,
+or <a href='/apps'>apps</a> page.
+</div>
+</div>
+</div>
 {% endblock %}

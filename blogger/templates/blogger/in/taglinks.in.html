@@ -1,0 +1,22 @@
+{# Template to build tag links section        #}
+{# Expects: {'post': <wp_blog object>,        #}
+{#           'tagnames': <list of tag names>} #}
+
+{% if tagnames %}
+    {% for tagname in tagnames %}
+        <div class='blog-post-tag-link-box'>
+            <a href='/blog/tag/{{ tagname }}'>
+                <span class='blog-post-tag-link-text'>
+                    {{ tagname }}
+                </span>
+            </a>
+        </div>
+    {% endfor %}
+{% else %}
+    {# No tag names given. #}
+    <div class='blog-post-tag-link-box'>
+        <span class='blog-post-tag-link-text'>
+            None
+        </span>
+    </div>
+{% endif %}

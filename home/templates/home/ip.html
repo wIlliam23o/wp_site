@@ -1,32 +1,30 @@
 {% extends "home/main.html" %}
 {% load wp_tags %}
 {% block title %}- Remote IP{% endblock %}
-
 {% block metainfo %}
-    <meta name="robots" content="nofollow">
-    <meta name="description" content="View your remote ip by visiting this welborn productions page. For plain-text you can visit /ip instead of /ip.html">
+<meta name="robots" content="nofollow">
+<meta name="description" content="View your remote ip by visiting this welborn productions page. For plain-text you can visit /ip instead of /ip.html">
 {% endblock %}
-
 {% block content %}
-    <div class='home-welcome-box'>
-        <div class='ip-info-box'>
-            <span class='ip-label'>
-                Your IP Address:
-            </span>
-            <br>
-            {% if request|get_remote_ip %}
-                <div class='ip-box'>
-                    {{ request|get_remote_ip }}
-                </div>
-                {% if request|get_remote_host %}
-                    <br>
-                    <div class='ip-box ip-host'>
-                        {{ request|get_remote_host }}
-                    </div>
-                {% endif %}
-            {% else %}
-                Sorry, I can't seem to locate your ip.
-            {% endif %}
-        </div>
-    </div>
+<div class='home-welcome-box'>
+<div class='ip-info-box'>
+<span class='ip-label'>
+Your IP Address:
+</span>
+<br>
+{% if request|get_remote_ip %}
+<div class='ip-box'>
+{{ request|get_remote_ip }}
+</div>
+{% if request|get_remote_host %}
+<br>
+<div class='ip-box ip-host'>
+{{ request|get_remote_host }}
+</div>
+{% endif %}
+{% else %}
+Sorry, I can't seem to locate your ip.
+{% endif %}
+</div>
+</div>
 {% endblock %}

@@ -1,107 +1,80 @@
 {% extends 'home/main.html' %}
 {% load wp_tags %}
-
 {% block metainfo %}
-	<meta name='description' content='Contents for a welborn productions project or script{% if file %}: {{ file }}{% else %}.{% endif %}'>
+<meta name='description' content='Contents for a welborn productions project or script{% if file %}: {{ file }}{% else %}.{% endif %}'>
 {% endblock %}
-
 {% block extrastylelink %}
-	<link type='text/css' rel='stylesheet' href='/static/css/projects.min.css' />
-	{{ block.super }}
+<link type='text/css' rel='stylesheet' href='/static/css/projects.min.css' />
+{{ block.super }}
 {% endblock %}
-
-<!-- Initial CSS to use -->
 {% block extrastyle %}
-	<style type='text/css'>
-	    #file-content {
-	    	height: 600px;
-	    	border-radius: 5px;
-	    	display: none;
-	    }
-		#file-menu { display: none; }
-		#file-info { display: none; }
-		#project-info { display: none; }
-	</style>
+<style type='text/css'>
+#file-content {
+height: 600px;
+border-radius: 5px;
+display: none;
+}
+#file-menu { display: none; }
+#file-info { display: none; }
+#project-info { display: none; }
+</style>
 {% endblock %}
-
-<!-- Viewer JS -->
 {% block javascript %}
-	<script type='text/javascript' src='/static/js/wpviewer-0.0.2.min.js'></script>
-	<script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
-	<script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
+<script type='text/javascript' src='/static/js/wpviewer-0.0.2.min.js'></script>
+<script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
+<script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
 {% endblock %}
-
-<!-- Floating message -->
 {% block floater %}
-	<div id='floater'>
-		<p id='floater-msg'>
-			Loading file: {{ file }}
-		</p>
-	</div>
+<div id='floater'>
+<p id='floater-msg'>
+Loading file: {{ file }}
+</p>
+</div>
 {% endblock %}
-<!-- File browser menu -->
 {% block verticalmenu %}
-	<div id='file-menu' class='vertical-menu'>
-		<ul id='file-menu-items' class='vertical-menu-main'>
-			<!-- Items will be added dynamically with wpviewer.js -->
-		</ul>
-	</div>
+<div id='file-menu' class='vertical-menu'>
+<ul id='file-menu-items' class='vertical-menu-main'>
+</ul>
+</div>
 {% endblock %}
-
-<!-- File content, dynamically loaded with AJAX (because big files may take too long) -->
 {% block content %}
-	<!-- Header/Title -->
-	<div id='title-header' class='title-box'>
-		<h3 class='title'>Source View</h3>
-	</div>
-
-	<!-- Project Info -->
-	<div id='project-info'>
-	    <a id='project-link' href='javascript: void(0);' onclick='javascript: void(0);'>
-	        <div id='project-title' class='project-title'>
-	            <h1 id='project-title-name' class='project-header'> </h1>
-	            <br/>
-
-	        </div>
-	    </a>
-	</div>
-
-	<!-- File Info -->
-	<div id='file-info'>
-	    <a id='file-link' href='javascript: void(0);' onclick='javascript: void(0);'>
-        	<div id='viewer-filename-box' class='viewer-filename-box'>
-        		<span id='viewer-filename' class='viewer-filename'> </span>
-        	</div>
-        	<div class='viewer-download-box'>
-            	<span class='viewer-download-text'>download</span>
-        	</div>
-    	</a>
-    </div>
-
-	<!-- File Content -->
-	<div id='file-content-box'>
-		<div id='file-content'>
-			No file loaded yet...
-		</div>
-	</div>
-	<!-- Setup ace editor.. -->
-	<script type='text/javascript'>
-	    wpviewer.setup_ace('{{ file }}');
-	</script>
+<div id='title-header' class='title-box'>
+<h3 class='title'>Source View</h3>
+</div>
+<div id='project-info'>
+<a id='project-link' href='javascript: void(0);' onclick='javascript: void(0);'>
+<div id='project-title' class='project-title'>
+<h1 id='project-title-name' class='project-header'> </h1>
+<br/>
+</div>
+</a>
+</div>
+<div id='file-info'>
+<a id='file-link' href='javascript: void(0);' onclick='javascript: void(0);'>
+<div id='viewer-filename-box' class='viewer-filename-box'>
+<span id='viewer-filename' class='viewer-filename'> </span>
+</div>
+<div class='viewer-download-box'>
+<span class='viewer-download-text'>download</span>
+</div>
+</a>
+</div>
+<div id='file-content-box'>
+<div id='file-content'>
+No file loaded yet...
+</div>
+</div>
+<script type='text/javascript'>
+wpviewer.setup_ace('{{ file }}');
+</script>
 {% endblock %}
-
 {% block bodyend %}
 <script type='text/javascript'>
-	$(document).ready(function () {
-		{# setup ajax #}
-		wptools.pre_ajax();
-
-		{# Load initial file #}
-		wpviewer.set_current_file('{{ file }}');
-		wpviewer.view_file('{{ file }}');
-
-		{# Scroll to file view #}
-		wptools.scroll_to_anchor('#file-content-box');
-	});
+$(document).ready(function () {
+wptools.pre_ajax();
+wpviewer.set_current_file('{{ file }}');
+wpviewer.view_file('{{ file }}');
+wptools.scroll_to_anchor('#file-content-box');
+});
 </script>
 {% endblock %}

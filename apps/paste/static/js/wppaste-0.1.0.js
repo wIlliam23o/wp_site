@@ -233,7 +233,7 @@ var wppaste = {
         var opts = options || {'nolangset': false};
         var pastesettings = wppaste.get_paste_settings();
         if (!opts.nolangset) {
-            // set language from cookie
+            // Set language from settings
             wppaste.set_selected_mode(pastesettings.paste_lang);
         }
         // Set theme
@@ -619,18 +619,18 @@ var wppaste = {
         for (newkey in newobj) {
             // See if the old key even exists.
             if (tmpobj[newkey]) {
-                // old key exists, make sure new value is good.
+                // Old key exists, make sure new value is good.
                 if (typeof(newobj[newkey]) !== 'undefined') {
-                    // new key is truthy, update the old one.
+                    // New key is defined, update the old one.
                     tmpobj[newkey] = newobj[newkey];
                 }
-                // otherwise the old key/value is kept.
+                // Otherwise the old key/value is kept.
             } else {
-                // add the new key.
+                // Add the new key.
                 tmpobj[newkey] = newobj[newkey];
             }
         }
-        // return the modified old object.
+        // Return the modified old object.
         return tmpobj;
     },
 

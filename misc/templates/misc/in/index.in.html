@@ -1,0 +1,165 @@
+{% extends "home/main.html" %}
+{% load wp_tags %}
+{% load misc_tags %}
+
+{% block title %}- Miscellaneous{% endblock %}
+
+{% block metainfo %}
+    <meta name='description' content='Miscellaneous tools or scripts from welborn productions.'>
+{% endblock %}
+
+{% block extrastylelink %}
+    <link type='text/css' rel='stylesheet' href='/static/css/misc.min.css' />
+    {{ block.super }}
+{% endblock %}
+
+{% block extrastyle %}
+    <style type='text/css'>
+        .wpbutton.misc-edit-button {
+            position: absolute;
+            right: 10px;
+        }
+    </style>
+{% endblock %}
+
+
+<!-- Build misc objects menu -->
+{% block verticalmenu %}
+    {% if miscobjects %}
+        <div class='vertical-menu'>
+            <ul class='vertical-menu-main'>
+                {% for misc in miscobjects %}
+                    <li class='vertical-menu-item'>
+                        <a class='vertical-menu-link' href='#{{ misc.alias }}'>
+                            <span class='vertical-menu-text'>{{ misc.name }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+{% endblock %}
+
+<!-- Build misc Listing -->
+{% block content %}
+    {% if miscobjects %}
+        <div class='wp-block misc-listing'>
+             <!-- Form for submitting file names to the /viewer -->
+             <form id='file-viewer' method='post' action='/view/'>{% csrf_token %}
+                  <!-- Includes Token for Django's CSRF handling. -->
+                  <input id='viewer-filename' name='file' type='hidden' value='none'>
+             </form>
+
+            {% for misc in miscobjects %}
+                <!-- Single misc listing. -->
+                <div id='{{ misc.alias }}' class='wp-block misc-container'>
+                    <!-- EDIT -->
+                    {% if request|is_staff %}
+                        <a href='/adminmisc/wp_misc/{{misc.id}}'>
+                            <div class='wpbutton misc-edit-button'>
+                                <span>edit</span>
+                            </div>
+                        </a>
+                    {% endif %}
+                    <!-- Header (Name/Link/Version) -->
+                    <div class='misc-header-box'>
+                        <a href='/misc/{{ misc.alias }}'>
+                            <span class='header misc-name'>{{ misc.name }}</span>
+                        </a>
+                        <br/>
+                        {% if misc.version %}
+                            <span class='version'>version {{ misc.version }}</span>
+                            <br/>
+                        {% endif %}
+                        <!-- Misc Type Info -->
+                        <div class='misc-type-info-box'>
+                            <div class='misc-type-info-item'>
+                                <span class='misc-type-label'>Type:&nbsp;</span>
+                                <span class='misc-type-value'>{{ misc|misctype_str }}</span>
+                            </div>
+                            <div class='misc-type-info-item'>
+                                <span class='misc-type-label'>Language:&nbsp;</span>
+                                <span class='misc-type-value'>{{ misc.language }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Short Description -->
+                    {% if misc.description %}
+                        <div id='miscdesc-{{ misc.alias }}' class='misc-desc misc-index'>
+                            <span class='desc'>{{ misc.description|safe }}</span>
+                        </div>
+                    {% endif %}
+
+
+                    <!-- Misc object download box -->
+                    <div class='misc-download-box misc-index'>
+                        <div class='misc-download-button misc-index'>
+                            <a href='/dl/{{ misc.filename }}' title='Download {{ misc.name }}.'>
+                                Download {{ misc.name }}
+                            </a>
+                        </div>
+                        {% if misc|is_viewable %}
+                            <div class='misc-download-button misc-index'>
+                                <a href='javascript: void(0);' title='View source code for {{ misc.name }} locally.' onclick='javascript: misctools.submitMisc("{{ misc.filename }}");'>
+                                    View {{ misc.name }} (local)
+                                </a>
+                            </div>
+                        {% endif %}
+                        <!-- Screenshots Button -->
+                        {% if misc|has_screenshots %}
+                            <div class='misc-download-button misc-index'>
+                                <a href='/misc/{{ misc.alias }}#screenshots' title='View screenshot for {{ misc.name }}.'>
+                                    Screenshots
+                                </a>
+                            </div>
+                        {% endif %}
+                        <!-- Long Description Button-->
+                        {% if misc|has_html_content or misc.usage_string %}
+                            <div class='misc-download-button misc-index'>
+                                <a href='javascript: void(0);' title='Show long description for {{ misc.name }}.' onclick='javascript: misctools.toggleLongDesc("{{ misc.alias }}");'>
+                                        <span id='misclongdescbtn-{{ misc.alias }}'>Show More</span>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if misc|has_html_content or misc.usage_string %}
+                        <!-- Long Description -->
+                        <div id='misclongdesc-{{ misc.alias }}' class='misclongdesc'>
+                            {{ misc|get_content}}
+                        </div>
+
+                        <!-- Usage String -->
+                        {% if misc.usage_string %}
+                            <div id='miscusage-{{ misc.alias }}' class='miscusage'>
+                                <pre>{{ misc.usage_string }}</pre>
+                            </div>
+                        {% endif %}
+
+                         <!-- Possible Warning -->
+                        {% if misc|has_warning %}
+                            <br>
+                            <div class='misc-warning'>
+                                {{ misc|get_warning }}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- No Misc Objects -->
+        <span>Sorry, no misc items are here yet.</span>
+    {% endif %}
+{% endblock %}
+
+{% block bodyend %}
+    <script type='text/javascript'>
+        $(document).ready( function () {
+            // hide long descriptions on load.
+            $('.misclongdesc').hide();
+            $('.miscusage').hide();
+        });
+    </script>
+{% endblock %}
