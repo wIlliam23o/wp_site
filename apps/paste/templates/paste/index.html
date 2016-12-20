@@ -266,47 +266,31 @@ Highlight Theme:
 <input id='replyto-id' type='hidden' value='{{ replyto.paste_id }}'/>
 {% endif %}
         <pre id='encoded-content' style='display: none;'>{% if paste.content %}{{ paste.content|b64encode }}{% elif replyto.content %}{{ replyto.content|b64encode }}{% endif %}</pre>
-    </div>
-
-    <!-- Setup ace editor.. -->
-    <script type='text/javascript'>
-        var doreadonly = {% if paste %}true{% else %}false{% endif %};
-
-        {# setup basic settings for ace. #}
-        wppaste.setup_ace(doreadonly);
-
-
-        {# setup individual-paste-related settings. #}
-        {% if paste.language %}
-            wppaste.set_selected_mode('{{ paste.language }}');
-            wppaste.load_paste_settings({'nolangset': true});
-        {% elif replyto.language %}
-            wppaste.set_selected_mode('{{ replyto.language }}');
-            wppaste.load_paste_settings({'nolangset': true});
-        {% else %}
-            {# Try loading cookie info to set ace mode. #}
-            wppaste.load_paste_settings();
-        {% endif %}
-
-        {% if paste.content or replyto.content %}
-            {# ---- Load paste content.. ---- #}
-            wppaste.load_paste_content();
-
-        {% else %}
-            {# Clear editor, This is a new paste. #}
-            wp_content.getSession().setValue('');
-        {% endif %}
-    </script>
+</div>
+<script type='text/javascript'>
+var doreadonly = {% if paste %}true{% else %}false{% endif %};
+wppaste.setup_ace(doreadonly);
+{% if paste.language %}
+wppaste.set_selected_mode('{{ paste.language }}');
+wppaste.load_paste_settings({'nolangset': true});
+{% elif replyto.language %}
+wppaste.set_selected_mode('{{ replyto.language }}');
+wppaste.load_paste_settings({'nolangset': true});
+{% else %}
+wppaste.load_paste_settings();
+{% endif %}
+{% if paste.content or replyto.content %}
+wppaste.load_paste_content();
+{% else %}
+wp_content.getSession().setValue('');
+{% endif %}
+</script>
 {% endblock content %}
-
 {% block bodyend %}
 <script type='text/javascript'>
-    $(document).ready(function () {
-        {# setup ajax #}
-        wptools.pre_ajax();
-
-        {# Scroll to content #}
-        wptools.scroll_to_anchor('#paste-content-box');
-    });
+$(document).ready(function () {
+wptools.pre_ajax();
+wptools.scroll_to_anchor('#paste-content-box');
+});
 </script>
 {% endblock %}

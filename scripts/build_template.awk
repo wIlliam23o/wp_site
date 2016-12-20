@@ -59,6 +59,10 @@ inpre==0 && /<pre/ {
     } else {
         print $0
     }
+    if (match($0, /<\/pre>/)) {
+        # Disable inpre, it was a single line pre.
+        inpre=0
+    }
     next
 }
 inpre==1 {
