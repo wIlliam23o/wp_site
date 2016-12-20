@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Runs `vulture` on non templatetags/settings files.
+# Runs `vulture` on various python source files, filterable with options.
 # -Christopher Welborn 12-19-2016
 appname="vulture_test"
 appversion="0.0.1"
