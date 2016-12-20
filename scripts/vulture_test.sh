@@ -148,6 +148,7 @@ total=0
 while IFS= read -r line; do
     # Migrations are generated, so they are not noteworthy right now.
     [[ "$line" =~ /migrations/ ]] && continue
+
     is_admin=0
     [[ "$line" =~ /admin.py: ]] && is_admin=1
     is_middleware=0

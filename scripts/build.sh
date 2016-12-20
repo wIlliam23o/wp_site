@@ -87,7 +87,7 @@ function build_browserify_file {
     browserify_outname="$(get_browserify_outname "$jsfile")"
     browserify_outrelname="${browserify_outname##*..}"
     browserify_outshortname="${browserify_outrelname##*/}"
-    if ! is_modified "$jsfile" "$browserify_outname" && (( ! forced_mode )); then
+    if (( ! forced_mode )) && ! is_modified "$jsfile" "$browserify_outname"; then
         debug_lbl "Skipping non-modified browserify file:" "$relshortname"
         return 0
     fi
@@ -496,11 +496,11 @@ if ((do_all)); then
 fi
 
 # Selective builds.
-if (( do_js )) || (( do_browserify )); then
+if ((do_js || do_browserify)); then
     build_js
 fi
 
-if (( do_sass )); then
+if ((do_sass)); then
     build_sass
 fi
 
