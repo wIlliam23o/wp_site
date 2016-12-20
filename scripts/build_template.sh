@@ -15,18 +15,7 @@ shopt -s nullglob
 debug_mode=0
 
 # Sed program to "build" templates.
-sedprogram='
-# Remove blank lines.
-/^$/d;
-# Remove leading whitespace.
-s/^[ \t]*//;
-# Remove single line html comments.
-/^<\!--.*-->$/d;
-# Remove single line js block comments.
-/^\/\*.*\*\/$/d;
-# Remove single line django comments.
-/^{\#.*\#}/d;
-'
+awkprogramfile="$appdir/build_template.awk"
 
 # Count of non-modified template files found when running.
 non_modified_templates=0
@@ -43,6 +32,11 @@ function build_template {
     #   $1  : Input file name (*.in.html)
     #   $2  : Optional output file name.
     local filename=$1 outfile=$2
+    declare -a awkargs=(
+        "-v" "build_template_ver=$appversion"
+        "-f" "$awkprogramfile"
+    )
+    # ((debug_mode)) && { do_stdin=1; awkargs+=("-v" "debugmode=1"); }
 
     if [[ -z "$filename" ]]; then
         echo_err "No filename given to \`build_template\`!"
@@ -50,11 +44,11 @@ function build_template {
     fi
     if ((do_stdout)) || [[ -z "$outfile" ]]; then
         # Build to stdout.
-        sed "$sedprogram" "$filename" && return 0
+        awk "${awkargs[@]}" "$filename" && return 0
     else
         # Build to file if
         if ((do_forced)) || is_modified "$filename" "$outfile"; then
-            sed "$sedprogram" "$filename" > "$outfile" || return 1
+            awk "${awkargs[@]}" "$filename" > "$outfile" || return 1
             echo -e "Built template: $outfile"
         else
             let non_modified_templates+=1
@@ -83,7 +77,7 @@ function build_templates {
         filename="${filepath##*/}"
         filebase="${filename%.*.*}"
         outfile="$(readlink -f "${outdir}/${filebase}.html")"
-        if ((do_dryrun)) && is_modified "$filepath" "$outfile"; then
+        if ((do_dryrun)) && { ((do_forced)) || is_modified "$filepath" "$outfile"; }; then
             echo -e "Would've built: $outfile"
             continue
         fi
