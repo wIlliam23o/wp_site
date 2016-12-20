@@ -6,19 +6,24 @@ appname="vulture_test"
 appversion="0.0.1"
 apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
-# appdir="${apppath%/*}"
+appdir="${apppath%/*}"
 
 if ! hash vulture; then
     printf "\nCannot find \`vulture\` executable, install it with \`pip\`.\n" 1>&2
     exit 1
 fi
 
-script_paths=(*.py */*.py **/*.py)
+script_paths=(
+    "$appdir"/../*.py
+    "$appdir"/../**/*.py
+    "$appdir"/../**/**/*.py
+)
+# Automatically exclude files that will always show errors.
+# They include globals, come from another repo, or they are only libraries.
 exclude_paths=(
     "wp_main/settings.py"
     "projects/static/files"
     "misc/static/files"
-    "wp_main/templatetags"
 )
 
 function echo_err {
@@ -56,7 +61,7 @@ function print_usage {
 
     Usage:
         $appscript -h | -v
-        $appscript [-a] [-m] [-M] [-n] [-s] [-u] [FILE...]
+        $appscript [-a] [-m] [-M] [-n] [-s] [-t] [-T] [-u] [FILE...]
 
     Options:
         FILE             : File to test with vulture.
@@ -67,6 +72,8 @@ function print_usage {
         -M,--middleware  : Test middleware files.
         -n,--normal      : Test normal files.
         -s,--scripts     : Test utility script files.
+        -t,--templates   : Test templatetags files.
+        -T,--tests       : Test test files.
         -u,--urls        : Test urls files.
         -v,--version     : Show $appname version and exit.
 
@@ -80,6 +87,8 @@ do_middleware=0
 do_models=0
 do_normal=0
 do_scripts=0
+do_templates=0
+do_tests=0
 do_urls=0
 do_all=1
 for arg; do
@@ -108,6 +117,14 @@ for arg; do
             do_scripts=1
             do_all=0
             ;;
+        "-t" | "--templates")
+            do_templates=1
+            do_all=0
+            ;;
+        "-T" | "--tests")
+            do_tests=1
+            do_all=0
+            ;;
         "-u" | "--urls")
             do_urls=1
             do_all=0
@@ -129,6 +146,8 @@ done
 
 total=0
 while IFS= read -r line; do
+    # Migrations are generated, so they are not noteworthy right now.
+    [[ "$line" =~ /migrations/ ]] && continue
     is_admin=0
     [[ "$line" =~ /admin.py: ]] && is_admin=1
     is_middleware=0
@@ -137,25 +156,32 @@ while IFS= read -r line; do
     [[ "$line" =~ /models.py: ]] && is_models=1
     is_script=0
     [[ "$line" =~ scripts/ ]] && is_script=1
+    is_template=0
+    [[ "$line" =~ /template[^/]+?/ ]] && is_template=1
+    is_test=0
+    [[ "$line" =~ tests/ ]] && is_test=1
     is_urls=0
     [[ "$line" =~ /urls.py: ]] && is_urls=1
-    is_normal="$((!is_admin && !is_models && !is_urls))"
-    print_it=0
-    if ((do_all)); then
-        print_it=1
-    elif ((do_admin && is_admin)); then
-        print_it=1
-    elif ((do_middleware && is_middleware)); then
-        print_it=1
-    elif ((do_models && is_models)); then
-        print_it=1
-    elif ((do_scripts && is_script)); then
-        print_it=1
-    elif ((do_urls && is_urls)); then
-        print_it=1
-    elif ((do_normal && is_normal)); then
-        print_it=1
-    fi
+    is_normal="$((
+        !is_admin &&
+        !is_models &&
+        !is_middleware &&
+        !is_script &&
+        !is_template &&
+        !is_test &&
+        !is_urls
+    ))"
+    print_it="$((
+        do_all ||
+        (do_admin && is_admin) ||
+        (do_middleware && is_middleware) ||
+        (do_models && is_models) ||
+        (do_scripts && is_script) ||
+        (do_templates && is_template) ||
+        (do_tests && is_test) ||
+        (do_urls && is_urls) ||
+        (do_normal && is_normal)
+    ))"
     if ((print_it)); then
         printf "%s\n" "$line"
         let total+=1
