@@ -1,3 +1,4 @@
+{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "misc/index.html" %}
 {% load wp_tags %}
 {% load misc_tags %}
@@ -51,48 +52,58 @@ $('.screen').width('100%');
 {% endif %}
 {% if misc.usage_string %}
 <div class='miscusage miscusage-main'>
-<pre>{{ misc.usage_string }}</pre>
-</div>
-{% endif %}
-{% if misc|has_html_content or misc.usage_string %}
-{% if misc|has_warning %}
-<br>
-<div class='misc-warning'>
-{{ misc|get_warning }}
-</div>
-{% endif %}
-{% if misc|has_screenshots %}
-<div class='misc-desc'>
-<div class='title-box' id='screenshots'>
-<h3 class='title'>Screenshots:</h3>
-</div>
-{{ misc|get_screenshots }}
-</div>
-{% endif %}
-<br>
-<div class='misc-download-box-wrapper'>
-<div class='misc-download-box'>
-<div class='misc-download-button'>
-<a href='/dl/{{ misc.filename }}'>Download {{ misc.name }}</a>
-</div>
-{% if misc|is_viewable %}
-<div class='misc-download-button'>
-<form id='file-viewer' method='post' action='/view/'>{% csrf_token %}
-<input id='viewer-filename' name='file' type='hidden' value='{{ misc.filename }}'>
-</form>
-<a href='javascript: void(0);' onclick='javascript: $("#file-viewer").submit();'>
-View {{ misc.name }} (local)
-</a>
-</div>
-{% endif %}
-</div>
-</div>
-{% else %}
-<span>Sorry, no information found for this item: {{ requested_page }}</span>
-{% endif %}
-</div>
-</div>
-{% else %}
-<span>Sorry, no misc items are here yet.</span>
-{% endif %}
+                        <pre>{{ misc.usage_string }}</pre>
+                    </div>
+                {% endif %}
+
+                {% if misc|has_html_content or misc.usage_string %}
+                    <!-- Possible Warning -->
+                    {% if misc|has_warning %}
+                        <br>
+                        <div class='misc-warning'>
+                            {{ misc|get_warning }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Screenshots -->
+                    {% if misc|has_screenshots %}
+                        <div class='misc-desc'>
+                            <div class='title-box' id='screenshots'>
+                                <h3 class='title'>Screenshots:</h3>
+                            </div>
+                            <!-- Insert screenshots code -->
+                            {{ misc|get_screenshots }}
+                        </div>
+                    {% endif %}
+                    <!-- Misc object download box -->
+                    <br>
+                    <div class='misc-download-box-wrapper'>
+                        <div class='misc-download-box'>
+                            <div class='misc-download-button'>
+                                <a href='/dl/{{ misc.filename }}'>Download {{ misc.name }}</a>
+                            </div>
+                            {% if misc|is_viewable %}
+                                <div class='misc-download-button'>
+                                    <!-- Form for submitting file names to the /viewer -->
+                                    <form id='file-viewer' method='post' action='/view/'>{% csrf_token %}
+                                        <!-- Includes Token for Django's CSRF handling. -->
+                                        <input id='viewer-filename' name='file' type='hidden' value='{{ misc.filename }}'>
+                                    </form>
+                                    <a href='javascript: void(0);' onclick='javascript: $("#file-viewer").submit();'>
+                                        View {{ misc.name }} (local)
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- No content -->
+                    <span>Sorry, no information found for this item: {{ requested_page }}</span>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <!-- No Misc Object Found! -->
+        <span>Sorry, no misc items are here yet.</span>
+    {% endif %}
 {% endblock %}

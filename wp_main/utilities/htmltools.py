@@ -291,7 +291,9 @@ def clean_html(source_string):
 
     return highlight(
         hide_email(
-            remove_whitespace(source_string)
+            remove_comments(
+                remove_whitespace(source_string)
+            )
         )
     )
 

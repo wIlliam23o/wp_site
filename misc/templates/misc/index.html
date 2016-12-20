@@ -1,3 +1,4 @@
+{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "home/main.html" %}
 {% load wp_tags %}
 {% load misc_tags %}
@@ -106,29 +107,33 @@ Screenshots
 </div>
 {% if misc.usage_string %}
 <div id='miscusage-{{ misc.alias }}' class='miscusage'>
-<pre>{{ misc.usage_string }}</pre>
-</div>
-{% endif %}
-{% if misc|has_warning %}
-<br>
-<div class='misc-warning'>
-{{ misc|get_warning }}
-</div>
-{% endif %}
-{% endif %}
-</div>
-{% endfor %}
-</div>
-{% else %}
-<span>Sorry, no misc items are here yet.</span>
-{% endif %}
+                                <pre>{{ misc.usage_string }}</pre>
+                            </div>
+                        {% endif %}
+
+                         <!-- Possible Warning -->
+                        {% if misc|has_warning %}
+                            <br>
+                            <div class='misc-warning'>
+                                {{ misc|get_warning }}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- No Misc Objects -->
+        <span>Sorry, no misc items are here yet.</span>
+    {% endif %}
 {% endblock %}
+
 {% block bodyend %}
-<script type='text/javascript'>
-$(document).ready( function () {
-// hide long descriptions on load.
-$('.misclongdesc').hide();
-$('.miscusage').hide();
-});
-</script>
+    <script type='text/javascript'>
+        $(document).ready( function () {
+            // hide long descriptions on load.
+            $('.misclongdesc').hide();
+            $('.miscusage').hide();
+        });
+    </script>
 {% endblock %}

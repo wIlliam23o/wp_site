@@ -15,7 +15,7 @@ BEGIN {
     debug("DEBUGMODE", debugmode)
     print "{# Generated using build_template.sh v. "build_template_ver" #}"
 }
-inpre==0 && /^<!--.+-->$/ {
+inpre==0 && /[ \t]?<!--.+-->$/ {
     # Single line html comment.
     # Skip.
     if (debugmode == 1) {
