@@ -1,1 +1,1 @@
-updateobject.py
+/home/cj/scripts/welbornprod/wp_site/scripts/updateobject.py
