@@ -34,6 +34,8 @@ def delete_sel_expired(modeladmin, request, queryset):
     pstr = plural(querylen, 'paste')
     msg = 'Deleted {} of {} selected {}.'.format(delcount, querylen, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
+
+
 delete_sel_expired.short_description = 'Delete selected expired pastes'
 
 
@@ -60,8 +62,10 @@ def disable_sel_expired(modeladmin, request, queryset):
     querylen = len(queryset)
     discnt = disable_expired(queryset)
     pstr = plural(querylen, 'paste')
-    msg = 'Disabled {} of {} selected {}.'.format(discnt, pstr)
+    msg = 'Disabled {} of {} selected {}.'.format(discnt, querylen, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
+
+
 disable_sel_expired.short_description = 'Disable selected expired pastes'
 
 
@@ -71,6 +75,8 @@ def disable_pastes(modeladmin, request, queryset):
     pstr = plural(dcnt, 'paste')
     msg = 'Disabled {} {}.'.format(dcnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
+
+
 disable_pastes.short_description = 'Disable selected pastes'
 
 
@@ -80,6 +86,8 @@ def enable_pastes(modeladmin, request, queryset):
     pstr = plural(encnt, 'paste')
     msg = 'Enabled {} {}.'.format(encnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
+
+
 enable_pastes.short_description = 'Enable selected pastes'
 
 
@@ -90,6 +98,8 @@ def hold_sel(modeladmin, request, queryset):
     msg = '{} {} marked as \'onhold\'.'.format(heldcnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
     return heldcnt
+
+
 hold_sel.short_description = 'Hold selected pastes'
 
 
@@ -110,6 +120,8 @@ def privatize_sel(modeladmin, request, queryset):
     msg = '{} of {} {} marked as private.'.format(privcnt, selcnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
     return privcnt
+
+
 privatize_sel.short_description = 'Privatize selected pastes'
 
 
@@ -121,6 +133,8 @@ def remove_hold_sel(modeladmin, request, queryset):
     msg = '{} {} marked as not \'onhold\'.'.format(notheldcnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
     return notheldcnt
+
+
 remove_hold_sel.short_description = 'Remove hold on selected pastes'
 
 
@@ -132,6 +146,8 @@ def unprivatize_sel(modeladmin, request, queryset):
     msg = '{} of {} {} marked as not private.'.format(privcnt, selcnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
     return privcnt
+
+
 unprivatize_sel.short_description = 'Unprivatize selected pastes'
 
 
