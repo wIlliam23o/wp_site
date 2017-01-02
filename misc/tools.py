@@ -10,7 +10,7 @@ import logging
 import os
 
 from django.template import loader, Template
-from django.template.base import TemplateDoesNotExist
+from django.template.exceptions import TemplateDoesNotExist
 
 from misc.models import wp_misc
 from misc.types import misctype_byname

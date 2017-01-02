@@ -10,14 +10,13 @@ import logging
 import os.path
 import base64
 import re
-from sys import version as sysversion
 
 # Fixing html fragments (from shortening blog posts and other stuff)
 from tidylib import tidy_fragment
 
 # Django template loaders
 from django.template import RequestContext, Context, loader
-from django.template.base import TemplateDoesNotExist
+from django.template.exceptions import TemplateDoesNotExist
 from django.conf import settings
 
 # Basic utilities and highlighting

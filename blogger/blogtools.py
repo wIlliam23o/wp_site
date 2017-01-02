@@ -12,7 +12,7 @@ import logging
 # Global settings
 from django.conf import settings
 from django.template import loader, Template
-from django.template.base import TemplateDoesNotExist
+from django.template.exceptions import TemplateDoesNotExist
 
 # For trimming posts.
 import lxml.html
