@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 # simple redirect urls.
 from django.views.generic.base import RedirectView
 # login url is set in settings
@@ -21,9 +21,8 @@ from wp_main.robots import robots
 # admin.autodiscover()
 
 # Main Site (home)
-urlpatterns = patterns(
+urlpatterns = [
     # No common prefix for these.
-    '',
     # 404 tester
     url(r'^404\.html?$',
         homeviews.view_404),
@@ -83,84 +82,73 @@ urlpatterns = patterns(
     # about page
     url(r'^[Aa]bout/?$',
         homeviews.view_about),
-)
+]
 
 # Apps views (apps) (see apps.urls)
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'^[Aa]pps/?',
         include('apps.urls')),
     # shortcut for /apps/paste
     url(r'^[Pp]aste/?',
         include('apps.paste.urls')),
-)
+]
 
 # Image share
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'^[Ii][Mm][Gg]/?',
         include('img.urls'))
-)
+]
 
 # Projects view (projects)
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'^[Pp]rojects/?',
         include('projects.urls'))
-)
+]
 
 # Misc view (misc)
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'^[Mm]isc/?',
         include('misc.urls'))
-)
+]
 # Download view (downloads)
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     # /dl/
     url(r'^[Dd][Ll]/?',
         include('downloads.urls'))
-)
 
+]
 # Viewer view (viewer)
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'^[Vv]iew/?',
         include('viewer.urls'))
-)
+]
 
 # Blogger views (blogger)
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'^[Bb]log/?',
         include('blogger.urls'))
-)
+]
 
 # Searcher views (searcher)
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'^[Ss]earch/?',
         include('searcher.urls'))
-)
+]
 
 # Private Sandbox views.
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'^[Ss]and[Bb]ox/?',
         include('sandbox.urls'))
-)
+]
 
 # Stats views.
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     # stats info
     url(r'^[Ss]tats/?',
         include('stats.urls'))
-)
+]
 # Admin/Other
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     # Admin docs.
     url(r'^admin/doc/?',
         include('django.contrib.admindocs.urls')),
@@ -168,7 +156,7 @@ urlpatterns += patterns(
     # Default admin site.
     url(r'^admin/?',
         include(admin_site.urls)),
-)
+]
 
 # Error handlers
 handler404 = 'home.views.view_404'
@@ -178,8 +166,7 @@ handler500 = 'home.views.view_500'
 # Script Kiddie attempts
 # (not sure what to do right now except show
 #  them a msg stating how dumb they are.)
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     # wordpress login
     url(r'^wp-admin',
         homeviews.view_scriptkids),
@@ -191,31 +178,28 @@ urlpatterns += patterns(
         homeviews.view_scriptkids),
     url(r'^admin\.php$',
         homeviews.view_scriptkids),
-)
+]
 
 # URL Junk (from base64 encoded links)
 # These don't get decoded for bots without javascript, so they end up here.
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     # mailto: cj...
     url(r'^bWFpbHRvOmNqQHdlbGJvcm5wcm9kLmNvbQ==',
         homeviews.view_no_javascript),
-)
+]
 
 # Simple redirects
-urlpatterns += patterns(
-    '',
+urlpatterns += [
     url(r'^favicon\.ico$',
         RedirectView.as_view(
             url='/static/images/favicons/favicon.ico',
             permanent=True
         )),
-)
+]
 
 # Debug toolbar explicit setup (per new debug_toolbar version)
 if settings.DEBUG:
     import debug_toolbar
-    urlpatterns += patterns(
-        '',
+    urlpatterns += [
         url(r'^__debug__/', include(debug_toolbar.urls)),
-    )
+    ]

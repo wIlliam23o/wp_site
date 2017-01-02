@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from apps.timekeeper import views
 # Patterns for pastebin app.
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # timekeeper main
     url(r'^/?$', views.view_index),
-)
+]
