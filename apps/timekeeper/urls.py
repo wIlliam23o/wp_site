@@ -4,5 +4,5 @@ from apps.timekeeper import views
 # Patterns for pastebin app.
 urlpatterns = [
     # timekeeper main
-    url(r'^/?$', views.view_index),
+    url(r'^$', views.view_index),
 ]

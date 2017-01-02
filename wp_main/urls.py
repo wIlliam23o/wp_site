@@ -5,6 +5,8 @@ from django.conf.urls import include, url
 from django.views.generic.base import RedirectView
 # login url is set in settings
 from django.conf import settings
+# login views.
+from django.contrib.auth import views as auth_views
 # main views
 from home import views as homeviews
 from home.admin import admin_site
@@ -49,7 +51,7 @@ urlpatterns = [
         homeviews.view_ip),
     # login processor
     url(settings.LOGIN_URL_REGEX,
-        'django.contrib.auth.views.login'),
+        auth_views.login),
     # bad login message
     url(r'^badlogin\.html?$',
         homeviews.view_badlogin),

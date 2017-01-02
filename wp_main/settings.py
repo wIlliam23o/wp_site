@@ -12,7 +12,7 @@ SYSVERSION = sys.version
 # Version for welbornprod.com
 WPVERSION = '2.4.1'
 
-TEMPLATE_DEBUG, DEBUG = settings_local.TEMPLATE_DEBUG, settings_local.DEBUG
+DEBUG = settings_local.DEBUG
 
 # Django messages framework, message-levels
 # from django.contrib.messages import constants as message_constants
@@ -78,7 +78,6 @@ USER_AGENTS_CACHE = 'default'
 
 # main app (location of settings.py)
 MAIN_DIR = os.path.join(BASE_DIR, 'wp_main')
-TEMPLATES_BASE = os.path.join(MAIN_DIR, 'templates')
 
 # IP's debug_toolbar should be shown to.
 INTERNAL_IPS = tuple(SECRETS.settings.get('internal_ips', []))
@@ -127,15 +126,18 @@ STATICFILES_FINDERS = (
     #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
+templates_base = os.path.join(MAIN_DIR, 'templates')
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'APP_DIRS': True,
+        'BASE': templates_base,
+        'DEBUG': settings_local.TEMPLATE_DEBUG,
         'DIRS': (
-            TEMPLATES_BASE,
-            os.path.join(TEMPLATES_BASE, 'admin/templates'),
-            os.path.join(TEMPLATES_BASE, 'admindoc/templates'),
+            templates_base,
+            os.path.join(templates_base, 'admin/templates'),
+            os.path.join(templates_base, 'admindoc/templates'),
             # Include project pages as possible templates.
             os.path.join(BASE_DIR, 'projects/static/html'),
             # Include blog post html as possible templates.
