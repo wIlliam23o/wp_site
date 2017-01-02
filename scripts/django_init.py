@@ -94,8 +94,8 @@ def init_django():
             sys.path.insert(0, require_dir)
 
     # Required since 1.7
-    import django
-    django.setup()
+    from django import setup
+    setup()
 
     # Success
     initialized = True

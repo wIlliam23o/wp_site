@@ -9,12 +9,6 @@
 import os
 import sys
 
-import warnings
-
-from django.utils.deprecation import RemovedInDjango19Warning
-
-warnings.filterwarnings(action='ignore', category=RemovedInDjango19Warning)
-
 
 def import_err(name, exc, module=None, local=False):
     """ Print a helpful message for missing third-party/local libraries. """
@@ -195,8 +189,19 @@ def do_list_apps():
     if not UPDATEABLE_APPS:
         raise ValueError('No updateable apps found!')
 
-    for appmodule in UPDATEABLE_APPS:
-        print('{:>16}: {}'.format(appmodule.name, appmodule.__file__))
+    for appmodule in sorted(UPDATEABLE_APPS, key=lambda m: m.name):
+        try:
+            cnt = appmodule.model.objects.count()
+        except Exception:
+            cnt = 0
+        print(
+            '{:>16}: {:<16} Objects: {:<4} Path: {}'.format(
+                appmodule.name,
+                objectupdater.get_type_name(appmodule.model),
+                cnt,
+                os.path.split(appmodule.__file__)[0],
+            )
+        )
 
     print('\nUpdateable apps: {}'.format(len(UPDATEABLE_APPS)))
     return 0
