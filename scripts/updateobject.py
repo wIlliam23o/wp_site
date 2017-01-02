@@ -100,6 +100,7 @@ def trim_ext(s):
     """ Helper for trimming .py from a filename (for aliases, and _SCRIPT) """
     return os.path.splitext(s)[0]
 
+
 # Directory where the alias scripts for updateobject.py can be found.
 SCRIPTSDIR = django_init.scripts_dir
 
@@ -406,7 +407,7 @@ def get_model_ids(modelinfo):
     except Exception as ex:
         print('Unable to get ids for: {}'.format(modelinfo['name']))
         return set()
-    return {o.id for i in objects}
+    return {o.id for o in objects}
 
 
 def iter_paste_children(paste, level=1):
@@ -437,6 +438,7 @@ def print_pasteresult(iresult):
     """ Print a tuple result from iter_children/iter_pastes """
     indention = '  ' * iresult.level
     print('{}{!r}'.format(indention, iresult.paste))
+
 
 # Set list handler for this model.
 listfuncs = {
