@@ -11,6 +11,8 @@ model = wp_blog
 name = 'Blog'
 # Attributes to use for identifiers when looking up an object.
 attrs = ('title', 'slug')
+# Aliases for this app name,
+aliases = ('blogger', )
 
 
 def do_list():
@@ -27,3 +29,8 @@ def do_list():
         print('    {} ({})'.format(post.title, post.slug))
 
     return True
+
+
+def get_header(obj):
+    """ Return a formatted header string, for listing. """
+    return obj.title
