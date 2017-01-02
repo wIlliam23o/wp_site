@@ -204,7 +204,8 @@ class Highlighter(template.Node):
         self.embedded = embedded
 
     def render(self, context):
-        """ Render the highlighted code according to the user's lexer name. """
+        """ Render the highlighted code according to the user's lexer name.
+        """
         try:
             lexer_name = template.Variable(self.lexer_name).resolve(context)
         except template.VariableDoesNotExist:
@@ -289,13 +290,12 @@ class ImageViewer(template.Node):
             log.debug('Can\'t list dir: {}\n{}'.format(images_dir, ex))
             return None
 
-        # Helper functions for building screenshots.
-        relative_img = lambda filename: os.path.join(relative_dir, filename)
-        good_format = (lambda filename: (
-            os.path.splitext(filename)[-1] in formats))
-
         # Build acceptable pics list
-        good_pics = [relative_img(f) for f in all_files if good_format(f)]
+        good_pics = [
+            os.path.join(relative_dir, f)
+            for f in all_files
+            if os.path.splitext(f)[-1] in formats
+        ]
 
         # auto-pick noscript image if needed
         if len(good_pics) > 0:

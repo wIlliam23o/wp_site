@@ -15,7 +15,11 @@ import re
 from tidylib import tidy_fragment
 
 # Django template loaders
-from django.template import RequestContext, loader
+from django.template import (
+    Context,
+    RequestContext,
+    loader
+)
 from django.template.exceptions import TemplateDoesNotExist
 from django.conf import settings
 
@@ -812,13 +816,31 @@ def render_template(tmplate, context=None, request=None):
         On errors, log the error and return None.
     """
     context = context or {}
-    if (request is not None) and (context.get('request', None) is None):
-        context['request'] = request
-    print('USING CONTEXT: {!r}'.format(context))
-    print('USING REQUEST: {!r}'.format(request))
+    # Ensure context has a 'request' key when a request is given.
+    userequest = context.get('request', None) if request is None else request
+    if (userequest is not None) and (context.get('request', None) is None):
+        context['request'] = userequest
+
+    if userequest is None:
+        log.debug(
+            '\n'.join((
+                'Using context without a request (Context): {name}',
+                '    Context key length: {count}'
+            )).format(name=tmplate.origin.name, count=len(context))
+        )
+        contextobj = Context(context)
+    else:
+        log.debug(
+            '\n'.join((
+                'Using context with request (RequestContext): {name}',
+                '    Context key length: {count}'
+            )).format(name=tmplate.origin.name, count=len(context))
+        )
+        contextobj = RequestContext(userequest, context)
+
     # Try rendering.
     try:
-        content = tmplate.render(RequestContext(request, context))
+        content = tmplate.render(contextobj)
     except Exception as ex:
         errmsg = '\n'.join((
             'Error rendering template: {name} ',

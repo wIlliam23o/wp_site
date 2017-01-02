@@ -40,9 +40,10 @@ def index(request):
     else:
         latest_tweet = None
 
+    featuredblog = hometools.get_featured_blog(homeconfig)
     # render main page
     context = {
-        'featured_blog_post': hometools.get_featured_blog(homeconfig),
+        'featured_blog_post': featuredblog,
         'featured_project': hometools.get_featured_project(homeconfig),
         'featured_app': hometools.get_featured_app(homeconfig),
         'welcome_message': homeconfig.welcome_message,

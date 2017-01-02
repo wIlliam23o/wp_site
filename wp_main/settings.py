@@ -127,7 +127,6 @@ STATICFILES_FINDERS = (
 )
 
 templates_base = os.path.join(MAIN_DIR, 'templates')
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -298,7 +297,11 @@ if SERVER_LOCATION == 'remote':
     }
 
 DEBUG_TOOLBAR_CONFIG = {
-    'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'}
+    'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'},
+    # Leave this empty to use the jQuery included on every wp page.
+    'JQUERY_URL': '',
+    # Hide the toolbar on load.
+    'SHOW_COLLAPSED': True,
 }
 # Don't automatically adjust project settings based on DEBUG!
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
