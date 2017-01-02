@@ -15,7 +15,7 @@ import re
 from tidylib import tidy_fragment
 
 # Django template loaders
-from django.template import RequestContext, Context, loader
+from django.template import RequestContext, loader
 from django.template.exceptions import TemplateDoesNotExist
 from django.conf import settings
 
@@ -445,46 +445,6 @@ def fix_p_spaces(source_string):
     return '\n'.join(modified_lines)
 
 
-def get_context(context, request=None):
-    """ Return a Context() object from a dict.
-        If request is passed in, a RequestContext() is used.
-        On errors, log the error and return None.
-    """
-    # This is already a Context or RequestContext?
-    # It wouldn't hurt to return a Context(Context(context)),
-    # but there is no reason for all of this processing if that's the case.
-    if isinstance(context, (Context, RequestContext)):
-        return context
-
-    # Try creating a request context.
-    try:
-        if not context:
-            # Blank context object, with or without a request.
-            if request is not None:
-                return RequestContext(request, {})
-            return Context({'request': request})
-
-        if not request:
-            # Context with content, no Request.
-            if context.get('request', None) is None:
-                context['request'] = request
-            return Context(context)
-
-        # RequestContext with content.
-        return RequestContext(request, context)
-    except Exception as ex:
-        log.error('\n'.join((
-            'Error creating request context!',
-            '  Context: {c}',
-            '  Request: {r}',
-            '    Error: {e}'
-        )).format(
-            c=context,
-            r=request,
-            e=ex))
-        return None
-
-
 def get_html_file(wpobj):
     """ finds html file to use for the content, if any.
         returns empty string on failure.
@@ -830,14 +790,13 @@ def render_html(template_name, **kwargs):
                            Default: {}
     """
     context = kwargs.get('context', kwargs.get('context_dict', {}))
-    request = kwargs.get('request', None)
+    request = kwargs.get('request', context.get('request', None))
     link_list = kwargs.get('link_list', None)
     auto_link_args = kwargs.get('auto_link_args', {})
 
     tmplate = get_template(template_name)
     if tmplate is None:
         return None
-
     content = render_template(tmplate, context=context, request=request)
     if content:
         if link_list:
@@ -848,17 +807,18 @@ def render_html(template_name, **kwargs):
 
 
 def render_template(tmplate, context=None, request=None):
-    """ Render a Template object with a context.
+    """ Render a Template with a context, by name.
         If a request is passed in, a RequestContext is used.
         On errors, log the error and return None.
     """
-    contextobj = get_context(context, request=request)
-    if contextobj is None:
-        # There was an error grabbing a Context, bail out.
-        return None
-    # Have context, try rendering.
+    context = context or {}
+    if (request is not None) and (context.get('request', None) is None):
+        context['request'] = request
+    print('USING CONTEXT: {!r}'.format(context))
+    print('USING REQUEST: {!r}'.format(request))
+    # Try rendering.
     try:
-        content = tmplate.render(contextobj)
+        content = tmplate.render(RequestContext(request, context))
     except Exception as ex:
         errmsg = '\n'.join((
             'Error rendering template: {name} ',

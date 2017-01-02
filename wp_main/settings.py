@@ -10,7 +10,7 @@ import settings_local
 
 SYSVERSION = sys.version
 # Version for welbornprod.com
-WPVERSION = '2.4.1'
+WPVERSION = '2.5.0'
 
 DEBUG = settings_local.DEBUG
 
@@ -132,8 +132,6 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'APP_DIRS': True,
-        'BASE': templates_base,
-        'DEBUG': settings_local.TEMPLATE_DEBUG,
         'DIRS': (
             templates_base,
             os.path.join(templates_base, 'admin/templates'),
@@ -154,6 +152,7 @@ TEMPLATES = [
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'debug': settings_local.TEMPLATE_DEBUG,
 
         },
     }

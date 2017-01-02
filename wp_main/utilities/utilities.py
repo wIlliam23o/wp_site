@@ -35,6 +35,8 @@ class _NoValue(object):
 
     def __str__(self):
         return 'NoValue'
+
+
 NoValue = _NoValue()
 
 
@@ -286,6 +288,8 @@ def get_browser_name(request):
 
     # get user agent
     user_agent = get_user_agent(request)
+    if not user_agent:
+        return None
     return user_agent.browser.family.lower()
 
 
@@ -293,6 +297,8 @@ def get_browser_style(request):
     """ return browser-specific css file (or None if not needed) """
 
     browser_name = get_browser_name(request)
+    if not browser_name:
+        return None
     # get browser css to use...
     if browser_name.startswith('ie'):
         return '/static/css/main-ie.min.css'
@@ -373,6 +379,7 @@ def get_object_safe(objects, **kwargs):
         # No Error is raised, just return None
         return None
     return obj
+
 
 # Alias for function.
 get_object = get_object_safe
@@ -601,8 +608,12 @@ def is_mobile(request):
         # happens on template errors,
         # which hopefully never make it to production.
         return False
+    ua = get_user_agent(request)
+    if not ua:
+        # Happens when request has no META, dua returns ''.
+        return False
 
-    return (not get_user_agent(request).is_pc)
+    return (not ua.is_pc)
 
 
 def is_textmode(request):
