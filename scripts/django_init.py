@@ -15,7 +15,7 @@ __version__ = '1.0.4'
 
 
 # Exportable attributes..
-# These are only set when initialize_django() successfully completes.
+# These are only set when init_django() successfully completes.
 project_dir = ''
 settings_dir = ''
 scripts_dir = ''
