@@ -38,8 +38,10 @@ from apps.paste.models import wp_paste
 
 # for admin change_list filtering.
 import re
+# Example of a 'result' item being passed to colorize_admin_css():
+# <th class="field-__str__"><a href="/adminmisc/wp_misc/7/change/">XTools v. 0.3.6</a></th>  # noqa
 #                               adminpage type  id     str()
-disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
+disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/[\w]+/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
 
 log = logging.getLogger('wp.wp_main.tags')
@@ -71,6 +73,7 @@ def colorize_admin_css(item):
         # This is not an object link.
         return item
     else:
+        log.debug('Found object link: {}'.format(item))
         # grab object.
         if len(obj_match.groups()) == 4:
             # beginning of a tag (<a href) (Not used right now)
@@ -81,15 +84,19 @@ def colorize_admin_css(item):
             try:
                 objid = int(idstr)
             except Exception as ex:
-                log.error('Failed to parsed disable-item id: '
-                          '{}\n{}'.format(idstr, ex))
+                log.error(
+                    'Failed to parsed disable-item id: {}\n{}'.format(
+                        idstr,
+                        ex
+                    )
+                )
                 return item
 
             # name/title of object (My Blog Post)
             name = obj_match.groups()[3]
         else:
             # failed to match our pattern exactly.
-            log.debug("Incorrect number of items in match: " + str(item))
+            log.debug('Incorrect number of items in match: {}'.format(item))
             return item
 
     # convert to object
@@ -107,22 +114,26 @@ def colorize_admin_css(item):
         if objname == otype:
             obj = utilities.get_object_safe(objects, id=objid)
             break
-    log.debug('Found: {}'.format(obj))
+    log.debug('Found object from result item: {}'.format(obj))
     # no object found for this type.
     if obj is None:
-        log.debug(''.join((
-            'Colorize-Admin: Can\'t find: '
-            '{} [{}]')).format(name, otype))
+        log.error(
+            'Colorize-Admin: Can\'t find: {} [{}]'.format(name, otype)
+        )
         return item
 
     # List of classes to add to this link.
-    newclasses = []
+    # The starting class is to add specificity to the css.
+    newclasses = ['.wp-admin']
 
     # Add classes based on object attributes.
     if is_disabled(obj):
         # Item is disabled (could be post, project, misc, paste, etc.)
         newclasses.append('item-disabled')
 
+    # Paste-specific colors.
+    # TODO: Like searchables and updateables, make colorize_admin an app-based
+    #       check. Have a admin_colors.py that defines a colorizable result.
     if is_onhold(obj):
         # Item is onhold.
         newclasses.append('item-onhold')
@@ -138,6 +149,7 @@ def colorize_admin_css(item):
     if newclasses:
         # Return item with new classes added.
         newtxt = '<a class="{}" href'.format(' '.join(newclasses))
+        # Only replace the link part, because it may be wrapped with something
         return mark_safe(item.replace('<a href', newtxt))
     else:
         return item

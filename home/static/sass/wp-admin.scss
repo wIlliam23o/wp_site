@@ -57,33 +57,36 @@
 }
 
 // Custom items (from wp_tags filters or other)
-.item-disabled {
-    // Disabled items are grey!
-    // scss-lint:disable ImportantRule
-    color: $greylight !important;
+.wp-admin {
+    &.item-disabled {
+        // Disabled items are grey!
+        // scss-lint:disable ImportantRule
+        color: $greylight !important;
+
+        &.item-expired {
+            // expired, already disabled items are red/grey.
+            // scss-lint:disable ImportantRule
+            color: $redlight !important;
+        }
+    }
 
     &.item-expired {
-        // expired, already disabled items are red/grey.
+        // expired pastes/items are red
         // scss-lint:disable ImportantRule
-        color: $redlight !important;
+        color: $redmain !important;
+    }
+
+    &.item-onhold {
+        // Onhold items are outlined!
+        text-decoration: overline underline;
+    }
+
+    &.item-private {
+        // Private items are italic.
+        font-style: italic;
     }
 }
 
-.item-expired {
-    // expired pastes/items are red
-    // scss-lint:disable ImportantRule
-    color: $redmain !important;
-}
-
-.item-onhold {
-    // Onhold items are outlined!
-    text-decoration: overline underline;
-}
-
-.item-private {
-    // Private items are italic.
-    font-style: italic;
-}
 
 .vLargeTextField,
 .vXMLLargeTextField {
