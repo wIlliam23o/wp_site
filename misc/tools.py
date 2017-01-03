@@ -9,9 +9,6 @@ Created on Oct 20, 2013
 import logging
 import os
 
-from django.conf import settings
-from django.template.backends.django import DjangoTemplates
-
 from misc.models import wp_misc
 from misc.types import misctype_byname
 
@@ -33,10 +30,10 @@ def get_long_desc(miscobj):
         return content
 
     # Fallback to content field.
-    template = DjangoTemplates(
-        settings.DJANGO_TEMPLATES_OPTS
-    ).from_string(miscobj.content)
-    return template.render(context={'misc': miscobj})
+    return htmltools.render_html_str(
+        miscobj.content,
+        context={'misc': miscobj}
+    )
 
 
 def get_misc_warning(miscobj):
@@ -49,7 +46,7 @@ def get_misc_warning(miscobj):
 
 
 def get_screenshots_dir(miscobj):
-    """ Retrieves screenshots html code for this misc object, if
+    """ Retrieves screenshots directory for this misc object, if
         screenshots are available.
         Otherwise, returns None.
     """
@@ -103,12 +100,12 @@ def get_by_filename(filename):
     """ Retrieve a misc object by its file. """
 
     if filename:
-        # Trim leading /, filenames are never stored that way.
-        # it would break os.path.join if they were.
-        if filename.startswith('/'):
-            filename = filename[1:]
-
-        obj = utilities.get_object_safe(wp_misc, filename=filename)
+        obj = utilities.get_object_safe(
+            wp_misc,
+            # Trim leading /, filenames are never stored that way.
+            # it would break os.path.join if they were.
+            filename=filename.lstrip('/')
+        )
         if obj:
             return obj
     return None

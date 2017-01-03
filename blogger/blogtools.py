@@ -9,15 +9,8 @@
 
 import logging
 
-# Global settings
-from django.conf import settings
-from django.template.backends.django import DjangoTemplates
-
-
 # For trimming posts.
 import lxml.html
-
-from django.conf import settings
 
 # Local tools
 from wp_main.utilities import utilities
@@ -93,12 +86,7 @@ def get_post_body(post):
     absolute_path = utilities.get_absolute_path(post.html_url)
     if not absolute_path:
         # no valid html_url, using post body as a Template.
-        # 'template' overrides the file path in load_html_file.
-        # TODO: Make wp_main.utilities.htmltools.template_from_str(s)
-        template = DjangoTemplates(
-            settings.DJANGO_TEMPLATES_OPTS
-        ).from_string(post.body)
-        return template.render(context={'post': post})
+        return htmltools.render_html_str(post.body, context={'post': post})
 
     # load template content.
     return htmltools.load_html_file(

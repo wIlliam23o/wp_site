@@ -16,6 +16,7 @@ from tidylib import tidy_fragment
 
 # Django template loaders
 from django.template import loader
+from django.template.backends.django import DjangoTemplates
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -809,6 +810,35 @@ def render_html(template_name, **kwargs):
         return content
 
     return None
+
+
+def render_html_str(s, context=None, request=None):
+    """ Use DjangoTemplates() to render a template string.
+        Returns the rendered content str on success.
+    """
+    template = DjangoTemplates(settings.DJANGO_TEMPLATES_OPTS).from_string(s)
+    try:
+        content = template.render(context=context or {}, request=request)
+    except Exception as ex:
+        # For trimming the template string, for logging.
+        max_content_len = 45
+        log.error(
+            '\n'.join((
+                'Cannot render template str: {s}{ellipses}',
+                '    Context: {context:!r}',
+                '    Request: {request:!r}',
+                '      Error: ({errtype}) {errmsg}',
+            )).format(
+                s=s[:max_content_len],
+                ellipsis='...' if len(s) > max_content_len else '',
+                context=context,
+                request=request,
+                errtype=type(ex).__name__,
+                errmsg=ex,
+            )
+        )
+        return ''
+    return content
 
 
 def strip_all(s, strip_chars):
