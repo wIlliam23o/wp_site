@@ -74,11 +74,28 @@
         // expired pastes/items are red
         // scss-lint:disable ImportantRule
         color: $redmain !important;
+
+        &.item-onhold {
+            border-color: $redlight;
+        }
     }
 
     &.item-onhold {
         // Onhold items are outlined!
-        text-decoration: overline underline;
+        border-color: $greylight;
+        border-radius: 2px;
+        border-style: solid;
+        border-width: 1px;
+        padding-right: 2px;
+        text-decoration: none;
+
+        &:hover {
+            border-style: none;
+        }
+
+        &.item-private {
+            padding-right: 4px;
+        }
     }
 
     &.item-private {

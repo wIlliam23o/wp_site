@@ -124,7 +124,7 @@ def colorize_admin_css(item):
 
     # List of classes to add to this link.
     # The starting class is to add specificity to the css.
-    newclasses = ['.wp-admin']
+    newclasses = ['wp-admin']
 
     # Add classes based on object attributes.
     if is_disabled(obj):
@@ -134,6 +134,10 @@ def colorize_admin_css(item):
     # Paste-specific colors.
     # TODO: Like searchables and updateables, make colorize_admin an app-based
     #       check. Have a admin_colors.py that defines a colorizable result.
+    if is_expired_onhold(obj) or is_expired(obj):
+        # Item is an expired paste.
+        newclasses.append('item-expired')
+
     if is_onhold(obj):
         # Item is onhold.
         newclasses.append('item-onhold')
@@ -141,10 +145,6 @@ def colorize_admin_css(item):
     if is_private(obj):
         # Item is a private paste.
         newclasses.append('item-private')
-
-    if is_expired(obj):
-        # Item is an expired paste.
-        newclasses.append('item-expired')
 
     if newclasses:
         # Return item with new classes added.
@@ -429,13 +429,46 @@ def is_expired(paste_obj):
         if not, returns False.
     """
 
-    if hasattr(paste_obj, 'is_expired'):
-        try:
-            expired = paste_obj.is_expired()
-        except TypeError:
-            expired = False
-    else:
-        expired = False
+    try:
+        expired = paste_obj.is_expired()
+    except AttributeError:
+        return False
+    except TypeError:
+        log.error(
+            'Tried calling is_expired() on: {!r} (type: {})'.format(
+                paste_obj,
+                type(paste_obj).__name__,
+            )
+        )
+        return False
+
+    return expired
+
+
+@register.filter
+def is_expired_onhold(paste_obj):
+    """ if object has .is_expired() function, returns the result.
+        if not, returns False.
+        This passes a keyword argument, never_onhold=False. To ensure
+        that even expired pastes that are on hold return their actual
+        expiration state.
+    """
+
+    try:
+        expired = paste_obj.is_expired(never_onhold=False)
+    except AttributeError:
+        return False
+    except TypeError:
+        log.error(
+            ' '.join((
+                'Tried calling is_expired(never_onhold=False) on:',
+                '{!r} (type: {})',
+            )).format(
+                paste_obj,
+                type(paste_obj).__name__,
+            )
+        )
+        return False
     return expired
 
 
