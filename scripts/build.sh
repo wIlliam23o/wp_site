@@ -254,7 +254,8 @@ function build_sass_file {
 function build_templates {
     # Build all template files using build_template.sh
     declare -a tmpargs=("--quiet")
-    ((forced_mode)) && tmpargs=("--force")
+    ((forced_mode)) && tmpargs+=("--force")
+    ((debug_mode)) && tmpargs+=("--dryrun" "--debug")
     tmpargs+=("--all")
     "$appdir/build_template.sh" "${tmpargs[@]}"
 }
@@ -263,7 +264,8 @@ function build_template_file {
     # Build a single template file using build_template.sh
     local tmpfile=$1
     declare -a tmpargs=("--quiet")
-    ((forced_mode)) && tmpargs=("--force")
+    ((forced_mode)) && tmpargs+=("--force")
+    ((debug_mode)) && tmpargs+=("--dryrun" "--debug")
     tmpargs+=("$tmpfile")
     "$appdir/build_template.sh" "${tmpargs[@]}"
 }
@@ -437,7 +439,8 @@ do_browserify=0
 do_js=0
 do_sass=0
 do_template=0
-do_all=0
+# Default behavior is to build all, unless otherwise specified.
+do_all=1
 declare -a infiles
 for arg; do
     case "$arg" in
@@ -477,18 +480,21 @@ for arg; do
             exit 1
             ;;
         *)
+            do_all=0
             infiles=("${infiles[@]}" "$arg")
     esac
 done
 
 # Build individual files.
 if (( ${#infiles[@]} > 0 )); then
+    debug "Building individual files: ${#infiles[@]}"
     build_files "${infiles[@]}"
     exit
 fi
 
 if ((do_all)); then
     # Build all files (default behavior).
+    debug "Building ALL files."
     build_js
     build_sass
     build_templates
@@ -497,13 +503,16 @@ fi
 
 # Selective builds.
 if ((do_js || do_browserify)); then
+    debug "Building browserify/js."
     build_js
 fi
 
 if ((do_sass)); then
+    debug "Building SASS."
     build_sass
 fi
 
 if ((do_template)); then
+    debug "Building templates."
     build_templates
 fi
