@@ -825,16 +825,18 @@ def render_template(tmplate, context=None, request=None):
         log.debug(
             '\n'.join((
                 'Using context without a request (Context): {name}',
-                '    Context key length: {count}'
-            )).format(name=tmplate.origin.name, count=len(context))
+            )).format(
+                name=tmplate.origin.name,
+            )
         )
         contextobj = Context(context)
     else:
         log.debug(
             '\n'.join((
                 'Using context with request (RequestContext): {name}',
-                '    Context key length: {count}'
-            )).format(name=tmplate.origin.name, count=len(context))
+            )).format(
+                name=tmplate.origin.name,
+            )
         )
         contextobj = RequestContext(userequest, context)
 

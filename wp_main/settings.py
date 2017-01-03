@@ -204,6 +204,7 @@ INSTALLED_APPS = (
 
     # for making get_user_agent(request) available.
     'django_user_agents',
+
     # local apps
     'wp_main',  # contains global template tags (wp_tags)
     'apps',  # handles urls for all sub-apps.
