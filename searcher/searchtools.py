@@ -164,7 +164,7 @@ def search_app(searchmod, queries, request=None):
     try:
         for obj in searchmod.get_objects():
             content = searchmod.get_content(obj, request=request)
-            desc = searchmod.get_desc(obj, request=request)
+            desc = searchmod.get_desc(obj)
             targets = searchmod.get_targets(obj, content=content, desc=desc)
             if search_targets(queries, targets):
                 resultargs = searchmod.result_args(obj, desc=desc)

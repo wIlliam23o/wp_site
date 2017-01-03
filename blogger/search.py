@@ -8,12 +8,12 @@ from blogger import blogtools
 
 def get_content(post, request=None):
     """ Return the full body/content for a post. """
-    return blogtools.get_post_body(request, post)
+    return blogtools.get_post_body(post)
 
 
-def get_desc(post, request=None):
+def get_desc(post):
     """ Get description to search and display. """
-    return blogtools.get_post_body_short(request, post, max_text_lines=16)
+    return blogtools.get_post_body_short(post, max_text_lines=16)
 
 
 def get_objects():
