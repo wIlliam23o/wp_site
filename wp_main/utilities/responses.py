@@ -95,7 +95,7 @@ def clean_response(
         returns cleaned HttpResponse.
         Arguments:
             template_name   : Known template name to render.
-            context         : Context dict or Context()/RequestContext().
+            context         : Context dict.
             request         : Request() object (or None).
             status          : Status code for the HttpResponse().
 
@@ -126,7 +126,14 @@ def clean_response(
             auto_link_args=kwargs.get('auto_link_args', None)
         )
     except Exception:
-        logtraceback(log.error, message='Unable to render.')
+        logtraceback(
+            log.error,
+            message='Unable to render: {}, context: {}, request: {}'.format(
+                template_name,
+                context,
+                request
+            )
+        )
         # 500 page.
         return error500(request, msgs=('Error while building that page.',))
 
@@ -243,7 +250,8 @@ def error_response(request=None, errnum=500, msgs=None, user_error=None):
         rendered = htmltools.render_clean(
             templatefile,
             context=context,
-            request=request)
+            request=request
+        )
     except Exception as ex:
         logmsg = 'Unable to render template: {}\n{}'.format(templatefile, ex)
         log.error(logmsg)
@@ -263,7 +271,8 @@ def error_response(request=None, errnum=500, msgs=None, user_error=None):
         return HttpResponseServerError(errmsg, status=errnum)
     if not rendered:
         rendered = htmltools.fatal_error_page(
-            'Unable to build that page, sorry.')
+            'Unable to build that page, sorry.'
+        )
     # Successfully rendered {errnum}.html page.
     return HttpResponse(rendered, status=errnum)
 

@@ -9,8 +9,8 @@ Created on Oct 20, 2013
 import logging
 import os
 
-from django.template import loader, Template
-from django.template.exceptions import TemplateDoesNotExist
+from django.conf import settings
+from django.template.backends.django import DjangoTemplates
 
 from misc.models import wp_misc
 from misc.types import misctype_byname
@@ -26,23 +26,17 @@ def get_long_desc(miscobj):
         otherwise it uses .content.
     """
     # Try template first.
-    try:
-        fname = '{}.html'.format(miscobj.alias)
-        template = loader.get_template(fname)
-    except TemplateDoesNotExist:
-        # Fallback to content field.
-        template = Template(miscobj.content)
 
-    content = htmltools.load_html_file(
-        None,
-        template=template,
-        context={
-            'misc': miscobj
-        })
-    if not content:
-        log.error('Misc object has no content!: {}'.format(miscobj.name))
+    fname = '{}.html'.format(miscobj.alias)
+    content = htmltools.load_html_template(fname)
+    if content:
+        return content
 
-    return content
+    # Fallback to content field.
+    template = DjangoTemplates(
+        settings.DJANGO_TEMPLATES_OPTS
+    ).from_string(miscobj.content)
+    return template.render(context={'misc': miscobj})
 
 
 def get_misc_warning(miscobj):

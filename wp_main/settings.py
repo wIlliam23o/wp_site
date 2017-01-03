@@ -127,34 +127,44 @@ STATICFILES_FINDERS = (
 )
 
 templates_base = os.path.join(MAIN_DIR, 'templates')
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'APP_DIRS': True,
-        'DIRS': (
-            templates_base,
-            os.path.join(templates_base, 'admin/templates'),
-            os.path.join(templates_base, 'admindoc/templates'),
-            # Include project pages as possible templates.
-            os.path.join(BASE_DIR, 'projects/static/html'),
-            # Include blog post html as possible templates.
-            os.path.join(BASE_DIR, 'blogger/static/html'),
-        ),
-        'OPTIONS': {
-            'context_processors': [
-                'django.contrib.auth.context_processors.auth',
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.template.context_processors.i18n',
-                'django.template.context_processors.media',
-                'django.template.context_processors.static',
-                'django.template.context_processors.tz',
-                'django.contrib.messages.context_processors.messages',
-            ],
-            'debug': settings_local.TEMPLATE_DEBUG,
+# Used for DjangoTemplates().from_string, and TEMPLATES.
+DJANGO_TEMPLATES_OPTS = {
+    # Needed for using DjangoTemplates().from_string.
+    'NAME': 'DjangoTemplates',
+    'APP_DIRS': True,
+    'DIRS': (
+        templates_base,
+        os.path.join(templates_base, 'admin/templates'),
+        os.path.join(templates_base, 'admindoc/templates'),
+        # Include project pages as possible templates.
+        os.path.join(BASE_DIR, 'projects/static/html'),
+        # Include blog post html as possible templates.
+        os.path.join(BASE_DIR, 'blogger/static/html'),
+    ),
+    'OPTIONS': {
+        'context_processors': [
+            'django.contrib.auth.context_processors.auth',
+            'django.template.context_processors.csrf',
+            'django.template.context_processors.debug',
+            'django.template.context_processors.request',
+            'django.template.context_processors.i18n',
+            'django.template.context_processors.media',
+            'django.template.context_processors.static',
+            'django.template.context_processors.tz',
+            'django.contrib.messages.context_processors.messages',
+        ],
+        'debug': settings_local.TEMPLATE_DEBUG,
 
-        },
-    }
+    },
+}
+DEFAULT_TEMPLATE_SETTINGS = {
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+}
+DEFAULT_TEMPLATE_SETTINGS.update(DJANGO_TEMPLATES_OPTS)
+
+# Actual config that django uses.
+TEMPLATES = [
+    DEFAULT_TEMPLATE_SETTINGS,
 ]
 
 MIDDLEWARE_CLASSES = (

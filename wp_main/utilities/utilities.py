@@ -642,11 +642,13 @@ def logtraceback(log=None, message=None):
     """
     typ, val, tb = sys.exc_info()
     tbinfo = traceback.extract_tb(tb)
-    linefmt = ('Error in:\n'
-               '  {fname}, {funcname}(),\n'
-               '    line {num}: {txt}\n'
-               '    {typ}:\n'
-               '      {msg}')
+    linefmt = '\n'.join((
+        'Error in:',
+        '  {fname}, {funcname}(),',
+        '    line {num}: {txt}',
+        '    {typ}:',
+        '      {msg}',
+    ))
     if log is None:
         log = print
 
@@ -665,7 +667,10 @@ def logtraceback(log=None, message=None):
         if message is None:
             logmsg = linefmt.format(**fmtargs)
         else:
-            logmsg = '{}\n{}'.format(message, linefmt.format(**fmtargs))
+            logmsg = '{}\n{}'.format(
+                message,
+                linefmt.format(**fmtargs)
+            )
         log(logmsg)
         logged.append(logmsg)
     return logged

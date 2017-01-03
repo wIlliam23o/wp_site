@@ -190,7 +190,8 @@ class FavIcons(template.Node):
     def render(self, context):
         favs = htmltools.render_clean(
             'home/fav_icons.html',
-            context=context)
+            context=context
+        )
         return favs
 
 

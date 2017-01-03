@@ -128,7 +128,8 @@ def view_error(request, error_number):
         'home/{}.html'.format(error_number),
         context=context,
         request=request,
-        status=error_number)
+        status=error_number
+    )
 
 
 @never_cache

@@ -15,12 +15,9 @@ import re
 from tidylib import tidy_fragment
 
 # Django template loaders
-from django.template import (
-    Context,
-    RequestContext,
-    loader
-)
+from django.template import loader
 from django.template.exceptions import TemplateDoesNotExist
+from django.template.loader import render_to_string
 from django.conf import settings
 
 # Basic utilities and highlighting
@@ -598,26 +595,17 @@ def highlight(content):
             content))
 
 
-def load_html_file(filename, request=None, context=None, template=None):
+def load_html_file(filename, request=None, context=None):
     """ Try rendering a file as a Template, if that fails return the raw
         file content.
         This can all be short-circuited by passing in a pre-loaded template
         with: template=loader.get_template(templatename)
         Arguments:
             filename  : File name for template/html file.
-            request   : Request() to build RequestContext()
-            context   : Context(), RequestContext() or dict for template.
-                        If request is passed with a dict, a RequestContext()
-                        is built.
-                        If a dict is passed a Context() is built.
-            template  : Overrides all template loading and file opening.
-                        (filename is useless if template is passed)
-                        The template is rendered with context and request.
+            request   : Request() to build template with.
+            context   : Context dict for template.
     """
 
-    if template:
-        # A template was already passed in.
-        return render_template(template, context=context, request=request)
     # Try rendering file as a template.
     content = load_html_template(filename, request=request, context=context)
     if content:
@@ -655,10 +643,22 @@ def load_html_template(sfile, request=None, context=None):
         Return the content on success, or None on failure.
     """
 
-    tmplate = get_template(sfile)
-    if tmplate is not None:
-        return render_template(tmplate, context=context, request=request)
-    return None
+    try:
+        log.debug(
+            'Trying to render template: {}, request: {}, context: {}'.format(
+                sfile,
+                request,
+                context,
+            )
+        )
+        content = render_to_string(
+            sfile,
+            context=context or {},
+            request=request
+        )
+    except TemplateDoesNotExist:
+        return None
+    return content
 
 
 def remove_blanklines(source_string):
@@ -749,10 +749,9 @@ def remove_whitespace(source):
 def render_clean(template_name, **kwargs):
     """ Runs render_html() through clean_html().
         Renders template by name and context dict,
-        RequestContext is used if 'request' kwarg is passed in.
         Keyword Arguments (same as render_html()):
-                   context : dict to be used by Context() or RequestContext()
-                   request : HttpRequest() object passed to RequestContext()
+                   context : Context dict for templates.
+                   request : HttpRequest() object.
                  link_list : link_list to be used with htmltools.auto_link()
                              Default: False
             auto_link_args : A dict containing kw arguments for auto_link()
@@ -771,11 +770,9 @@ def render_html(template_name, **kwargs):
         This differs from load_html_file(), where render_html() must use a
         template name, load_html_file() will fall back to raw file content.
         Keyword arguments are:
-                 context : Context or RequestContext dict to be used
-                           RequestContext is used if a request is passed in
-                           with 'request' kwarg.
+                 context : Context dict.
                            Default: {}
-                 request : HttpRequest object to pass on to RequestContext
+                 request : HttpRequest object to pass on to template.
                            Default: False (causes Context to be used)
                link_list : A link list in auto_link() format to be used
                            with auto_link() before returning content.
@@ -794,72 +791,24 @@ def render_html(template_name, **kwargs):
                            Default: {}
     """
     context = kwargs.get('context', kwargs.get('context_dict', {}))
+    if hasattr(context, 'flatten'):
+        # Context or RequestContext snuck in, probably from a template Node.
+        context = context.flatten()
     request = kwargs.get('request', context.get('request', None))
     link_list = kwargs.get('link_list', None)
     auto_link_args = kwargs.get('auto_link_args', {})
 
-    tmplate = get_template(template_name)
-    if tmplate is None:
-        return None
-    content = render_template(tmplate, context=context, request=request)
+    content = render_to_string(
+        template_name,
+        context=context,
+        request=request
+    )
     if content:
         if link_list:
             content = auto_link(content, link_list, **auto_link_args)
         return content
 
     return None
-
-
-def render_template(tmplate, context=None, request=None):
-    """ Render a Template with a context, by name.
-        If a request is passed in, a RequestContext is used.
-        On errors, log the error and return None.
-    """
-    context = context or {}
-    # Ensure context has a 'request' key when a request is given.
-    userequest = context.get('request', None) if request is None else request
-    if (userequest is not None) and (context.get('request', None) is None):
-        context['request'] = userequest
-
-    if userequest is None:
-        log.debug(
-            '\n'.join((
-                'Using context without a request (Context): {name}',
-            )).format(
-                name=tmplate.origin.name,
-            )
-        )
-        contextobj = Context(context)
-    else:
-        log.debug(
-            '\n'.join((
-                'Using context with request (RequestContext): {name}',
-            )).format(
-                name=tmplate.origin.name,
-            )
-        )
-        contextobj = RequestContext(userequest, context)
-
-    # Try rendering.
-    try:
-        content = tmplate.render(contextobj)
-    except Exception as ex:
-        errmsg = '\n'.join((
-            'Error rendering template: {name} ',
-            '  Context: {context}',
-            '  Request: {request}'
-            '    Error: {err}'
-        )).format(
-            name=tmplate.origin.name,
-            context=context,
-            request=request,
-            err=ex
-        )
-        utilities.logtraceback(log.error, errmsg)
-        return None
-    else:
-        # Good content, return it.
-        return content
 
 
 def strip_all(s, strip_chars):
