@@ -298,8 +298,6 @@ if SERVER_LOCATION == 'remote':
 
 DEBUG_TOOLBAR_CONFIG = {
     'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'},
-    # Leave this empty to use the jQuery included on every wp page.
-    'JQUERY_URL': '',
     # Hide the toolbar on load.
     'SHOW_COLLAPSED': True,
 }
