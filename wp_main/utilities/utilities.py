@@ -48,10 +48,16 @@ def append_path(*args):
         ex:
             mypath = append_path('/view' , project.source_dir)
     """
-    spath = '/'.join(args)
-    while '//' in spath:
-        spath = spath.replace('//', '/')
-    return spath
+    # First are only has the end / stripped.
+    # Strip all / from arg index 1 and up.
+    s = '/'.join(
+        p.rstrip('/') if i == 0 else p.strip('/')
+        for i, p in enumerate(args)
+    )
+    # This is for paths like: //test/this.
+    while '//' in s:
+        s = s.replace('//', '/')
+    return s
 
 
 def ban_add(request):
@@ -138,44 +144,51 @@ def debug_allowed(request):
 
 
 def get_absolute_path(relative_file_path):
-    """ return absolute path for file, if any
-        returns empty string on failure.
-        restricted to public STATIC_PARENT dir.
-        if no_dir is True, then only file paths are returned.
+    """ Return absolute path for file, if any.
+        Returns empty string on failure.
+        Restricted to public STATIC_PARENT dir.
     """
 
-    if relative_file_path == "":
-        return ""
-
-    # Guard against ../ tricks.
-    if '..' in relative_file_path:
+    relative_path = relative_file_path.lstrip('/')
+    if not relative_path:
+        return ''
+    elif '..' in relative_path:
+        # Guard against ../ tricks.
+        log.error('Trying to traverse directories: {}'.format(
+            relative_file_path
+        ))
         return ''
 
-    sabsolutepath = ''
-    # Remove '/static' from the file path.
-    if relative_file_path.startswith(('static', '/static')):
-        staticparts = relative_file_path.split('/')
-        if len(staticparts) > 1:
-            staticstart = 2 if relative_file_path.startswith('/') else 1
-            staticpath = '/'.join(staticparts[staticstart:])
-            # use new relative path (without /static)
-            relative_file_path = staticpath
-        else:
-            # Don't allow plain '/static'
-            return ''
+    # Remove 'static', '/static', and '/static/' from the file path,
+    # ensuring there is no trailing /.
+    relative_path = (
+        relative_path.lstrip('/').lstrip('static').lstrip('/').rstrip('/')
+    )
+    if not relative_path:
+        # Don't allow plain '/static'.
+        return ''
 
+    absolutepath = ''
     # Walk real static dir.
     for root, dirs, files in os.walk(settings.STATIC_ROOT):  # noqa
-        spossible = os.path.join(root, relative_file_path)
-        if os.path.exists(spossible):
-            sabsolutepath = spossible
+        fullpath = os.path.join(root, relative_path)
+        if os.path.exists(fullpath):
+            absolutepath = fullpath
             break
-
-    # Guard against files outside of the public /static dir.
-    if not sabsolutepath.startswith(settings.STATIC_ROOT):
+    else:
+        # No absolute path found.
         return ''
 
-    return sabsolutepath
+    # Guard against files outside of the public /static dir.
+    if not absolutepath.startswith(settings.STATIC_ROOT):
+        log.error(
+            'Trying to get absolute path for non-static file: {}'.format(
+                relative_file_path
+            )
+        )
+        return ''
+
+    return absolutepath
 
 
 def get_apps(
@@ -340,7 +353,7 @@ def get_filename(file_path):
     if not file_path:
         return file_path
     try:
-        sfilename = os.path.split(file_path)[1]
+        sfilename = os.path.split(file_path)[-1]
     except Exception:
         log.error('Error in os.path.split({})'.format(file_path))
         sfilename = file_path
@@ -414,6 +427,9 @@ def get_relative_path(spath):
 
     if not spath:
         return ''
+    if '..' in spath:
+        # No ups allowed.
+        return ''
 
     prepend = ''
     if settings.STATIC_ROOT in spath:
@@ -421,8 +437,8 @@ def get_relative_path(spath):
         prepend = '/static'
     elif settings.BASE_PARENT in spath:
         spath = spath.replace(settings.BASE_PARENT, '')
-    if spath and (not spath.startswith('/')):
-        spath = '/{}'.format(spath)
+    # Ensure a leading /.
+    spath = '/{}'.format(spath.lstrip('/'))
 
     if prepend:
         spath = '{}{}'.format(prepend, spath)
