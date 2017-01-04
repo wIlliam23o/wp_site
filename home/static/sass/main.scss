@@ -1008,13 +1008,15 @@ samp {
     color: $blackmain;
     font-size: $fontmedium;
     font-weight: bold;
+    line-height: $lineheightmedium;
 }
 
 .error-noaccess-message {
     // Message displayed on the test site for anons.
     color: darkred;
-    font-size: 2em;
+    font-size: $fontbig;
     font-weight: bold;
+    line-height: $lineheightbig;
     text-align: center;
     text-shadow: $shadowtextbig;
 }

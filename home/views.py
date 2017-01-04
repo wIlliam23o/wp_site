@@ -149,7 +149,7 @@ def view_ip_simple(request):
 
 
 def view_login(request):
-    """ processes login attempts ## NOT BEING USED RIGHT NOW ##"""
+    """ processes login attempts ## NOT BEING USED RIGHT NOW ## """
 
     # My first attempt at a login page, not very good.
     # I am using Django's auth.views with modified css right now.
@@ -160,7 +160,7 @@ def view_login(request):
 
     # log.debug("username: " + str(username) + ", pw: " + str(pw))
 
-    response = responses.redirect_response("/badlogin.html")
+    response = responses.redirect_response('/badlogin.html')
     if (username is not None) and (pw is not None):
 
         user = auth.authenticate(user=username, password=pw)
@@ -190,9 +190,13 @@ def view_no_javascript(request):
     """ Return a page for bots trying to visit base64 or other links that
         are supposed to be decoded with javascript.
     """
-    return responses.basic_response(
-        'Sorry, you must have javascript enabled to follow that link.'
-    )
+    return responses.basic_response('\n'.join((
+        'Sorry, you must have javascript enabled to follow that link.',
+        'It was supposed to open your email client so you can email me.',
+        'I use a basic encoding on mailto: links because of bots.',
+        'If you know a better way, please email me :).',
+        'The address is cj at this domain.'
+    )))
 
 
 def view_raiseerror(request):
