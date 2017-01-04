@@ -4,7 +4,7 @@
     Provides easy access to HttpResponse/Request objects/functions,
     and some helper functions.
 
-    -Christopher Welborn <cj@welbornprod.com> - Mar 27, 2013
+    -Christopher Welborn - Mar 27, 2013
 '''
 import logging
 
@@ -75,9 +75,9 @@ def alert_message(request, alert_msg, **kwargs):
         status=kwargs.get('status', 200))
 
 
-def basic_response(scontent='', *args, **kwargs):
+def basic_response(content, *args, **kwargs):
     """ just a wrapper for the basic HttpResponse object. """
-    return HttpResponse(scontent, *args, **kwargs)
+    return HttpResponse(str(content or ''), *args, **kwargs)
 
 
 def clamp_num(i, min_val=None, max_val=None):
@@ -671,10 +671,10 @@ def text_response(text_content, content_type='text/plain'):
     return HttpResponse(text_content, content_type=content_type)
 
 
-def wsgi_error(request, smessage):
+def wsgi_error(request, msg):
     """ print message to requests wsgi errors """
-
-    request.META['wsgi_errors'] = smessage
+    preverr = request.META.get('wsgi_errors', '')
+    request.META['wsgi_errors'] = '\n'.join((preverr, msg))
 
 
 def xml_response(template_name, context=None, request=None, comments=False):

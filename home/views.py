@@ -158,32 +158,24 @@ def view_login(request):
     username = request.POST.get('user', request.GET.get('user', None))
     pw = request.POST.get('pw', request.GET.get('pw', None))
 
-    # log.debug("username: " + str(username) + ", pw: " + str(pw))
-
-    response = responses.redirect_response('/badlogin.html')
     if (username is not None) and (pw is not None):
-
         user = auth.authenticate(user=username, password=pw)
+        if (user is not None) and user.is_active():
+            auth.login(request, user)
+            referer_view = responses.get_referer_view(
+                request,
+                default=None
+            )
 
-        # log.debug("USER=" + str(user))
+            # Change response based on whether prev. view was given.
+            if referer_view is None:
+                # Success
+                return responses.redirect_response('/')
 
-        if user is not None:
-            if user.is_active():
-                auth.login(request, user)
-                referer_view = responses.get_referer_view(request,
-                                                          default=None)
+            # Previous view
+            return responses.redirect_response(referer_view)
 
-                # log.debug("referer_view: " + str(referer_view))
-
-                # Change response based on whether prev. view was given.
-                if referer_view is None:
-                    # Success
-                    response = responses.redirect_response('/')
-                else:
-                    # Previous view
-                    response = responses.redirect_response(referer_view)
-
-    return response
+    return responses.redirect_response('/badlogin.html')
 
 
 def view_no_javascript(request):
