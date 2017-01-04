@@ -486,8 +486,9 @@ def get_request_args(request, requesttype=None):
             request  : The request object to retrieve args from.
 
         Keyword Arguments:
-            requesttype  : 'post', 'get', or None.
-                           If None is given, it retrieves both POST and GET.
+            requesttype  : 'post', 'get', or None/falsey.
+                           If falsey, it retrieves both POST and GET.
+                           Default: None
 
     """
 
@@ -500,17 +501,18 @@ def get_request_args(request, requesttype=None):
             log.error('Invalid request arg type!: {}\n{}'.format(
                 requesttype,
                 ex))
-            reqargs = QueryDict()
-    else:
-        # Default request type is REQUEST (both GET and POST)
-        # REQUEST is deprecated, but this will simulate it.
-        getargs = getattr(request, 'GET', None)
-        if getargs is None:
-            log.error('request has not GET attr: {!r}'.format(request))
-            return QueryDict()
-        reqargs = getargs.copy()
-        # QueryDict.update *appends* to existing keys, instead of overwriting.
-        reqargs.update(request.POST)
+        else:
+            # Use the requested arg type only.
+            return reqargs
+    # Default request type is REQUEST (both GET and POST)
+    # REQUEST is deprecated, but this will simulate it.
+    getargs = getattr(request, 'GET', None)
+    if getargs is None:
+        log.error('request has not GET attr: {!r}'.format(request))
+        return QueryDict()
+    reqargs = getargs.copy()
+    # QueryDict.update *appends* to existing keys, instead of overwriting.
+    reqargs.update(request.POST)
     return reqargs
 
 

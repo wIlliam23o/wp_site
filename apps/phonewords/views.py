@@ -26,9 +26,7 @@ except Exception as ex:
 def view_index(request):
     """ Main view for phone words. """
 
-    reqargs = responses.get_request_args(
-        request,
-        requesttype='request')
+    reqargs = responses.get_request_args(request)
     if reqargs:
         # This request came with args, send it to view_results()
         return view_results(request, args=reqargs)
