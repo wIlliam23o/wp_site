@@ -677,16 +677,21 @@ def wsgi_error(request, smessage):
     request.META['wsgi_errors'] = smessage
 
 
-def xml_response(template_name, context=None, request=None):
+def xml_response(template_name, context=None, request=None, comments=False):
     """ loads sitemap.xml template, renders with context,
         returns HttpResponse with content_type='application/xml'.
     """
+
     try:
         tmplate = loader.get_template(template_name)
-        clean_render = tmplate.render(context or {}, request)
+        clean_render = htmltools.remove_comments(
+            tmplate.render(context or {}, request)
+        )
         response = HttpResponse(clean_render, content_type='application/xml')
     except Exception as ex:
-        errmsg = 'Error: {}'.format(ex)
-        response = HttpResponseServerError(errmsg, content_type='text/plain')
+        return HttpResponseServerError(
+            'Error loading sitemap: {}'.format(ex),
+            content_type='text/plain'
+        )
 
     return response

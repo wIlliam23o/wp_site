@@ -42,6 +42,7 @@ def view_sitemap(request):
             'url_list': [sm_url for sm_url in build_urls(request)]
         },
         request=request,
+        comments=False,
     )
 
 
@@ -216,10 +217,9 @@ class SitemapUrl(object):  # noqa
 
     """ Provides info for individual sitemap urls. """
 
-    def __init__(self, location='', rel_location='',
-                 changefreq='', lastmod='',
-                 protocol='http', domain='',
-                 priority='0.5'):
+    def __init__(
+            self, location='', rel_location='', changefreq='', lastmod='',
+            protocol='http', domain='', priority='0.5'):
         # changes info
         self.changefreq = changefreq
         self.lastmod = lastmod
