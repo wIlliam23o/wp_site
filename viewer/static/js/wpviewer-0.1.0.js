@@ -11,7 +11,7 @@
 // page load, and then it is set with JS when doing ajax calls.
 var wpviewer = {
     // Modules and file names are versioned to "break" the cache on updates.
-    version: '0.0.2',
+    version: '0.1.0',
     // current relative path for file. (/static/file.py)
     current_file : '',
     // current short name (file.py)
@@ -84,21 +84,17 @@ var wpviewer = {
             return;
         }
 
-        /* Header for projects ...pythons None equates to null in JS. */
-        if (file_info.project_alias !== null && file_info.project_name !== null) {
-            $('#project-title-name').html(file_info.project_name);
-            $('#project-link').click(function () { wptools.navigateto('/projects/' + file_info.project_alias); });
-            if (file_info.project_alias) { $('#project-info').fadeIn(); }
-        // Header for miscobj.
-        } else if (file_info.misc_alias !== null && file_info.misc_name !== null) {
-            $('#project-title-name').html(file_info.misc_name);
-            $('#project-link').click(function () { wptools.navigateto('/misc/' + file_info.misc_alias); });
-            if (file_info.misc_alias) { $('#project-info').fadeIn(); }
+        /* Header for projects/misc, set to null when there is no project */
+        if ((file_info.name !== null) && (file_info.related_url !== null)) {
+            $('#project-title-name').html(file_info.name);
+            $('#project-link').attr('href', file_info.related_url);
+            $('#project-info').fadeIn();
         }
+
         // File info
         if (file_info.file_short && file_info.static_path) {
             $('#viewer-filename').html(file_info.file_short);
-            $('#file-link').click(function () { wptools.navigateto('/dl/' + file_info.static_path); });
+            $('#file-link').attr('href', '/dl' + file_info.static_path);
             if (file_info.file_short) { $('#file-info').fadeIn(); }
             // set current working filename.
             wpviewer.set_current_file(file_info.static_path);
@@ -261,15 +257,15 @@ var wpviewer = {
                 500: function () { console.log('A major error occurred.'); },
             },
         })
-            .fail(function (xhr, status, error) {
+            .fail(function (xhr, xhrstatus, error) {
                 var msg = error.message || 'The error was unknown.';
-                console.log('failure: ' + status + '\n    ' + msg);
+                console.log('failure: ' + xhrstatus + '\n    ' + msg);
                 $('#file-content-box').html('<span class=\'B\'>Sorry, an unhandled error occurred. ' + msg + '</span>');
             })
-            .done(function (data, status, xhr) {
+            .done(function (data, xhrstatus, xhr) {
 
                 // handle errors...
-                if (status === 'error') {
+                if (xhrstatus === 'error') {
                     $('#file-content-box').html('<span class=\'B\'>Sorry, either that file doesn\'t exist, or there was an error processing it.</span>');
                     console.log('wp-error response: ' + xhr.responseText);
                 } else {

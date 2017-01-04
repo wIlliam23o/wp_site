@@ -153,7 +153,7 @@ def get_using_paths(dir_path, absolute_path=None, proj=None):
         log.debug("unable to listdir: " + absolute_path + '\n' + str(ex))
 
     # no files in this directory, or bad dir.
-    if len(files) == 0:
+    if not files:
         return (None, None)
 
     # dir has files, get most important to show.
@@ -247,4 +247,13 @@ def get_file_info(file_path):
         'absolute_path': absolute_path,
         'file_content': file_content,
     }
+    if project:
+        fileinfo['name'] = project.name
+        fileinfo['related_url'] = '/projects/{}'.format(project.alias)
+    elif miscobj:
+        fileinfo['name'] = miscobj.name
+        fileinfo['related_url'] = '/misc/{}'.format(miscobj.alias)
+    else:
+        fileinfo['name'] = None
+        fileinfo['related_url'] = None
     return fileinfo
