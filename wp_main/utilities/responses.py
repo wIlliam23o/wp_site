@@ -563,8 +563,13 @@ def json_response(data):
     """
 
     if isinstance(data, dict):
-        data = json.dumps(data)
-
+        try:
+            # Try sorting keys, they should all be strings.
+            data = json.dumps(data, sort_keys=True)
+        except TypeError:
+            # Try to return something, even if unsorted.
+            # It won't hold up in JS though.
+            data = json.dumps(data)
     return HttpResponse(data, content_type='application/json')
 
 
