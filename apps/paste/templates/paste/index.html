@@ -149,7 +149,9 @@ Author:
 </div>
 {% endif %}
 <div class='paste-private-box' title='Private pastes are not listed publicly,
-but are viewable to anyone that knows the URL or ID.'>
+but are viewable to anyone that knows the URL or ID.
+Private replies are only listed under private pastes,
+and are never shared from public pastes.'>
 <div class='paste-private-label'>
 Private:
 </div>
@@ -168,16 +170,17 @@ Author:
 </div>
 <input id='paste-author-entry' type='text' class='input-text' value='' onblur='wppaste.on_author_change();'/>
 </div>
-<div class='paste-private-box' title='Check this box to make this a private paste.
-Private pastes are not listed publicly,
-but are viewable to anyone that knows the URL or ID.'>
+<div class='paste-private-box' title='Private pastes are not listed publicly,
+but are viewable to anyone that knows the URL or ID.
+Private replies are only listed under private pastes,
+and are never shared from public pastes.'>
 <div class='paste-private-label'>
 Private:
 </div>
 <input id='paste-private-opt' type='checkbox' {% if replyto and replyto.private %}checked='checked' {% endif %}/>
 </div>
 {% if request|is_authenticated %}
-<div class='paste-onhold-box' title='Check this box to mark this paste as 'on hold'.'>
+<div class='paste-onhold-box' title='Check this box to mark this paste as on hold, and never expire it.'>
 <div class='paste-onhold-label'>
 On Hold:
 </div>

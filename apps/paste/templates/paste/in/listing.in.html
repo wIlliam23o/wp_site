@@ -85,16 +85,18 @@
                                 </span>
                             </div>
                         {% endif %}
-                        {% if paste.parent %}
-                            <div class='paste-item-replyto-label'>
-                                Reply To:
-                                <a href='/paste/?id={{ paste.parent.paste_id }}'>
-                                    <span class='paste-item-replyto'>
-                                        {{ paste.parent.title }}
-                                    </span>
-                                </a>
-                            </div>
-                        {% endif %}
+                        {% with parent=paste|paste_parent %}
+                            {% if parent %}
+                                <div class='paste-item-replyto-label'>
+                                    Reply To:
+                                    <a href='/paste/?id={{ parent.paste_id }}'>
+                                        <span class='paste-item-replyto'>
+                                            {{ parent.title }}
+                                        </span>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
                         <div class='paste-item-lang-label'>
                             Language:
                             <span class='paste-item-lang'>
@@ -116,46 +118,48 @@
                                 views
                             {% endif %}
                         </div>
-                        {% if paste|child_count > 0 %}
-                            {# Paste has replies of its own. #}
-                            <div class='paste-item-replies-btn'>
-                                <a href='javascript: void(0);' onclick='javascript: $("#paste-replies-{{ paste.paste_id }}").slideToggle();'>
-                                    {{ paste|child_count }}
-                                    {% if paste|child_count == 1 %}
-                                        reply...
-                                    {% else %}
-                                        replies...
-                                    {% endif %}
-                                </a>
-                            </div>
-                            <div id='paste-replies-{{ paste.paste_id }}' class='paste-item-replies-box'>
-                                <div class='paste-item-reply-label'>
-                                    Replies:
-                                </div>
-                                {% for reply in paste|paste_children %}
-                                    <div class='paste-item-reply'>
-                                        <a href='/paste/?id={{ reply.paste_id }}'>
-                                            <div class='paste-item-reply-title'>
-                                                {{ reply.title }}
-                                            </div>
-                                        </a>
-                                        {% if reply.author %}
-                                            <div class='paste-item-reply-author-label'>
-                                                Author:
-                                                <span class='paste-item-reply-author'>
-                                                    {{ reply.author }}
-                                                </span>
-                                            </div>
+                        {% with reply_cnt=paste|child_count %}
+                            {% if reply_cnt > 0 %}
+                                {# Paste has replies of its own. #}
+                                <div class='paste-item-replies-btn'>
+                                    <a href='javascript: void(0);' onclick='javascript: $("#paste-replies-{{ paste.paste_id }}").slideToggle();'>
+                                        {{ reply_cnt }}
+                                        {% if reply_cnt == 1 %}
+                                            reply...
+                                        {% else %}
+                                            replies...
                                         {% endif %}
-                                        <div class='paste-item-reply-date'>
-                                            {{ reply.publish_date|get_time_since }}
-                                        </div>
+                                    </a>
+                                </div>
+                                <div id='paste-replies-{{ paste.paste_id }}' class='paste-item-replies-box'>
+                                    <div class='paste-item-reply-label'>
+                                        Replies:
                                     </div>
-                                {% endfor %}
-                            </div>
+                                    {% for reply in paste|paste_children %}
+                                        <div class='paste-item-reply'>
+                                            <a href='/paste/?id={{ reply.paste_id }}'>
+                                                <div class='paste-item-reply-title'>
+                                                    {{ reply.title }}
+                                                </div>
+                                            </a>
+                                            {% if reply.author %}
+                                                <div class='paste-item-reply-author-label'>
+                                                    Author:
+                                                    <span class='paste-item-reply-author'>
+                                                        {{ reply.author }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                            <div class='paste-item-reply-date'>
+                                                {{ reply.publish_date|get_time_since }}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
 
 
-                        {% endif %}
+                            {% endif %}
+                        {% endwith %}
                     </div>
                 {% endfor %}
             {% endif %}

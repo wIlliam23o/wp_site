@@ -6,6 +6,8 @@
 import logging
 from django import template
 
+from apps.paste import pastetools
+
 log = logging.getLogger('wp.apps.paste.paste_tags')
 
 register = template.Library()
@@ -15,8 +17,12 @@ register = template.Library()
 def child_count(paste):
     """ Get count of children for this paste. """
     if paste and hasattr(paste, 'children'):
-        children = paste.children
-        return getattr(children, 'count', lambda: 0)()
+        # No content needed for the count.
+        return (
+            pastetools.get_paste_children(paste, order_by=None)
+            .defer('content')
+            .count()
+        )
     return 0
 
 
@@ -28,6 +34,7 @@ def is_expired(paste):
     log.error('Not a paste, missing is_expired method: {!r}'.format(paste))
     return False
 
+
 @register.filter
 def needs_line_breaks(paste):
     """ Return true if this pastes content is long and has no line breaks. """
@@ -38,10 +45,18 @@ def needs_line_breaks(paste):
 
 @register.filter
 def paste_children(paste):
-    """ Makes paste.children available in the templates. """
-    c = [p for
-         p in paste.children.filter(disabled=False).order_by('-publish_date')]
-    return c
+    """ Makes paste.children available in the templates, after passing
+        through a gauntlet of checks (disabled, private, is_expired()).
+    """
+    return pastetools.get_paste_children(paste)
+
+
+@register.filter
+def paste_parent(paste):
+    """ Makes paste.parent available in the template, after passing
+        through a gauntlet of checks (disabled, private, is_expired()).
+    """
+    return pastetools.get_paste_parent(paste)
 
 
 @register.filter

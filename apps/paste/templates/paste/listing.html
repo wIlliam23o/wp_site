@@ -75,16 +75,18 @@ Author:
 </span>
 </div>
 {% endif %}
-{% if paste.parent %}
+{% with parent=paste|paste_parent %}
+{% if parent %}
 <div class='paste-item-replyto-label'>
 Reply To:
-<a href='/paste/?id={{ paste.parent.paste_id }}'>
+<a href='/paste/?id={{ parent.paste_id }}'>
 <span class='paste-item-replyto'>
-{{ paste.parent.title }}
+{{ parent.title }}
 </span>
 </a>
 </div>
 {% endif %}
+{% endwith %}
 <div class='paste-item-lang-label'>
 Language:
 <span class='paste-item-lang'>
@@ -106,11 +108,12 @@ view
 views
 {% endif %}
 </div>
-{% if paste|child_count > 0 %}
+{% with reply_cnt=paste|child_count %}
+{% if reply_cnt > 0 %}
 <div class='paste-item-replies-btn'>
 <a href='javascript: void(0);' onclick='javascript: $("#paste-replies-{{ paste.paste_id }}").slideToggle();'>
-{{ paste|child_count }}
-{% if paste|child_count == 1 %}
+{{ reply_cnt }}
+{% if reply_cnt == 1 %}
 reply...
 {% else %}
 replies...
@@ -143,6 +146,7 @@ Author:
 {% endfor %}
 </div>
 {% endif %}
+{% endwith %}
 </div>
 {% endfor %}
 {% endif %}

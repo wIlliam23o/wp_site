@@ -88,11 +88,12 @@ view
 views
 {% endif %}
 </div>
-{% if reply|child_count > 0 %}
+{% with reply_cnt=reply|child_count %}
+{% if reply_cnt > 0 %}
 <div class='paste-item-replies'>
 <a href='/paste/replies/?id={{ reply.paste_id }}'>
-{{ reply|child_count }}
-{% if reply|child_count == 1 %}
+{{ reply_cnt }}
+{% if reply_cnt == 1 %}
 reply...
 {% else %}
 replies...
@@ -100,6 +101,7 @@ replies...
 </a>
 </div>
 {% endif %}
+{% endwith %}
 </div>
 {% endfor %}
 {% endif %}
