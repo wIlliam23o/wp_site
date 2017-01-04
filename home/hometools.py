@@ -97,7 +97,9 @@ def get_latest_blog():
     """ retrieve the last posted blog entry (wp_blog object)"""
 
     try:
-        post = wp_blog.objects.filter(disabled=False).latest('posted_datetime')
+        post = (
+            wp_blog.objects.filter(disabled=False).latest('posted_datetime')
+        )
     except Exception as ex:
         log.error('Unable to retrieve latest blog post:\n{}'.format(ex))
         return None
@@ -108,7 +110,9 @@ def get_latest_project():
     """ retrieve the last published project (wp_project object) """
 
     try:
-        proj = wp_project.objects.filter(disabled=False).latest('publish_date')
+        proj = (
+            wp_project.objects.filter(disabled=False).latest('publish_date')
+        )
     except Exception as ex:
         log.error('Unable to retrieve latest project:\n{}'.format(ex))
         return None
@@ -116,19 +120,25 @@ def get_latest_project():
 
 
 def get_scriptkid_image():
-    """ returns a random image filename from /images/scriptkid """
+    """ returns a random image filename from /static/images/scriptkids """
 
     import random
-    image_dir = utilities.get_absolute_path("images/scriptkids")
-    goodexts = ("jpeg", ".jpg", ".png", ".gif", ".bmp")
+    image_dir = utilities.get_absolute_path('/static/images/scriptkids')
+    goodexts = ('.jpeg', '.jpg', '.png', '.gif', '.bmp')
     try:
-        images = [img for img in os.listdir(image_dir)
-                  if img[-4:].lower() in goodexts]
+        images = [
+            imgfile
+            for imgfile in os.listdir(image_dir)
+            if os.path.splitext(imgfile)[-1].lower() in goodexts
+        ]
     except Exception as ex:
-        log.error("can't do listdir() on: " + image_dir + '\n' + str(ex))
+        log.error('Can\'t do listdir() on {!r}\n  {}'.format(
+            image_dir,
+            ex,
+        ))
         return None
     if not images:
-        log.error("images was empty!")
+        log.error('Script kid images are empty!')
         return None
 
     randomindex = random.randint(0, len(images) - 1)

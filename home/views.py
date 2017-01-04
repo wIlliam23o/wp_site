@@ -215,11 +215,7 @@ def view_scriptkids(request):
     """
 
     # get ip if possible.
-    # ip_address = request.META.get("HTTP_X_FORWARDED_FOR", None)
-    # if ip_address is None:
-    #    ip_address = request.META.get("REMOTE_ADDR", None)
     ip_address = utilities.get_remote_ip(request)
-    use_ip = (ip_address is not None)
     try:
         path = request.path
     except AttributeError:
@@ -231,7 +227,7 @@ def view_scriptkids(request):
     if scriptkid_img is not None:
         scriptkid_img = utilities.get_relative_path(scriptkid_img)
     use_img = (scriptkid_img is not None)
-
+    use_ip = (ip_address is not None)
     context = {
         'use_img': use_img,
         'scriptkid_img': scriptkid_img,
@@ -239,11 +235,15 @@ def view_scriptkids(request):
         'ip_address': ip_address,
     }
     # Try banning the ip.
-    if use_ip:
+    ban_ip = use_ip and (ip_address != '127.0.0.1')
+    if ban_ip:
         if utilities.ban_add(request):
             log.error('Banned script kid: {}'.format(ip_address))
         else:
             log.error('Could not ban script kid: {}'.format(ip_address))
+    else:
+        log.debug('Not banning scriptkid: {}'.format(ip_address))
+
     # return formatted template.
     return responses.clean_response(
         'home/scriptkids.html',
