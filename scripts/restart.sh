@@ -5,7 +5,7 @@
 #    Collects static files, admin css, and restarts apache using wprefresh.py
 # -Christopher Welborn 06-08-2015
 appname="restart"
-appversion="0.0.1"
+appversion="0.0.2"
 apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
@@ -111,6 +111,7 @@ fi
 
 if python3 "$appdir/wprefresh.py" "${userflags[@]}" "${userargs[@]}"; then
     [[ -e "$snd_success" ]] && play "$snd_success" &>/dev/null
+    printf "\nServer restarted: %s\n" "$(date '+%A, %b. %e [%I:%M:%S%P]')"
     exit 0
 fi
 
