@@ -6,7 +6,7 @@
     <div class='paragraph'>
         Python evaluation bot for IRC. PyVal was made to evaluate python code
         safely (without compromising your own system), and depends on
-        <a href='http://pypy.org'>pypy-sandbox</a>
+        <a href='http://pypy.org' title='PyPy Main Site'>pypy-sandbox</a>
         to block certain system calls.
     </div>
     <div class='paragraph'>
@@ -26,7 +26,7 @@
     </div>
     <div class='paragraph'>
         The [bash]/bin[?bash] directory contains several libraries/modules needed to
-        run <a href='http://pypy.org'>pypy-sandbox</a>.
+        run <a href='http://pypy.org' title='PyPy Main Site'>pypy-sandbox</a>.
     </div>
     <div class='paragraph'>
         Read access is allowed in these two directories, but any [python]write()[/python]
@@ -49,7 +49,15 @@
             python-pypy.sandbox or python-pypy.translator.sandbox package
         </li>
         <div class='listdesc'>
-            Found in debian/ubuntu distros.<br>
+            Found in debian/ubuntu distros up to Debian [code]jessie[/code] and Ubuntu [code]16.04[/code].
+            <br>
+            For newer distros it has to be compiled. Instructions are in the
+            <a href='http://pypy.readthedocs.io/en/latest/sandbox.html' title='PyPy Sandbox Docs'>
+                PyPy Sandbox Docs
+            </a>.
+            It's not recommended to compile it without at least <strong>8GB</strong> of RAM,
+            and a working [bash]pypy[/bash] executable.
+            <br>
             This package provides the prebuilt pypy-sandbox executable which is used
             by <strong>PyVal</strong> to run code safely.
             <div class='paragraph'>
@@ -67,9 +75,9 @@
         </li>
         <div class='listdesc'>
             When
-            <a href='http://twistedmatrix.com'>Twisted</a>
+            <a href='http://twistedmatrix.com' title='Twisted Main Site'>Twisted</a>
             fully supports
-            <a href='http://python.org/download/releases/'>Python 3</a>
+            <a href='http://python.org/download/releases/' title='Python Releases Index'>Python 3</a>
             , this project may be ported over.
         </div>
 
@@ -90,7 +98,7 @@
         <h3 class='title'>Source Code</h3>
     </div>
     <p>
-        <a href='https://github.com/welbornprod/pyvalbot/tree/dev' target='_blank'>
+        <a href='https://github.com/welbornprod/pyvalbot/tree/dev' target='_blank' title='PyValBot @ Github.com'>
             PyVal (github)
         </a>
         &nbsp;- current <strong>PyVal</strong> source code at
@@ -828,16 +836,16 @@ if __name__ != '__pyval__':
         <ul class='circle blue'>
             <li>
                 Now searches [bash]/home/user[?bash] directories first when
-                looking for [bash]pypy-sandbox[?bash].
+                looking for [bash]pypy-sandbox[/bash].
             </li>
             <li>
-                [bash]pyval_exec[?bash] debug mode fixed.
+                [bash]pyval_exec[/bash] debug mode fixed.
             </li>
             <li>
                 Licensed under GPL v3.
             </li>
             <li>
-                Missing help for [bash]banwarns[?bash] command was added.
+                Missing help for [bash]banwarns[/bash] command was added.
             </li>
         </ul>
     </div>
@@ -849,7 +857,7 @@ if __name__ != '__pyval__':
         </span>
         <ul class='circle blue'>
             <li>
-                Added [code]adminmsg[?code] and [code]chanmsg[?code] commands.
+                Added [code]adminmsg[/code] and [code]chanmsg[/code] commands.
             </li>
             <div class='listdesc'>
                 The bot can send a msg to all admins, or all joined channels
@@ -869,25 +877,25 @@ if __name__ != '__pyval__':
         </span>
         <ul class='circle blue'>
             <li>
-                Added [bash]--username[?bash] and
-                [bash]--loginpw[?bash] command-line options.
+                Added [bash]--username[/bash] and
+                [bash]--loginpw[/bash] command-line options.
             </li>
             <div class='listdesc'>
                 Gives you the ability to pass a username and password to the server itself.
                 This enables pyval to connect to more servers (such as BNC servers).
             </div>
             <li>
-                Added [bash]--autosave[?bash] and
-                and [bash]--dumpconfig[?bash] command-line options.
+                Added [bash]--autosave[/bash] and
+                and [bash]--dumpconfig[/bash] command-line options.
             </li>
             <div class='listdesc'>
                 Command-line options can be saved as a configuration file for the next run.
                 If a config file exists, settings will be loaded from it.
                 The command-line options still have priority though.
                 <br><br>
-                With [bash]--autosave[?bash], the current command-line options are saved to config.
+                With [bash]--autosave[/bash], the current command-line options are saved to config.
                 <br><br>
-                Current configuration can be viewed with the [bash]--dumpconfig[?bash] flag.
+                Current configuration can be viewed with the [bash]--dumpconfig[/bash] flag.
             </div>
         </ul>
     </div>
@@ -902,7 +910,7 @@ if __name__ != '__pyval__':
                 Switched paste bin to <a href='http://welbornprod.com/paste'>welbornprod.com/paste</a>.
             </li>
             <div class='listdesc'>
-                This removes the [bash]pastebinit[?bash] requirement, and allows me
+                This removes the [bash]pastebinit[/bash] requirement, and allows me
                 to have more control over what PyVal can do. Also, I just like my paste site more. :P
             </div>
         </ul>
@@ -924,7 +932,7 @@ if __name__ != '__pyval__':
                 will automatically be banned from using the bot.
             </div>
             <li>
-                Added [code]banwarns[?code] command for admins, to show all
+                Added [code]banwarns[/code] command for admins, to show all
                 ban warnings issued.
             </li>
             <li>
