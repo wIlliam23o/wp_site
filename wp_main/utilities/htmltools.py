@@ -593,7 +593,9 @@ def highlight(content):
     """ Uses the highlighter tools to syntax highlight everything. """
     return highlighter.highlight_inline(
         highlighter.highlight_codes(
-            content))
+            content
+        )
+    )
 
 
 def load_html_file(filename, request=None, context=None):

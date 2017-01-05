@@ -196,47 +196,47 @@ def ends(str_, val_to_check):
 
 
 @register.filter
-def exceeds_max(value, max_):
+def exceeds_max(value, maximum):
     """ checks if a value exceeds the maximum allowed """
 
     if isinstance(value, (float, int)):
-        val_ = value
+        intval = value
     else:
         try:
-            val_ = int(value)
+            intval = int(value)
         except (TypeError, ValueError):
-            val_ = value
+            intval = value
 
-    if isinstance(max_, (float, int)):
-        return (val_ > max_)
+    if isinstance(maximum, (float, int)):
+        return (intval > maximum)
     else:
-        if max_.isalnum():
+        if maximum.isalnum():
             try:
-                imax = int(max_)
-                return (val_ > imax)
+                imax = int(maximum)
+                return (intval > imax)
             except (TypeError, ValueError):
                 pass
     return False
 
 
 @register.filter
-def exceeds_min(value, min_):
+def exceeds_min(value, minimum):
     """ checks if a value exceeds the minimum allowed """
 
     if isinstance(value, (float, int)):
-        val_ = value
+        intval = value
     else:
         try:
-            val_ = int(value)
+            intval = int(value)
         except (TypeError, ValueError):
-            val_ = value
-    if isinstance(min_, (float, int)):
-        return (val_ < min_)
+            intval = value
+    if isinstance(minimum, (float, int)):
+        return (intval < minimum)
     else:
-        if min_.isalnum():
+        if minimum.isalnum():
             try:
-                imin = int(min_)
-                return (val_ < imin)
+                imin = int(minimum)
+                return (intval < imin)
             except (TypeError, ValueError):
                 pass
 

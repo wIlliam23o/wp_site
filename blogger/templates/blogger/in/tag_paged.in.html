@@ -39,7 +39,7 @@
 				</a>
 			</div>
 			{% if blog_posts %}
-				{% if post_count|exceeds_max:25 %}
+				{% if post_count|exceeds_max:"25" %}
 					<!-- NAVIGATION -->
 					<div class='blog-nav-box'>
 						<span class='blog-nav-label'>Navigation:</span>
@@ -86,7 +86,7 @@
 {% block content %}
 	{{ block.super }}
 	{% if blog_posts %}
-		{% if post_count|exceeds_max:25 %}
+		{% if post_count|exceeds_max:"25" %}
 			<!-- NAVIGATION -->
 			<div class='blog-nav-box'>
 				<span class='blog-nav-label'>Navigation:</span>

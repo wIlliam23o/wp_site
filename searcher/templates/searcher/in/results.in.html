@@ -43,7 +43,7 @@
 					{{ search_warning }}
 				</span>
 			{% else %}
-				{% if results_count|exceeds_max:25 %}
+				{% if results_count|exceeds_max:"25" %}
 					<span class='search-header-text'>Viewing the first page of </span>
 				{% else %}
 					<span class='search-header-text'>Found </span>
@@ -53,7 +53,7 @@
 						  <span class='search-header-query'> {{ query_safe }}</span>
 			{% endif %}
 		</div>
-		{% if results_count|exceeds_max:25 %}
+		{% if results_count|exceeds_max:"25" %}
 			<a href='/search/page/?q={{ query_safe }}&?start_id=0'>
 				<div class='readmore-box' style='margin-left: 5px;'>
 					<span class='readmore-text'>view all results</span>

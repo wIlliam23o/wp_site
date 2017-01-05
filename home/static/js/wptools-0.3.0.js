@@ -34,7 +34,7 @@
 *
 *  Base64 encode / decode
 *  http://www.webtoolkit.info/
-*
+*  Modified a little bit by me, Christopher Welborn to have helper methods.
 **/
 
 /* This code works, despite whatever warnings jshint was spouting. */
@@ -43,16 +43,17 @@
 var Base64 = {
 
     // private property
-    _keyStr : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
+    _keyStr: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
 
     // public method for encoding
-    encode : function (input) {
+    encode: function Base64_encode(input) {
+        if (!input) {
+            // Falsey input str.
+            return '';
+        }
         var output = '';
         var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
         var i = 0;
-
-        input = Base64._utf8_encode(input);
-
         while (i < input.length) {
             chr1 = input.charCodeAt(i++);
             chr2 = input.charCodeAt(i++);
@@ -75,7 +76,11 @@ var Base64 = {
     },
 
     // public method for decoding
-    decode : function (input) {
+    decode: function Base64_decode(input) {
+        if (!input) {
+            // Falsey input str.
+            return '';
+        }
         var output = '';
         var chr1, chr2, chr3;
         var enc1, enc2, enc3, enc4;
@@ -108,7 +113,7 @@ var Base64 = {
     },
 
     // private method for UTF-8 encoding
-    _utf8_encode : function (string) {
+    _utf8_encode: function Base64__utf8_encode(string) {
         string = string.replace(/\r\n/g, '\n');
         var utftext = '',
             n = 0,
@@ -134,7 +139,7 @@ var Base64 = {
     },
 
     // private method for UTF-8 decoding
-    _utf8_decode : function (utftext) {
+    _utf8_decode: function Base64__utf8_decode(utftext) {
         var string = '',
             i = 0,
             c = 0,
@@ -160,7 +165,39 @@ var Base64 = {
         }
 
         return string;
-    }
+    },
+
+    is_base64: function Base64_is_base64(input) {
+        /* Returns true if the input looks like a Base64 string. */
+        if (!input) {
+            // Falsey input str.
+            return false;
+        }
+        if (!input.trim) {
+            // Not a str.
+            return false;
+        }
+        var trimmed = input.replace(/\n/g, '');
+        return trimmed.length % 4 == 0 && /[A-Za-z0-9+/=]+/.test(trimmed);
+    },
+
+    try_decode: function Base64_try_decode(input) {
+        /* Try decoding text as base64. If it's length ends up being greater
+           after the decode, then it was not actually encoded.
+           Returns either decoded text, or the original if it wasn't encoded.
+         */
+         if (!input) {
+             // Falsey input str.
+             console.error('Base64.try_decode(): Falsey string');
+             return '';
+         }
+         if (!Base64.is_base64(input)) {
+             console.error('Base64.try_decode(): Not base64: "' + input + '"');
+             return input;
+         }
+
+         return Base64.decode(input);
+    },
 };
 
 /* jshint ignore:end */
@@ -396,7 +433,8 @@ var wptools = {
         return (container || document).querySelectorAll(selector);
     },
 
-    setup_ace_snippet: function (elementid, fileext) {
+    setup_ace_snippet: function (elementid, fileext, options) {
+        var opts = options || {'encoded': true};
         // Grab initial text from element, before building ace.
         var $aceelem = $(document.getElementById(elementid));
         if (!$aceelem.length) {
@@ -405,8 +443,17 @@ var wptools = {
         var snippetencoded = $aceelem.text();
         var snippettext = '';
         // The initial text is Base64 encoded, to save formatting.
-        if (snippetencoded) {
-            snippettext = Base64.decode($aceelem.text());
+        // The only time it is not encoded is when javascript is disabled.
+        // However, if a non-js user causes a page to be cached with
+        // non-encoded content, a regular js user may end up with non-encoded
+        // content. This means that we have to make sure the content really
+        // is Base64 when decoding it. Hince, try_decode instead of decode.
+        if (opts.encoded === false) {
+            // The caller told me it isn't base64.
+            snippettext = snippetencoded;
+        } else {
+            // Be careful decoding, make sure it's base64.
+            snippettext = Base64.try_decode(snippetencoded);
         }
 
         // Initialize the editor.

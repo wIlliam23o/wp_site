@@ -36,6 +36,8 @@ $redlight: rgb(206, 154, 154);
 $redmain: #b90000;
 $redhover: #f00;
 $greenmain: #01941e;
+$solarized-bg: #002b36;
+$solarized-fore: #93A1A1;
 
 // Shadows
 $shadowfloater: 6px 6px 7px rgba(0, 0, 0, .52);
@@ -173,6 +175,11 @@ $lineheightnormal: 1.1em;
     // IE6-9
     // Forget ie6-9, they don't need a gradient.
     // filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#{$top}', endColorstr='#{$bottom}', GradientType=0);
+}
+
+@mixin solarized() {
+    background-color: $solarized-bg;
+    color: $solarized-fore;
 }
 
 @mixin transform($trans) {

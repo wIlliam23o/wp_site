@@ -30,15 +30,16 @@ HCODEPAT2 = re.compile(r'(\[[\w\d]+\])([^\[\?]+)(\[\?[\w\d+]+\])')
 LEXERNAMES = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
 
 # Basic style codes
-STYLECODES = {'b': '<span class=\'B\'>{}</span>',
-              'i': '<span class=\'I\'>{}</span>',
-              # This 'l' (link) code requires 2 arguments separated by |.
-              # The first arg is the text, the second is the link target.
-              # Links are opened in a new (blank) window.
-              'l': '<a href=\'{1}\' target=\'_blank\'>{0}</a>',
-              'u': '<span style=\'text-decoration: underline;\'>{}</span>',
-              'code': '<div class=\'codewrap\'>{}</div>',
-              }
+STYLECODES = {
+    'b': '<span class=\'B\'>{}</span>',
+    'i': '<span class=\'I\'>{}</span>',
+    # This 'l' (link) code requires 2 arguments separated by |.
+    # The first arg is the text, the second is the link target.
+    # Links are opened in a new (blank) window.
+    'l': '<a href=\'{1}\' target=\'_blank\'>{0}</a>',
+    'u': '<span style=\'text-decoration: underline;\'>{}</span>',
+    'code': '<div class=\'codewrap\'>{}</div>',
+}
 
 # Aliases for pygments lexer names. These are switched to the long name
 # before highlighting.
@@ -225,41 +226,42 @@ def get_lexer_name_fromfile(sfilename):
     return lexer_name
 
 
-def get_tag_class(text, tag='pre'):
-    """ Grabs class name from a pre tag for highlight_inline() """
-    if ('<{} class='.format(tag) in text) and ('>' in text):
-        sclass = text.split('=')[1]
-        if '>' in sclass:
-            sclass = sclass[:sclass.index('>')]
-            if "'" in sclass:
-                sclass = sclass.replace("'", '')
-            elif '"' in sclass:
-                sclass = sclass.replace('"', '')
-        else:
-            # A style or something was added to the <pre> tag, it breaks this.
-            return None
-    else:
-        sclass = ''
-    return sclass
+def get_tag_classes(text, tag='pre'):
+    """ Grabs class names from a pre tag for highlight_inline() """
+    if '<{} class='.format(tag) not in text:
+        return []
+
+    classpat = re.compile(
+        r'class=[{quotes}]{{1}}([\d\w\-_ ]+)'.format(
+            quotes='\'"',
+        ),
+        flags=re.IGNORECASE
+    )
+    tagstrs = classpat.findall(text)
+    if not tagstrs:
+        return []
+    if len(tagstrs) > 1:
+        log.error('Grabbed too many class names from: {}'.format(text))
+    return tagstrs[0].strip().split()
 
 
-def highlight_codes(scode):
+def highlight_codes(text):
     """ Highlights embedded wp highlight codes.
         like: [lang]lang code here[/lang]
     """
-    if isinstance(scode, (list, tuple)):
+    if isinstance(text, (list, tuple)):
         return_list = True
-        scode = '\n'.join(scode)
+        text = '\n'.join(text)
     else:
         return_list = False
 
     formatter = DEFAULT_FORMATTER
 
     # Search lines for original codes (HCODEPAT)..
-    matches = HCODEPAT.findall(scode)
+    matches = HCODEPAT.findall(text)
     # ...alternate method [code]...[?code] uses ? instead of / to get around
     #    code with / in it. (uses HCODEPAT2 to find them)
-    newmatches = HCODEPAT2.findall(scode)
+    newmatches = HCODEPAT2.findall(text)
     if newmatches:
         # New-style matches were found, add them to the 'matches' list.
         matches.extend(newmatches)
@@ -288,12 +290,12 @@ def highlight_codes(scode):
             newcode = try_highlight(code, langname, formatter=formatter)
         # Replace old text with new code.
         oldtext = ''.join(mgroups)
-        scode = scode.replace(oldtext, newcode)
+        text = text.replace(oldtext, newcode)
 
     if return_list:
-        return scode.split('\n')
+        return text.split('\n')
     else:
-        return scode
+        return text
 
 
 def highlight_file(static_path, file_content):
@@ -324,125 +326,171 @@ def highlight_file(static_path, file_content):
     return mark_safe(file_content)
 
 
-def highlight_inline(scode, tag='pre'):
-    """ highlights inline code for html strings.
-        if code is wrapped with <pre class='python'> this function
+def highlight_inline(text, tag='pre'):
+    """ Highlights inline code for html strings.
+        If code is wrapped with <pre class='python'> this function
         will find it and replace it with highlighted python code.
-        the class can be any valid pygments lexer name.
-        if no tag is found the original string is returned.
+        The class can be any valid pygments lexer name.
+        If no tag is found the original string is returned.
     """
 
-    if not '<{} class='.format(tag) in scode:
-        # log.debug('highlight_inline: Will not be highlighted.')
-        return scode
+    if '<{} class='.format(tag) not in text:
+        # No tag at all, no highlighting.
+        return text
 
-    slines = scode.split('\n')
-    sclass = ''
+    # Whether we are currently processing a tag's contents.
     inblock = False
+    # Blocks of text inside of the tag, tags not included.
     current_block = []
+    # Lexer decided by class name on the tags.
     lexer = None
-    formatter = DEFAULT_FORMATTER
-    sfinished = scode
-    # Styles that won't be highlighted, but wrapped in a div
-    basic_styles = ('none', 'codewrap', 'sampwrap', 'highlighted-inline')
+    # Styles that trigger a cancel,
+    disallow_styles = {
+        # Highlighting a template means the tag gets highlighted twice.
+        'codewrap-template',
+    }
+    # Styles that won't be highlighted, but wrapped in a div.
+    basic_styles = {
+        'none',
+        'codewrap',
+        'codewrap-noscript',
+        'sampwrap',
+        'sampwrap-noscript',
+        'highlighted-inline'
+    }
     # For detecting starts/stops.
     opentag = '<{}class='.format(tag)
     closetag = '</{}>'.format(tag)
-    for sline in slines:
-        strim = sline.replace(' ', '').replace('\t', '')
+    outlines = []
+
+    for line in text.split('\n'):
+        trimmed = line.replace(' ', '').replace('\t', '')
         # Inside a block, collect lines and wait for end.
         if inblock:
-            if closetag in strim:
-                # End of block.
-                inblock = False
-                # highlight block
-                soldblock = '\n'.join(current_block)
-                # class = 'none or 'codewrap', etc. was used, just wrap it.
-                if lexer in basic_styles:
-                    # No highlighting, just wrap it.
-                    # if pre class='codewrap' was used, the 'codewrap' style
-                    # will still be applied to the pre tag.
-                    # if pre class='none' was used, the 'highlighted-inline'
-                    # class will be applied.
-                    if lexer == 'none':
-                        newblock = ''.join([
-                            '<div class=\'highlighted-inline\'>',
-                            '{}'.format(soldblock),
-                            '</div>'])
-                    else:
-                        # plain div, the parent tag applied some style.
-                        newblock = '<div>\n{}\n</div>'.format(soldblock)
-                    # newlines for human-readable source.
-                    newblock = '\n{}\n'.format(newblock)
-                    sfinished = sfinished.replace(soldblock, newblock)
-                # must have valid lexer for highlighting
-                elif lexer is not None:
-                    # Highlight the old block of text.
-                    try:
-                        highlighted = pygments.highlight(soldblock,
-                                                         lexer,
-                                                         formatter)
-                    except Exception as ex:
-                        log.error('highlight_inline(): Error:\n{}'.format(ex))
-                        highlighted = soldblock
-
-                    newblock = [
-                        '\n<div class=\'highlighted-inline\'>',
-                        highlighted,
-                        '</div>\n',
-                    ]
-                    sfinished = sfinished.replace(
-                        soldblock,
-                        '\n'.join(newblock))
-                # clear block
-                current_block = []
-            else:
+            if closetag not in trimmed:
                 # Add this line to the block that will be wrapped/highlighted
-                current_block.append(sline)
-        else:
-            # Detect start
-            if strim.startswith(opentag):
-                # get class name
-                sclass = get_tag_class(sline, tag=tag)
-                if sclass is None:
-                    # Error while parsing class name probably extra info in
-                    # the tag. like: <pre class='test' style='breaker'>
-                    # Code will not be highlighted.
-                    log.error('Unable to parse class attribute from '
-                              '{}'.format(sline))
+                current_block.append(line)
+                continue
+            # End of block.
+            inblock = False
+            # Decide how to wrap/highlight it..
+            # class = 'none or 'codewrap', etc. was used, just wrap it.
+            append_end_div = False
+            if lexer in basic_styles:
+                # No highlighting, just wrap it.
+                # if pre class='codewrap' was used, the 'codewrap' style
+                # will still be applied to the pre tag.
+                # if pre class='none' was used, the 'highlighted-inline'
+                # class will be applied.
+                if lexer == 'none':
+                    outlines.append('<div class=\'highlighted-inline\'>')
+                    outlines.extend(current_block)
+                    append_end_div = True
                 else:
-                    # check for name fixing
-                    # names can start with '_' like '_c' in case they share
-                    # a name with other css classes.
-                    if sclass.startswith('_'):
-                        sclass = sclass[1:]
-                    if sclass.lower() in basic_styles:
-                        # no highlighting wanted here.
-                        # but we will wrap it in a <div class='highlighted...'
-                        lexer = sclass
-                        sclass = ''
-                        inblock = True
-                    elif sclass:
-                        # try highlighting with this lexer name.
-                        try:
-                            lexer = get_lexer_byname(sclass)
-                        except:
-                            log.error('highlight_inline: unable to create '
-                                      'lexer/formatter with: '
-                                      '{}'.format(sclass))
-                            sclass = ''
-                            lexer = None
-                        # Set the flag to start collecting lines.
-                        inblock = True
-                    else:
-                        # No class
-                        log.error((
-                            'encountered empty highlight class:  {}'
-                        ).format(sline))
-                        return scode
+                    # plain div, the parent tag applied some style.
+                    outlines.append('<div class="pre-{}-plain">'.format(
+                        lexer
+                    ))
+                    outlines.extend(current_block)
+                    append_end_div = True
 
+            # must have valid lexer for highlighting
+            elif lexer is not None:
+                # Highlight the old block of text.
+                outlines.append(highlight_inline_block(
+                    '\n'.join(current_block),
+                    lexer,
+                    DEFAULT_FORMATTER
+                ))
+            # Add closing pre tag.
+            outlines.append(line)
+            if append_end_div:
+                outlines.append('</div>')
+            # clear block
+            current_block = []
+            continue
+
+        # Detect start
+        if trimmed.startswith(opentag):
+            outlines.append(line)
+            # get class name
+            classes = get_tag_classes(line, tag=tag)
+            if not classes:
+                # Error while parsing class name probably extra info in
+                # the tag. like: <pre class='test' style='breaker'>
+                # Code will not be highlighted.
+                log.error(
+                    'Unable to parse class attribute from {}'.format(
+                        line
+                    )
+                )
+                continue
+
+            # check for name fixing
+            # names can start with '_' like '_c' in case they share
+            # a name with other css classes.
+            classes = [s.lstrip('_') for s in classes]
+            for clsname in classes:
+                clsnamelower = clsname.lower()
+                if clsnamelower in disallow_styles:
+                    # This class means the file should not be highlighted.
+                    return text
+                if clsnamelower in basic_styles:
+                    # no highlighting wanted here.
+                    # but we will wrap it in a <div class='highlighted...'
+                    lexer = clsname
+                    inblock = True
+                elif clsname:
+                    # try highlighting with this lexer name.
+                    try:
+                        lexer = get_lexer_byname(clsname)
+                    except:
+                        log.error(
+                            ' '.join((
+                                'highlight_inline: unable to create ',
+                                'lexer/formatter with: {}'
+                            )).format(clsname)
+                        )
+                        lexer = None
+                    # Set the flag to start collecting lines.
+                    inblock = True
+                else:
+                    # No class
+                    log.error(
+                        'encountered empty highlight class: {}'.format(line)
+                    )
+                    return text
+
+        else:
+            # Non-related code line.
+            outlines.append(line)
     # Finished with all lines.
-    return sfinished
+    return '\n'.join(outlines)
+
+
+def highlight_inline_block(text, lexer, formatter):
+    """ Highlight a block of text and wrap in a .highlighted-inline div.
+        Helper method for highlight_inline().
+        Returns the highlighted text on success.
+        On errors, it logs the error and returns the original text.
+    """
+    if formatter is None:
+        formatter = DEFAULT_FORMATTER
+    if lexer is None:
+        log.error('highlight_inline_block: No lexer given, using \'text\'.')
+        lexer = lexers.get_lexer_by_name('text')
+
+    try:
+        highlighted = pygments.highlight(text, lexer, formatter)
+    except Exception as ex:
+        log.error('highlight_inline(): Error:\n{}'.format(ex))
+        highlighted = text
+
+    return '\n'.join((
+        '\n<div class=\'highlighted-inline\'>',
+        highlighted,
+        '</div>\n',
+    ))
 
 
 def try_highlight(code, langname, formatter=None):
@@ -458,16 +506,18 @@ def try_highlight(code, langname, formatter=None):
     try:
         lexer = lexers.get_lexer_by_name(langname)
         if not lexer:
-            log.debug('try_highlight: No lexer found for '
-                      '{}'.format(langname))
+            log.debug(
+                'try_highlight: No lexer found for  {}'.format(langname)
+            )
             return code
 
         highlighted = pygments.highlight(code, lexer, formatter)
         # log.debug('highlight: {}, {}'.format(langname, highlighted))
-        return ''.join([
+        return ''.join((
             '<div class="highlighted-embedded">',
             highlighted,
-            '</div>'])
+            '</div>'
+        ))
     except Exception as ex:
         log.debug('try_highlight: Error highlighting.\n{}'.format(ex))
         return code
