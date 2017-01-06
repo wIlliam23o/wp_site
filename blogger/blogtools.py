@@ -10,7 +10,7 @@
 import logging
 
 # For trimming posts.
-import lxml.html
+from django.utils.text import Truncator
 
 # Local tools
 from wp_main.utilities import utilities
@@ -24,11 +24,8 @@ log = logging.getLogger('wp.blog.tools')
 DEFAULT_ORDERBY = '-posted_datetime'
 # Number of posts per page.
 DEFAULT_MAXPOSTS = 25
-# Number of lines before adding 'read more..' button on previews.
-DEFAULT_MAXLINES = 17
-# Number of characters before adding 'read more..' button on previews.
-# This is not used for blog posts anymore.
-DEFAULT_MAXLENGTH = 2000
+# Number of words before adding 'read more..' button on previews.
+DEFAULT_MAXWORDS = 170
 
 
 def add_read_more(content, url, nobreak=False):
@@ -110,55 +107,22 @@ def get_post_body(post):
     return htmltools.render_html_str(post.body, context={'post': post})
 
 
-def get_post_body_short(post, max_text_length=None, max_text_lines=None):
+def get_post_body_short(post, max_words=DEFAULT_MAXWORDS):
     """ Retrieves body for post using get_post_body, trimming if needed.
         Returns the post's content, possibly with an added 'read more' button.
     """
 
-    if max_text_length is None:
-        max_text_length = DEFAULT_MAXLENGTH or 0
-    if max_text_lines is None:
-        max_text_lines = DEFAULT_MAXLINES or 0
-    new_body = get_post_body(post)
+    if max_words is None:
+        max_words = DEFAULT_MAXWORDS or 0
 
-    trimmed = False
-    # trim by maximum text length
-    if ((max_text_length > 0) and
-            (len(new_body) > max_text_length)):
-        new_body = new_body[:max_text_length]
-        trimmed = True
+    content = get_post_body(post)
+    if not max_words:
+        return content
 
-    # trim by maximum lines
-    if max_text_lines > 0:
-        # Testing actual text content lines using lxml.
-        text_content = lxml.html.fromstring(new_body).text_content()
-        while '\n\n' in text_content:
-            text_content = text_content.replace('\n\n', '\n')
-        text_content = text_content.strip()
-        if text_content.count('\n') > max_text_lines:
-            # needs trimming.
-            lines_ = new_body.split('\n')[:max_text_lines + 1]
-            new_body = '\n'.join(lines_)
-            trimmed = True
-
-    # trim by <br>'s
-    if ((max_text_lines > 0) and (new_body.count('<br') > max_text_lines)):
-        # needs trimming
-        lines_ = new_body.split('<br')[:max_text_lines + 1]
-        new_body = '<br'.join(lines_)
-        trimmed = True
-
-    # Fix open tags
-    new_body = htmltools.fix_open_tags(new_body)
-
-    # post was trimmed? add "...continued" and readmore box.
-    if trimmed:
-        if ('<noscript>' in new_body) and ('</noscript>' not in new_body):
-            # Tidylib has failed before.
-            new_body = '\n'.join((new_body, '</noscript>'))
-        return add_read_more(new_body, 'blogger/view/{}'.format(post.slug))
-
-    return new_body
+    trimmed = Truncator(content).words(max_words, html=True)
+    if len(trimmed) < len(content):
+        return add_read_more(trimmed, '/blog/view/{}'.format(post.slug))
+    return content
 
 
 def get_post_byany(identifier):

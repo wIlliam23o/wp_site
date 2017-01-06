@@ -54,7 +54,13 @@
 				<span class='blog-post-tags'>tags:</span> {{ blog_post|tag_links }}
 			</div>
 			<div class='blog-post-body'>
-				{{ blog_post|get_body }}
+                {% with body=blog_post|get_body %}
+                    {% if body %}
+				        {{ body }}
+                    {% else %}
+                        Sorry, no content was found for that post.
+                    {% endif %}
+                {% endwith %}
 			</div>
 			<!-- Related Projects links (if any) -->
 			{% if related_projects %}

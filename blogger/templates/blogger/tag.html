@@ -1,5 +1,6 @@
 {# Generated using build_template.sh v. 0.0.1 #}
 {% extends "blogger/index.html" %}
+{% load wp_tags %}
 {% block title %}- Blog Tag{% endblock %}
 {% block metainfo %}
 <meta name='description' content='Welborn production blog posts containing{% if tag_name %} the tag: {{ tag_name }}{% else %} a certain tag.{% endif %}'>

@@ -827,12 +827,12 @@ def render_html_str(s, context=None, request=None):
         log.error(
             '\n'.join((
                 'Cannot render template str: {s}{ellipses}',
-                '    Context: {context:!r}',
-                '    Request: {request:!r}',
+                '    Context: {context}',
+                '    Request: {request}',
                 '      Error: ({errtype}) {errmsg}',
             )).format(
                 s=s[:max_content_len],
-                ellipsis='...' if len(s) > max_content_len else '',
+                ellipses='...' if len(s) > max_content_len else '',
                 context=context,
                 request=request,
                 errtype=type(ex).__name__,

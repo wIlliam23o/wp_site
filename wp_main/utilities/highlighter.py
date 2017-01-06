@@ -7,7 +7,7 @@
 '''
 import logging
 import re
-import lxml
+import lxml.html
 
 from pygments import (
     highlight as pygments_highlight,
@@ -54,17 +54,10 @@ STYLEALIASES = {
 STYLENAMES = list(STYLECODES.keys())
 
 # Preload the default formatter.
-try:
-    DEFAULT_FORMATTER = formatters.html.HtmlFormatter(
-        linenos=False,
-        nowrap=True,
-        style='default')
-except AttributeError:
-    # Pygments 2.0.2+
-    DEFAULT_FORMATTER = formatters.get_formatter_by_name('html')
-    DEFAULT_FORMATTER.linenos = False
-    DEFAULT_FORMATTER.nowrap = True
-    DEFAULT_FORMATTER.style = 'default'
+DEFAULT_FORMATTER = formatters.get_formatter_by_name('html')
+DEFAULT_FORMATTER.linenos = False
+DEFAULT_FORMATTER.nowrap = True
+DEFAULT_FORMATTER.style = 'default'
 
 
 class WpHighlighter(object):
@@ -81,9 +74,10 @@ class WpHighlighter(object):
         self.lexer = get_lexer_byname(self.lexer_name)
         self.style_name = style_name if style_name else 'default'
         self.line_nums = line_nums
-        self.formatter = formatters.html.HtmlFormatter(
-            linenos=self.line_nums,
-            style=self.style_name)
+        self.formatter = formatters.get_formatter_by_name('html')
+        self.formatter.linenos = self.line_nums
+        self.formatter.style = self.style_name
+        self.formatter.nowrap = (not self.linenos)
 
     def set_lexer(self, lexer_name):
         """ another way to set the lexer """
@@ -374,7 +368,6 @@ def highlight_inline(text, tag='pre'):
             processor=highlight_pre_elems,
         ),
         pretty_print=True,
-        # <span></span><span class='blah'></span>
     ).decode()
 
 
@@ -408,7 +401,7 @@ def highlight_pre_elems(elem):
             return elem
         elif classes.intersection(disallow_styles):
             # Cancel processing, contains a no-highlight-allowed class.
-            return elem
+            return None
         elif classes.intersection(basic_styles):
             # No processing done, class already set for pre tag.
             elem.set(
@@ -421,7 +414,9 @@ def highlight_pre_elems(elem):
             return elem
         # Have a class set that is probably a language name for pygments.
         try:
-            lexer = get_lexer_bynames(classes)
+            # Allow class names like '_c' to be transformed to 'c'.
+            # If a language name interferes with actual css add the _ to it.
+            lexer = get_lexer_bynames([s.lstrip('_') for s in classes])
         except ClassNotFound:
             # No valid lexer. Just leave it.
             log.error('No lexer found with: {!r}'.format(

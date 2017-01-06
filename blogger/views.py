@@ -118,10 +118,11 @@ def view_post(request, identifier):
     # no content found.
     if not blogtools.get_post_body(post):
         errmsg = 'Sorry, no content found for this post.'
-        errlink = '\n'.join([
+        errlink = '\n'.join((
             '<a href=\'/blog\'><span>',
             'Click here to go back to the main blog page.',
-            '</span></a>'])
+            '</span></a>',
+        ))
         return responses.alert_message(request, errmsg, body_message=errlink)
 
     # increment view count

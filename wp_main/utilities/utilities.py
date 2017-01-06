@@ -151,7 +151,6 @@ def get_absolute_path(relative_file_path):
 
     relative_path = relative_file_path.lstrip('/')
     if not relative_path:
-        log.error('No relative path given: {}'.format(relative_file_path))
         return ''
     elif '..' in relative_path:
         # Guard against ../ tricks.
@@ -181,7 +180,6 @@ def get_absolute_path(relative_file_path):
             break
     else:
         # No absolute path found.
-        log.error('No absolute path found for: {}'.format(relative_path))
         return ''
 
     # Guard against files outside of the public /static dir.

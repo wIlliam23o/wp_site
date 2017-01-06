@@ -4,9 +4,11 @@
 .highlighted-inline {
     // Code paragraphs that are highlighted using pygments.
     @include border-radius-thin(5px);
+    display: inline-block;
     font-family: $fontsmono;
-    margin-top: 0;
-    padding-left: 5px;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    padding: 5px;
 }
 
 @media grid {
@@ -16,7 +18,7 @@
     }
 }
 // scss-lint:disable QualifyingElement
-pre div.highlighted-inline {
+div.highlighted-inline {
     font-size: $fontnormal;
 }
 
