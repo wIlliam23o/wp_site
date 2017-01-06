@@ -22,12 +22,27 @@ log = logging.getLogger('wp.blog.tools')
 
 # Defaults (if nothing is passed to the listing functions)
 DEFAULT_ORDERBY = '-posted_datetime'
-# number of posts per page.
+# Number of posts per page.
 DEFAULT_MAXPOSTS = 25
-# number of lines before adding 'more..' button on previews.
+# Number of lines before adding 'read more..' button on previews.
 DEFAULT_MAXLINES = 17
-# number of characters before adding 'more..' button on previews.
+# Number of characters before adding 'read more..' button on previews.
+# This is not used for blog posts anymore.
 DEFAULT_MAXLENGTH = 2000
+
+
+def add_read_more(content, url, nobreak=False):
+    """ Add a 'read more...' button to some content, by rendering the
+        blogger/readmore.html template and appending it to the content.
+    """
+    return '\n'.join((
+        content,
+        '<span class=\'continued\'> ...(continued)</span>',
+        htmltools.render_clean(
+            'blogger/readmore.html',
+            context={'href': url, 'nobreak': nobreak},
+        ),
+    ))
 
 
 def fix_post_list(blog_posts, **kwargs):
@@ -47,12 +62,9 @@ def fix_post_list(blog_posts, **kwargs):
     if blog_posts is None:
         return []
     max_posts = kwargs.get('max_posts', DEFAULT_MAXPOSTS)
-    # max_text_length = kwargs.get('max_text_length', DEFAULT_MAXLENGTH)
-    # max_text_lines = kwargs.get('max_text_lines', DEFAULT_MAXLINES)
 
     # trim posts length
-    if ((max_posts > 0) and
-            (len(blog_posts) > max_posts)):
+    if ((max_posts > 0) and (len(blog_posts) > max_posts)):
         blog_posts = blog_posts[:max_posts]
     return blog_posts
 
@@ -78,35 +90,38 @@ def get_post_body(post):
         log.error('post is None!')
         return ''
 
+    # Try for automatic slug-based html file.
     slugfile = '{}.html'.format(post.slug)
     content = htmltools.load_html_template(slugfile)
     if content:
         return content
 
+    # Try the posts's html_url as a template.
     absolute_path = utilities.get_absolute_path(post.html_url)
-    if not absolute_path:
-        # no valid html_url, using post body as a Template.
-        return htmltools.render_html_str(post.body, context={'post': post})
+    if absolute_path:
+        # Load the html_url template content.
+        return htmltools.load_html_file(
+            absolute_path,
+            context={
+                'post': post
+            })
 
-    # load template content.
-    return htmltools.load_html_file(
-        absolute_path,
-        context={
-            'post': post
-        })
+    # No valid html_url, using post body as a Template.
+    return htmltools.render_html_str(post.body, context={'post': post})
 
 
 def get_post_body_short(post, max_text_length=None, max_text_lines=None):
-    """ retrieves body for post, timming if needed.
-        uses get_post_body to retrieve the initial body. """
+    """ Retrieves body for post using get_post_body, trimming if needed.
+        Returns the post's content, possibly with an added 'read more' button.
+    """
 
     if max_text_length is None:
-        max_text_length = DEFAULT_MAXLENGTH
+        max_text_length = DEFAULT_MAXLENGTH or 0
     if max_text_lines is None:
-        max_text_lines = DEFAULT_MAXLINES
+        max_text_lines = DEFAULT_MAXLINES or 0
     new_body = get_post_body(post)
-    trimmed = False
 
+    trimmed = False
     # trim by maximum text length
     if ((max_text_length > 0) and
             (len(new_body) > max_text_length)):
@@ -138,17 +153,10 @@ def get_post_body_short(post, max_text_length=None, max_text_lines=None):
 
     # post was trimmed? add "...continued" and readmore box.
     if trimmed:
-        readmorecontext = {
-            'href': '/blog/view/{}'.format(post.slug),
-            'nobreak': False,
-        }
-        readmoretxt = htmltools.render_clean(
-            'blogger/readmore.html',
-            context=readmorecontext)
-        new_body = '\n'.join((
-            new_body,
-            '<span class=\'continued\'> ...(continued)</span>',
-            readmoretxt))
+        if ('<noscript>' in new_body) and ('</noscript>' not in new_body):
+            # Tidylib has failed before.
+            new_body = '\n'.join((new_body, '</noscript>'))
+        return add_read_more(new_body, 'blogger/view/{}'.format(post.slug))
 
     return new_body
 

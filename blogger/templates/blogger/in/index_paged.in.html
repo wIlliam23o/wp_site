@@ -6,6 +6,11 @@
     <meta name="description" content="Welborn productions blog post listing.">
 {% endblock %}
 
+{% block javascript %}
+    <script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
+    <script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
+{% endblock %}
+
 {% block contentabove %}
 	<div class="blog-header">
 		<div class="blog-header-title">
@@ -13,7 +18,7 @@
 				<h3 class='header'>Blog</h3>
 			</a>
 		</div>
-		
+
 		<div class="blog-header-text">
 			{% block blogcontentabove %}
 				<div class='blog-header'>
@@ -28,7 +33,7 @@
 					<div class="readmore-box" style="margin-left: 5px; position: absolute; right: 10px; top: 10px;">
 						<span class="readmore-text">view all tags</span>
 					</div>
-				</a>	
+				</a>
 
 				</div>
 				{% if blog_posts %}

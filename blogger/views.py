@@ -33,7 +33,8 @@ def index(request):
     return responses.clean_response(
         'blogger/index.html',
         context=context,
-        request=request)
+        request=request,
+    )
 
 
 def index_page(request):
@@ -85,7 +86,8 @@ def index_page(request):
     return responses.clean_response(
         'blogger/index_paged.html',
         context=context,
-        request=request)
+        request=request,
+    )
 
 
 def view_post(request, identifier):
@@ -140,7 +142,8 @@ def view_post(request, identifier):
     return responses.clean_response(
         'blogger/post.html',
         context=context,
-        request=request)
+        request=request,
+    )
 
 
 def view_tags(request):

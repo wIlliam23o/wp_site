@@ -10,6 +10,10 @@
 <link type='text/css' rel='stylesheet' href='/static/css/blogger.min.css'/>
 {{ block.super }}
 {% endblock %}
+{% block javascript %}
+<script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
+<script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
+{% endblock %}
 {% block contentabove %}
 <div class='blog-header'>
 <div class='blog-header-title'>

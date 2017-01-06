@@ -6,6 +6,10 @@
 {% block metainfo %}
 <meta name='description' content='Blog post from welborn productions{% if blog_post %}: {{ blog_post.title }}{% else %}.{% endif %}'>
 {% endblock %}
+{% block javascript %}
+<script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
+<script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
+{% endblock %}
 {% block extrahead %}
 <script type='text/javascript'>
 $(document).ready(
