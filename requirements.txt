@@ -1,3 +1,4 @@
+cssselect >= 1.0.0
 Colr >=0.5.2
 Django == 1.10.4
 bpython >= 0.15.0

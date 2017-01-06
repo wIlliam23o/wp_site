@@ -7,8 +7,13 @@
 '''
 import logging
 import re
-import pygments
-from pygments import formatters
+import lxml
+
+from pygments import (
+    highlight as pygments_highlight,
+    lexers,
+    formatters,
+)
 from pygments import lexers
 from pygments.util import ClassNotFound
 
@@ -104,7 +109,7 @@ class WpHighlighter(object):
         classtxt = ' '.join(classlist)
 
         try:
-            codeh = pygments.highlight(code, self.lexer, self.formatter)
+            codeh = pygments_highlight(code, self.lexer, self.formatter)
             highlighted = '\n'.join([
                 '<div class=\'{}\'>'.format(classtxt),
                 codeh,
@@ -130,6 +135,11 @@ def check_lexer_name(sname):
         if sname in names_tuple:
             return True
     return False
+
+
+def copy_element(elem):
+    """ Returns a copy of an HtmlElement. """
+    return lxml.html.copy.deepcopy(elem)
 
 
 def get_all_lexer_names():
@@ -162,7 +172,7 @@ def get_hcode_language(mgroups):
     return None
 
 
-def get_lexer_byname(sname):
+def get_lexer_byname(sname, default='text'):
     """ retrieves a lexer by name, different than lexers.get_lexer_by_name()
         because it automatically enables certain options.
         this way all lexers for welbornprod will have the same options
@@ -173,8 +183,31 @@ def get_lexer_byname(sname):
         lexer = lexers.get_lexer_by_name(sname, stripall=True,)
     except ClassNotFound:
         log.debug('Bad lexer name: {}'.format(sname))
-        return lexers.get_lexer_by_name('text', stripall=True)
+        if default is None:
+            raise
+        return lexers.get_lexer_by_name(default, stripall=True)
     return lexer
+
+
+def get_lexer_bynames(names, default=None):
+    """ Given a list of possible lexer names, return the first one that
+        works.
+        If a `default` name is given, it's lexer is returned when no name
+        matches.
+        When `default` is None, and no name matches,
+        pygments.util.ClassNotFound is raised.
+    """
+    errs = []
+    for name in names:
+        try:
+            lexer = lexers.get_lexer_by_name(name)
+            return lexer
+        except ClassNotFound as ex:
+            errs.append(ex)
+    if default is not None:
+        return lexers.get_lexer_by_name(default)
+    # Just raise the last error.
+    raise ClassNotFound(*errs[-1].args) from errs[-1]
 
 
 def get_lexer_fromfile(sfilename):
@@ -333,164 +366,111 @@ def highlight_inline(text, tag='pre'):
         The class can be any valid pygments lexer name.
         If no tag is found the original string is returned.
     """
+    return lxml.html.tostring(
+        wrap_elem(
+            lxml.html.fromstring(text),
+            tag=tag,
+            newtag='div',
+            processor=highlight_pre_elems,
+        ),
+        pretty_print=True,
+        # <span></span><span class='blah'></span>
+    ).decode()
 
-    if '<{} class='.format(tag) not in text:
-        # No tag at all, no highlighting.
-        return text
 
-    # Whether we are currently processing a tag's contents.
-    inblock = False
-    # Blocks of text inside of the tag, tags not included.
-    current_block = []
-    # Lexer decided by class name on the tags.
-    lexer = None
-    # Styles that trigger a cancel,
+def highlight_pre_elems(elem):
+    """ Highlights pre tag content in an HtmlElement according to the classes
+        set on the pre tags and transforms them into pre-like divs.
+        This is a processor for wrap_elem().
+        Returns the element on success, or None on error.
+    """
     disallow_styles = {
         # Highlighting a template means the tag gets highlighted twice.
         'codewrap-template',
     }
     # Styles that won't be highlighted, but wrapped in a div.
     basic_styles = {
-        'none',
         'codewrap',
         'codewrap-noscript',
         'sampwrap',
         'sampwrap-noscript',
         'highlighted-inline'
     }
-    # For detecting starts/stops.
-    opentag = '<{}class='.format(tag)
-    closetag = '</{}>'.format(tag)
-    outlines = []
 
-    for line in text.split('\n'):
-        trimmed = line.replace(' ', '').replace('\t', '')
-        # Inside a block, collect lines and wait for end.
-        if inblock:
-            if closetag not in trimmed:
-                # Add this line to the block that will be wrapped/highlighted
-                current_block.append(line)
-                continue
-            # End of block.
-            inblock = False
-            # Decide how to wrap/highlight it..
-            # class = 'none or 'codewrap', etc. was used, just wrap it.
-            append_end_div = False
-            if lexer in basic_styles:
-                # No highlighting, just wrap it.
-                # if pre class='codewrap' was used, the 'codewrap' style
-                # will still be applied to the pre tag.
-                # if pre class='none' was used, the 'highlighted-inline'
-                # class will be applied.
-                if lexer == 'none':
-                    outlines.append('<div class=\'highlighted-inline\'>')
-                    outlines.extend(current_block)
-                    append_end_div = True
-                else:
-                    # plain div, the parent tag applied some style.
-                    outlines.append('<div class="pre-{}-plain">'.format(
-                        lexer
-                    ))
-                    outlines.extend(current_block)
-                    append_end_div = True
-
-            # must have valid lexer for highlighting
-            elif lexer is not None:
-                # Highlight the old block of text.
-                outlines.append(highlight_inline_block(
-                    '\n'.join(current_block),
-                    lexer,
-                    DEFAULT_FORMATTER
+    # Go ahead and set the div's class, returning None means this element
+    # isn't used anyway.
+    elem.set('class', 'highlighted-inline')
+    for preelem in elem.cssselect('pre'):
+        preclass_str = preelem.get('class', '')
+        classes = set(preclass_str.split(' '))
+        if (not classes) or ('none' in classes):
+            # No processing done, just set the class for the wrapping div.
+            return elem
+        elif classes.intersection(disallow_styles):
+            # Cancel processing, contains a no-highlight-allowed class.
+            return elem
+        elif classes.intersection(basic_styles):
+            # No processing done, class already set for pre tag.
+            elem.set(
+                'class',
+                ' '.join((
+                    elem.get('class', default='highlighted-inline'),
+                    preclass_str,
                 ))
-            # Add closing pre tag.
-            outlines.append(line)
-            if append_end_div:
-                outlines.append('</div>')
-            # clear block
-            current_block = []
-            continue
+            )
+            return elem
+        # Have a class set that is probably a language name for pygments.
+        try:
+            lexer = get_lexer_bynames(classes)
+        except ClassNotFound:
+            # No valid lexer. Just leave it.
+            log.error('No lexer found with: {!r}'.format(
+                preclass_str
+            ))
+            return elem
 
-        # Detect start
-        if trimmed.startswith(opentag):
-            outlines.append(line)
-            # get class name
-            classes = get_tag_classes(line, tag=tag)
-            if not classes:
-                # Error while parsing class name probably extra info in
-                # the tag. like: <pre class='test' style='breaker'>
-                # Code will not be highlighted.
-                log.error(
-                    'Unable to parse class attribute from {}'.format(
-                        line
-                    )
+        # Highlight the pre tag's text using pygments.
+        try:
+            highlighted = pygments_highlight(
+                preelem.text,
+                lexer,
+                DEFAULT_FORMATTER
+            )
+        except Exception as ex:
+            log.error(
+                '\n'.join((
+                    'Failed to highlight pre tag: <p class={clsstr}>',
+                    '    Source line: {sourceline}',
+                    '    Error: {err}'
+                )).format(
+                    clsstr=preelem.get('class', default=''),
+                    sourceline=preelem.sourceline,
+                    err=ex,
                 )
-                continue
+            )
+            return elem
 
-            # check for name fixing
-            # names can start with '_' like '_c' in case they share
-            # a name with other css classes.
-            classes = [s.lstrip('_') for s in classes]
-            for clsname in classes:
-                clsnamelower = clsname.lower()
-                if clsnamelower in disallow_styles:
-                    # This class means the file should not be highlighted.
-                    return text
-                if clsnamelower in basic_styles:
-                    # no highlighting wanted here.
-                    # but we will wrap it in a <div class='highlighted...'
-                    lexer = clsname
-                    inblock = True
-                elif clsname:
-                    # try highlighting with this lexer name.
-                    try:
-                        lexer = get_lexer_byname(clsname)
-                    except:
-                        log.error(
-                            ' '.join((
-                                'highlight_inline: unable to create ',
-                                'lexer/formatter with: {}'
-                            )).format(clsname)
-                        )
-                        lexer = None
-                    # Set the flag to start collecting lines.
-                    inblock = True
-                else:
-                    # No class
-                    log.error(
-                        'encountered empty highlight class: {}'.format(line)
-                    )
-                    return text
+        # Highlight succeeded, replace the text with the highlight's html.
+        preelem.text = ''
+        preelem.append(lxml.html.fromstring(highlighted))
 
-        else:
-            # Non-related code line.
-            outlines.append(line)
-    # Finished with all lines.
-    return '\n'.join(outlines)
+    return elem
 
 
-def highlight_inline_block(text, lexer, formatter):
-    """ Highlight a block of text and wrap in a .highlighted-inline div.
-        Helper method for highlight_inline().
-        Returns the highlighted text on success.
-        On errors, it logs the error and returns the original text.
+def replace_elem(old, new):
+    """ Replace an HtmlElement with a new one, either by calling
+        old.getparent().replace(), or by adding the new one
+        and removing the old one.
     """
-    if formatter is None:
-        formatter = DEFAULT_FORMATTER
-    if lexer is None:
-        log.error('highlight_inline_block: No lexer given, using \'text\'.')
-        lexer = lexers.get_lexer_by_name('text')
-
-    try:
-        highlighted = pygments.highlight(text, lexer, formatter)
-    except Exception as ex:
-        log.error('highlight_inline(): Error:\n{}'.format(ex))
-        highlighted = text
-
-    return '\n'.join((
-        '\n<div class=\'highlighted-inline\'>',
-        highlighted,
-        '</div>\n',
-    ))
+    # Either add the new element after, or replace it in the parent.
+    oldparent = old.getparent()
+    if oldparent.tag == 'body':
+        # This might mean that there was no parent, either way this works.
+        old.addnext(new)
+        old.remove()
+    else:
+        # Just replace the element using lxml's builtin method.
+        oldparent.replace(old, new)
 
 
 def try_highlight(code, langname, formatter=None):
@@ -511,7 +491,7 @@ def try_highlight(code, langname, formatter=None):
             )
             return code
 
-        highlighted = pygments.highlight(code, lexer, formatter)
+        highlighted = pygments_highlight(code, lexer, formatter)
         # log.debug('highlight: {}, {}'.format(langname, highlighted))
         return ''.join((
             '<div class="highlighted-embedded">',
@@ -521,3 +501,41 @@ def try_highlight(code, langname, formatter=None):
     except Exception as ex:
         log.debug('try_highlight: Error highlighting.\n{}'.format(ex))
         return code
+
+
+def wrap_elem(elem, tag='pre', newtag='div', processor=None):
+    """ Wrap all pre tags in a `tag` with a class of `class_str`.
+        Returns the new element, with replaced/wrapped tags.
+        Arguments:
+            elem       : An lxml.html.HtmlElement to search/replace in.
+            tag        : Tags that should be wrapped.
+                         Default: 'pre'
+            newtag     : Tag for the wrapper.
+                         Default: 'div'
+            processor  : Function that processes each element.
+                         It accepts each `newtag` element, after wrapping,
+                         as the only argument.
+                         It should return an HtmlElement on success, or None
+                         to cancel processing and use an unprocessed element.
+                         Default: None
+    """
+    wrapfmt = '<{tag}>\n{text}\n</{tag}>'.format
+    for e in elem.cssselect(tag):
+        if e.tag != tag:
+            continue
+
+        # Get the element's source code, for wrapping.
+        ehtml = lxml.html.tostring(e).decode()
+        # Wrap the old source in a `newtag`.
+        newhtml = wrapfmt(tag=newtag, text=ehtml)
+        # Create a new element from the wrapped source.
+        newelem = lxml.html.fromstring(newhtml)
+        # Process the element, if a processor was given.
+        if processor and callable(processor):
+            processedelem = processor(copy_element(newelem))
+            if processedelem is not None:
+                newelem = processedelem
+
+        replace_elem(e, newelem)
+
+    return elem
