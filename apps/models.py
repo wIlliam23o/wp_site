@@ -109,20 +109,16 @@ class wp_app(models.Model):  # noqa
     date_hierarchy = 'publish_date'
     get_latest_by = 'publish_date'
 
-    def __unicode__(self):
-        """ returns string/unicode representation of project """
-        s = self.name
-        if self.version != "":
-            s = s + " v. " + self.version
+    def __str__(self):
+        """ stringify this object, with optional version string. """
+        s = str(self.name)
+        if self.version:
+            s = ' '.join((s, 'v. {}'.format(self.version)))
         return s
 
-    def __str__(self):
-        """ same as unicode() except str() """
-        return str(self.__unicode__())
-
     def __repr__(self):
-        """ same as unicode() """
-        return self.__unicode__()
+        """ same as str() """
+        return self.__str__()
 
     def get_json(self):
         """ Reads the apps json_data and returns an object. """
@@ -130,7 +126,7 @@ class wp_app(models.Model):  # noqa
         if self.json_data:
             try:
                 jsonobj = json.loads(self.json_data)
-            except Exception as ex:
+            except ValueError as ex:
                 raise InvalidJsonData(ex)
             return jsonobj
         # No json_data.
@@ -143,7 +139,7 @@ class wp_app(models.Model):  # noqa
         """
         try:
             jsonstr = json.dumps(obj)
-        except Exception as ex:
+        except (ValueError, TypeError) as ex:
             raise InvalidJsonObject(ex)
 
         self.json_data = jsonstr
@@ -157,13 +153,13 @@ class wp_app(models.Model):  # noqa
     # Meta info for the admin site
     class Meta:
         ordering = ['name']
-        verbose_name = "App"
-        verbose_name_plural = "Apps"
+        verbose_name = 'App'
+        verbose_name_plural = 'Apps'
 
 
-class InvalidJsonData(Exception):
+class InvalidJsonData(ValueError):
     pass
 
 
-class InvalidJsonObject(Exception):
+class InvalidJsonObject(ValueError):
     pass

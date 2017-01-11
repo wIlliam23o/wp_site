@@ -18,25 +18,33 @@ from home.admin import admin_site
 def disable_posts(modeladmin, request, queryset):
     """ makes .disabled = True on all selected posts. """
     queryset.update(disabled=True)
-disable_posts.short_description = "Disable selected Posts"
+
+
+disable_posts.short_description = 'Disable selected Posts'
 
 
 def enable_posts(modeladmin, request, queryset):
     """ makes .disabled = False on all selected posts. """
     queryset.update(disabled=False)
-enable_posts.short_description = "Enable selected Posts"
+
+
+enable_posts.short_description = 'Enable selected Posts'
 
 
 def disable_comments(modeladmin, request, queryset):
     """ makes .enable_comments = False on selected posts."""
     queryset.update(enable_comments=False)
-disable_comments.short_description = "Disable Comments in selected Posts"
+
+
+disable_comments.short_description = 'Disable Comments in selected Posts'
 
 
 def enable_comments(modeladmin, request, queryset):
     """ makes .enable_comments = True on selected posts."""
     queryset.update(enable_comments=True)
-enable_comments.short_description = "Enable Comments in selected Posts"
+
+
+enable_comments.short_description = 'Enable Comments in selected Posts'
 
 
 class wp_blogAdmin(admin.ModelAdmin):
@@ -50,5 +58,6 @@ class wp_blogAdmin(admin.ModelAdmin):
         disable_posts,
         enable_comments,
         disable_comments]
+
 
 admin_site.register(wp_blog, wp_blogAdmin)

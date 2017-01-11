@@ -12,32 +12,36 @@ class pw_result(models.Model):
     """ Holds a prefetched result from PhoneWords. """
 
     # Original query for this result (phone number)
-    query = models.CharField(blank=False, max_length=256,
-                             help_text=('Original query for this result.'))
+    query = models.CharField(
+        blank=False,
+        max_length=256,
+        help_text='Original query for this result.'
+    )
     # Length of results from this query
-    result_length = models.IntegerField(blank=False,
-                                        help_text=('Length of results '
-                                                   'for the query.'))
+    result_length = models.IntegerField(
+        blank=False,
+        help_text='Length of results for the query.'
+    )
     # Holds all the result items [{combo : wordfound}, ...]
-    json = models.TextField(blank=False,
-                            help_text='JSON to hold results list.')
+    json = models.TextField(
+        blank=False,
+        help_text='JSON to hold results list.'
+    )
 
     # Number of attempts needed for this result originally.
-    attempts = models.IntegerField(blank=False,
-                                   help_text=('Number of attempts to get '
-                                              'these results.'))
-    
+    attempts = models.IntegerField(
+        blank=False,
+        help_text='Number of attempts to get these results.'
+    )
+
     # Disable this result (force re-calculating)
     disabled = models.BooleanField(default=False)
 
     def __str__(self):
-        return '{} : ({} results)'.format(self.query,
-                                          self.result_length)
-
-    def __unicode__(self):
-        """ not needed in py3 """
-        return '{} : ({} results)'.format(self.query,
-                                          self.result_length)
+        return '{} : ({} results)'.format(
+            self.query,
+            self.result_length
+        )
 
     def get_results(self):
         """ Try to parse results_json and return an object.
@@ -47,7 +51,7 @@ class pw_result(models.Model):
         if self.json:
             try:
                 results = json.loads(self.json)
-            except Exception as ex:
+            except ValueError as ex:
                 raise InvalidJsonData(ex)
             return results
         # No results to get.
@@ -60,7 +64,7 @@ class pw_result(models.Model):
 
         try:
             jsonstr = json.dumps(obj)
-        except Exception as ex:
+        except (TypeError, ValueError) as ex:
             raise InvalidJsonObject(ex)
 
         self.json = jsonstr
@@ -78,9 +82,9 @@ class pw_result(models.Model):
         verbose_name_plural = "PhoneWords Results"
 
 
-class InvalidJsonData(Exception):
+class InvalidJsonData(ValueError):
     pass
 
 
-class InvalidJsonObject(Exception):
+class InvalidJsonObject(ValueError):
     pass

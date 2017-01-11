@@ -35,6 +35,7 @@ class TKSessionAdmin(admin.ModelAdmin):
 class TKZipCodeAdmin(admin.ModelAdmin):
     pass
 
+
 admin_site.register(TKConfig, SingletonModelAdmin)
 admin_site.register(TKAddress, TKAddressAdmin)
 admin_site.register(TKEmployee, TKEmployeeAdmin)

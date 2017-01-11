@@ -14,8 +14,7 @@ from home.admin import admin_site
 
 
 class wp_downloadsAdmin(admin.ModelAdmin):
-    # prepopulated_fields= {'alias': ('name'.replace(' ', '').lower(),)
-    #                      }
+    # prepopulated_fields= {'alias': ('name'.replace(' ', '').lower(), )}
     pass
 
 
