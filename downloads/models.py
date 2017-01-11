@@ -55,8 +55,8 @@ class file_tracker(models.Model):
     def __str__(self):
         return self.get_shortname(dosave=False)
 
-    def __unicode__(self):
-        return self.get_shortname(dosave=False)
+    def __repr__(self):
+        return self.__str__()
 
     def get_shortname(self, updateinfo=False, dosave=False):
         """ retrieves shortname if it is set,
