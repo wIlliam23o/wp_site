@@ -77,7 +77,7 @@ class WpHighlighter(object):
         self.formatter = formatters.get_formatter_by_name('html')
         self.formatter.linenos = self.line_nums
         self.formatter.style = self.style_name
-        self.formatter.nowrap = (not self.linenos)
+        self.formatter.nowrap = (not self.line_nums)
 
     def set_lexer(self, lexer_name):
         """ another way to set the lexer """
@@ -95,7 +95,7 @@ class WpHighlighter(object):
         if not classes:
             classes = self.classes
         # Default class for all highlighted code (for the div wrapper)
-        classlist = ['highlighted']
+        classlist = ['highlight']
         if classes:
             # User defined classes, may override the default class.
             classlist.extend(classes)

@@ -61,20 +61,22 @@ Width:
 </div>
 </div>
 <div class='debug-page-box'>
-{% filter highlight_python %}
-{% debug %}
-{% endfilter %}
+			<pre>
+				{% filter highlight_python %}
+					{% debug %}
+				{% endfilter %}
+			</pre>
 </div>
 {% else %}
-<div class="alert">
-<span class="alert-message">
+<div class='alert'>
+<span class='alert-message'>
 Sorry, you don't have permissions to view the debugging info.
 </span>
 </div>
-<div class="wp-block welcome-message-box">
-<span class="welcome-message-text">
+<div class='wp-block welcome-message-box'>
+<span class='welcome-message-text'>
 You wouldn't like it anyway, try going back to my&nbsp;
-<a href="/">home page</a>.
+<a href='/'>home page</a>.
 </span>
 </div>
 {% endif %}
