@@ -314,8 +314,14 @@ def get_time_since(date):
 
 @register.filter
 def get_user_agent(request):
-    """ Get the user agent string from a request. """
+    """ Get a user_agents.parser.UserAgent from a request. """
     return utilities.get_user_agent(request)
+
+
+@register.filter
+def get_user_agent_dict(request):
+    """ Get a user_agents.parser.UserAgent in dict form from a request. """
+    return utilities.get_user_agent_dict(request)
 
 
 @register.filter
@@ -413,6 +419,12 @@ def is_authenticated(req_or_user):
     # Request or User was not passed!
     log.error('is_authenticated(): No \'user\' or \'is_authenticated\' attr!')
     return False
+
+
+@register.filter
+def is_dict(d):
+    """ Use isinstance() to determine whether an object is a dict. """
+    return isinstance(d, dict)
 
 
 @register.filter
@@ -649,16 +661,14 @@ def sortdict(d):
         Or in a template:
             {% for skey, sval in mydict|sortdict %}
     """
-
-    for skey in sorted(d.keys()):
-        yield (skey, d[skey])
+    yield from ((k, d[k]) for k in sorted(d))
 
 
 @register.filter
 def sortitems(o):
     """ wrapper for sorted() """
 
-    return sorted(o)
+    return tuple(sorted(o))
 
 
 @register.filter

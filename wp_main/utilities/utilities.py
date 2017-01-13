@@ -612,6 +612,55 @@ def get_time_since(date, limit=None):
     return '{:.0f} {}, {:.0f} {}'.format(days, daystr, hours, hourstr)
 
 
+def get_user_agent_dict(request):
+    """ Return a user_agents.parser.UserAgent in dict form,
+        whether get_user_agent() fails or not.
+        Returns a dict of {attr: value} on success.
+        Returns {} on error.
+    """
+    ua = get_user_agent(request)
+    if not ua:
+        return {}
+    # Attributes and default values.
+    ua_attrs = {
+        'browser': {'family': '', 'version': '', 'version_string': ''},
+        'device': {'family': '', 'brand': '', 'model': ''},
+        'is_bot': False,
+        'is_mobile': False,
+        'is_pc': False,
+        'is_tablet': False,
+        'is_touch_capable': False,
+        'os': {'family': '', 'version': '', 'version_string': ''},
+        'ua_string': '',
+    }
+
+    def parse_family_val(v):
+        """ Turn UserAgents tuple-based values into dicts. """
+        attrs = ('family', 'brand', 'model', 'version', 'version_string')
+        if not any(hasattr(v, a) for a in attrs):
+            return v
+        values = set()
+        keyvalstrs = []
+        notset = object()
+        for a in attrs:
+            val = getattr(v, a, notset)
+            if (val is notset) or (not val):
+                # Ignore missing attrs/values.
+                continue
+            if val in values:
+                # Don't add duplicate values (family: nexus, model: nexus)
+                continue
+            values.add(val)
+            keyvalstrs.append('{}: {}'.format(a.title(), val))
+
+        return ', '.join(keyvalstrs)
+
+    return {
+        k: parse_family_val(getattr(ua, k, ua_attrs[k]))
+        for k in ua_attrs
+    }
+
+
 def is_file_or_dir(spath):
     """ returns true if path is a file, or is a dir. """
 

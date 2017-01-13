@@ -8,21 +8,38 @@
 {% endblock %}
 
 {% block content %}
+{% with uainfo=request|get_user_agent_dict %}
     <div class='home-welcome-box'>
         <div class='info-box'>
             <span class='info-label'>
                 Your User Agent:
             </span>
             <br>
-            {% with request|get_user_agent as useragent %}
-                {% if useragent.ua_string %}
-                    <div class='info-value'>
-                        {{ useragent.ua_string }}
-                    </div>
-                {% else %}
-                    Sorry, I can't seem to get your user agent string.
-                {% endif %}
-            {% endwith %}
+            {% if uainfo.ua_string %}
+                <div class='info-value'>
+                    {{ uainfo.ua_string }}
+                </div>
+            {% else %}
+                Sorry, I can't seem to get your user agent string.
+            {% endif %}
         </div>
+        {% if uainfo %}
+            <div class='info-box'>
+                <div class='info-label'>
+                    Extra information:
+                </div>
+                {% for k, v in uainfo|sortdict %}
+                    <div class='version-info-box'>
+                        <div class='version-info-label'>
+                            {{ k }}
+                        </div>
+                        <div class='version-info-value'>
+                            {{ v }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
+{% endwith %}
 {% endblock %}
