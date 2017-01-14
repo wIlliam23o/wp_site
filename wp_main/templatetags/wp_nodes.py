@@ -3,9 +3,13 @@
     -Christopher Welborn 09-03-14
 """
 import base64
+import json
 import logging
 import os
+import sys
 from django import template
+from django.utils.safestring import mark_safe
+
 from wp_main.utilities import utilities, htmltools, highlighter
 
 log = logging.getLogger('wp.templatenodes')
@@ -55,6 +59,14 @@ def ad_bottom(parser, token):
 def b64encode(s):
     """ Encode string as bas64. """
     return base64.encodebytes(s.encode('utf-8')).decode('utf-8').strip()
+
+
+@register.tag
+def debugplus(parser, token):
+    """ Renders a DebugPlus node in place.
+    """
+
+    return DebugPlus()
 
 
 @register.tag
@@ -166,10 +178,10 @@ class AdArticle(template.Node):
 
     def render(self, context):
         """ Render this article ad node. """
-        adarticle = htmltools.render_clean(
+        return htmltools.render_clean(
             'home/ad_article.html',
-            context=context)
-        return adarticle
+            context=context
+        )
 
 
 class AdBottom(template.Node):
@@ -177,10 +189,35 @@ class AdBottom(template.Node):
     """ Renders a google ad for the bottom of the page. """
 
     def render(self, context):
-        adbottom = htmltools.render_clean(
+        return htmltools.render_clean(
             'home/ad_bottom.html',
-            context=context)
-        return adbottom
+            context=context
+        )
+
+
+class DebugPlus(template.Node):
+
+    """ Renders DebugPlus info in place. """
+
+    def render(self, context):
+        """ Render this debugplus node. """
+
+        context['debuginfo'] = {
+            'contexts': [
+                {str(k): str(v) for k, v in d.items()}
+                for d in context
+            ],
+            'modules': tuple(
+                (k, getattr(sys.modules[k], '__file__', '(builtin)'))
+                for k in sorted(sys.modules)
+            ),
+        }
+        debughtml = htmltools.render_clean(
+            'home/debugplus.html',
+            context=context
+        )
+        return debughtml
+
 
 
 class FavIcons(template.Node):
@@ -188,11 +225,10 @@ class FavIcons(template.Node):
     """ Renders favicons code for many browsers/devices. """
 
     def render(self, context):
-        favs = htmltools.render_clean(
+        return htmltools.render_clean(
             'home/fav_icons.html',
             context=context
         )
-        return favs
 
 
 class Highlighter(template.Node):
@@ -227,18 +263,12 @@ class Highlighter(template.Node):
         else:
             embedded = False
 
-        # code = var_quotes(code, varname='Highlighter.code')
-        # lexername = var_quotes(lexer_name, varname='Highlighter.lexer_name')
-
         hl = highlighter.WpHighlighter(
             lexer_name=lexer_name,
             code=code,
-            classes=['highlighted-embedded'] if embedded else None)
-        content = hl.highlight()
-        # log.debug('\n{d}\nHighlighter:\n\n{c}\n{d}\n'.format(
-        #     c=content,
-        #     d='-' * 80))
-        return content
+            classes=['highlighted-embedded'] if embedded else None
+        )
+        return hl.highlight()
 
 
 class ImageViewer(template.Node):
@@ -322,5 +352,4 @@ class TrackingGoogle(template.Node):
     """
 
     def render(self, context):
-        trackingscript = htmltools.render_clean('home/tracking_google.html')
-        return trackingscript
+        return htmltools.render_clean('home/tracking_google.html')

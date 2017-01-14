@@ -1112,11 +1112,9 @@ samp {
 }
 
 .debug-page-box {
-    // Entire debug info is layed out.
+    // DebugPlus node is rendered inside of this.
     @include border-radius-thick(5px);
     background-color: $whitedull;
-    font-size: $fontmono;
-    overflow-x: scroll;
     padding: 5px;
     position: relative;
 }

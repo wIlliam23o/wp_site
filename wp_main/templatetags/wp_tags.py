@@ -324,6 +324,16 @@ def get_user_agent_dict(request):
     return utilities.get_user_agent_dict(request)
 
 
+@register.filter(name='hash')
+def hash_object(obj):
+    """ Try hash()ing an object, fallback to hash(str(obj)). """
+    try:
+        val = hash(obj)
+    except TypeError:
+        return hash(str(obj))
+    return val
+
+
 @register.filter
 def hcodes(content):
     """ Highlight using short codes found with highlighter.highlight_codes.

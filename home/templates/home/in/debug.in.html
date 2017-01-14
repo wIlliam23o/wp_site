@@ -1,5 +1,6 @@
 {% extends "home/main.html" %}
 {% load wp_tags %}
+{% load wp_nodes %}
 {% block title %}- Debug Info{% endblock %}
 
 {% block content %}
@@ -65,11 +66,7 @@
 
 		</div>
 		<div class='debug-page-box'>
-			<pre>
-				{% filter highlight_python %}
-					{% debug %}
-				{% endfilter %}
-			</pre>
+			{% debugplus %}
 		</div>
 	{% else %}
 		<!-- No Permissions -->
@@ -91,9 +88,15 @@
 {% block bodyend %}
 	<script type='text/javascript'>
 		$(document).ready(function () {
-			var b = $('body');
-			$('#debug-width').text($(b).css('width'));
-			$('#debug-height').text($(b).css('height'));
+			$('#debug-width').text($(window).width());
+			$('#debug-height').text($(window).height());
+			window.addEventListener(
+				'resize',
+				function resize_window(e) {
+					$('#debug-width').text($(window).width());
+					$('#debug-height').text($(window).height());
+				}
+			);
 		});
 
 	</script>
