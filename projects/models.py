@@ -117,6 +117,7 @@ class wp_project(models.Model):
         s = str(self.name)
         if self.version:
             s = ' '.join((s, 'v. {}'.format(self.version)))
+        return s
 
     def __repr__(self):
         """ same as str() """
