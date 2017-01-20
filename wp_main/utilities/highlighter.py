@@ -10,11 +10,11 @@ import re
 import lxml.html
 
 from pygments import (
+    __version__ as pygments_version, # Only needed for bugfix_get_all_lexers()
     highlight as pygments_highlight,
     lexers,
     formatters,
 )
-from pygments import lexers
 from pygments.util import ClassNotFound
 
 from django.utils.safestring import mark_safe
@@ -31,8 +31,35 @@ HCODEPAT = re.compile(r'(\[[\w\d]+\])([^\[/]+)(\[/[\w\d+]+\])')
 # Use it for code that contains the '/' character.
 HCODEPAT2 = re.compile(r'(\[[\w\d]+\])([^\[\?]+)(\[\?[\w\d+]+\])')
 
-# List of valid lexer names.
-LEXERNAMES = [lexer_[1] for lexer_ in lexers.get_all_lexers()]
+
+# ------------------ BUG FIX, DELETE ASAP -----------------------------------!
+def bugfix_get_all_lexers():
+    """ BUGFIX for pygments and IPython plugin.
+        Bug report: https://github.com/ipython/ipython/issues/6386
+
+        Return a generator of tuples in the form ``(name, aliases,
+        filenames, mimetypes)`` of all know lexers.
+    """
+    for item in lexers.itervalues(lexers.LEXERS):
+        yield item[1:]
+    try:
+        for lexer in lexers.find_plugin_lexers():
+            yield lexer.name, lexer.aliases, lexer.filenames, lexer.mimetypes
+    except AttributeError:
+        # IPython causes this when ran through mod_wsgi.
+        # Bug report: https://github.com/ipython/ipython/issues/6386
+        log.error(
+            'Bug still present in pygments: {}'.format(
+                'https://github.com/ipython/ipython/issues/6386'
+            )
+        )
+        pass
+
+
+# List of valid lexer names in the form of (name, name2, ..).
+# The IPython bug mentioned below is the reason for this proper for-loop.
+LEXERNAMES = [lexer[1] for lexer in bugfix_get_all_lexers()]
+# ---------------------------------------------------------------------------!
 
 # Basic style codes
 STYLECODES = {
