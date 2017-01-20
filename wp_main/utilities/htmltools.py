@@ -496,23 +496,26 @@ def get_screenshots(images_dir, noscript_image=None):
 
     """
     # accceptable image formats (last 4 chars)
-    formats = ['.png', '.jpg', '.gif', '.bmp', 'jpeg']
+    formats = ['.png', '.jpg', '.gif', '.bmp', '.jpeg']
 
-    # Make sure we are using the right dir.
-    # get absolute path for images dir,
-    # if none exists then delete the target_replacement.
-    images_dir = utilities.get_absolute_path(images_dir)
-    if not images_dir:
+    if os.path.isdir(images_dir):
+        dirpath = images_dir
+    else:
+        # Make sure we are using the right dir.
+        # get absolute path for images dir.
+        dirpath = utilities.get_absolute_path(images_dir)
+    if not dirpath:
+        log.error('No images dir: {!r} -> {!r}'.format(images_dir, dirpath))
         return None
 
     # Get useable relative dir (user-passed may be wrong format)
-    relative_dir = utilities.get_relative_path(images_dir)
+    relative_dir = utilities.get_relative_path(dirpath)
 
     # find acceptable pics
     try:
-        all_files = os.listdir(images_dir)
+        all_files = os.listdir(dirpath)
     except Exception as ex:
-        log.debug('Can\'t list dir: {}\n{}'.format(images_dir, ex))
+        log.error('Can\'t list dir: {}\n{}'.format(dirpath, ex))
         return None
 
     # Help functions for building screenshots.
@@ -520,7 +523,7 @@ def get_screenshots(images_dir, noscript_image=None):
         return os.path.join(relative_dir, filename)
 
     def good_format(filename):
-        return filename[-4:] in formats
+        return os.path.splitext(filename)[-1] in formats
 
     # Build acceptable pics list
     good_pics = [relative_img(f) for f in all_files if good_format(f)]

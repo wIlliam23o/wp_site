@@ -148,6 +148,14 @@ def get_absolute_path(relative_file_path):
         Returns empty string on failure.
         Restricted to public STATIC_PARENT dir.
     """
+    if relative_file_path.startswith(settings.STATIC_ROOT):
+        # Happens when an already-absolute-path is sent in.
+        log.debug('Already absolute: {!r}'.format(relative_file_path))
+        relative_file_path = relative_file_path.replace(
+            settings.STATIC_ROOT,
+            ''
+        )
+        log.debug('...starting from: {!r}'.format(relative_file_path))
 
     relative_path = relative_file_path.lstrip('/')
     if not relative_path:
