@@ -40,7 +40,7 @@ def bugfix_get_all_lexers():
         Return a generator of tuples in the form ``(name, aliases,
         filenames, mimetypes)`` of all know lexers.
     """
-    for item in lexers.itervalues(lexers.LEXERS):
+    for item in lexers.LEXERS.values():
         yield item[1:]
     try:
         for lexer in lexers.find_plugin_lexers():
