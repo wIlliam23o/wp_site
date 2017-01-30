@@ -1,108 +1,119 @@
-{# Generated using build_template.sh v. 0.0.1 #}
 {% extends 'home/main.html' %}
 {% load wp_tags %}
 {% load searcher_tags %}
 {% block title %}- Search Results{% endblock %}
+
 {% block metainfo %}
-<meta name='description' content='Search results from a welborn productions search query.'>
+    <meta name='description' content='Search results from a welborn productions search query.'>
 {% endblock %}
+
 {% block extrastylelink %}
-<link type='text/css' rel='stylesheet' href='/static/css/searcher.min.css' />
-{{ block.super }}
+	<link type='text/css' rel='stylesheet' href='/static/css/searcher.min.css' />
+	{{ block.super }}
 {% endblock %}
+
 {% block contentabove %}
-<div class='search-header'>
-<div class='search-header-title'>
-<h3 class='header'>Search</h3>
-</div>
-<div class='search-header-text'>
-<span class='title'>Search welborn productions</span>
-</div>
-<div class='search-form'>
-<span class='search-label'>Enter something to search for: </span>
-<form id='search-form'>
-<input type='search' name='q' id='searchbox' class='search-textbox' required=True></input>
-<a href='javascript: void(0);' onclick='javascript: do_search();'>
-<div class='submit-button'>
-<span>search</span>
-</div>
-</a>
-</form>
-</div>
-<div class='search-header-text' style='padding-left: 5px;'>
-{% if search_warning %}
-<span class='search-header-text' style='color: darkred; font-weight: bold;'>
-{{ search_warning }}
-</span>
-{% else %}
-{% if results_count|exceeds_max:"25" %}
-<span class='search-header-text'>Viewing the first page of </span>
-{% else %}
-<span class='search-header-text'>Found </span>
-{% endif %}
-<span class='search-header-count'>{{ results_count }}</span>
-<span class='search-header-text'> results for: </span>
-<span class='search-header-query'> {{ query_safe }}</span>
-{% endif %}
-</div>
-{% if results_count|exceeds_max:"25" %}
-<a href='/search/page/?q={{ query_safe }}&?start_id=0'>
-<div class='readmore-box' style='margin-left: 5px;'>
-<span class='readmore-text'>view all results</span>
-</div>
-</a>
-{% endif %}
-</div>
+	<div class='search-header'>
+		<!-- Header/Title -->
+		<div class='search-header-title'>
+			<h3 class='header'>Search</h3>
+		</div>
+		<div class='search-header-text'>
+				<span class='title'>Search welborn productions</span>
+		</div>
+
+		<!-- Search Box -->
+		<div class='search-form'>
+			<span class='search-label'>Enter something to search for: </span>
+			<form id='search-form'>
+				<input type='search' name='q' id='searchbox' class='search-textbox' required=True></input>
+				<!-- Search Button -->
+				<a href='javascript: void(0);' onclick='javascript: do_search();'>
+					<div class='submit-button'>
+						<span>search</span>
+					</div>
+				</a>
+			</form>
+		</div>
+
+		<!-- Results Header -->
+		<div class='search-header-text' style='padding-left: 5px;'>
+			{% if search_warning %}
+				<span class='search-header-text' style='color: darkred; font-weight: bold;'>
+					{{ search_warning }}
+				</span>
+			{% else %}
+				{% if results_count|exceeds_max:"25" %}
+					<span class='search-header-text'>Viewing the first page of </span>
+				{% else %}
+					<span class='search-header-text'>Found </span>
+				{% endif %}
+					<span class='search-header-count'>{{ results_count }}</span>
+						<span class='search-header-text'> results for: </span>
+						  <span class='search-header-query'> {{ query_safe }}</span>
+			{% endif %}
+		</div>
+		{% if results_count|exceeds_max:"25" %}
+			<a href='/search/page/?q={{ query_safe }}&?start_id=0'>
+				<div class='readmore-box' style='margin-left: 5px;'>
+					<span class='readmore-text'>view all results</span>
+				</div>
+			</a>
+		{% endif %}
+	</div>
 {% endblock %}
+
 {% block content %}
-{% if results_list %}
-<div class='search-results'>
-{% for result in results_list %}
-<div class='search-listing'>
-<div class='search-listing-title-box'>
-<a href='{{ result.link }}'>
-<span class='search-listing-title'>
-{{ result.title }}
-</span>
-</a>
-{% if result.restype %}
-<div class='search-listing-type-box'>
-<span class='search-listing-type-label'>
-Type:
-</span>
-<span class='search-listing-type-value'>
-{{ result.restype }}
-</span>
-</div>
-{% endif %}
-</div>
-<div class='search-listing-date-box'>
-<span class='search-listing-date'>{{ result.posted }}</span>
-</div>
-<div class='search-listing-body'>
-{{ result.description|highlight_desc|mark_safe }}
-</div>
-</div>
-{% endfor %}
-</div>
-{% else %}
-{% if not search_warning %}
-<span style='font-style: italic;'>Sorry, I couldn't find anything.</span>
-<br/>
-<span>{{ '[RANDOM MSG]'|random_result_msg }}</span>
-{% endif %}
-{% endif %}
+	{% if results_list %}
+		<div class='search-results'>
+			{% for result in results_list %}
+				<div class='search-listing'>
+
+				    <div class='search-listing-title-box'>
+				    	<a href='{{ result.link }}'>
+                            <span class='search-listing-title'>
+                            	{{ result.title }}
+                            </span>
+                        </a>
+                        {% if result.restype %}
+                        	<div class='search-listing-type-box'>
+	                        	<span class='search-listing-type-label'>
+	                        		Type:
+	                        	</span>
+	                        	<span class='search-listing-type-value'>
+	                        		{{ result.restype }}
+	                        	</span>
+	                        </div>
+                        {% endif %}
+				    </div>
+					<div class='search-listing-date-box'>
+						<span class='search-listing-date'>{{ result.posted }}</span>
+					</div>
+					<div class='search-listing-body'>
+						{{ result.description|highlight_desc|mark_safe }}
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	{% else %}
+		{% if not search_warning %}
+			<span style='font-style: italic;'>Sorry, I couldn't find anything.</span>
+			<br/>
+			<span>{{ '[RANDOM MSG]'|random_result_msg }}</span>
+		{% endif %}
+	{% endif %}
 {% endblock %}
+
 {% block bodyend %}
-<script type='text/javascript'>
-function do_search() {
-var searchtext = $('#searchbox').val();
-if (searchtext) {
-$('#search-form').submit();
-}
-}
-$(document).ready(function () {
-wptools.select('#searchbox').focus();
-});
-</script>
+	<script type='text/javascript'>
+		function do_search() {
+			var searchtext = $('#searchbox').val();
+			if (searchtext) {
+				$('#search-form').submit();
+			}
+		}
+		$(document).ready(function () {
+			wptools.select('#searchbox').focus();
+		});
+	</script>
 {% endblock %}

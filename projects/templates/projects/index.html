@@ -1,58 +1,73 @@
-{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "home/main.html" %}
 {% load wp_tags %}
+
 {% block title %}- Projects{% endblock %}
+
 {% block metainfo %}
-<meta name='description' content='Current projects from welborn productions.'/>
+    <meta name='description' content='Current projects from welborn productions.'/>
 {% endblock %}
+
 {% block extrastylelink %}
-<link type='text/css' rel='stylesheet' href='/static/css/projects.min.css' />
-<link type='text/css' rel='stylesheet' href='/static/css/video-js.min.css' />
-{{ block.super }}
+	<!-- Style for Video.js -->
+	<link type='text/css' rel='stylesheet' href='/static/css/projects.min.css' />
+    <link type='text/css' rel='stylesheet' href='/static/css/video-js.min.css' />
+    {{ block.super }}
 {% endblock %}
+
 {% block javascript %}
-<script type='text/javascript' src='/static/js/video/video.js'></script>
+	<!-- Video.js video player. -->
+    <script type='text/javascript' src='/static/js/video/video.js'></script>
 {% endblock %}
+
+<!-- Build projects menu -->
 {% block verticalmenu %}
-{% if projects %}
-<div class='vertical-menu'>
-<ul class='vertical-menu-main'>
-{% for project in projects %}
-<li class='vertical-menu-item'>
-<a class='vertical-menu-link' href='/projects/{{ project.alias }}'>
-<span class='vertical-menu-text'>{{ project.name }}</span>
-</a>
-</li>
-{% endfor %}
-</ul>
-</div>
-{% endif %}
+	{% if projects %}
+		<div class='vertical-menu'>
+			<ul class='vertical-menu-main'>
+				{% for project in projects %}
+					<li class='vertical-menu-item'>
+						<a class='vertical-menu-link' href='/projects/{{ project.alias }}'>
+							<span class='vertical-menu-text'>{{ project.name }}</span>
+						</a>
+					</li>
+				{% endfor %}
+			</ul>
+		</div>
+	{% endif %}
 {% endblock %}
+
+<!-- Build Project Listing -->
 {% block content %}
-{% if projects %}
-<div class='wp-block project-listing'>
-{% for project in projects %}
-<div class='wp-block project-container'>
-{% if request.user.is_staff %}
-<a href='/adminprojects/wp_project/{{ project.id }}'>
-<div class='wpbutton project-edit-button'>
-<span>edit</span>
-</div>
-</a>
-{% endif %}
-<div class='project-header-box'>
-<a href='/projects/{{ project.alias }}'>
-<span class='header project-name'>{{ project.name }}</span>
-</a>
-<br/>
-<span class='version'>version {{ project.version }}</span>
-<br/>
-</div>
-<div class='project-desc'>
-<span class='desc'>{{ project.description|safe }}</span>
-</div>
-</div>
-{% endfor %}
-</div>
-{% endif %}
+	{% if projects %}
+		<div class='wp-block project-listing'>
+			{% for project in projects %}
+				<!-- Single project listing. -->
+				<div class='wp-block project-container'>
+					<!-- EDIT -->
+					{% if request.user.is_staff %}
+						<a href='/adminprojects/wp_project/{{ project.id }}'>
+							<div class='wpbutton project-edit-button'>
+								<span>edit</span>
+							</div>
+						</a>
+					{% endif %}
+					<!-- Header (Name/Link/Version) -->
+					<div class='project-header-box'>
+						<a href='/projects/{{ project.alias }}'>
+							<span class='header project-name'>{{ project.name }}</span>
+						</a>
+						<br/>
+						<span class='version'>version {{ project.version }}</span>
+						<br/>
+					</div>
+
+					<!-- Description -->
+					<div class='project-desc'>
+						<span class='desc'>{{ project.description|safe }}</span>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	{% endif %}
 {% endblock %}
+

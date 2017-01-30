@@ -1,66 +1,70 @@
-{# Generated using build_template.sh v. 0.0.1 #}
+{# Debug Plus Template Node                 #}
+{# Expects a context with `debuginfo`.      #}
+{# The context comes from the DebugPlusNode #}
 {% load wp_tags %}
+
 {% if debuginfo %}
-<link type='text/css' rel='stylesheet' href='/static/css/debugplus.min.css'/>
-<div class='debugplus-toggleable'>
-<div class='debugplus-toggle' onclick='javascript: toggle_section(this, "#debugplus-contexts");'>
-</div>
-<div id='debugplus-contexts' class='debugplus-section'>
-{% for contextdict in debuginfo.contexts %}
-{% if contextdict %}
-{% with dictlen=contextdict|length dicthash=contextdict|hash %}
-<div class='debugplus-toggleable'>
-<div class='debugplus-toggle' onclick='javascript: toggle_section(this, "#debugplus-item-{{ dictlen }}{{ dicthash }}");'>
-</div>
-<div id='debugplus-item-{{ dictlen }}{{ dicthash }}' class='debugplus-item'>
-{% for contextkey, contextvalue in contextdict|sortdict %}
-<div class='debugplus-pair'>
-<div class='debugplus-key'>
-{{ contextkey }}
-</div>
-<div class='debugplus-value'>
-{{ contextvalue }}
-</div>
-</div>
-{% endfor %}
-</div>
-</div>
-{% endwith %}
-{% endif %}
-{% endfor %}
-</div>
-</div>
-<div class='debugplus-toggleable'>
-<div class='debugplus-toggle' onclick='javascript: toggle_section(this, "#debugplus-modules");'>
-</div>
-<div id='debugplus-modules' class='debugplus-section'>
-{% for name, file in debuginfo.modules %}
-<div id='debugplus-item-{{ name }}' class='debugplus-item no-div'>
-<div class='debugplus-pair'>
-<div class='debugplus-key'>
-{{ name }}
-</div>
-<div class='debugplus-value'>
-{{ file }}
-</div>
-</div>
-</div>
-{% endfor %}
-</div>
-</div>
-<script type='text/javascript'>
-function toggle_section(toggler, id) {
-var $elem = $(id);
-if (!$elem.length) {
-return;
-}
-$elem.slideToggle(function change_toggle() {
-if ($(this).is(':hidden')) {
-$(toggler).css('transform', 'none');
-} else {
-$(toggler).css('transform', 'rotate(180deg)');
-}
-});
-}
-</script>
+    <link type='text/css' rel='stylesheet' href='/static/css/debugplus.min.css'/>
+    <div class='debugplus-toggleable'>
+        <div class='debugplus-toggle' onclick='javascript: toggle_section(this, "#debugplus-contexts");'>
+        </div>
+        <div id='debugplus-contexts' class='debugplus-section'>
+        {% for contextdict in debuginfo.contexts %}
+            {% if contextdict %}
+                {% with dictlen=contextdict|length dicthash=contextdict|hash %}
+                    <div class='debugplus-toggleable'>
+                        <div class='debugplus-toggle' onclick='javascript: toggle_section(this, "#debugplus-item-{{ dictlen }}{{ dicthash }}");'>
+                        </div>
+                        <div id='debugplus-item-{{ dictlen }}{{ dicthash }}' class='debugplus-item'>
+                            {% for contextkey, contextvalue in contextdict|sortdict %}
+                                <div class='debugplus-pair'>
+                                    <div class='debugplus-key'>
+                                        {{ contextkey }}
+                                    </div>
+                                    <div class='debugplus-value'>
+                                        {{ contextvalue }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endwith %}
+            {% endif %}
+        {% endfor %}
+        </div>
+    </div>
+    <div class='debugplus-toggleable'>
+        <div class='debugplus-toggle' onclick='javascript: toggle_section(this, "#debugplus-modules");'>
+        </div>
+        <div id='debugplus-modules' class='debugplus-section'>
+            {% for name, file in debuginfo.modules %}
+                <div id='debugplus-item-{{ name }}' class='debugplus-item no-div'>
+                    <div class='debugplus-pair'>
+                        <div class='debugplus-key'>
+                            {{ name }}
+                        </div>
+                        <div class='debugplus-value'>
+                            {{ file }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script type='text/javascript'>
+        function toggle_section(toggler, id) {
+            /* Toggle a "toggleable" section, by jQuery id. */
+            var $elem = $(id);
+            if (!$elem.length) {
+                return;
+            }
+            $elem.slideToggle(function change_toggle() {
+                if ($(this).is(':hidden')) {
+                    $(toggler).css('transform', 'none');
+                } else {
+                    $(toggler).css('transform', 'rotate(180deg)');
+                }
+            });
+        }
+    </script>
 {% endif %}

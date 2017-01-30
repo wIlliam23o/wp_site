@@ -1,101 +1,109 @@
-{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "home/main.html" %}
 {% load blogger_tags %}
 {% load wp_tags %}
 {% block title %}- Blog{% endblock %}
+
 {% block metainfo %}
-<meta name='description' content='Welborn productions blog posts.'>
+    <meta name='description' content='Welborn productions blog posts.'>
 {% endblock %}
+
 {% block extrastylelink %}
-<link type='text/css' rel='stylesheet' href='/static/css/blogger.min.css'/>
-{{ block.super }}
+	<link type='text/css' rel='stylesheet' href='/static/css/blogger.min.css'/>
+	{{ block.super }}
 {% endblock %}
+
 {% block javascript %}
-<script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
-<script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
+    <script type='text/javascript' src='/static/js/ace/ace.js' charset='utf-8'></script>
+    <script type='text/javascript' src='/static/js/ace/ext-modelist.js' charset='utf-8'></script>
 {% endblock %}
+
 {% block contentabove %}
-<div class='blog-header'>
-<div class='blog-header-title'>
-<a href='/blog'>
-<h3 class='header'>Blog</h3>
-</a>
-</div>
-<div class='blog-header-text'>
-{% block blogcontentabove %}
-<span class='title'>Latest blog posts</span>
-<br/>
-{% if post_count|exceeds_max:"25" %}
-<a href='/blog/page?start_id=0'>
-<div class='wpbutton' style='margin-left: 5px; display: inline-block;'>
-<span>view all posts</span>
-</div>
-</a>
-{% endif %}
-<a href='/blog/tags'>
-<div class='wpbutton' style='margin-left: 5px; display: inline-block;'>
-<span>view all tags</span>
-</div>
-</a>
-{% endblock %}
-</div>
-</div>
+	<div class='blog-header'>
+		<div class='blog-header-title'>
+			<a href='/blog'>
+				<h3 class='header'>Blog</h3>
+			</a>
+		</div>
+
+		<div class='blog-header-text'>
+			{% block blogcontentabove %}
+				<span class='title'>Latest blog posts</span>
+				<br/>
+				{% if post_count|exceeds_max:"25" %}
+					<a href='/blog/page?start_id=0'>
+						<div class='wpbutton' style='margin-left: 5px; display: inline-block;'>
+							<span>view all posts</span>
+						</div>
+					</a>
+				{% endif %}
+				<a href='/blog/tags'>
+					<div class='wpbutton' style='margin-left: 5px; display: inline-block;'>
+						<span>view all tags</span>
+					</div>
+				</a>
+
+			{% endblock %}
+		</div>
+	</div>
 {% endblock %}
 {% block content %}
-<div class='blog-posts'>
-{% if blog_posts %}
-{% for post in blog_posts %}
-{% if not post.disabled %}
-<div class='blog-listing'>
-<div class='blog-post-title-box'>
-<a href='/blog/view/{{ post.slug }}'>
-<span class='blog-listing-title'>{{ post.title }}</span>
-</a>
-</div>
-{% if request|is_staff %}
-<a href='/adminblogger/wp_blog/{{ post.id }}'>
-<div class='wpbutton blog-edit-button'>
-<span>edit</span>
-</div>
-</a>
-{% endif %}
-<div class='blog-post-date-box'>
-<span class='blog-post-date'>{{ post.posted }}</span>
-</div>
-<div class='blog-post-tags-box'>
-{{ post|tag_links }}
-</div>
-<div class='blog-listing-body'>
-{{ post|get_body_short }}
-</div>
-{% if post.enable_comments %}
-<a href='/blog/view/{{ post.slug }}#comments-box'>
-<div class='comments-button'>
-comments..
-</div>
-</a>
-{% endif %}
-{% if post|get_projects %}
-<div class='blog-related-projects-box-index'>
-<span class='blog-related-projects-label'>related projects:&nbsp;</span>
-<div class='blog-related-projects-list'>
-{% for project in post|get_projects %}
-<div class='blog-related-project'>
-<a href='/projects/{{ project.alias }}'>
-<span>{{ project.name }}</span>
-</a>
-</div>
-{% endfor %}
-</div>
-</div>
-{% endif %}
-</div>
-{% endif %}
-{% endfor %}
-{% else %}
-<span style='font-style: italic;'>Sorry, no blog posts found.</span>
-<br/>
-<a href='/'><span>Click here to go back home.</span></a>
-{% endif %}
-</div>
+	<div class='blog-posts'>
+			{% if blog_posts %}
+				{% for post in blog_posts %}
+					{% if not post.disabled %}
+						<div class='blog-listing'>
+							<div class='blog-post-title-box'>
+								<a href='/blog/view/{{ post.slug }}'>
+									<span class='blog-listing-title'>{{ post.title }}</span>
+								</a>
+							</div>
+							<!-- EDIT -->
+		                    {% if request|is_staff %}
+	                            <a href='/adminblogger/wp_blog/{{ post.id }}'>
+			                        <div class='wpbutton blog-edit-button'>
+		                                <span>edit</span>
+			                        </div>
+	                            </a>
+		                    {% endif %}
+							<div class='blog-post-date-box'>
+								<span class='blog-post-date'>{{ post.posted }}</span>
+							</div>
+							<div class='blog-post-tags-box'>
+								{{ post|tag_links }}
+							</div>
+							<div class='blog-listing-body'>
+								{{ post|get_body_short }}
+							</div>
+							<!-- Comments Button -->
+							{% if post.enable_comments %}
+								<a href='/blog/view/{{ post.slug }}#comments-box'>
+									<div class='comments-button'>
+										comments..
+									</div>
+								</a>
+							{% endif %}
+							<!-- Related Projects links (if any) -->
+							{% if post|get_projects %}
+								<div class='blog-related-projects-box-index'>
+									<span class='blog-related-projects-label'>related projects:&nbsp;</span>
+									<div class='blog-related-projects-list'>
+										{% for project in post|get_projects %}
+											<div class='blog-related-project'>
+												<a href='/projects/{{ project.alias }}'>
+													<span>{{ project.name }}</span>
+												</a>
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+							{% endif %}
+						</div>
+					{% endif %}
+				{% endfor %}
+			{% else %}
+				<span style='font-style: italic;'>Sorry, no blog posts found.</span>
+				<br/>
+				<a href='/'><span>Click here to go back home.</span></a>
+			{% endif %}
+	</div>
 {% endblock %}

@@ -1,153 +1,195 @@
-{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "home/main.html" %}
 {% block title %}- About{% endblock %}
+
 {% block metainfo %}
-<meta name='description' content='Information about Christopher Welborn and Welborn Productions.'>
+    <meta name='description' content='Information about Christopher Welborn and Welborn Productions.'>
 {% endblock %}
+
 {% block extrastylelink %}
-<link type='text/css' rel='stylesheet' href='/static/css/about.min.css' />
-<link type='text/css' rel='stylesheet' href='/static/css/github-badge.min.css' />
-<link type='text/css' rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css'/>
-<link type='text/css' rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/octicons/2.4.1/octicons.min.css'/>
-{{ block.super }}
+    <link type='text/css' rel='stylesheet' href='/static/css/about.min.css' />
+    {# Local github badge, disabled (will be removed) #}
+    <link type='text/css' rel='stylesheet' href='/static/css/github-badge.min.css' />
+    {# Font-Awesome for octobadge. #}
+    <link type='text/css' rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css'/>
+    {# Octicons for octobadge #}
+    <link type='text/css' rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/octicons/2.4.1/octicons.min.css'/>
+    {# deviant.io badge css, disabled until bug fix. #}
+    {# <link type='text/css' rel='stylesheet' href='https://deviant.io/badge/badge.min.css'/> #}
+    {{ block.super }}
 {% endblock %}
+
 {% block javascript %}
-<script type='text/javascript' src='/static/js/github-badge-0.0.3.min.js'></script>
+    {# This is the local welbornprod github badge, enabled when deviant.io fails  #}
+    <script type='text/javascript' src='/static/js/github-badge-0.0.3.min.js'></script>
 {% endblock %}
+
 {% block content %}
-<div class='about-box'>
-<div id='about-pic-box'>
-<img id='about-img' src='/static/images/cj-avatar-suit-128px.png' alt='Christopher Welborn'/>
-<div id='about-contact'>
-<address>
-<span>Christopher Welborn</span><br/>
-<span>Jasper, AL</span><br/>
-</address>
-<div id='about-contact-box'>
-<a class='wp-address' href='mailto:cj@welbornprod.com' target='_blank'>
-<div class='about-contact-button'>
-<span>email</span>
-</div>
-</a>
-<a href='https://facebook.com/welbornprod' target='_blank'>
-<div class='about-contact-button'>
-<span>facebook</span>
-</div>
-</a>
-<a href='https://twitter.com/cjwelborn' target='_blank'>
-<div class='about-contact-button'>
-<span>twitter</span>
-</div>
-</a>
-</div>
-</div>
-</div>
-<div id='about-bio'>
-<h2 id='about-biography' class='about-title title'>
-Biography
-</h2>
-<p class='about-paragraph'>
-My name is Christopher Welborn, I am a <span id='age'>33</span>
-year old programmer from Jasper, Al.
-I have been working with computers and code since childhood.
-I started out with Q-BASIC in Windows 3.1 and have progressed
-significantly over the years as the technology has also
-progressed.
-I spent most of my years focusing on Windows, however lately I
-work in different variations of the Linux operating system.
-My favorite programming languages include Python,
-JavaScript,
-Rust,
-C,
-and Visual Basic .Net.
-(VB was my second language and it served me well before
-moving on to other domains.)
-I've dabbled in
-C++ and
-C# a little, and I also enjoy working
-with microcontrollers and single-board computers such as the
-Arduino,
-ATTiny,
-and Raspberry Pi.
-</p>
-</div>
-<div id='about-more'>
-<br/>
-<h2 id='about-projects' class='about-title title'>
-Projects
-</h2>
-<p>
-I mostly write tools that make my everyday tasks quicker or easier, but like many coders I sometimes
-write code just to learn from it and teach myself new concepts. Some projects I use on a daily basis,
-and others never see the light of day. I've uploaded some of my projects here in the
-hope that they might help other people from every skill level to accomplish
-their tasks, or to learn from the code I publish.
-</p>
-<h2 id='about-contact' class='about-title title'>
-Contact
-</h2>
-<p>
-If you need to contact me for any reason, for help with your PC or help concerning one of my projects,
-please feel free to email me.
-</p>
-<div id='about-specialties'>
-<h2 class='about-title title'>
-Specialties
-</h2>
-<ul class='checkmark'>
-<li>Software Design</li>
-<li>Web Design</li>
-<li>PC Repair/Optimization</li>
-<li>System/Software Installation</li>
-<li>&amp; More (Just Ask)</li>
-</ul>
-</div>
-</div>
-</div>
-<div class='about-box-extras'>
-<div id='about-contrib'>
-<h2 class='about-title title'>
-additional info:
-</h2>
-<div id='about-contrib-box'>
-<div id='github-badge-wrapper' class='about-contrib-item'>
-</div>
-<div class='about-contrib-item'>
-<a href='https://www.daniweb.com/members/572777/chriswelborn' target='_blank'>
-<img src='https://www.daniweb.com/stats/badge/572777/solved.jpg' width='120' height='90' alt='chriswelborn Contributes to DaniWeb' border='0' target='_blank' />
-</a>
-</div>
-<div class='about-contrib-item'>
-<a href='https://www.djangoproject.com/' target='_blank'>
-<img src='/static/images/badges/djangopowered_grey.gif' border='0' alt='Powered by Django.' title='Powered by Django.' />
-</a>
-</div>
-<div class='about-contrib-item'>
-<a href='https://www.python.org' target='_blank'>
-<img src='/static/images/badges/python-powered-anim.gif' style='border-radius: 15px;-moz-border-radius: 15px;-webkit-border-radius: 15px;width: 256px;height: 64px;' alt='Python Powered' title='Python Powered' border='0'/>
-</a>
-</div>
-</div>
-</div>
-</div>
+    <div class='about-box'>
+        <!-- Image -->
+        <div id='about-pic-box'>
+            <img id='about-img' src='/static/images/cj-avatar-suit-128px.png' alt='Christopher Welborn'/>
+            <div id='about-contact'>
+                <address>
+                    <span>Christopher Welborn</span><br/>
+                    <span>Jasper, AL</span><br/>
+                </address>
+                    <div id='about-contact-box'>
+                    <!-- EMail -->
+                    <a class='wp-address' href='mailto:cj@welbornprod.com' target='_blank'>
+                        <div class='about-contact-button'>
+                            <span>email</span>
+                        </div>
+                    </a>
+                    <!-- Facebook -->
+                    <a href='https://facebook.com/welbornprod' target='_blank'>
+                        <div class='about-contact-button'>
+                            <span>facebook</span>
+                        </div>
+                    </a>
+                    <!-- Twitter -->
+                    <a href='https://twitter.com/cjwelborn' target='_blank'>
+                        <div class='about-contact-button'>
+                            <span>twitter</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bio -->
+        <div id='about-bio'>
+            <h2 id='about-biography' class='about-title title'>
+                Biography
+            </h2>
+            <p class='about-paragraph'>
+                {# The messed up linebreaks are for the stupid auto linker #}
+                {# It's in wp_main.utilities.htmltools, and only runs for  #}
+                {# this about page.                                        #}
+                My name is Christopher Welborn, I am a <span id='age'>33</span>
+                year old programmer from Jasper, Al.
+                I have been working with computers and code since childhood.
+                I started out with Q-BASIC in Windows 3.1 and have progressed
+                significantly over the years as the technology has also
+                progressed.
+                I spent most of my years focusing on Windows, however lately I
+                work in different variations of the Linux operating system.
+                My favorite programming languages include Python,
+                JavaScript,
+                Rust,
+                C,
+                and Visual Basic .Net.
+                (VB was my second language and it served me well before
+                moving on to other domains.)
+                I've dabbled in
+                C++ and
+                C# a little, and I also enjoy working
+                with microcontrollers and single-board computers such as the
+                Arduino,
+                ATTiny,
+                and Raspberry Pi.
+            </p>
+        </div>
+        <div id='about-more'>
+            <!-- Projects -->
+            <br/>
+            <h2 id='about-projects' class='about-title title'>
+                Projects
+            </h2>
+            <p>
+                I mostly write tools that make my everyday tasks quicker or easier, but like many coders I sometimes
+                write code just to learn from it and teach myself new concepts. Some projects I use on a daily basis,
+                and others never see the light of day. I've uploaded some of my projects here in the
+                hope that they might help other people from every skill level to accomplish
+                their tasks, or to learn from the code I publish.
+            </p>
+
+            <!-- Contact -->
+            <h2 id='about-contact' class='about-title title'>
+                Contact
+            </h2>
+            <p>
+                If you need to contact me for any reason, for help with your PC or help concerning one of my projects,
+                please feel free to email me.
+            </p>
+            <!--Services -->
+            <div id='about-specialties'>
+                <h2 class='about-title title'>
+                    Specialties
+                </h2>
+                <ul class='checkmark'>
+                    <li>Software Design</li>
+                    <li>Web Design</li>
+                    <li>PC Repair/Optimization</li>
+                    <li>System/Software Installation</li>
+                    <li>&amp; More (Just Ask)</li>
+                </ul>
+            </div>
+        </div>
+        <!-- END div:bio -->
+    </div>
+
+    <div class='about-box-extras'>
+        <div id='about-contrib'>
+            <h2 class='about-title title'>
+                additional info:
+            </h2>
+            <div id='about-contrib-box'>
+                <!-- Github -->
+                <div id='github-badge-wrapper' class='about-contrib-item'>
+                    {# deviant.io badge. #}
+                    {# Ditched for welbornprod until they straighten out. #}
+                    {# <github-badge class='github-badge' user='welbornprod' show_repos='true' show_languages='true'> #}
+                    {#     Loading github badge... #}
+                    {# </github-badge> #}
+                </div>
+                <!-- Daniweb -->
+                <div class='about-contrib-item'>
+                    <a href='https://www.daniweb.com/members/572777/chriswelborn' target='_blank'>
+                        <img src='https://www.daniweb.com/stats/badge/572777/solved.jpg' width='120' height='90' alt='chriswelborn Contributes to DaniWeb' border='0' target='_blank' />
+                    </a>
+                </div>
+                <!-- Django Powered -->
+                <div class='about-contrib-item'>
+                    <a href='https://www.djangoproject.com/' target='_blank'>
+                        <img src='/static/images/badges/djangopowered_grey.gif' border='0' alt='Powered by Django.' title='Powered by Django.' />
+                    </a>
+                </div>
+                <!-- Python Powered -->
+                <div class='about-contrib-item'>
+                    <a href='https://www.python.org' target='_blank'>
+                        <img src='/static/images/badges/python-powered-anim.gif' style='border-radius: 15px;-moz-border-radius: 15px;-webkit-border-radius: 15px;width: 256px;height: 64px;' alt='Python Powered' title='Python Powered' border='0'/>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- END div: contrib -->
+    </div>
+    <!-- END div:about -->
 {% endblock %}
+
 {% block bodyend %}
-<script type='text/javascript'>
-$(document).ready(function () {
-github_badge.build(
-'welbornprod',
-function success(div) {
-$('#github-badge-wrapper').html(div);
-},
-function error(error_message) {
-if (error_message) {
-console.error('Unable to build github badge:\n  ' + error_message);
-}
-$('#github-badge-wrapper').css({display: 'none'});
-}
-);
-var now = new Date();
-$('#age').text(now.getYear() - (now.getMonth() > 8 ? 82 : 83));
-});
-</script>
+    {# deviant.io badge. #}
+    {# <script type='text/javascript' src='https://deviant.io/badge/badge.min.js'></script> #}
+    <script type='text/javascript'>
+        /* global github_badge: false */
+        $(document).ready(function () {
+            github_badge.build(
+                'welbornprod',
+                function success(div) {
+                    $('#github-badge-wrapper').html(div);
+                },
+                function error(error_message) {
+                    if (error_message) {
+                        console.error('Unable to build github badge:\n  ' + error_message);
+                    }
+                    $('#github-badge-wrapper').css({display: 'none'});
+                }
+            );
+
+            /* No more manditory yearly edits :) */
+            var now = new Date();
+            $('#age').text(now.getYear() - (now.getMonth() > 8 ? 82 : 83));
+        });
+
+    </script>
 {% endblock %}

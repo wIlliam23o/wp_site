@@ -14,7 +14,7 @@ shopt -s nullglob
 # This can be set with --debug.
 debug_mode=0
 
-# Sed program to "build" templates.
+# Awk program to "build" templates.
 awkprogramfile="$appdir/build_template.awk"
 
 # Count of non-modified template files found when running.
@@ -205,6 +205,53 @@ function move_old_templates {
     return $errs
 }
 
+function moveback_templates {
+    # Move new template from templates/in/ to templates/.
+    # This is like undoing everything this script was made for (a bad idea).
+    local errs=0 outfile filename
+    for filepath in "$@"; do
+        filepath="$(readlink -f "$filepath")"
+        if [[ ! -e "$filepath" ]]; then
+            echo_err "File does not exist: $filepath"
+            let errs+=1
+            continue
+        elif [[ "$filepath" != *.in.html ]]; then
+            echo_err "Not a template file: $filepath"
+            let errs+=1
+            continue
+        fi
+        outdir="$(readlink -f "${filepath%/*}/..")"
+        if [[ ! -d "$outdir" ]]; then
+            if ((do_dryrun)); then
+                echo -e "Would've created dir: $outdir"
+            else
+                if ! mkdir -p "$outdir"; then
+                    echo_err "Failed to create directory: $outdir"
+                    let errs+=1
+                    continue
+                fi
+            fi
+        fi
+        filename="${filepath##*/}"
+        # Replace .in.html extension with .html.
+        filename="${filename%%.*}.html"
+        outfile="$(readlink -f "${outdir}/${filename}")"
+
+        if ((do_dryrun)); then
+            printf "Would've moved: %s to %s\n" "${filepath##*/}" "$outfile"
+            continue
+        fi
+        # Move the file.
+        if mv "$filepath" "$outfile"; then
+            echo -e "Moved to: $outfile"
+        else
+            echo_err "Failed to move: ${filepath##*/}"
+            let errs+=1
+            continue
+        fi
+    done
+    return $errs
+}
 function print_usage {
     # Show usage reason if first arg is available.
     [[ -n "$1" ]] && echo_err "\n$1\n"
@@ -213,7 +260,7 @@ function print_usage {
 
     Usage:
         $appscript -h | -v
-        $appscript [-d | -f] [-q] [-m |-r | -R] [-s] (-a | FILE...) [-D]
+        $appscript [-d | -f] [-q] [-m | -M |-r | -R] [-s] (-a | FILE...) [-D]
 
     Options:
         FILE          : Template file to build.
@@ -226,6 +273,9 @@ function print_usage {
         -h,--help     : Show this message.
         -m,--move     : Move old template files to new dir:
                             templates/$template_subdir
+        -M,--moveback : Move new template files (/$template_subdir) to their
+                        original dir:
+                            templates/
         -q,--quiet    : Don't print header/footer messages.
         -r,--rename   : Rename old .html files to .in.html.
                         Does no overwrite existing .in.html files.
@@ -315,6 +365,7 @@ do_all=0
 do_dryrun=0
 do_forced=0
 do_move=0
+do_moveback=0
 do_rename=0
 do_remove=0
 do_quiet=0
@@ -340,6 +391,9 @@ for arg; do
             ;;
         "-m" | "--move")
             do_move=1
+            ;;
+        "-M" | "--moveback")
+            do_moveback=1
             ;;
         "-q" | "--quiet")
             do_quiet=1
@@ -382,6 +436,9 @@ fi
 
 if ((do_move)); then
     move_old_templates "${filenames[@]}"
+    errfiles=$?
+elif ((do_moveback)); then
+    moveback_templates "${filenames[@]}"
     errfiles=$?
 elif ((do_rename)); then
     rename_old_templates "${filenames[@]}"

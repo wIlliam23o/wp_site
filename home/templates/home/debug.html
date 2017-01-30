@@ -1,95 +1,103 @@
-{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "home/main.html" %}
 {% load wp_tags %}
 {% load wp_nodes %}
 {% block title %}- Debug Info{% endblock %}
+
 {% block content %}
-{% if request|debug_allowed %}
-<div class="wp-block welcome-message-box">
-<span class="welcome-message-text">
-Debugging Info:
-</span>
-<div class='version-info-box'>
-<div class='version-info-label'>
-Django
-</div>
-<div class='version-info-value'>
-{{ djangoversion }}
-</div>
-</div>
-<div class='version-info-box'>
-<div class='version-info-label'>
-Python
-</div>
-<div class='version-info-value'>
-{{ sysversion }}
-</div>
-</div>
-<div class='version-info-box'>
-<div class='version-info-label'>
-Postgres
-</div>
-<div class='version-info-value'>
-{{ postgresversion }}
-</div>
-</div>
-<div class='version-info-box'>
-<div class='version-info-label'>
-Site Version
-</div>
-<div class='version-info-value'>
-{{ siteversion }} {% if siteversionnum %}v. {{ siteversionnum }}{% endif %}
-</div>
-</div>
-<div class='debug-info-box'>
-<div>Client info:</div>
-<div class='debug-info-item'>
-<span class='debug-info-label'>
-Height:
-</span>
-<span id='debug-height' class='debug-info-value'>
-(loading)
-</span>
-</div>
-<div class='debug-info-item'>
-<span class='debug-info-label'>
-Width:
-</span>
-<span id='debug-width' class='debug-info-value'>
-(loading)
-</span>
-</div>
-</div>
-</div>
-<div class='debug-page-box'>
-{% debugplus %}
-</div>
-{% else %}
-<div class='alert'>
-<span class='alert-message'>
-Sorry, you don't have permissions to view the debugging info.
-</span>
-</div>
-<div class='wp-block welcome-message-box'>
-<span class='welcome-message-text'>
-You wouldn't like it anyway, try going back to my&nbsp;
-<a href='/'>home page</a>.
-</span>
-</div>
-{% endif %}
+	{% if request|debug_allowed %}
+		<!-- Show Debugging Info -->
+		<div class="wp-block welcome-message-box">
+				<span class="welcome-message-text">
+					Debugging Info:
+				</span>
+				<div class='version-info-box'>
+					<div class='version-info-label'>
+						Django
+					</div>
+					<div class='version-info-value'>
+						{{ djangoversion }}
+					</div>
+				</div>
+				<div class='version-info-box'>
+					<div class='version-info-label'>
+						Python
+					</div>
+					<div class='version-info-value'>
+						{{ sysversion }}
+					</div>
+				</div>
+				<div class='version-info-box'>
+					<div class='version-info-label'>
+						Postgres
+					</div>
+					<div class='version-info-value'>
+						{{ postgresversion }}
+					</div>
+				</div>
+				<div class='version-info-box'>
+					<div class='version-info-label'>
+						Site Version
+					</div>
+					<div class='version-info-value'>
+						{{ siteversion }} {% if siteversionnum %}v. {{ siteversionnum }}{% endif %}
+					</div>
+				</div>
+
+				{# Extra pieces of debug info. #}
+				<div class='debug-info-box'>
+					<div>Client info:</div>
+					<div class='debug-info-item'>
+						<span class='debug-info-label'>
+							Height:
+						</span>
+						<span id='debug-height' class='debug-info-value'>
+							(loading)
+						</span>
+					</div>
+					<div class='debug-info-item'>
+						<span class='debug-info-label'>
+							Width:
+						</span>
+						<span id='debug-width' class='debug-info-value'>
+							(loading)
+						</span>
+					</div>
+				</div>
+
+		</div>
+		<div class='debug-page-box'>
+			{% debugplus %}
+		</div>
+	{% else %}
+		<!-- No Permissions -->
+		<div class='alert'>
+			<span class='alert-message'>
+				Sorry, you don't have permissions to view the debugging info.
+			</span>
+		</div>
+		<div class='wp-block welcome-message-box'>
+			<span class='welcome-message-text'>
+				You wouldn't like it anyway, try going back to my&nbsp;
+				<a href='/'>home page</a>.
+			</span>
+		</div>
+	{% endif %}
 {% endblock %}
+
+{# Load client-side debug info. #}
 {% block bodyend %}
-<script type='text/javascript'>
-$(document).ready(function () {
-$('#debug-width').text($(window).width());
-$('#debug-height').text($(window).height());
-window.addEventListener(
-'resize',
-function resize_window(e) {
-$('#debug-width').text($(window).width());
-$('#debug-height').text($(window).height());
-}
-);
-});
-</script>
+	<script type='text/javascript'>
+		$(document).ready(function () {
+			$('#debug-width').text($(window).width());
+			$('#debug-height').text($(window).height());
+			window.addEventListener(
+				'resize',
+				function resize_window(e) {
+					$('#debug-width').text($(window).width());
+					$('#debug-height').text($(window).height());
+				}
+			);
+		});
+
+	</script>
 {% endblock %}
