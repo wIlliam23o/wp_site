@@ -26,19 +26,30 @@
         }
     }
 
+    .dock-item.noscript:hover {
+        transform: scale3d(1.25, 1.25, 1);
+        transition: .25s;
+        transition-timing-function: cubic-bezier(.22, .61, .36, 1);
+    }
+
     .dock-item.noscript span {
         display: block;
     }
 
     .dock-item span {
         display: none;
-        padding-left: 20px;
+        margin-left: 10px;
+        text-align: center;
         text-transform: lowercase;
+        width: 100%;
     }
 
     .dock-item img {
         border: 0;
-        margin: 5px 10px 0;
+        margin-bottom: 0;
+        margin-left: 10px;
+        margin-right: 10px;
+        margin-top: 5px;
         width: 100%;
     }
 

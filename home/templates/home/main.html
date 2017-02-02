@@ -186,45 +186,58 @@
 		        {# Navigation #}
 				{% with feature_nofisheye=request|feature:"nofisheye" feature_mobile=request|is_mobile %}
 			        <div id='dock' {% if feature_mobile or feature_nofisheye %}class='noscript'{% endif %}>
-						<div id='dock-box' class='dock-container {% if feature_mobile or feature_nofisheye %}noscript{% endif %}'>
-							<a id='dock-home' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/'>
+						<div id='dock-box' class='dock-container noscript'>
+							<a id='dock-home' class='dock-item noscript' href='/'>
 								<span>Home</span>
 								<img src='/static/images/dock/wp-home.png' alt='home'/>
 							</a>
-							<a id='dock-projects' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/projects'>
+							<a id='dock-projects' class='dock-item noscript' href='/projects'>
 								<span>Projects</span>
 								<img src='/static/images/dock/wp-projects.png' alt='projects'/>
 							</a>
-							<a id='dock-apps' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/apps'>
+							<a id='dock-apps' class='dock-item noscript' href='/apps'>
 								<span>Apps</span>
 								<img src='/static/images/dock/wp-apps.png' alt='apps'/>
 							</a>
-							<a id='dock-misc' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/misc'>
+							<a id='dock-misc' class='dock-item noscript' href='/misc'>
 							    <span>Misc.</span>
 							    <img src='/static/images/dock/wp-misc.png' alt='misc'/>
 							</a>
-							<a id='dock-paste' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/paste'>
+							<a id='dock-paste' class='dock-item noscript' href='/paste'>
 								<span>Paste</span>
 								<img src='/static/images/dock/wp-paste.png' alt='paste'/>
 							</a>
-							<a id='dock-img' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/img'>
+							<a id='dock-img' class='dock-item noscript' href='/img'>
 								<span>Images</span>
 								<img src='/static/images/dock/wp-img.png' alt='images'/>
 							</a>
-							<a id='dock-blog' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/blog'>
+							<a id='dock-blog' class='dock-item noscript' href='/blog'>
 								<span>Blog</span>
 								<img src='/static/images/dock/wp-blog.png' alt='blog'/>
 							</a>
-							<a id='dock-about' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/about'>
+							<a id='dock-about' class='dock-item noscript' href='/about'>
 								<span>About</span>
 								<img src='/static/images/dock/wp-about.png' alt='about'/>
 							</a>
-							<a id='dock-search' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/search'>
+							<a id='dock-search' class='dock-item noscript' href='/search'>
 								<span>Search</span>
 								<img src='/static/images/dock/wp-search.png' alt='search'/>
 							</a>
 						</div>
 					</div>
+					{% if feature_mobile or feature_nofisheye %}
+						{# noscript is fine for these features. #}
+					{% else %}
+						<script type='text/javascript'>
+							// Remove noscript class
+							document.getElementById('dock-box').classList.remove('noscript');
+							document.querySelectorAll('.noscript').forEach(
+								function (elem) {
+									elem.classList.remove('noscript');
+								}
+							);
+						</script>
+					{% endif %}
 				{% endwith %}
 
 				{# Child page content #}
