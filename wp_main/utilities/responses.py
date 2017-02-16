@@ -212,13 +212,14 @@ def error_response(request=None, errnum=500, msgs=None, user_error=None):
             request     : Request object from view.
             errnum      : Int, error number (decides which template to use).
             msgs        : Optional error messages for the messages framework.
-                          Accepts a list, or a single string.
+                          Accepts a list.
             user_error  : Friendly msg to show to the user, usually because it
                           was their fault (invalid request/url).
                           Without it, the default 'sorry, this was my fault..'
                           msg is shown.
     """
     if msgs and isinstance(msgs, str):
+        log.warn('Received str for msgs!: {}'.format(msgs))
         msgs = [msgs]
 
     if not request:
@@ -231,10 +232,9 @@ def error_response(request=None, errnum=500, msgs=None, user_error=None):
             '\nOriginal message:\n{}'.format('\n'.join(msgs)) if msgs else ''
         )))
 
-    if msgs:
-        # Send messages using the message framework.
-        for m in msgs:
-            messages.error(request, m)
+    # Send messages using the message framework.
+    for s in msgs:
+        messages.error(request, s)
 
     context = {
         'server_name': get_server(request),
@@ -277,7 +277,7 @@ def error403(request, msgs=None, user_error=None):
         Arguments:
             request     : Request object from view.
             msgs        : Optional error messages for the messages framework.
-                          Accepts a list, or a single string.
+                          Accepts a list.
             user_error  : Friendly msg to show to the user, usually because it
                           was their fault (invalid request/url).
                           Without it, the default 'sorry, this was my fault..'
@@ -296,6 +296,7 @@ def error404(request, msgs=None):
     """
 
     if msgs and isinstance(msgs, str):
+        log.warn('Received str for msgs!: {}'.format(msgs))
         msgs = [msgs]
 
     if msgs:
@@ -315,7 +316,7 @@ def error500(request, msgs=None, user_error=None):
         Arguments:
             request     : Request object from view.
             msgs        : Optional error messages for the messages framework.
-                          Accepts a list, or a single string.
+                          Accepts a list.
             user_error  : Friendly msg to show to the user, usually because it
                           was their fault (invalid request/url).
                           Without it, the default 'sorry, this was my fault..'
@@ -489,13 +490,13 @@ def get_request_args(request, requesttype=None):
             log.error('Invalid request arg type!: {}\n{}'.format(
                 requesttype,
                 ex))
-            return QueryDict()
+            reqargs = QueryDict()
     else:
         # Default request type is REQUEST (both GET and POST)
         # REQUEST is deprecated, but this will simulate it.
         reqargs = request.GET.copy()
+        # QueryDict.update *appends* to existing keys, instead of overwriting.
         reqargs.update(request.POST)
-
     return reqargs
 
 
@@ -668,8 +669,7 @@ def xml_response(template_name, context=None):
     try:
         tmplate = loader.get_template(template_name)
         contextobj = Context(contextdict)
-        clean_render = htmltools.remove_whitespace(
-            htmltools.remove_comments(tmplate.render(contextobj)))
+        clean_render = tmplate.render(contextobj)
         response = HttpResponse(clean_render, content_type='application/xml')
     except Exception as ex:
         errmsg = 'Error: {}'.format(ex)

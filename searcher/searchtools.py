@@ -7,10 +7,9 @@
     -Christopher Welborn Mar 28, 2013
 '''
 import logging
-log = logging.getLogger('wp.search.tools')
-
 from wp_main.utilities import utilities
 from .result import WpResult
+log = logging.getLogger('wp.search.tools')
 
 # Apps must have a search.py module that implements these functions:
 must_implement = (
@@ -29,7 +28,7 @@ must_implement = (
     # Ex: get_objects = lambda : mymodel.objects.filter(disabled=False)
     'get_objects',
 
-    # Desc: Returns target strings to search (built with app.model attributes.)
+    # Desc: Returns target strings to search (built with app.model attrs.)
     # Signature: get_targets(obj, content=None, desc=None)
     # Ex: get_targets = lambda post: (post.title, post.body, post.author)
     'get_targets',
@@ -226,6 +225,7 @@ def valid_query(querystr):
         search_warning = 'Weird characters in search term, try again.'
 
     return search_warning
+
 
 # Load searchables once.
 SEARCHABLE_APPS = get_searchable()

@@ -1,187 +1,169 @@
+{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "home/main.html" %}
 {% load wp_tags %}
 {% load apps_tags %}
-
 {% block title %}- Phone Words{% endblock %}
-
 {% block metainfo %}
-    <meta name='description' content='Retrieves english words that can be formed with a phone number.'>
+<meta name='description' content='Retrieves english words that can be formed with a phone number.'>
 {% endblock %}
-
 {% block extrastylelink %}
-    <link type='text/css' rel='stylesheet' href='/static/css/apps.min.css'/>
-    <link type='text/css' rel='stylesheet' href='/static/css/phonewords.min.css'/>
-    {{ block.super }}
+<link type='text/css' rel='stylesheet' href='/static/css/apps.min.css'/>
+<link type='text/css' rel='stylesheet' href='/static/css/phonewords.min.css'/>
+{{ block.super }}
 {% endblock %}
-
 {% block javascript %}
-    <script type='text/javascript' src='/static/js/phonewords-0.0.2.min.js'></script>
+<script type='text/javascript' src='/static/js/phonewords-0.0.2.min.js'></script>
 {% endblock %}
-
-<!-- Floating message -->
 {% block floater %}
-    <div id='floater'>
-        <span id='floater-msg'>
-            Generating results
-            {% if query %}
-                for: {{ query }}
-            {% else %}
-                ...
-            {% endif %}
-        </span>
-        <br>
-        <span id='floater-smalltext'>
-            this may take a minute
-        </span>
-    </div>
+<div id='floater'>
+<span id='floater-msg'>
+Generating results
+{% if query %}
+for: {{ query }}
+{% else %}
+...
+{% endif %}
+</span>
+<br>
+<span id='floater-smalltext'>
+this may take a minute
+</span>
+</div>
 {% endblock %}
-
 {% block content %}
-    <div class='phonewords-container'>
-        <div class='phonewords-header-box'>
-            <h3 class='header phonewords-header'>
-                PhoneWords
-            </h3>
-            <span class='version'>version {{ version }}</span>
-        </div>
-        <!-- App container -->
-        <div class='phonewords-container phonewords-sub-container'>
-            <!-- Query Form -->
-            <div id='phonewords-form'>
-                <form id='lookup-form' method='POST' action='/apps/phonewords/' onsubmit='javascript: return phonewords.validate_submit();'>{% csrf_token %}
-                    <span class='input-label'>
-                        Word or number to look up:
-                    </span>
-                    <input type='text' name='query' id='query-box' class='input-text app-input-text phonewords-input-text' maxlength='8' required='True'>
-                    <a href='javascript: void(0);' onclick='javascript: phonewords.do_lookup();' title='check this number/word.'>
-                        <div class='submit-button app-submit-button'>
-                            <span>lookup</span>
-                        </div>
-                    </a>
-                    {% if hasargs %}
-                        <!-- link back to landing page if we're not on it already -->
-                        <a href='/apps/phonewords' title='help for phonewords'>
-                            <div class='submit-button app-submit-button'>
-                                <span>help</span>
-                            </div>
-                        </a>
-                    {% endif %}
-                </form>
-            </div>
-            <!-- Results Area -->
-            <p>
-                <!-- Had Errors? -->
-                {% if errors %}
-                    <span>There was an error processing that:</span>
-                    <br>
-                    <span>{{ errors }}</span>
-                {% else %}
-                    {% if hasargs %}
-                        <div class='phonewords-results-box'>
-                            <h3 class='header phonewords-results-header'>
-                                Results:
-                            </h3>
-                            <span class='phonewords-results-count'>
-                                Total: {{ results|get_length }}
-                            </span>
-                            <div class='phoneword-results-box'>
-                                <!-- Results from lookup function. -->
-                                {% if results %}
-                                    <textarea id='pw_results' rows={% if results.items|get_length < 40 %} '{{ results.items|get_length|add:"1" }}' {% else %} '40' {% endif %} cols='40' readonly placeholder='Loading results...' class='phonewords-textarea'>
-                                        {% for resnumber, resword in results|sortdict %}
-                                            {{ resnumber }} : {{ resword }}
-                                        {% endfor %}
-                                    </textarea>
-                                {% else %}
-                                    <textarea id='pw_results' rows='4' cols='60' readonly placeholder='Loading results...' class='phonewords-textarea'>
-                                        No results found.
-                                        Possibly too many 1s or 0s in the number,
-                                        or just not enough good letters to make a word.
-                                    </textarea>
-                                {% endif %}
-                            </div>
-                            <!-- Total from get_phonewords() -->
-                            {% if total %}
-                                <div class='phonewords-total-box'>
-                                    <span class='phonewords-results-count'>
-                                        Total attempts: {{ total }}
-                                    </span>
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% else %}
-                        <!-- Default index page (or No args/Bad args) -->
-                        <div class='phonewords-results-box' style='background: white;'>
-                            <h3 class='title'>Usage:</h3>
-                            <p class='desc'>
-                                Enter a small word or a seven digit number.
-                                <br>
-                                If a word is entered (any alphabetical character),
-                                the reverse number-lookup is used.
-                                <br>
-                                If a number is entered, word-lookup is used.
-                            </p>
-
-                            <h3 class='title'>About:</h3>
-                            <p class='desc'>
-                                This utility will find the phone-number for a
-                                given word, or find all possible words for a
-                                7 digit phone number.
-                            </p>
-                            <p class='desc'>
-                                <span class='phonewords-warning'>
-                                    It does not save your identity.
-                                </span><br>
-                                Phone numbers are cached for fast lookup,
-                                but no identifying information is attached to
-                                the number.
-                                There is no way for it to know if you are entering your
-                                <span class='I'>real number</span> anyway.
-                                <br><br>
-                                This is an open-source site, you can look at the source
-                                code for this app at
-                                <a href='http://github.com{{ "phonewords/dev"|gitdir }}' target='_blank'>
-                                    github.com
-                                </a>.
-                            </p>
-                            <h3 class='title'>Words:</h3>
-                            <div class='desc'>
-                                Any word that is 3 to 7 characters long can be entered,
-                                but non-alphabetical characters will not be converted.
-                                <div class='phonewords-desc-example'>
-                                    <h3 class='title'>Example:</h3>
-                                    <p class='desc'>
-                                        If you enter 'niceapp', the response would be <code>niceapp : 642-3277</code>.
-                                    </p>
-                                </div>
-                            </div>
-                            <h3 class='title'>Numbers:</h3>
-                            <div class='desc'>
-                                For numbers you may use a hyphen, but other non-number characters
-                                are rejected. The limit is seven due to the number of comparisons and
-                                combinations that have to be calculated. The limit ensures
-                                some kind of a reasonable response time.
-                                <div class='phonewords-desc-example'>
-                                    <h3 class='title'>Number Example:</h3>
-                                    <p class='desc'>
-                                        If you enter '762-7827', the response would be about 70 results
-                                        including:
-                                        <br>
-                                    </p>
-                                    <div class='codewrap phonewords-desc-example-codewrap'>
-                                        smart27 : smart<br>
-                                        7627tap : tap<br>
-                                        snap827 : snap<br>
-                                        snaptap : snaptop (a combined result)
-                                    </div>
-                                </div>
-                            </div>
-
-
-                    {% endif %}
-                {% endif %}
-
-            </p>
-        </div>
-    </div>
+<div class='phonewords-container'>
+<div class='phonewords-header-box'>
+<h3 class='header phonewords-header'>
+PhoneWords
+</h3>
+<span class='version'>version {{ version }}</span>
+</div>
+<div class='phonewords-container phonewords-sub-container'>
+<div id='phonewords-form'>
+<form id='lookup-form' method='POST' action='/apps/phonewords/' onsubmit='javascript: return phonewords.validate_submit();'>{% csrf_token %}
+<span class='input-label'>
+Word or number to look up:
+</span>
+<input type='text' name='query' id='query-box' class='input-text app-input-text phonewords-input-text' maxlength='8' required='True'>
+<a href='javascript: void(0);' onclick='javascript: phonewords.do_lookup();' title='check this number/word.'>
+<div class='submit-button app-submit-button'>
+<span>lookup</span>
+</div>
+</a>
+{% if hasargs %}
+<a href='/apps/phonewords' title='help for phonewords'>
+<div class='submit-button app-submit-button'>
+<span>help</span>
+</div>
+</a>
+{% endif %}
+</form>
+</div>
+<p>
+{% if errors %}
+<span>There was an error processing that:</span>
+<br>
+<span>{{ errors }}</span>
+{% else %}
+{% if hasargs %}
+<div class='phonewords-results-box'>
+<h3 class='header phonewords-results-header'>
+Results:
+</h3>
+<span class='phonewords-results-count'>
+Total: {{ results|get_length }}
+</span>
+<div class='phoneword-results-box'>
+{% if results %}
+<textarea id='pw_results' rows={% if results.items|get_length < 40 %} '{{ results.items|get_length|add:"1" }}' {% else %} '40' {% endif %} cols='40' readonly placeholder='Loading results...' class='phonewords-textarea'>
+{% for resnumber, resword in results|sortdict %}
+{{ resnumber }} : {{ resword }}
+{% endfor %}
+</textarea>
+{% else %}
+<textarea id='pw_results' rows='4' cols='60' readonly placeholder='Loading results...' class='phonewords-textarea'>
+No results found.
+Possibly too many 1s or 0s in the number,
+or just not enough good letters to make a word.
+</textarea>
+{% endif %}
+</div>
+{% if total %}
+<div class='phonewords-total-box'>
+<span class='phonewords-results-count'>
+Total attempts: {{ total }}
+</span>
+</div>
+{% endif %}
+</div>
+{% else %}
+<div class='phonewords-results-box' style='background: white;'>
+<h3 class='title'>Usage:</h3>
+<p class='desc'>
+Enter a small word or a seven digit number.
+<br>
+If a word is entered (any alphabetical character),
+the reverse number-lookup is used.
+<br>
+If a number is entered, word-lookup is used.
+</p>
+<h3 class='title'>About:</h3>
+<p class='desc'>
+This utility will find the phone-number for a
+given word, or find all possible words for a
+7 digit phone number.
+</p>
+<p class='desc'>
+<span class='phonewords-warning'>
+It does not save your identity.
+</span><br>
+Phone numbers are cached for fast lookup,
+but no identifying information is attached to
+the number.
+There is no way for it to know if you are entering your
+<span class='I'>real number</span> anyway.
+<br><br>
+This is an open-source site, you can look at the source
+code for this app at
+<a href='http://github.com{{ "phonewords/dev"|gitdir }}' target='_blank'>
+github.com
+</a>.
+</p>
+<h3 class='title'>Words:</h3>
+<div class='desc'>
+Any word that is 3 to 7 characters long can be entered,
+but non-alphabetical characters will not be converted.
+<div class='phonewords-desc-example'>
+<h3 class='title'>Example:</h3>
+<p class='desc'>
+If you enter 'niceapp', the response would be <code>niceapp : 642-3277</code>.
+</p>
+</div>
+</div>
+<h3 class='title'>Numbers:</h3>
+<div class='desc'>
+For numbers you may use a hyphen, but other non-number characters
+are rejected. The limit is seven due to the number of comparisons and
+combinations that have to be calculated. The limit ensures
+some kind of a reasonable response time.
+<div class='phonewords-desc-example'>
+<h3 class='title'>Number Example:</h3>
+<p class='desc'>
+If you enter '762-7827', the response would be about 70 results
+including:
+<br>
+</p>
+<div class='codewrap phonewords-desc-example-codewrap'>
+smart27 : smart<br>
+7627tap : tap<br>
+snap827 : snap<br>
+snaptap : snaptop (a combined result)
+</div>
+</div>
+</div>
+{% endif %}
+{% endif %}
+</p>
+</div>
+</div>
 {% endblock %}

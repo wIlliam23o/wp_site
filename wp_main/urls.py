@@ -34,7 +34,10 @@ urlpatterns = patterns(
     url(r'^500\.html?$',
         homeviews.view_500),
     # error raiser (for testing)
-    url(r'^raise.html$',
+    url(r'^raise.html?$',
+        homeviews.view_raiseerror),
+    # error raiser (for testing)
+    url(r'^[Rr]aise$',
         homeviews.view_raiseerror),
     # debug info
     url(r'^debug\.html?$',
@@ -58,15 +61,21 @@ urlpatterns = patterns(
     url(r'^sitemap\.xml$',
         sitemaps.view_byserver),
     # textmode test
-    url(r'^textmode$',
+    url(r'^[Tt]ext[Mm]ode$',
         homeviews.view_textmode_simple),
-    url(r'^textmode\.html?$',
+    url(r'^[Tt]ext[Mm]ode\.html?$',
         homeviews.view_textmode),
     # useragent simple
-    url(r'^u(ser)?a(gent)/?$',
+    url(r'^[Uu]ser[Aa]gent/?$',
+        homeviews.view_useragent_simple),
+    # useragent simple
+    url(r'^[Uu][Aa]/?$',
         homeviews.view_useragent_simple),
     # useragent html
-    url(r'^useragent\.html?$',
+    url(r'^[Uu]ser[Aa]gent\.html?$',
+        homeviews.view_useragent),
+    # useragent html
+    url(r'^[Uu][Aa]\.html?$',
         homeviews.view_useragent),
     # home (index)
     url(r'^$',

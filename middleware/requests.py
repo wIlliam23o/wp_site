@@ -62,11 +62,16 @@ class WpBanIpMiddleware(object):
         if not self.configraw:
             return None
 
-        self.banpatterns = [p for p in self.iter_compile() if p]
+        self.banpatterns = [p for p in self.iter_compile() if p is not None]
         if self.banpatterns:
             banlen = len(self.banpatterns)
             ipstr = 'IP is' if banlen == 1 else 'IPs are'
-            self.log.debug('{} {} in the banned list.'.format(banlen, ipstr))
+            self.log.debug(
+                '\n    '.join((
+                    '{} {} in the banned list.'.format(banlen, ipstr),
+                    '\n    '.join(p.pattern for p in self.banpatterns)
+                ))
+            )
         else:
             self.log.debug('No IPs are in the ban list.')
 
@@ -115,11 +120,13 @@ class WpBanIpMiddleware(object):
             if banpat.match(remote_ip):
                 # Return the most basic 403 possible.
                 # Nothing fancy for people I don't even want on my site.
+                self.log.error('Refused banned ip: {}'.format(remote_ip))
                 return HttpResponse('Forbidden.',
                                     content_type='text/plain',
                                     status=403,
                                     reason='Invalid Permissions')
 
+        self.log.debug('IP okay: {}'.format(remote_ip))
         # Success.
         return None
 

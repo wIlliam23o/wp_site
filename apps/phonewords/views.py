@@ -53,7 +53,7 @@ def view_results(request, args=None):
     total = None
     rawquery = args['query']
     if not rawquery:
-        return responses.error404(request, msgs=['Invalid url args.'])
+        return responses.error404(request, msgs=('Invalid url args.', ))
 
     lookupfunc, query, method = get_lookup_func(rawquery)
     cache_used = False
@@ -76,7 +76,8 @@ def view_results(request, args=None):
         # Get wp words file.
         wordfile = os.path.join(
             settings.BASE_DIR,
-            'apps/phonewords/words')
+            'apps/phonewords/words'
+        )
         if os.path.isfile(wordfile):
             # Get results.
             try:
@@ -93,7 +94,8 @@ def view_results(request, args=None):
                 except Exception as ex:
                     log.error('Error fixing results:\n{}'.format(ex))
                     errmsg = (
-                        'Sorry, there was an error parsing the results.<br>{}')
+                        'Sorry, there was an error parsing the results.<br>{}'
+                    )
                     errors = Exception(errmsg.format(ex))
                 # Cache these results for later if its a number.
                 if method == 'number' and (not cache_used):

@@ -62,8 +62,10 @@ $fontsmall: .8em;
 $fontinline: .9em;
 $fontmono: .9em;
 $fontnormal: 1em;
+$lineheightnormal: 1.2em;
 $fontbigger: 1.2em;
 $fontmedium: 1.5em;
+$lineheightmedium: 1.6em;
 $fontbig: 2em;
 $fontbig2: 2.5em;
 $fontlarge: 3.5em;
@@ -150,6 +152,26 @@ $lineheightnormal: 1.1em;
      -moz-animation: $anim;
        -o-animation: $anim;
           animation: $anim;
+}
+
+@mixin linear-gradient($top, $bottom) {
+    // scss-lint:disable DuplicateProperty
+    background: $top;
+    // FF3.6+
+    background: -moz-linear-gradient(top, $top 0%, $bottom 100%);
+    // Chrome,Safari4+
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, $top), color-stop(100%, $bottom));
+    // Chrome10+,Safari5.1+
+    background: -webkit-linear-gradient(top, $top 0%, $bottom 100%);
+    // Opera 11.10+
+    background: -o-linear-gradient(top, $top 0%, $bottom 100%);
+    // IE10+
+    background: -ms-linear-gradient(top, $top 0%, $bottom 100%);
+    // W3C
+    background: linear-gradient(to bottom, $top 0%, $bottom 100%);
+    // IE6-9
+    // Forget ie6-9, they don't need a gradient.
+    // filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#{$top}', endColorstr='#{$bottom}', GradientType=0);
 }
 
 @mixin transform($trans) {

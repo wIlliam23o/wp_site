@@ -1,371 +1,296 @@
+{# Generated using build_template.sh v. 0.0.1 #}
 <!DOCTYPE html>
 {% load wp_tags %}
 {% load wp_nodes %}
 <html>
 <head>
-	<title>
-		Welborn Productions
-		{% if request|is_test_site %}
-			- Test Site
-		{% endif %}
-		{% block title %}
-		{% endblock %}
-	</title>
-
-	{# Basic Meta Info (can be included per view) #}
-	<meta charset='utf-8'/>
-	{# TODO: Serious css changes are needed to make this look good: #}
-	{# <meta name='viewport' content='width=device-width, initial-scale=1'> #}
-	{% block metainfo %}
-		{# This meta info should be overridden per-page by using the metainfo block. #}
-		{# It's only here as a backup, and only provides a very generic description. #}
-		<meta name='description' content='Welborn Productions - Projects, Scripts, Tools, Blog, and Web Applications.'>
-	{% endblock %}
-
-	{# Include favicons code for devices. #}
-	{% fav_icons %}
-
-	{# CSS Links #}
- 	<link type='text/css' rel='stylesheet' href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400|Open+Sans:400italic,600italic,700italic,800italic,400,800,600,700|Ubuntu+Mono:400,700,400italic,700italic'/>
- 	<link type='text/css' rel='stylesheet' href='/static/css/main.min.css'/>
-	<link type='text/css' rel='stylesheet' href='/static/css/dock.min.css' media='screen'/>
-	<link type='text/css' rel='stylesheet' href='/static/css/wt-rotator.min.css'/>
-	<link type='text/css' rel='stylesheet' href='/static/css/highlighter.min.css'/>
-	<link type='text/css' rel='stylesheet' href='https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css'/>
-
-	{# Browser-Specific CSS Files  #}
-	{% with request|get_browser_style as browser_style %}
-		{% if browser_style %}
-			<link type='text/css' rel='stylesheet' href='{{ browser_style }}'/>
-		{% endif %}
-	{% endwith %}
-
-	{# View-Specific or Extra CSS Files #}
-	{% block extrastylelink %}
-	{% endblock %}
-
-	{# Custom Local CSS #}
-	{% block extrastyle %}
-		{% if extra_style %}
-			<style type='text/css'>
-				{{ extra_style }}
-			</style>
-		{% endif %}
-	{% endblock %}
-
-	{# Dock (No Javascript) #}
-	<noscript>
-		<style type='text/css'>
-			#dock { margin-top: 0; }
-			a.dock-item { position: relative; float: left; margin-right: 30px; }
-			a.dock-item:hover { color: #9c9c9c; }
-			a.dock-item:active { color: #9c9c9c; }
-			.dock-item span { display: block; }
-		</style>
-	</noscript>
-
-
-	{# Using latest jQuery #}
-	<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
-	<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js'></script>
-	<script type='text/javascript' src='/static/js/jquery.cookie.min.js'></script>
-
-	{# Javascript: Fisheye Dock #}
-	{% if not request|is_mobile %}
-		{# No dock js loaded on mobile site. It doesn't work well with touch screens. #}
-		<script type='text/javascript' src='/static/js/fisheye-iutil.min.js'></script>
-	{% endif %}
-
-	{# Javascript: Image Rotator #}
-	<script type='text/javascript' src='/static/js/jquery.wt-rotator-wp.min.js'></script>
-	<script type='text/javascript' src='/static/js/jquery.easing.1.3.min.js'></script>
-	{# Javascript: Local Tools (email protection) #}
-	<script type='text/javascript' src='/static/js/wptools-0.2.1.min.js'></script>
-
-	{# Google Tracking - Universal Analytics code #}
-	{% tracking_google %}
-
-	{# Extra JavaScript (per page) #}
-	{% block javascript %}
-	{% endblock %}
-
-	{# Extra Head (could be anything) #}
-	{% block extrahead %}
-	{% endblock %}
+<title>
+Welborn Productions
+{% if request|is_test_site %}
+- Test Site
+{% endif %}
+{% block title %}
+{% endblock %}
+</title>
+<meta charset='utf-8'/>
+{% block metainfo %}
+<meta name='description' content='Welborn Productions - Projects, Scripts, Tools, Blog, and Web Applications.'>
+{% endblock %}
+{% fav_icons %}
+<link type='text/css' rel='stylesheet' href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400|Open+Sans:400italic,600italic,700italic,800italic,400,800,600,700|Ubuntu+Mono:400,700,400italic,700italic'/>
+<link type='text/css' rel='stylesheet' href='/static/css/main.min.css'/>
+<link type='text/css' rel='stylesheet' href='/static/css/dock.min.css'/>
+<link type='text/css' rel='stylesheet' href='/static/css/wt-rotator.min.css'/>
+<link type='text/css' rel='stylesheet' href='/static/css/highlighter.min.css'/>
+<link type='text/css' rel='stylesheet' href='https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css'/>
+{% with request|get_browser_style as browser_style %}
+{% if browser_style %}
+<link type='text/css' rel='stylesheet' href='{{ browser_style }}'/>
+{% endif %}
+{% endwith %}
+{% block extrastylelink %}
+{% endblock %}
+{% block extrastyle %}
+{% if extra_style %}
+<style type='text/css'>
+{{ extra_style }}
+</style>
+{% endif %}
+{% endblock %}
+<noscript>
+<style type='text/css'>
+@media print {
+#dock { display: none !important; }
+}
+@media screen {
+#dock {
+animation-duration: 1s;
+animation-iteration-count: 1;
+animation-name: fadein;
+animation-timing-function: ease-in;
+display: inline-block;
+margin-top: 0;
+opacity: 1;
+}
+a.dock-item { position: relative; float: left; margin-right: 30px; }
+a.dock-item:hover { color: #9c9c9c; }
+a.dock-item:active { color: #9c9c9c; }
+.dock-item span { display: block; }
+}
+</style>
+</noscript>
+<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js'></script>
+<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js'></script>
+<script type='text/javascript' src='/static/js/jquery.cookie.min.js'></script>
+{% if not request|is_mobile %}
+<script type='text/javascript' src='/static/js/fisheye-iutil.min.js'></script>
+{% endif %}
+<script type='text/javascript' src='/static/js/jquery.wt-rotator-wp.min.js'></script>
+<script type='text/javascript' src='/static/js/jquery.easing.1.3.min.js'></script>
+<script type='text/javascript' src='/static/js/wptools-0.3.0.min.js'></script>
+{% tracking_google %}
+{% block javascript %}
+{% endblock %}
+{% block extrahead %}
+{% endblock %}
 </head>
-
-{# MAIN PAGE #}
 <body>
-	{# RSS Feed #}
-	{# <link href='https://feeds.feedburner.com/WelbornProductions' type='application/rss+xml' rel='alternate' /> #}
-
-	{% if not request|is_viewable %}
-		{# Build alert_message for test site. #}
-		<div id='alert-box' class='alert'>
-			<div id='alert-title'>
-		    	Permission Denied
-		    </div>
-		</div>
-	{% else %}
-	    {# Alert area built based on alert_content or alert_message. #}
-	    {% with default_alert_class="alert" %}
-			{% if alert_content %}
-				{# html-formatted block for alert-message #}
-				<div id='alert-box' class='{% if alert_class %}{{ alert_class }}{% else %}{{ default_alert_class }}{% endif %}'>
-					{% if alert_title %}
-						<div id='alert-title'>{{ alert_title|safe }}</div>
-					{% endif %}
-					{{ alert_content|safe }}
-				</div>
-			{% elif alert_message %}
-				{# single alert-message #}
-				<div id='alert-box' class='{% if alert_class %}{{ alert_class }}{% else %}{{ default_alert_class }}{% endif %}'>
-					{% if alert_title %}
-						<div id='alert-title'>{{ alert_title|safe }}</div>
-					{% endif %}
-					<span class='alert-message'>{{ alert_message|safe }}</span>
-				</div>
-			{% else %}
-				{# Display noscript alert message if no other alert is present. #}
-				<noscript id='alert-box' class='alert alert-title' style='display: block;'>
-					You have JavaScript disabled!
-					This site uses JavaScript to enhance the experience.
-					Some apps may not work, or they may appear buggy.
-				</noscript>
-			{% endif %}
-		{% endwith %}
-	{% endif %}
-	{# Whole Page Container (Background and everything inside) #}
-	<div id='bg-surround'>
-	    <div id='bg-pattern' class='main-pattern'>
-	    	<div class='pattern-gradient'></div>
-		</div>
-
-		{# Content based on live/test site and access. #}
-		{% if not request|is_viewable %}
-		    {# Show no access msg for non-admins on test site. #}
-			<div id='page-surround'>
-				<div class='error-noaccess-message'>
-					Sorry, you do not have access to the test site.
-				</div>
-			</div>
-
-		{% else %}
-
-			{# Floating Box placeholder #}
-			{% block floater %}
-			{% endblock %}
-
-			{# Vertical menu placeholder #}
-			{% block verticalmenu %}
-				{% if vertical_menu %}
-					{{ vertical_menu }}
-				{% endif %}
-			{% endblock %}
-
-			<div class='wp-container'>
-				{# LOGO #}
-				<a href='/'>
-					<div id='wp-logo' class='logo'></div>
-				</a>
-
-
-		        {# Navigation #}
-				{% with feature_nofisheye=request|feature:"nofisheye" feature_mobile=request|is_mobile %}
-			        <div id='dock' {% if feature_mobile or feature_nofisheye %}class='noscript'{% endif %}>
-						<div id='dock-box' class='dock-container {% if feature_mobile or feature_nofisheye %}noscript{% endif %}'>
-							<a id='dock-home' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/'>
-								<span>Home</span>
-								<img src='/static/images/dock/wp-home.png' alt='home'/>
-							</a>
-							<a id='dock-projects' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/projects'>
-								<span>Projects</span>
-								<img src='/static/images/dock/wp-projects.png' alt='projects'/>
-							</a>
-							<a id='dock-apps' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/apps'>
-								<span>Apps</span>
-								<img src='/static/images/dock/wp-apps.png' alt='apps'/>
-							</a>
-							<a id='dock-misc' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/misc'>
-							    <span>Misc.</span>
-							    <img src='/static/images/dock/wp-misc.png' alt='misc'/>
-							</a>
-							<a id='dock-paste' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/paste'>
-								<span>Paste</span>
-								<img src='/static/images/dock/wp-paste.png' alt='paste'/>
-							</a>
-							<a id='dock-img' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/img'>
-								<span>Images</span>
-								<img src='/static/images/dock/wp-img.png' alt='images'/>
-							</a>
-							<a id='dock-blog' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/blog'>
-								<span>Blog</span>
-								<img src='/static/images/dock/wp-blog.png' alt='blog'/>
-							</a>
-							<a id='dock-about' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/about'>
-								<span>About</span>
-								<img src='/static/images/dock/wp-about.png' alt='about'/>
-							</a>
-							<a id='dock-search' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/search'>
-								<span>Search</span>
-								<img src='/static/images/dock/wp-search.png' alt='search'/>
-							</a>
-						</div>
-					</div>
-				{% endwith %}
-
-				{# Child page content #}
-		        <div id='page-surround'>
-					{# Above Page Content #}
-					{% block contentabove %}
-					{% endblock %}
-
-					{# Actual page content. #}
-					{% block content %}
-						{% if main_content %}
-							{{ main_content }}
-						{% endif %}
-					{% endblock %}
-
-					{# Comments for applicable pages #}
-					{% if enable_comments %}
-						{# DISQUS COMMENTS #}
-						<div class='comments-box' id='comments-box'>
-							<div class='title-box'>
-								<h1 class='title'>Comments</h1>
-							</div>
-	 						<div id='disqus_thread'>
-	 						</div>
-							{# Comments Javascript #}
-	    					<script type='text/javascript'>
-	    						/* jshint ignore: start */
-	      						var disqus_shortname = 'welbornproductions';
-								{% block disqusvariables %}
-								{% endblock %}
-	        					(function() {
-	          						var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-	          	 					dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-	           						(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	        						})();
-	        					(function () {
-	        						var s = document.createElement('script'); s.async = true;
-	        						s.type = 'text/javascript';
-	        						s.src = '//' + disqus_shortname + '.disqus.com/count.js';
-	       				 			(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
-	    							}());
-	        					/* jshint ignore: end */
-	    					</script>
-
-	    					<noscript>
-	    						Please enable JavaScript to view the <a href='https://disqus.com/?ref_noscript'>comments powered by Disqus.</a>
-	    					</noscript>
-	   				 		<a href='https://disqus.com' class='dsq-brlink'>
-	   				 			comments powered by <span class='logo-disqus'>Disqus</span>
-	   				 		</a>
-						</div>
-					{% endif %}
-
-		    	</div>
-		    </div>
-		{% endif %}
-
-		{# Google Ads #}
-		{% ad_bottom %}
-
-		<div class='wp-block donations'>
-			{# Paypal donation form #}
-			<form action='https://www.paypal.com/cgi-bin/webscr' method='post' target='blank'>
-				<input type='hidden' name='cmd' value='_s-xclick'>
-				<input type='hidden' name='encrypted' value='-----BEGIN PKCS7-----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-----END PKCS7-----'>
-
-				{# Description #}
-				<span class='donations-desc'>
-				If you would like to donate to welborn productions, you can do so here:
-				</span>
-
-				{# Button #}
-				<input type='image' style='margin-bottom: -5px; margin-left: 5px;' src='https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif' border='0' name='submit' alt='PayPal - The safer, easier way to pay online!'>
-				<img alt='Donate to welborn prod.' border='0' src='https://www.paypalobjects.com/en_US/i/scr/pixel.gif' width='1' height='1'>
-			</form>
-		</div>
-	</div>
-	<div class='wp-block bottom'>
-		<div id='copyright'>
-			<span class='copytext'>copyright 2013 -</span>
-			<span id='copyright-year' class='copytext'>2016</span>
-			<span class='copytext'>welborn productions</span>
-		</div>
-		<div class='totop-block'>
-			<a href='#' id='wp-totop' style='outline: none;'>
-				<span class='totop-desc'>top</span>
-			</a>
-		</div>
-	</div>
-
-	{# Email protection (reveal base64 encoded addresses with the wp-address class.)#}
-	<script type='text/javascript'>
-		/* jshint ignore: start */
-		$(document).ready( function () {
-			{# Dock initialize (non-mobile clients) #}
-			{% if not request|is_mobile and not request|feature:"nofisheye" %}
-				var $dock = $('#dock');
-				if ((typeof $dock.Fisheye) == 'function') {
-					$dock.Fisheye(
-						{
-							maxWidth: 30,
-							items: 'a',
-							itemsText: 'span',
-							container: '.dock-container',
-							itemWidth: 60, /* 60 */
-							proximity: 60, /* 60 */
-							alignment : 'left', /* left */
-							valign: 'bottom', /* top */
-							halign : 'center' /* left */
-						}
-					);
-				}
-			{% endif %}
-			{# Fix the copyright year. #}
-			var $copyyear = $('#copyright-year');
-			if ($copyyear.length) {
-				$copyyear.text((new Date()).getFullYear() || '2016');
-			}
-			{# Fix any base64 encoded email addresses. #}
-			wptools.wpreveal('.wp-address');
-
-			{# Make alert messages clickable. #}
-			{% if alert_message or alert_content %}
-				var $alertbox = $('#alert-box');
-				$alertbox.slideDown();
-				$alertbox.click(function () {
-					$(this).slideUp();
-				});
-				setTimeout(function () { $alertbox.slideUp(); }, 5000);
-
-			{% elif request|is_test_site and not request.user.is_staff %}
-				var $alertbox = $('#alert-box');
-				$alertbox.slideDown();
-				$alertbox.click(function () {
-					$(this).slideUp();
-				});
-			{% endif %}
-
-			{# Make all floaters destroyable and self-centering #}
-			var $floater = $('#floater');
-			if ($floater.length) {
-				$floater.click(function () { $(this).fadeOut(); });
-				wptools.center('#floater', true);
-				window.onresize = function () {
-					wptools.center('#floater', true);
-				};
-			}
-		});
-		/* jshint ignore: end */
-	</script>
-
-	{# For views inserting JS that should run before the body closes. #}
-	{% block bodyend %}
-	{% endblock %}
-
+{% if not request|is_viewable %}
+<div id='alert-box' class='alert'>
+<div id='alert-title'>
+Permission Denied
+</div>
+</div>
+{% else %}
+{% with default_alert_class="alert" %}
+{% if alert_content %}
+<div id='alert-box' class='{% if alert_class %}{{ alert_class }}{% else %}{{ default_alert_class }}{% endif %}'>
+{% if alert_title %}
+<div id='alert-title'>{{ alert_title|safe }}</div>
+{% endif %}
+{{ alert_content|safe }}
+</div>
+{% elif alert_message %}
+<div id='alert-box' class='{% if alert_class %}{{ alert_class }}{% else %}{{ default_alert_class }}{% endif %}'>
+{% if alert_title %}
+<div id='alert-title'>{{ alert_title|safe }}</div>
+{% endif %}
+<span class='alert-message'>{{ alert_message|safe }}</span>
+</div>
+{% else %}
+<noscript id='alert-box' class='alert alert-title' style='display: block;'>
+You have JavaScript disabled!
+This site uses JavaScript to enhance the experience.
+Some apps may not work, or they may appear buggy.
+</noscript>
+{% endif %}
+{% endwith %}
+{% endif %}
+<div id='bg-surround'>
+<div id='bg-pattern' class='main-pattern'>
+<div class='pattern-gradient'></div>
+</div>
+{% if not request|is_viewable %}
+<div id='page-surround'>
+<div class='error-noaccess-message'>
+Sorry, you do not have access to the test site.
+</div>
+</div>
+{% else %}
+{% block floater %}
+{% endblock %}
+{% block verticalmenu %}
+{% if vertical_menu %}
+{{ vertical_menu }}
+{% endif %}
+{% endblock %}
+<div class='wp-container'>
+<a href='/'>
+<div id='wp-logo' class='logo'></div>
+</a>
+{% with feature_nofisheye=request|feature:"nofisheye" feature_mobile=request|is_mobile %}
+<div id='dock' {% if feature_mobile or feature_nofisheye %}class='noscript'{% endif %}>
+<div id='dock-box' class='dock-container {% if feature_mobile or feature_nofisheye %}noscript{% endif %}'>
+<a id='dock-home' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/'>
+<span>Home</span>
+<img src='/static/images/dock/wp-home.png' alt='home'/>
+</a>
+<a id='dock-projects' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/projects'>
+<span>Projects</span>
+<img src='/static/images/dock/wp-projects.png' alt='projects'/>
+</a>
+<a id='dock-apps' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/apps'>
+<span>Apps</span>
+<img src='/static/images/dock/wp-apps.png' alt='apps'/>
+</a>
+<a id='dock-misc' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/misc'>
+<span>Misc.</span>
+<img src='/static/images/dock/wp-misc.png' alt='misc'/>
+</a>
+<a id='dock-paste' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/paste'>
+<span>Paste</span>
+<img src='/static/images/dock/wp-paste.png' alt='paste'/>
+</a>
+<a id='dock-img' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/img'>
+<span>Images</span>
+<img src='/static/images/dock/wp-img.png' alt='images'/>
+</a>
+<a id='dock-blog' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/blog'>
+<span>Blog</span>
+<img src='/static/images/dock/wp-blog.png' alt='blog'/>
+</a>
+<a id='dock-about' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/about'>
+<span>About</span>
+<img src='/static/images/dock/wp-about.png' alt='about'/>
+</a>
+<a id='dock-search' class='dock-item {% if feature_mobile or feature_nofisheye %}noscript{% endif %}' href='/search'>
+<span>Search</span>
+<img src='/static/images/dock/wp-search.png' alt='search'/>
+</a>
+</div>
+</div>
+{% endwith %}
+<div id='page-surround'>
+{% block contentabove %}
+{% endblock %}
+{% block content %}
+{% if main_content %}
+{{ main_content }}
+{% endif %}
+{% endblock %}
+{% if enable_comments %}
+<div class='comments-box' id='comments-box'>
+<div class='title-box'>
+<h1 class='title'>Comments</h1>
+</div>
+<div id='disqus_thread'>
+</div>
+<script type='text/javascript'>
+var disqus_shortname = 'welbornproductions';
+{% block disqusvariables %}
+{% endblock %}
+(function() {
+var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+(function () {
+var s = document.createElement('script'); s.async = true;
+s.type = 'text/javascript';
+s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+(document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+}());
+</script>
+<noscript>
+Please enable JavaScript to view the <a href='https://disqus.com/?ref_noscript'>comments powered by Disqus.</a>
+</noscript>
+<a href='https://disqus.com' class='dsq-brlink'>
+comments powered by <span class='logo-disqus'>Disqus</span>
+</a>
+</div>
+{% endif %}
+</div>
+</div>
+{% endif %}
+{% ad_bottom %}
+<div class='wp-block donations'>
+<form action='https://www.paypal.com/cgi-bin/webscr' method='post' target='blank'>
+<input type='hidden' name='cmd' value='_s-xclick'>
+<input type='hidden' name='encrypted' value='-----BEGIN PKCS7-----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-----END PKCS7-----'>
+<span class='donations-desc'>
+If you would like to donate to welborn productions, you can do so here:
+</span>
+<input type='image' style='margin-bottom: -5px; margin-left: 5px;' src='https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif' border='0' name='submit' alt='PayPal - The safer, easier way to pay online!'>
+<img alt='Donate to welborn prod.' border='0' src='https://www.paypalobjects.com/en_US/i/scr/pixel.gif' width='1' height='1'>
+</form>
+</div>
+</div>
+<div class='wp-block bottom'>
+<div id='copyright'>
+<span class='copytext'>copyright 2013 -</span>
+<span id='copyright-year' class='copytext'>2016</span>
+<span class='copytext'>welborn productions</span>
+</div>
+<div class='totop-block'>
+<a href='#' id='wp-totop' style='outline: none;'>
+<span class='totop-desc'>top</span>
+</a>
+</div>
+</div>
+<script type='text/javascript'>
+$(document).ready( function () {
+var $dock = $('#dock');
+{% if not request|is_mobile and not request|feature:"nofisheye" %}
+if ((typeof $dock.Fisheye) == 'function') {
+$dock.Fisheye(
+{
+maxWidth: 30,
+items: 'a',
+itemsText: 'span',
+container: '.dock-container',
+itemWidth: 60,
+proximity: 60,
+alignment : 'left',
+valign: 'bottom',
+halign : 'center'
+}
+);
+}
+{% endif %}
+if (!window.matchMedia('print').matches) {
+$dock.animate({'opacity': 1}, 1000, 'linear');
+$dock.css({'display': 'inline-block'});
+}
+var $copyyear = $('#copyright-year');
+if ($copyyear.length) {
+$copyyear.text((new Date()).getFullYear() || '2016');
+}
+wptools.wpreveal('.wp-address');
+{% if alert_message or alert_content %}
+var $alertbox = $('#alert-box');
+$alertbox.slideDown();
+$alertbox.click(function () {
+$(this).slideUp();
+});
+setTimeout(function () { $alertbox.slideUp(); }, 5000);
+{% elif request|is_test_site and not request.user.is_staff %}
+var $alertbox = $('#alert-box');
+$alertbox.slideDown();
+$alertbox.click(function () {
+$(this).slideUp();
+});
+{% endif %}
+var $floater = $('#floater');
+if ($floater.length) {
+$floater.click(function () { $(this).fadeOut(); });
+wptools.center('#floater', true);
+window.onresize = function () {
+wptools.center('#floater', true);
+};
+}
+});
+</script>
+{% block bodyend %}
+{% endblock %}
 </body>
 </html>

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-# file/path (path joining)
+from logging import Filter
 import os.path
 import sys
 
@@ -10,7 +10,7 @@ import settings_local
 
 SYSVERSION = sys.version
 # Version for welbornprod.com
-WPVERSION = '2.3.2'
+WPVERSION = '2.4.1'
 
 TEMPLATE_DEBUG, DEBUG = settings_local.TEMPLATE_DEBUG, settings_local.DEBUG
 
@@ -222,6 +222,20 @@ INSTALLED_APPS = (
     'viewer',
 )
 
+
+class SuppressDeprecated(Filter):
+    """ Ignores RemovedInDjango19Warning messages. """
+    def filter(self, record):
+        WARNINGS_TO_SUPPRESS = [
+            'RemovedInDjango19Warning'
+        ]
+        # Return false to suppress message.
+        return not any([
+            warn in record.getMessage()
+            for warn in WARNINGS_TO_SUPPRESS
+        ])
+
+
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
 LOGGING = {
@@ -230,7 +244,10 @@ LOGGING = {
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
-        }
+        },
+        'suppress_deprecated': {
+            '()': 'wp_main.settings.SuppressDeprecated'
+        },
     },
     'formatters': {
         'verbose': {
@@ -250,7 +267,8 @@ LOGGING = {
             'formatter': 'verbose',
             'filename': os.path.join(BASE_DIR, 'welbornprod.log'),
             'maxBytes': 2097152,
-            'backupCount': 0
+            'backupCount': 0,
+            'filters': ['suppress_deprecated', ],
         }
     },
     'loggers': {

@@ -1,79 +1,72 @@
+{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "blogger/index.html" %}
 {% load blogger_tags %}
 {% load wp_tags %}
 {% block title %}- Blog{% if post_title_short %} - {{ post_title_short }}{% endif %}{% endblock %}
-
 {% block metainfo %}
-    <meta name='description' content='Blog post from welborn productions{% if blog_post %}: {{ blog_post.title }}{% else %}.{% endif %}'>
+<meta name='description' content='Blog post from welborn productions{% if blog_post %}: {{ blog_post.title }}{% else %}.{% endif %}'>
 {% endblock %}
-
 {% block extrahead %}
-    <script type='text/javascript'>
-        $(document).ready(
-                function() {
-                    $('.screenshots_box').wtRotator(wprotator_settings);
-                    $('.wt-rotator').width('100%');
-                    $('.screen').width('100%');
-                }
-            );
-    </script>
+<script type='text/javascript'>
+$(document).ready(
+function() {
+$('.screenshots-box').wtRotator(wprotator_settings);
+$('.wt-rotator').width('100%');
+$('.screen').width('100%');
+}
+);
+</script>
 {% endblock %}
-
 {% block extrastylelink %}
-	{{ block.super }}
+{{ block.super }}
 {% endblock %}
-
 {% block contentabove %}
-	{{ block.super }}
-	{% block blogcontentabove %}
-	{% endblock %}
+{{ block.super }}
+{% block blogcontentabove %}
+{% endblock %}
 {% endblock %}
 {% block content %}
-	<div class='blog-post'>
-		{% if blog_post %}
-			<!-- EDIT -->
-            {% if request|is_staff %}
-                <a href='/adminblogger/wp_blog/{{ blog_post.id }}'>
-                    <div class='wpbutton blog-edit-button'>
-                        <span>edit</span>
-                    </div>
-                </a>
-            {% endif %}
-			<div class='blog-post-title-box'>
-				<span class='blog-post-title'>{{ blog_post.title }}</span>
-			</div>
-			<div class='blog-post-date-box'>
-				<span class='blog-post-date'>{{ blog_post.posted }}</span>
-			</div>
-			<div class='blog-post-tags-box'>
-				<span class='blog-post-tags'>tags:</span> {{ blog_post|tag_links }}
-			</div>
-			<div class='blog-post-body'>
-				{{ blog_post|get_body }}
-			</div>
-			<!-- Related Projects links (if any) -->
-			{% if related_projects %}
-				<div class='blog-related-projects-box'>
-					<span class='blog-related-projects-label'>related projects:&nbsp;</span>
-					<div class='blog-related-projects-list'>
-						{% for project in related_projects %}
-							<div class='blog-related-project'>
-								<a href='/projects/{{ project.alias }}'>
-									<span>{{ project.name }}</span>
-								</a>
-							</div>
-						{% endfor %}
-					</div>
-				</div>
-			{% endif %}
-		{% endif %}
-	</div>
-
-{% endblock %}
-
+<div class='blog-post'>
 {% if blog_post %}
-	{% block disqusvariables %}
-		var disqus_identifier = '{{ blog_post.slug }}';
-		var disqus_title = '{{ blog_post.title }}';
-	{% endblock %}
+{% if request|is_staff %}
+<a href='/adminblogger/wp_blog/{{ blog_post.id }}'>
+<div class='wpbutton blog-edit-button'>
+<span>edit</span>
+</div>
+</a>
+{% endif %}
+<div class='blog-post-title-box'>
+<span class='blog-post-title'>{{ blog_post.title }}</span>
+</div>
+<div class='blog-post-date-box'>
+<span class='blog-post-date'>{{ blog_post.posted }}</span>
+</div>
+<div class='blog-post-tags-box'>
+<span class='blog-post-tags'>tags:</span> {{ blog_post|tag_links }}
+</div>
+<div class='blog-post-body'>
+{{ blog_post|get_body }}
+</div>
+{% if related_projects %}
+<div class='blog-related-projects-box'>
+<span class='blog-related-projects-label'>related projects:&nbsp;</span>
+<div class='blog-related-projects-list'>
+{% for project in related_projects %}
+<div class='blog-related-project'>
+<a href='/projects/{{ project.alias }}'>
+<span>{{ project.name }}</span>
+</a>
+</div>
+{% endfor %}
+</div>
+</div>
+{% endif %}
+{% endif %}
+</div>
+{% endblock %}
+{% if blog_post %}
+{% block disqusvariables %}
+var disqus_identifier = '{{ blog_post.slug }}';
+var disqus_title = '{{ blog_post.title }}';
+{% endblock %}
 {% endif %}

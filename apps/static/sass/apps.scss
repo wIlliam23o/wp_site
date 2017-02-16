@@ -40,15 +40,6 @@
     color: $redmain;
 }
 
-.version {
-    color: $greydark;
-    font-family: $fontssmall;
-    font-size: $fontsmall;
-    font-weight: bold;
-    padding-left: 0%;
-    text-align: right;
-}
-
 .apps-desc {
     @include border-radius-thick(10px);
     background: $whitedull;

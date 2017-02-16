@@ -15,6 +15,7 @@ import traceback
 from datetime import datetime
 
 from django.conf import settings
+from django.db import connection
 # Import modules within this project.
 from django.utils.module_loading import import_module
 
@@ -49,6 +50,51 @@ def append_path(*args):
     while '//' in spath:
         spath = spath.replace('//', '/')
     return spath
+
+
+def ban_add(request):
+    """ Ban an IP by adding it to the banned.lst file (if not already banned)
+    """
+    remote_ip = get_remote_ip(request)
+    if not remote_ip:
+        log.error('Unable to ban, no ip available!')
+        return None
+    try:
+        with open(settings.SECRET_BAN_FILE, 'r') as f:
+            banpats = set(s.strip() for s in f)
+    except EnvironmentError as ex:
+        log.error(
+            'Unable to read ban file: {}\n  {}  \n{} was not banned!'.format(
+                settings.SECRET_BAN_FILE,
+                ex,
+                remote_ip
+            )
+        )
+        return None
+    banip = remote_ip.replace('.', '\.')
+    banpats.add(banip)
+    banpats = sorted(s for s in banpats if s)
+    try:
+        with open(settings.SECRET_BAN_FILE, 'w') as f:
+            f.write('\n'.join(banpats))
+            f.write('\n')
+    except EnvironmentError as ex:
+        log.error(
+            '\n    '.join((
+                'Unable to write banned.lst: {fname}',
+                '{ex}',
+                'IPs need banning!:\n      {banpats}',
+                'Happened while banning: {banip}'
+            )).format(
+                fname=settings.SECRET_BAN_FILE,
+                ex=ex,
+                banpats='\n      '.join(banpats),
+                banip=banip
+            )
+        )
+        return None
+    log.debug('Banned ip pattern: {}'.format(banip))
+    return banip
 
 
 def debug_allowed(request):
@@ -330,6 +376,28 @@ def get_object_safe(objects, **kwargs):
 
 # Alias for function.
 get_object = get_object_safe
+
+
+def get_postgres_version():
+    """ Retrieve PostgreSQL version from settings if set,
+        otherwise get it from the database and set it in settings.
+    """
+    # May have already fetched it.
+    ver = getattr(settings, 'POSTGRESQL_VERSION', None)
+    if ver:
+        return ver
+    # Grab it from the DB and set it in settings.
+    cur = connection.cursor()
+    cur.execute('SELECT version();')
+    db_ver = cur.fetchone()
+    if db_ver is None:
+        log.error('Unable to retrieve postgres version from database!')
+        settings.POSTGRESQL_VERSION = 'Unknown'
+    else:
+        # Have version from db.
+        settings.POSTGRESQL_VERSION = db_ver[0]
+        log.debug('Postgres version: {}'.format(settings.POSTGRESQL_VERSION))
+    return settings.POSTGRESQL_VERSION
 
 
 def get_relative_path(spath):

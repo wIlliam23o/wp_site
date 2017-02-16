@@ -1,30 +1,22 @@
-<!-- Template for injecting 'Source View' code on project pages -->
-<!-- Expects:  project object: 'project'    -->
-<!--           file path: 'file_path'       -->
-<!--           optional: 'link_text' string -->
-<!--           optional: 'desc_text' string -->
+{# Generated using build_template.sh v. 0.0.1 #}
 {% if project and file_path %}
-	<!-- SourceView link container -->
-	<div class='source-view'>
-		<!-- Form to submit to viewer -->
-		<form id='file-viewer' method='post' action='/view/'>{% csrf_token %}
-			<input name='file' type='hidden' value='{{ file_path }}'>
-		</form>
-		<!-- Link URL and Text -->
-		<a class='source-view-link' href='javascript: void(0);' onclick='javascript: $("#file-viewer").submit();'>
-			{% if link_text %}
-				{{ link_text }}
-			{% else %}
-				View Source (local)
-			{% endif %}
-		</a>
-		<!-- Description Text -->
-		<span class='source-view-text'>
-			{% if desc_text %}
-				{{ desc_text }}
-			{% else %}
-				- view source for {{ project.name }} v. {{ project.version }}
-			{% endif %}
-		</span>
-	</div>
+<div class='source-view'>
+<form id='file-viewer' method='post' action='/view/'>{% csrf_token %}
+<input name='file' type='hidden' value='{{ file_path }}'>
+</form>
+<a class='source-view-link' href='javascript: void(0);' onclick='javascript: $("#file-viewer").submit();'>
+{% if link_text %}
+{{ link_text }}
+{% else %}
+View Source (local)
+{% endif %}
+</a>
+<span class='source-view-text'>
+{% if desc_text %}
+{{ desc_text }}
+{% else %}
+- view source for {{ project.name }} v. {{ project.version }}
+{% endif %}
+</span>
+</div>
 {% endif %}

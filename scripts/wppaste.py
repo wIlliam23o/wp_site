@@ -23,7 +23,7 @@ if not settings.get('lang', None):
     settings['lang'] = 'Python'
 
 NAME = 'WpPaste'
-VERSION = '1.1.0'
+VERSION = '1.1.1'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[-1]
 
@@ -48,7 +48,7 @@ USAGESTR = """{versionstr}
         -p,--private            : Make this a private paste.
         -r,--raw                : Show raw response from the server.
         -t title,--title title  : Set title for this paste.
-                                  Defaults to: (first 32 chars of paste data..)
+                                  Defaults to: (first 32 chars of paste data.)
         -v,--version            : Show version.
         -V,--verbose            : When --debug and --verbose are used,
                                   http client debugging is enabled.
@@ -80,7 +80,7 @@ def main(argd):
 
     # No empty pastes allowed.
     if not pastetxt.strip():
-        print('\nNo paste data.\n')
+        print_err('\nNo paste data.\n')
         return 1
 
     # Build paste data from args, settings, or defaults (in that order).
@@ -107,7 +107,7 @@ def main(argd):
     # Submit the paste.
     url = pasteit(pastedata, debug=argd['--debug'], raw=argd['--raw'])
     if url is None:
-        print('\nUnable to submit this paste.')
+        print_err('\nUnable to submit this paste.')
         return 1
     else:
         print(url)
@@ -138,7 +138,7 @@ def pasteit(data, debug=False, raw=False):
     try:
         newdata = json.dumps(data)
     except Exception as exenc:
-        print('Unable to encode paste data: {}\n{}'.format(data, exenc))
+        print_err('Unable to encode paste data: {}\n{}'.format(data, exenc))
         return None
 
     pasteurl = ''.join((PASTE_DOMAIN, PASTE_URL))
@@ -155,12 +155,12 @@ def pasteit(data, debug=False, raw=False):
     try:
         con = request.urlopen(req)
     except Exception as exopen:
-        print('Unable to open paste url: {}\n{}'.format(pasteurl, exopen))
+        print_err('Unable to open paste url: {}\n{}'.format(pasteurl, exopen))
         return None
     try:
         resp = con.read()
     except Exception as exread:
-        print('\n'.join((
+        print_err('\n'.join((
             'Unable to read paste response from {}:',
             '{}')).format(pasteurl, exread))
         return None
@@ -170,7 +170,9 @@ def pasteit(data, debug=False, raw=False):
             print('\nRaw response:\n{}\n'.format(resp))
         respdata = json.loads(resp)
     except Exception as exjson:
-        print('Unable to decode JSON from {}\n{}'.format(pasteurl, exjson))
+        print_err(
+            'Unable to decode JSON from {}\n{}'.format(pasteurl, exjson)
+        )
         return None
 
     status = respdata.get('status', 'error')

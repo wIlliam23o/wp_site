@@ -17,7 +17,7 @@ import sys
 from docopt import docopt
 
 NAME = 'PidName'
-__VERSION__ = '1.3.1'
+__VERSION__ = '1.3.4'
 VERSIONSTR = '{} v. {}'.format(NAME, __VERSION__)
 SCRIPT = os.path.split(sys.argv[0])[-1]
 
@@ -32,8 +32,8 @@ usage_str = """{versionstr}
 
     Options:
         <name>                    : Known process name, or name to search for
-                                    (regex allowed). You can also enter a known
-                                    pid for reverse lookup.
+                                    (regex allowed). You can also enter a
+                                    known pid for reverse lookup.
         -h,--help                 : Show this message.
         -a,--args                 : Include command arguments in results when
                                     they trigger a match.
@@ -42,8 +42,8 @@ usage_str = """{versionstr}
         -e names,--exclude names  : Exclude any process names matching this
                                     regex. By default one process is always
                                     excluded, the 'pidname' process. It would
-                                    list false-positives when searching process
-                                    args.
+                                    list false-positives when searching
+                                    process args.
         -f,--first                : Use only the first process found.
         -F,--force                : When killing processes, use SIGKILL (-9)
                                     instead of SIGTERM.
@@ -58,8 +58,8 @@ usage_str = """{versionstr}
         -q,--quiet                : When killing processes, don't print
                                     anything. This works for 'KILL', but for
                                     'kill' confirmation is always printed.
-        -s,--short                : Use short output suitable for chaining with
-                                    another program. multiple pids are
+        -s,--short                : Use short output suitable for chaining
+                                    with another program. multiple pids are
                                     separated by a comma.
         -v,--version              : Show {script} version.
 
@@ -87,15 +87,16 @@ def main(argd):
     try:
         pnamepat = re.compile(pname)
     except Exception as expat:
-        print_fail('Invalid name/search-term given!: '
-                   '{}\n{}'.format(pname, expat))
+        print_fail(
+            'Invalid name/search-term given!: {}\n{}'.format(pname, expat)
+        )
 
     # Search for the pids and get some Results.
     knownpids = get_searchpid(
         pnamepat,
         exclude=argd['--exclude'],
         firstonly=argd['--first'] or argd['--pidonly'],
-        noargsearch=argd['--noargsearch'])
+        noargsearch=argd['--noargsearch'] or argd['--pidonly'])
 
     # Finished retrieving/searching.
     if argd['--kill'] or argd['--KILL']:
@@ -151,6 +152,7 @@ def get_processes(skipthisscript=True):
     """
 
     # build list of running process ids using /proc
+    # get pid for this script, in case I want to skip it.
     thispid = str(os.getpid())
     if skipthisscript:
         # don't inlcude this process (the python proc running this script)
@@ -159,7 +161,10 @@ def get_processes(skipthisscript=True):
     else:
         # all proc pids (string), including this one.
         pids = [pid for pid in os.listdir('/proc') if pid.isdigit()]
-
+    # Formatted read-error message.
+    fmt_readerror = (
+        'Read error for {path}, pid: {pid} (may have been killed)'.format
+    )
     # grab info from processes
     processes = {}
     for pid in pids:
@@ -171,13 +176,13 @@ def get_processes(skipthisscript=True):
         cmdnamepath = os.path.join('/proc', pid, 'comm')
         processinfo['name'] = try_fileread(cmdnamepath)
         if processinfo['name'] is None:
-            print('Read error for /proc/comm, pid: {}'.format(pid))
+            print(fmt_readerror(path='/proc/comm', pid=pid))
 
         # Args
         cmdargspath = os.path.join('/proc', pid, 'cmdline')
         processinfo['args'] = try_fileread(cmdargspath)
         if processinfo['args'] is None:
-            print('Read error for /proc/cmdline: pid: {}'.format(pid))
+            print(fmt_readerror(path='/proc/cmdline', pid=pid))
         elif skipthisscript and (SCRIPT in processinfo['args']):
             # Skip this script's parent process (not caught by pid earlier).
             continue
@@ -282,7 +287,7 @@ def kill_pids(results, force=False, sigkill=False, quiet=False):
     if not force:
         pidlen = len(results)
         plural = 'process' if pidlen == 1 else 'processes'
-        processnames = (r.format(pidname=True) for r in results)
+        processnames = (r.fmt(pidname=True) for r in results)
         msg = '\n'.join((
             'This will kill {} {}:'.format(pidlen, plural),
             '    {}'.format('\n    '.join(processnames)),
@@ -524,6 +529,7 @@ class Result(object):
     @classmethod
     def from_tuple(cls, tup):
         return cls(*tup)
+
 
 # START OF SCRIPT
 if __name__ == '__main__':

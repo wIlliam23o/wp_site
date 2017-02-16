@@ -1,0 +1,18 @@
+{# Renders download links for a project.   #}
+{# Expects:                                #}
+{#    project : A wp_project.              #}
+{#    desc    : Optional dl description.   #}
+{% if project %}
+    <div class='wp-block download-list'>
+        <div class='download-file'>
+            <a class='download-link' href='/dl/{{ project.download_url }}'>
+                <span class='download-link-text'>
+                    {{ project.name }} v. {{ project.version }}
+                </span>
+            </a>
+            <span class='download-desc'>
+                {% if desc %}{{ desc }}{% else %}&nbsp; - Current package.{% endif %}
+            </span>
+        </div>
+    </div>
+{% endif %}

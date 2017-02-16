@@ -11,40 +11,8 @@ import json
 import pickle
 import os
 import re
+import sys
 import zlib
-
-# Base usage string to build per-model usage strings from.
-base_usage_str = """{name} v. {ver}
-
-    Usage:
-        {script} [-h | -v]
-        {script} -A FILE...
-        {script} ID... -a [-F]
-        {script} IDENT [-d | -l | -j | -p]
-        {script} IDENT -u attribute:val
-        {script} -f | -l
-
-    Options:
-        FILE                   : One or more archive files to create objects
-                                 from.
-        ID                     : Same as IDENT, except multiple ids can be
-                                 used.
-        IDENT                  : {properid} identifier ({attrstr}).
-        -a,--archive           : Show archive string for a {lowerid}.
-                                 When -F is used, data is written to file.
-        -A,--ARCHIVE           : Load object from archive file.
-        -d,--delete            : Delete a {lowerid} (confirmation needed).
-        -f,--fields            : List model fields.
-        -F,--file              : When archiving, write to file.
-        -h,--help              : Show this message.
-        -j,--json              : Show JSON string for a {lowerid}.
-        -l,--list              : List detailed {lowerid} info, or summary if
-                                 no args were given.
-        -p,--pickle            : Show Pickle string for a {lowerid}.
-        -u data,--update data  : Update {lowerid} info with attribute:value
-                                 or "attribute:spaced value"
-        -v,--version           : Show version.
-"""
 
 
 def convert_attr(oldattr, val):
@@ -87,7 +55,7 @@ def convert_attr(oldattr, val):
 def do_fields(model):
     """ List all the model fields. """
 
-    print('\nFields for {}:'.format(model.__name__))
+    print('\nFields for {}:'.format(get_type_name(model)))
     tmpobject = model.objects.create()
     tmpobject.delete()
     fieldnames = get_model_fields(model)
@@ -108,48 +76,43 @@ def do_fields(model):
     return 0
 
 
-def do_headerstr(ident, model, attrs=None):
+def do_headerstr(ident, appmodule):
     """ Print just the header string for an object.
         Arguments:
-            ident  : name, title or part of a name to retrieve object.
-            model  : model containing the objects to retrieve from
-                     (wp_project, wp_blog, etc.)
+            ident     : name, title or part of a name to retrieve object.
+            appmodule : update.py module to get attrs and model from.
 
         Keyword Arguments:
             attrs  : attributes to use when retrieving the object.
     """
 
-    obj = get_object(ident, model, attrs=attrs)
+    obj = get_object(ident, appmodule.model, attrs=appmodule.attrs)
     if not obj:
-        print_notfound(ident, model, attrs)
-        return 1
-    headerstr = get_headerstr(obj)
-    print('Found: {}'.format(headerstr))
+        raise NotFound(ident, appmodule)
+    print('Found: {}'.format(appmodule.get_header(obj)))
     return 0
 
 
-def do_object_archive(ident, model, attrs, usefile=False):
+def do_object_archive(ident, appmodule, usefile=False):
     """ Creates the archive format of an object.
         Arguments:
-            ident   : Identifier for object (value of one of the attrs).
-            model   : Model to find object in.
-            attrs   : Attributes to search for ident.
-            usefile : True for automatic file name, or an explicit file name.
-                      If falsey, output repr is written to stdout.
+            ident      : Identifier for object (value of one of the attrs).
+            appmodule  : App's update.py module to get info from.
+            usefile    : True for automatic file name, or an explicit file
+                         name.
+                         If falsey, output repr is written to stdout.
     """
-    obj = get_object(ident, model, attrs=attrs)
-    mname = model.__name__
+    obj = get_object(ident, appmodule.model, attrs=appmodule.attrs)
+    mname = get_type_name(appmodule.model)
     if not obj:
-        print_notfound(ident, model, attrs)
-        return 1
+        raise NotFound(ident, appmodule)
 
-    headerstr = get_headerstr(obj)
+    headerstr = appmodule.get_header(obj)
 
     try:
         arcstr = get_object_archive(obj)
     except Exception as ex:
-        print('Unable to archive that {}.\n{}'.format(mname, ex))
-        return 1
+        raise ValueError('Unable to archive that {}.\n{}'.format(mname, ex))
 
     if usefile:
         # Write this data to a file
@@ -157,7 +120,7 @@ def do_object_archive(ident, model, attrs, usefile=False):
             # Explicit file name given.
             filename = usefile
         else:
-            for a in attrs:
+            for a in appmodule.attrs:
                 # Get object name from ident attrs.
                 objname = getattr(obj, a, None)
                 if objname:
@@ -172,13 +135,16 @@ def do_object_archive(ident, model, attrs, usefile=False):
             filename = '{}.{}{}.wparc'.format(
                 mname,
                 objname,
-                '-{}'.format(verstr) if verstr else '')
+                '-{}'.format(verstr) if verstr else ''
+            )
         try:
             with open(filename, 'wb') as fwrite:
                 fwrite.write(arcstr)
         except EnvironmentError as ex:
-            print('\nUnable to write file: {}\n{}'.format(filename, ex))
-            return 1
+            raise ValueError('Unable to write file: {}\n{}'.format(
+                filename,
+                ex
+            ))
         # Write success.
         print('\nWrote archive for {} to: {}\n'.format(headerstr, filename))
 
@@ -192,39 +158,67 @@ def do_object_archive(ident, model, attrs, usefile=False):
     return 0
 
 
-def do_objects_archive(idents, model, attrs, use_file=False):
+def do_objects_archive(idents, appmodule, use_file=False):
     """ Archive all objects with do_object_archive.
         Prints any errors, and returns the number of errors as an exit status
         code.
     """
     if not idents:
-        print('\nNo objects given to archive!\n')
-        return 1
+        raise ValueError('No objects given to archive!\n')
 
     errs = 0
     for ident in idents:
         errs += do_object_archive(
             ident,
-            model,
-            attrs,
-            use_file=use_file)
+            appmodule,
+            use_file=use_file
+        )
 
     return errs
+
+
+def do_object_delete(ident, appmodule):
+    """ Delete an object from the database. """
+
+    obj = get_object(ident, appmodule.model, attrs=appmodule.attrs)
+    if not obj:
+        raise NotFound(ident, appmodule)
+
+    answer = input(
+        'Are you sure you want to delete {} (y/n): '.format(
+            appmodule.get_header(obj)
+        )
+    ).lower().strip()
+
+    if answer[0] != 'y':
+        raise ValueError('Cancelled delete.')
+
+    try:
+        obj.delete()
+        print('\nDeleted {}'.format(repr(obj)))
+    except Exception as ex:
+        raise ValueError('Unable to delete that {}!\n{}'.format(
+            get_type_name(obj),
+            ex
+        ))
+    return 0
 
 
 def do_object_fromarchive(filename):
     """ Creates an object from an archive file. """
 
     if not os.path.isfile(filename):
-        print('\nThat file doesn\'t exist: {}'.format(filename))
-        return 1
+        raise FileNotFoundError('That file doesn\'t exist: {}'.format(
+            filename
+        ))
 
     try:
         with open(filename, 'rb') as fread:
             data = fread.read()
     except (IOError, OSError) as exread:
-        print('\nUnable to read from file: {}\n{}'.format(filename, exread))
-        return 1
+        raise EnvironmentError(
+            'Unable to read from file: {}\n{}'.format(filename, exread)
+        )
 
     # Got data, create the object.
     obj = get_object_fromarchive(data)
@@ -232,8 +226,9 @@ def do_object_fromarchive(filename):
         print('\nCreated object from archive: {}'.format(repr(obj)))
         return 0
     else:
-        print('\nUnable to create object from archive: {}'.format(filename))
-        return 1
+        raise ValueError(
+            'Unable to create object from archive: {}'.format(filename)
+        )
 
 
 def do_objects_fromarchives(filenames):
@@ -241,46 +236,19 @@ def do_objects_fromarchives(filenames):
         Returns the number of errors as an exit status code.
     """
     if not filenames:
-        print('\nNo files to load objects from!\n')
-        return 1
-    
+        raise ValueError('No files to load objects from!')
+
     errs = 0
     for filename in filenames:
         errs += do_object_fromarchive(filename)
     return errs
 
 
-def do_object_delete(ident, model, attrs):
-    """ Delete an object from the database. """
-
-    obj = get_object(ident, model, attrs=attrs)
-    if not obj:
-        print_notfound(ident, model, attrs)
-        return 1
-
-    headerstr = get_headerstr(obj)
-    answer = input('Are you sure you want to delete '
-                   '{} (y/n): '.format(headerstr)).lower().strip()
-
-    if answer[0] != 'y':
-        print('\nCancelled delete.\n')
-        return 1
-
-    try:
-        obj.delete()
-        print('\nDeleted {}'.format(repr(obj)))
-        return 0
-    except Exception as ex:
-        print('\nUnable to delete that {}!\n{}'.format(headerstr, ex))
-        return 1
-
-
-def do_object_info(ident, model, attrs):
+def do_object_info(ident, appmodule):
     """ Print info about an object.
         Arguments:
-            ident  : name, title, or part of a name used to retrieve the obj.
-            model  : model containing the objects to retrieve from
-                     (wp_project, wp_blog, etc.)
+            ident     : name, title, or part of a name used to get the obj.
+            appmodule : app's update.py module to get info from.
         Keyword Arguments:
             attrs  : attributes to use when retrieving the object.
     """
@@ -303,17 +271,16 @@ def do_object_info(ident, model, attrs):
             chunkspacing,
             chunkspacing.join(chunks[1:]))
 
-    obj = get_object(ident, model, attrs=attrs)
+    obj = get_object(ident, appmodule.model, attrs=appmodule.attrs)
     if not obj:
-        print_notfound(ident, model, attrs)
-        return 1
+        raise NotFound(ident, appmodule)
 
     pinfo = get_object_info(obj)
     keynames = sorted(list(pinfo.keys()))
     longestkey = len(max(keynames, key=len))
 
     # retrieve proper header string for this model.
-    headerstr = get_headerstr(obj)
+    headerstr = appmodule.get_header(obj)
     print('Info for {}:'.format(headerstr))
 
     functionlines = []
@@ -348,70 +315,70 @@ def do_object_info(ident, model, attrs):
     return 0
 
 
-def do_object_json(ident, model, attrs):
+def do_object_json(ident, appmodule):
     """ Retrieves an objects simple JSON representation.
         Keyword arguments are the same as do_object_info().
     """
 
-    obj = get_object(ident, model, attrs=attrs)
-    mname = model.__name__
+    obj = get_object(ident, appmodule.model, attrs=appmodule.attrs)
+    mname = get_type_name(appmodule.model)
     if not obj:
-        print_notfound(ident, model, attrs)
-        return 1
+        raise NotFound(ident, appmodule)
 
-    headerstr = get_headerstr(obj)
     try:
-        jsonstr = get_object_json(obj, model)
+        jsonstr = get_object_json(obj, appmodule.model)
     except Exception as ex:
-        print('Unable to retrieve JSON for that {}.\n{}'.format(mname, ex))
-        return 1
+        raise ValueError(
+            'Unable to retrieve JSON for that {}.\n{}'.format(mname, ex)
+        )
 
-    print('\nJSON for {}:\n'.format(headerstr))
-    print(jsonstr.replace('",', '",\n'))
-    return 1
+    if sys.stdout.isatty():
+        print('\nJSON for {}:\n'.format(appmodule.get_header(obj)))
+        print(jsonstr)
+        return 0
+
+    sys.stdout.buffer.write(jsonstr.encode())
+    return 0
 
 
-def do_object_pickle(ident, model, attrs):
+def do_object_pickle(ident, appmodule):
     """ Retrieve a pickle string for an object. """
-    obj = get_object(ident, model, attrs=attrs)
-    mname = model.__name__
+    obj = get_object(ident, appmodule.model, attrs=appmodule.attrs)
     if not obj:
-        print_notfound(ident, model, attrs)
-        return 1
+        raise NotFound(ident, appmodule)
 
-    headerstr = get_headerstr(obj)
     try:
-        pstr = get_object_pickle(obj)
+        pbytes = pickle.dumps(obj)
     except Exception as ex:
-        print('Unable to pickle that {}.\n{}'.format(mname, ex))
-        return 1
+        mname = get_type_name(appmodule.model)
+        raise ValueError('Unable to pickle that {}.\n{}'.format(mname, ex))
 
-    print('\nPickle for {}:\n'.format(headerstr))
-    print(pstr)
-    return 1
+    if sys.stdout.isatty():
+        print('\nPickle for {}:\n'.format(appmodule.get_header(obj)))
+        print(repr(pbytes))
+        return 0
+    # Piping to file possibly.
+    sys.stdout.buffer.write(pbytes)
+    return 0
 
 
-def do_object_update(ident, model, attrs, data=None):
+def do_object_update(ident, appmodule, data=None):
     """ Updates an object found with ident (name/alias/title/id/etc.),
         data is attribute:value, or "attribute:spaced value".
         returns 0 on success, 1 on failure (with error msgs printed)
         Arguments:
-            ident  : name, title, or part of a name to retrieve object with.
-            model  : model to retrieve objects from.
-                     (wp_project, wp_blog, etc.)
-            attrs  : list of attributes to search for a match.
-                     (name, alias, title, etc.)
+            ident      : name, title, or part of a name to get object with.
+            appmodule  : App's update.py module to get info from.
 
         Keyword Arguments:
-            data   : update data in the form of
-                     (attr:val, or "attr:space value")
-                     Must be able to do getattr(obj, attr).
+            data        : update data in the form of
+                          (attr:val, or "attr:space value")
+                          Must be able to do getattr(obj, attr).
     """
 
-    obj = get_object(ident, model, attrs=attrs)
+    obj = get_object(ident, appmodule.model, attrs=appmodule.attrs)
     if not obj:
-        print_notfound(ident, model, attrs)
-        return 1
+        raise NotFound(ident, appmodule)
 
     return update_object_bydata(obj, data)
 
@@ -471,81 +438,6 @@ def get_convert_func(oldattr):
 
     # Return the function that will be used.
     return convertfunc
-
-
-def get_headerstr(obj):
-    """ Get header string to print for this model. (wp_project, wp_blog, etc.)
-        Arguments:
-            model : model this object belongs to. (to determine header style.)
-            obj   : object to get header info from. (obj.name, obj.title, ..)
-    """
-    # TODO: This could be built into the model, like a 'console_repr'
-    #       attribute.
-    # TODO: ..then get_headerstr() would be: obj.console_repr()
-    # TODO: ..so this hardcoded mess (attrs as strings that are loaded) dies.
-
-    # Default header string.
-    headerstr = 'object'
-    if not obj:
-        return headerstr
-    # Header string for various models.
-    headerstrings = {
-        'wp_project': {
-            'format': '{} ({}) v. {}',
-            'attrs': ('name', 'alias', 'version'),
-        },
-        'wp_image': {
-            'format': '{} - {} ({})',
-            'attrs': ('image_id', 'title', 'filename')
-        },
-        'wp_misc': {
-            'format': '{} ({}) v. {}',
-            'attrs': ('name', 'alias', 'version'),
-        },
-        'wp_blog': {
-            'format': '{}',
-            'attrs': ('title',),
-        },
-        'wp_paste': {
-            'format': '{} [{}] {}',
-            'attrs': ('publish_date', 'paste_id', 'title')
-        },
-        'file_tracker': {
-            'format': '{}',
-            'attrs': ('filename',),
-        },
-
-    }
-    # Get current model name.
-    try:
-        mname = obj.__class__.__name__
-    except Exception as ex:
-        print('\nError retrieving model name!:\n{}'.format(ex))
-        return headerstr
-
-    if mname not in headerstrings:
-        print('\nget_headerstr(): No info for this model!: {}'.format(mname))
-        return headerstr
-
-    # Try getting real attribute values from attribute names
-    attrnames = headerstrings[mname]['attrs']
-    try:
-        attrvals = [getattr(obj, a) for a in attrnames]
-    except Exception as ex:
-        print('\nget_headerstr(): Error retrieving attributes: '
-              '{}\n{}'.format(','.join(attrnames), ex))
-        return headerstr
-
-    # Try formatting header string with attribute values.
-    headerformat = headerstrings[mname]['format']
-    try:
-        headerstr = headerformat.format(*attrvals)
-    except Exception as ex:
-        print('\nget_headerstr(): Error formatting header string: '
-              '{}\n{}'.format(headerformat, ex))
-        return headerstr
-    # success
-    return headerstr
 
 
 def get_model_fields(model, includefunctions=False, exclude=None):
@@ -643,10 +535,12 @@ def get_object_archive(obj):
     modelfields = get_model_fields(model, exclude=excludes)
 
     # Types that need to be stringified.
-    stringify = (datetime.date,
-                 datetime.datetime,
-                 datetime.time,
-                 bool)
+    stringify = (
+        datetime.date,
+        datetime.datetime,
+        datetime.time,
+        bool
+    )
 
     # Create blank date, with model type saved.
     data = {'original_model': model}
@@ -676,7 +570,7 @@ def get_object_fromarchive(data):
     #               wp_blog.from_archive_file(filename)
     if isinstance(data, str):
         # We need bytes for these operations.
-        data = bytes(data, 'utf-8')
+        data = data.encode()
 
     try:
         decompressed = zlib.decompress(data)
@@ -822,40 +716,35 @@ def get_object_json(obj):
     for fieldname in get_model_fields(model):
         data[fieldname] = str(getattr(obj, fieldname))
 
-    return json.dumps(data)
-
-
-def get_object_pickle(obj):
-    """ Returns a pickle string for this object. """
-
     try:
-        pstr = pickle.dumps(obj)
-        return pstr
-    except Exception as ex:
-        print('Unable to pickle that object!\n{}'.format(ex))
-    return ''
+        data = json.dumps(data, indent=4, sort_keys=True)
+    except TypeError:
+        # Non-str keys.
+        data = json.dumps(data, indent=4)
+    return data
 
 
-def get_object_from_pickle(pstr):
-    """ Returns an object from a pickle string. """
-
-    try:
-        o = pickle.loads(pstr)
-        return o
-    except Exception as ex:
-        print('Unable to get an object from that string!\n{}'.format(ex))
-    return None
-
-
-def get_scriptname(argv0):
-    """ Retrieve the short name that a script was called by.
-        No .py, no /path.
-        Arguments:
-            argv0  :  the sys.argv[0] for whatever script you are using.
+def get_type_name(obj):
+    """ Return the class name for an object, if it's already a class just
+        return it's name.
     """
+    name = getattr(obj, '__name__', None)
+    if name is not None:
+        return name
+    return type(obj).__name__
 
-    shortname = os.path.split(argv0)[1]
-    return shortname[:-3] if shortname.endswith('.py') else shortname
+
+def is_iterable(obj):
+    """ Returns True if the `obj` is not a string/bytes, but is iterable. """
+    if isinstance(obj, (bytes, str)):
+        return False
+    if callable(obj):
+        obj = obj()
+    try:
+        [_ for _ in obj]
+    except TypeError:
+        return False
+    return True
 
 
 def parse_date(s):
@@ -915,16 +804,6 @@ def parse_update_data(data):
         return None, None
 
 
-def print_notfound(ident, model, attrs):
-    """ Print a message when objects aren't found.
-        Kept here so the message is consistent.
-    """
-    mname = model.__name__
-    print('\nCan\'t find a {modelname} '.format(modelname=mname) +
-          'with that {attrstr}'.format(attrstr='/'.join(attrs)) +
-          '/id!: {identstr}'.format(identstr=ident))
-
-
 def try_get(model, **kwargs):
     """ Try doing a get(key=val), if it fails return None """
 
@@ -945,14 +824,17 @@ def update_object_bydata(obj, data, **kwargs):
     """
     attr, val = parse_update_data(data)
     if (not attr) or (not val):
-        print('\nMissing update data!\nExpecting attribute:value '
-              'or "attribute:spaced value"!')
-        return 1
+        raise ValueError(
+            ' '.join((
+                'Missing update data!\nExpecting attribute:value',
+                'or "attribute:spaced value"!'
+            ))
+        )
 
     return update_object(obj, attr, val, **kwargs)
 
 
-def update_object(obj, attr, val, objectname=None):
+def update_object(obj, attr, val):
     """ Updates an attribute of an object, where attr is a string.
         Example:
             update_object(
@@ -967,51 +849,66 @@ def update_object(obj, attr, val, objectname=None):
                    required type.)
     """
 
-    try:
-        objname = obj.__class__.__name__
-    except:
-        objname = 'object'
+    objname = get_type_name(obj)
 
     if not hasattr(obj, attr):
         # No attr by that name.
-        print('\n{} doesn\'t have that attribute!: {}'.format(objname, attr))
-        return 1
+        raise ValueError(
+            '{} doesn\'t have that attribute!: {}'.format(objname, attr)
+        )
 
     # Check old setting.
     oldattr = getattr(obj, attr)
     if val == oldattr:
-        print('\n{}.{} already set to: {}'.format(objname, attr, val))
-        return 1
+        raise ValueError(
+            '{}.{} already set to: {}'.format(objname, attr, val)
+        )
 
     try:
         # Use the conversion function to make sure proper types are set
         # (in Django/Database)
         val = convert_attr(oldattr, val)
-        # A little bit 'prettier' type string than <type 'this'>.
-        typestr = str(type(val)).strip('<').strip('>')
         print('\nSetting {}.{} = {} as {}'.format(
             objname,
             attr,
             val,
-            typestr))
+            get_type_name(val)
+        ))
     except Exception as ex:
-        print('\nError converting value to required type!: '
-              '{}\n{}'.format(val, ex))
-        return 1
+        raise ValueError(
+            'Error converting value to required type!: {}\n{}'.format(
+                val,
+                ex
+            )
+        )
 
     # Set the attribute.
     try:
         setattr(obj, attr, val)
     except Exception as ex:
-        print('\nError updating {}!:\n{}'.format(objname, ex))
-        return 1
+        raise ValueError('Error updating {}!:\n{}'.format(objname, ex))
     # Attribute set, now save it.
     try:
         obj.save()
     except Exception as ex:
-        print('\nError saving updated {}!\n{}'.format(objname, ex))
-        return 1
+        raise ValueError('Error saving updated {}!\n{}'.format(objname, ex))
 
     # Success.
     print('Set and saved: {}.{} = {}'.format(objname, attr, val))
     return 0
+
+
+class NotFound(ValueError):
+    """ Raised when an object can't be found with the user's IDENT arg. """
+    def __init__(self, ident, appmodule):
+        self.ident = ident
+        self.appmodule = appmodule
+
+    def __str__(self):
+        return ' '.join((
+            'Can\'t find a {modelname} with that {attr}/id!: {ident}'.format(
+                modelname=get_type_name(self.appmodule.model),
+                attr='/'.join(self.appmodule.attrs),
+                ident=self.ident
+            )
+        ))

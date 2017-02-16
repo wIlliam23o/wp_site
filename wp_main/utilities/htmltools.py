@@ -58,31 +58,30 @@ re_start_tag = re.compile(r'[\074]\w+')
 # These are used on the About page,
 # they are used to create links out of certain words.
 auto_link_list = (
-    ('Arduino', 'http://arduino.cc'),
-    ('BASIC', 'http://en.wikipedia.org/wiki/BASIC'),
-    ('Django', 'http://djangoproject.com'),
+    ('Arduino', 'https://www.arduino.cc'),
+    ('BASIC', 'https://en.wikipedia.org/wiki/BASIC'),
+    ('(?<!\w)C(?![\w\+\#])',
+        'https://en.wikipedia.org/wiki/C_(programming_language)'),
+    ('C\#', 'https://en.wikipedia.org/wiki/C_Sharp_(programming_language)'),
+    ('C\+\+', 'http://www.stroustrup.com/4th.html'),
+    ('Django', 'https://www.djangoproject.com'),
     ('Haskell', 'https://www.haskell.org/'),
-    ('HTML', 'http://en.wikipedia.org/wiki/HTML'),
-    ('JavaScript', 'http://en.wikipedia.org/wiki/JavaScript'),
+    ('HTML', 'https://en.wikipedia.org/wiki/HTML'),
+    ('JavaScript', 'https://en.wikipedia.org/wiki/JavaScript'),
     ('Linux', 'http://linux.org'),
     ('Mint', 'http://linuxmint.com'),
     ('PostgreSQL', 'http://www.postgresql.org'),
     ('Puppy', 'http://puppylinux.org'),
-    ('Python', 'http://www.python.org'),
-    ('RaspberryPi', 'http://raspberrypi.org'),
-    ('Raspberry Pi', 'http://raspberrypi.org'),
-    ('Rust', 'http://www.rust-lang.org/'),
+    ('Python', 'https://python.org'),
+    ('Raspberry ?Pi', 'https://www.raspberrypi.org'),
+    ('Rust', 'https://www.rust-lang.org/'),
     ('Ubuntu', 'http://ubuntu.com'),
     ('VB', 'http://msdn.microsoft.com/en-us/vstudio/'),
-    ('Visual Basic', 'http://msdn.microsoft.com/en-us/vstudio/'),
-    ('Windows', 'http://www.windows.com'),
+    ('Visual Basic', 'https://msdn.microsoft.com/en-us/vstudio/'),
+    ('Windows', 'https://windows.com'),
     ('ATTiny',
         'http://www.atmel.com/products/microcontrollers/avr/tinyavr.aspx'),
-    ('(?P<CGROUP> C )',
-        'http://en.wikipedia.org/wiki/C_(programming_language)'),
 )
-
-# Module Functions (not everything can be an html_content(), or should be.)
 
 
 def apply_link_line(link_pat, link_href, attr_string, line):
@@ -117,7 +116,7 @@ def apply_link_line(link_pat, link_href, attr_string, line):
             # use only 1 group
             link_text = strip_all(
                 re_match.group(),
-                ' .,\'";:?/\\`~!@#$%^&*()_+-={}[]|')
+                ' .,\'";:?/\\`~!@$%^&*()_-={}[]|')
         else:
             matchgroupdict = re_match.groupdict()
             # use first group dict key if found
@@ -281,8 +280,8 @@ def clean_html(source_string):
     """ runs the proper remove_ functions. on the source string
     """
 
-    # these things have to be done in a certain order to work correctly.
-    # hide_email, highlight, remove_comments, remove_whitespace
+    # This used to do more, but build_template.sh is cleaning everything
+    # before running.
     if source_string is None:
         log.debug('Final HTML for page was None!')
         return ''
@@ -290,11 +289,13 @@ def clean_html(source_string):
         log.debug('Final HTML for page was empty!')
         return ''
 
-    return remove_whitespace(
-        remove_comments(
-            highlight(
-                hide_email(
-                    source_string))))
+    return highlight(
+        hide_email(
+            remove_comments(
+                remove_whitespace(source_string)
+            )
+        )
+    )
 
 
 def fatal_error_page(message=None):
@@ -697,9 +698,16 @@ def load_html_template(sfile, request=None, context=None):
     return None
 
 
+def remove_blanklines(source_string):
+    """ Removes blank lines from a string. """
+    return '\n'.join([l for l in source_string.splitlines() if l])
+
+
 def remove_comments(source_string):
     """ splits source_string by newlines and
         removes any line starting with <!-- and ending with -->.
+
+        DEPRECATED: build_template.sh removes comments before running.
     """
 
     def is_comment(line):

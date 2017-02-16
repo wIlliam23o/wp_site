@@ -1,0 +1,54 @@
+{% extends "home/main.html" %}
+
+{% block title %}- Blog Tags{% endblock %}
+
+{% block metainfo %}
+    <meta name='description' content='All tags found in welborn productions blog posts.'>
+{% endblock %}
+
+{% block extrastylelink %}
+	{{ block.super }}
+	<link type='text/css' rel='stylesheet' href='/static/css/blogger.min.css'/>
+	<link type='text/css' rel='stylesheet' href='/static/css/tags.min.css'/>
+{% endblock %}
+
+{% block contentabove %}
+	<div class='blog-header'>
+		<div class='blog-header-title'>
+			<a href='/blog/tags'>
+				<h3 class='header'>Blog Tags</h3>
+			</a>
+		</div>
+
+		<div class='blog-header-text'>
+				<span class='blog-header-text'>Viewing all </span>
+					<span class='blog-header-count'>{{ tag_count }}</span>
+						<span class='blog-header-text'> tags.</span>
+		</div>
+	</div>
+{% endblock %}
+
+{% block content %}
+	{% if tag_list %}
+		<div class='blog-tag-list'>
+			{% for wptag in tag_list %}
+				<div class='blog-tag-list-item'>
+					<a href='/blog/tag/page/{{ wptag.name }}?start_id=0'>
+						<span class='blog-tag-list-text' style='font-size: {{ wptag.size }}'>
+							{{ wptag.name }}
+						</span>
+					</a>
+				</div>
+				{% endfor %}
+		</div>
+	{% else %}
+        <div>
+		    <span style='font-style: italic;'>Sorry, no tags were found.</span>
+		</div>
+        <div>
+		    <a href='/blog'>
+                <span>Click here to go back to the blog.</span>
+            </a>
+        </div>
+	{% endif %}
+{% endblock %}

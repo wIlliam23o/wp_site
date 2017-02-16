@@ -13,7 +13,7 @@
 # -Christopher Welborn (rewrite: 1-27-15)
 
 appname="WRun"
-appversion="0.2.1"
+appversion="0.3.0"
 # script directories to use (relative to cwd)
 scriptdirs=("scripts" "apps/paste/scripts")
 
@@ -22,9 +22,7 @@ function indent_text () {
     # Arguments:
     #     $1  : (number) the amount of spaces.
     #     $2  : (string) the text to indent.
-    local let length=$1
-    local i
-    local spaces=""
+    local length=$1 i spaces=""
     for ((i=0; i<length; i++))
     do
         spaces=" $spaces"
@@ -54,7 +52,7 @@ function find_script () {
                 continue
             elif [[ ${scriptname%.*} =~ $1 ]] || [[ "$scriptname" == "$1" ]]; then
                 # Found a regex match, or an exact match.
-                printf "%s" "$scriptpath"
+                printf "%s" "$(readlink -f "$scriptpath")"
                 return 0
             fi
         done
@@ -68,7 +66,7 @@ function list_script_type () {
     # With no arguments, all types are listed.
     local lastdir=""
     local scripts=""
-    local let indent=0
+    local indent=0
 
     for scriptdir in "${scriptdirs[@]}"
     do
@@ -169,11 +167,15 @@ function print_usage () {
 
 function valid_scriptdirs () {
     # test scriptdirs
-    for scriptdir in "${scriptdirs[@]}"
-    do
+    local index=0
+    for scriptdir in "${scriptdirs[@]}"; do
         if [[ ! -d $scriptdir ]]; then
-            print_fail "\nscript dir not found!: $scriptdir\n"
+            # Running from scripts dir already?
+            newscriptdir="../$scriptdir"
+            [[ -d "$newscriptdir" ]] || print_fail "script dir not found!: $scriptdir"
+            scriptdirs[$index]=$newscriptdir
         fi
+        let index+=1
     done
 }
 
@@ -192,7 +194,7 @@ fi
 
 # Grab arguments for the script.
 scriptargs=("${@:2}")
-scriptcmd="$scriptpath ${scriptargs[*]}"
+scriptcmd="${scriptpath##*/} ${scriptargs[*]}"
 # Run it.
-print_status "%s\n\n" "Running: ./$scriptcmd"
-./"$scriptpath" "${scriptargs[@]}"
+print_status "%s\n\n" "Running: ${scriptcmd}"
+"$scriptpath" "${scriptargs[@]}"

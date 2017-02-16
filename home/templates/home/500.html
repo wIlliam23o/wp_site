@@ -1,54 +1,50 @@
+{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "home/main.html" %}
 {% block title %}- Server Error{% endblock %}
-
 {% block metainfo %}
-    <meta name="description" content="A server error for welborn productions.">
+<meta name="description" content="A server error for welborn productions.">
 {% endblock %}
-
 {% block content %}
-	<div class='error-box'>
-		{# Show messages from the messages framework #}
-		{% if messages %}
-			    {% for message in messages %}
-			    	{% if message.tags == 'error' %}
-			    		<div class="msg-framework-error">
-			    			{{ message }}
-			    		</div>
-			    	{% endif %}
-			    {% endfor %}
-		{% else %}
-			<div class='msg-framework-error'>
-				Server Error.
-			</div>
-			<div class='error-message'>
-				Something very bad just happened.
-			</div>
-		{% endif %}
-
-		{% if request_path %}
-			<div class='error-path'>
-				{{ request_path }}
-			</div>
-		{% endif %}
-
-		<div class='error-home-message'>
-			{% if user_error %}
-				{{ user_error|safe }}
-			{% else %}
-				Sorry, this was probably my fault.
-				An email has been sent to me regarding this error.
-				It will be fixed as soon as possible. -Cj
-			{% endif %}
-		</div>
-		<div class='error-home-link'>
-			<a href='/'>Click here to go to the home page</a>,
-		</div>
-		<div class='error-home-message'>
-			or try my
-			<a href='/projects'>projects</a>,
-			<a href='/blog'>blog</a>,
-			<a href='/misc'>misc. stuff</a>,
-			or <a href='/apps'>apps</a> page.
-		</div>
-	</div>
+<div class='error-box'>
+{% if messages %}
+{% for message in messages %}
+{% if message.tags == 'error' %}
+<div class="msg-framework-error">
+{{ message }}
+</div>
+{% endif %}
+{% endfor %}
+{% else %}
+<div class='msg-framework-error'>
+Server Error.
+</div>
+<div class='error-message'>
+Something very bad just happened.
+</div>
+{% endif %}
+{% if request_path %}
+<div class='error-path'>
+{{ request_path }}
+</div>
+{% endif %}
+<div class='error-home-message'>
+{% if user_error %}
+{{ user_error|safe }}
+{% else %}
+Sorry, this was probably my fault.
+An email has been sent to me regarding this error.
+It will be fixed as soon as possible. -Cj
+{% endif %}
+</div>
+<div class='error-home-link'>
+<a href='/'>Click here to go to the home page</a>,
+</div>
+<div class='error-home-message'>
+or try my
+<a href='/projects'>projects</a>,
+<a href='/blog'>blog</a>,
+<a href='/misc'>misc. stuff</a>,
+or <a href='/apps'>apps</a> page.
+</div>
+</div>
 {% endblock %}

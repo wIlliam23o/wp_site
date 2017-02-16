@@ -1,54 +1,48 @@
+{# Generated using build_template.sh v. 0.0.1 #}
 {% extends 'home/main.html' %}
 {% block title %}- Search{% endblock %}
-
 {% block metainfo %}
-    <meta name='description' content='Search welborn productions blog posts, projects, tools, scripts, and web applications.'>
+<meta name='description' content='Search welborn productions blog posts, projects, tools, scripts, and web applications.'>
 {% endblock %}
-
 {% block extrastylelink %}
-	<link type='text/css' rel='stylesheet' href='/static/css/searcher.min.css' />
-	{{ block.super }}
+<link type='text/css' rel='stylesheet' href='/static/css/searcher.min.css' />
+{{ block.super }}
 {% endblock %}
-
 {% block contentabove %}
-	<div class='search-header'>
-		<div class='search-header-title'>
-			<a href='/search'>
-				<h3 class='header'>Search</h3>
-			</a>
-		</div>
-
-		<div class='search-header-text'>
-				<span class='title'>Search welborn productions</span>
-		</div>
-	</div>
+<div class='search-header'>
+<div class='search-header-title'>
+<a href='/search'>
+<h3 class='header'>Search</h3>
+</a>
+</div>
+<div class='search-header-text'>
+<span class='title'>Search welborn productions</span>
+</div>
+</div>
 {% endblock %}
 {% block content %}
-	<div class='search-form' style='top: 50px;'>
-		<span class='search-label'>Enter something to search for: </span>
-		<form id='search-form'>
-			<!-- Search query (3 char minimum) -->
-			<input type='search' name='q' id='searchbox' class='search-textbox' required=True></input>
-			<!-- Search Button -->
-			<a href='javascript: void(0);' onclick='javascript: do_search();'>
-				<div class='submit-button'>
-					<span>search</span>
-				</div>
-			</a>
-		</form>
-	</div>
+<div class='search-form' style='top: 50px;'>
+<span class='search-label'>Enter something to search for: </span>
+<form id='search-form'>
+<input type='search' name='q' id='searchbox' class='search-textbox' required=True></input>
+<a href='javascript: void(0);' onclick='javascript: do_search();'>
+<div class='submit-button'>
+<span>search</span>
+</div>
+</a>
+</form>
+</div>
 {% endblock %}
-
 {% block bodyend %}
-	<script type='text/javascript'>
-		function do_search() {
-			var searchtext = $('#searchbox').val();
-			if (searchtext) {
-				$('#search-form').submit();
-			}
-		}
-		$(document).ready(function () {
-			wptools.select('#searchbox').focus();
-		});
-	</script>
+<script type='text/javascript'>
+function do_search() {
+var searchtext = $('#searchbox').val();
+if (searchtext) {
+$('#search-form').submit();
+}
+}
+$(document).ready(function () {
+wptools.select('#searchbox').focus();
+});
+</script>
 {% endblock %}

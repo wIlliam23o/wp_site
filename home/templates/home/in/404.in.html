@@ -1,0 +1,50 @@
+{% extends "home/main.html" %}
+{% block title %}- Page not found.{% endblock %}
+
+{% block metainfo %}
+    <meta name="description" content="A ( not found ) error, or ( can't retrieve ) error.">
+{% endblock %}
+
+{% block content %}
+	<div class='error-box'>
+		<div class='error-image-box'>
+			<img class='error-image' src='/static/images/404.png'>
+		</div>
+		{# Show messages from the messages framework #}
+		{% if messages %}
+			    {% for message in messages %}
+			    	{% if message.tags == 'error' %}
+			    		<div class="msg-framework-error">
+			    			{{ message }}
+			    		</div>
+			    	{% endif %}
+			    {% endfor %}
+		{% else %}
+			{# Typical 404 message #}
+			<div class='error-message'>
+				Sorry, I can't find this page:
+			</div>
+
+			<div class='error-path'>
+				{{ request_path }}
+			</div>
+
+		{% endif %}
+		<div class='error-home-message'>
+			{% if user_error %}
+				{{ user_error|safe }}
+			{% endif %}
+
+			<div class='error-home-link'>
+				<a href='/'>Click here to go to the home page</a>,
+			</div>
+			<div class='error-home-message'>
+				or try my
+				<a href='/projects'>projects</a>,
+				<a href='/blog'>blog</a>,
+				<a href='/misc'>misc. stuff</a>,
+				or <a href='/apps'>apps</a> page.
+			</div>
+		</div>
+	</div>
+{% endblock %}

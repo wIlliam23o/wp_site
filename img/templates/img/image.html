@@ -1,16 +1,13 @@
+{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "img/index.html" %}
 {% load wp_tags %}
-
 {% block title %}- Images - {{ image.title }}{% endblock %}
-
 {% block img_header %}
-    {% if image.title %}
-        {{ image.title }}
-    {% else %}
-        Untitled
-    {% endif %}
+{% if image.title %}
+{{ image.title }}
+{% else %}
+Untitled
+{% endif %}
 {% endblock %}
-
 {% block img_image_title %}
-{# Just stomping on the original title content. #}
 {% endblock %}

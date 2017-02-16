@@ -96,6 +96,7 @@ def view_debug(request):
     """ return the django debug info page. """
     context = {
         'djangoversion': get_django_version(),
+        'postgresversion': utilities.get_postgres_version(),
         'sysversion': getattr(settings, 'SYSVERSION', ''),
         'siteversion': getattr(settings, 'SITE_VERSION', ''),
         'siteversionnum': getattr(settings, 'WPVERSION', ''),
@@ -192,6 +193,20 @@ def view_no_javascript(request):
     )
 
 
+def view_raiseerror(request):
+    """ Purposely raise an error while loading this view, for testing.
+        Custom error msgs can be passed as GET arguments.
+    """
+    viewfunc = {
+        403: responses.error403,
+        404: responses.error404,
+        500: responses.error500,
+    }.get(responses.get_request_arg(request, 'errno', default=500))
+    # Pass message args on to the error view.
+    reqargs = responses.get_request_args(request)
+    return viewfunc(request, msgs=reqargs.getlist('msg', None))
+
+
 def view_scriptkids(request):
     """ return my script kiddie view
         for people trying to access wordpress-login pages and stuff like that.
@@ -221,24 +236,17 @@ def view_scriptkids(request):
         'use_ip': use_ip,
         'ip_address': ip_address,
     }
+    # Try banning the ip.
+    if use_ip:
+        if utilities.ban_add(request):
+            log.error('Banned script kid: {}'.format(ip_address))
+        else:
+            log.error('Could not ban script kid: {}'.format(ip_address))
     # return formatted template.
     return responses.clean_response(
         'home/scriptkids.html',
         context=context,
         request=request)
-
-
-def view_raiseerror(request):
-    """ Purposely raise an error while loading this view, for testing.
-        Custom error msgs can be passed as GET arguments.
-    """
-
-    reqargs = responses.get_request_args(request)
-    if reqargs['msgs']:
-        msgs = reqargs['msgs'].split('|')
-    else:
-        msgs = None
-    return responses.error500(request, msgs=msgs)
 
 
 @never_cache

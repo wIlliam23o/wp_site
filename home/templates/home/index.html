@@ -1,199 +1,167 @@
+{# Generated using build_template.sh v. 0.0.1 #}
 {% extends "home/main.html" %}
 {% load blogger_tags %}
 {% load wp_tags %}
 {% load tweet_tags %}
 {% block title %}- Home{% endblock %}
-
 {% block metainfo %}
-    <meta name='description' content='Welborn productions projects, scripts, tools, blog, and web applications.'>
+<meta name='description' content='Welborn productions projects, scripts, tools, blog, and web applications.'>
 {% endblock %}
-
 {% block extrastylelink %}
-	<link rel='stylesheet' href='static/css/home.min.css' type='text/css'/>
-	<link rel='stylesheet' href='static/css/blogger.min.css' type='text/css'/>
-	{{ block.super }}
+<link rel='stylesheet' href='static/css/home.min.css' type='text/css'/>
+<link rel='stylesheet' href='static/css/blogger.min.css' type='text/css'/>
+{{ block.super }}
 {% endblock %}
-
 {% block extrahead %}
-	<!-- no search engines on the test site -->
-	{% if request|is_test_site %}
-		<meta name='robots' content='noindex, nofollow' />
-		<meta name='googlebot' content='noindex, nofollow' />
-	{% endif %}
+{% if request|is_test_site %}
+<meta name='robots' content='noindex, nofollow' />
+<meta name='googlebot' content='noindex, nofollow' />
+{% endif %}
 {% endblock %}
-
 {% block content %}
-	<div class='home-welcome-box'>
-	    <!-- Welcome Box -->
-		<div class='home-welcome-text'>
-			<!-- Test-Site warning -->
-			{% if request|is_test_site %}
-				<!-- test box is initially hidden, JS below will show it. -->
-				<div id='test-site-box'>
-					<span style='color: #B90000; font-size: 1.2em;'>
-						You are viewing the test-site!
-						<br/>
-						I cannot be held responsible for anything bad that may happen.
-					</span>
-					<br/>
-					<span style='color: #0085FF; font-size: 1.2em;'>
-						<a href='https://welbornprod.com'>Click here for the real site.</a>
-					</span>
-				</div>
-			{% endif %}
-
-			<!-- Welcome Message -->
-		    Welcome to the <span class='I'>Welborn Productions</span> site.<br>
-		    This is a place for my projects, code snippets, and whatever else I think
-		    might be useful.
-
-		</div>
-		<div class='home-welcome-text'>
-			Feel free to browse my <a href='/projects'>projects</a>,
-			<a href='/apps'>apps</a>,
-			or <a href='/misc'>miscellaneous stuff</a>,
-			and for the latest information my <a href='/blog'>blog</a> is here.
-		</div>
-		<!-- Extra Welcome Message -->
-		{% if welcome_message %}
-			<div class='home-welcome-extra-msg'>
-				{{ welcome_message|mark_safe }}
-			</div>
-		{% endif %}
-	</div>
-
-	{% if featured_project %}
-	<!-- Main Featured Box: Project -->
-		<div class='featured-main-box'>
-			<div class='title-box'>
-				<h3 class='title'>Featured Project</h3>
-			</div>
-			<!-- Featured Project Box -->
-			<div class='featured-item-container'>
-				<!-- Project Header (Title, Version) -->
-				<div class='featured-header-box'>
-					<a href='/projects/{{ featured_project.alias }}'>
-						<span class='header featured-name'>{{ featured_project.name }}</span>
-					</a>
-					<br/>
-					<span class='featured-version'>version {{ featured_project.version }}</span>
-				</div>
-				<!-- Project Desc -->
-				<div class='featured-desc'>
-					<div class='desc'>
-						{{ featured_project.description }}
-					</div>
-				</div>
-			</div>
-		</div>
-	{% endif %}
-
-	{% if featured_app %}
-		<!-- Main Featured Box: Web App -->
-		<div class='featured-main-box'>
-			<div class='title-box'>
-				<h3 class='title'>Featured Web App</h3>
-			</div>
-
-			<!-- Featured App Box -->
-			<div class='featured-item-container'>
-				<!-- App Header (Title, Version) -->
-				<div class='featured-header-box'>
-					<a href='/apps/{{ featured_app.alias }}'>
-						<span class='header featured-name'>{{ featured_app.name }}</span>
-					</a>
-					<br>
-					<span class='featured-version'>version {{ featured_app.version }}</span>
-				</div>
-				<!-- App Desc. -->
-				<div class='featured-desc'>
-					<div class='desc'>
-						{{ featured_app.description }}
-					</div>
-				</div>
-			</div>
-		</div>
-	{% endif %}
-
-	{% if featured_blog_post %}
-	<!-- Main Featured Box: Blog Post -->
-		<div class='featured-main-box'>
-			<div class='title-box'>
-				<h3 class='title'>Featured Blog Post</h3>
-			</div>
-			<!-- Latest Blog Post Box -->
-			<div class='featured-item-container'>
-				<!-- Blog Post Header (Title, Date) -->
-				<div class='featured-header-box'>
-					<a href='/blog/view/{{ featured_blog_post.slug }}'>
-						<span class='header featured-name'>{{ featured_blog_post.title }}</span>
-					</a>
-					<br/>
-					<span class='featured-version'>{{ featured_blog_post.posted }}</span>
-				</div>
-				<!-- Project Desc -->
-				<div class='featured-desc'>
-					<div class='desc'>
-						{{ featured_blog_post|get_body_short }}
-					</div>
-				</div>
-				<!-- Related Projects -->
-				{% if featured_blog_post|get_projects %}
-					<div class='blog-related-projects-box-index'>
-						<span class='blog-related-projects-label'>related projects:&nbsp;</span>
-						<div class='blog-related-projects-list'>
-							{% for project in featured_blog_post|get_projects %}
-								<div class='blog-related-project'>
-									<a href='/projects/{{ project.alias }}'>
-										<span>{{ project.name }}</span>
-									</a>
-								</div>
-							{% endfor %}
-						</div>
-					</div>
-				{% endif %}
-			</div>
-		</div>
-	{% endif %}
-	<!-- Latest Tweet -->
-	{% if latest_tweet %}
-		<div class='featured-main-box'>
-			<div class='title-box'>
-				<h3 class='title'>
-					Latest Tweet
-				</h3>
-			</div>
-			<div class='featured-item-container'>
-				<div class='tweet-box'>
-					{% if latest_tweet.user.profile_image_url %}
-						<div class='tweet-profile-image'>
-							<img id='tweet-home-profile-img' src='{{ latest_tweet.user.profile_image_url }}'>
-						</div>
-					{% endif %}
-					{% if latest_tweet.user.screen_name %}
-						<div class='tweet-screen-name'>
-							<a href='https://twitter.com/CjWelborn' target='_blank'>
-								{{ latest_tweet.user.screen_name }}
-							</a>
-						</div>
-					{% endif %}
-					{% if latest_tweet.text %}
-						<div class='tweet-text'>
-							{{ latest_tweet|parse_tweet_html }}
-						</div>
-					{% endif %}
-				</div>
-			</div>
-		</div>
-	{% endif %}
+<div class='home-welcome-box'>
+<div class='home-welcome-text'>
+{% if request|is_test_site %}
+<div id='test-site-box'>
+<span style='color: #B90000; font-size: 1.2em;'>
+You are viewing the test-site!
+<br/>
+I cannot be held responsible for anything bad that may happen.
+</span>
+<br/>
+<span style='color: #0085FF; font-size: 1.2em;'>
+<a href='https://welbornprod.com'>Click here for the real site.</a>
+</span>
+</div>
+{% endif %}
+Welcome to the <span class='I'>Welborn Productions</span> site.<br>
+This is a place for my projects, code snippets, and whatever else I think
+might be useful.
+</div>
+<div class='home-welcome-text'>
+Feel free to browse my <a href='/projects'>projects</a>,
+<a href='/apps'>apps</a>,
+or <a href='/misc'>miscellaneous stuff</a>,
+and for the latest information my <a href='/blog'>blog</a> is here.
+</div>
+{% if welcome_message %}
+<div class='home-welcome-extra-msg'>
+{{ welcome_message|mark_safe }}
+</div>
+{% endif %}
+</div>
+{% if featured_project %}
+<div class='featured-main-box'>
+<div class='title-box'>
+<h3 class='title'>Featured Project</h3>
+</div>
+<div class='featured-item-container'>
+<div class='featured-header-box'>
+<a href='/projects/{{ featured_project.alias }}'>
+<span class='header featured-name'>{{ featured_project.name }}</span>
+</a>
+<br/>
+<span class='version'>version {{ featured_project.version }}</span>
+</div>
+<div class='featured-desc'>
+<div class='desc'>
+{{ featured_project.description }}
+</div>
+</div>
+</div>
+</div>
+{% endif %}
+{% if featured_app %}
+<div class='featured-main-box'>
+<div class='title-box'>
+<h3 class='title'>Featured Web App</h3>
+</div>
+<div class='featured-item-container'>
+<div class='featured-header-box'>
+<a href='/apps/{{ featured_app.alias }}'>
+<span class='header featured-name'>{{ featured_app.name }}</span>
+</a>
+<br>
+<span class='version'>version {{ featured_app.version }}</span>
+</div>
+<div class='featured-desc'>
+<div class='desc'>
+{{ featured_app.description }}
+</div>
+</div>
+</div>
+</div>
+{% endif %}
+{% if featured_blog_post %}
+<div class='featured-main-box'>
+<div class='title-box'>
+<h3 class='title'>Featured Blog Post</h3>
+</div>
+<div class='featured-item-container'>
+<div class='featured-header-box'>
+<a href='/blog/view/{{ featured_blog_post.slug }}'>
+<span class='header featured-name'>{{ featured_blog_post.title }}</span>
+</a>
+<br/>
+<span class='version'>{{ featured_blog_post.posted }}</span>
+</div>
+<div class='featured-desc'>
+<div class='desc'>
+{{ featured_blog_post|get_body_short }}
+</div>
+</div>
+{% if featured_blog_post|get_projects %}
+<div class='blog-related-projects-box-index'>
+<span class='blog-related-projects-label'>related projects:&nbsp;</span>
+<div class='blog-related-projects-list'>
+{% for project in featured_blog_post|get_projects %}
+<div class='blog-related-project'>
+<a href='/projects/{{ project.alias }}'>
+<span>{{ project.name }}</span>
+</a>
+</div>
+{% endfor %}
+</div>
+</div>
+{% endif %}
+</div>
+</div>
+{% endif %}
+{% if latest_tweet %}
+<div class='featured-main-box'>
+<div class='title-box'>
+<h3 class='title'>
+Latest Tweet
+</h3>
+</div>
+<div class='featured-item-container'>
+<div class='tweet-box'>
+{% if latest_tweet.user.profile_image_url %}
+<div class='tweet-profile-image'>
+<img id='tweet-home-profile-img' src='{{ latest_tweet.user.profile_image_url }}'>
+</div>
+{% endif %}
+{% if latest_tweet.user.screen_name %}
+<div class='tweet-screen-name'>
+<a href='https://twitter.com/CjWelborn' target='_blank'>
+{{ latest_tweet.user.screen_name }}
+</a>
+</div>
+{% endif %}
+{% if latest_tweet.text %}
+<div class='tweet-text'>
+{{ latest_tweet|parse_tweet_html }}
+</div>
+{% endif %}
+</div>
+</div>
+</div>
+{% endif %}
 {% endblock %}
-
-<!-- Insert before closing BODY -->
 {% block bodyend %}
-	<script type='text/javascript'>
-		{# Show the 'test site' warning #}
-		{% if request|is_test_site %}
-			setTimeout( function () { $('#test-site-box').fadeOut(500); }, 7000);
-		{% endif %}
-	</script>
+<script type='text/javascript'>
+{% if request|is_test_site %}
+setTimeout( function () { $('#test-site-box').fadeOut(500); }, 7000);
+{% endif %}
+</script>
 {% endblock %}

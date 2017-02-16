@@ -5,7 +5,7 @@
 # -Christopher Welborn 06-08-2015
 
 appname="WpBuild"
-appversion="0.2.1"
+appversion="0.3.0"
 apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
@@ -87,7 +87,7 @@ function build_browserify_file {
     browserify_outname="$(get_browserify_outname "$jsfile")"
     browserify_outrelname="${browserify_outname##*..}"
     browserify_outshortname="${browserify_outrelname##*/}"
-    if ! is_modified "$jsfile" "$browserify_outname" && (( ! forced_mode )); then
+    if (( ! forced_mode )) && ! is_modified "$jsfile" "$browserify_outname"; then
         debug_lbl "Skipping non-modified browserify file:" "$relshortname"
         return 0
     fi
@@ -115,6 +115,9 @@ function build_file {
             ;;
         *.scss)
             build_sass_file "$1"
+            ;;
+        *.in.html)
+            build_template_file "$1"
             ;;
         *)
             echo_err "Unknown file type: $1"
@@ -246,6 +249,23 @@ function build_sass_file {
 
     echo_file_lbl "Building SASS file:" "$relshortname" "$outpathshort"
     sass "${sass_args[@]}" "${sass_include_args[@]}" "$sassfile" "$outpath"
+}
+
+function build_templates {
+    # Build all template files using build_template.sh
+    declare -a tmpargs=("--quiet")
+    ((forced_mode)) && tmpargs=("--force")
+    tmpargs+=("--all")
+    "$appdir/build_template.sh" "${tmpargs[@]}"
+}
+
+function build_template_file {
+    # Build a single template file using build_template.sh
+    local tmpfile=$1
+    declare -a tmpargs=("--quiet")
+    ((forced_mode)) && tmpargs=("--force")
+    tmpargs+=("$tmpfile")
+    "$appdir/build_template.sh" "${tmpargs[@]}"
 }
 
 function create_trigger_ref {
@@ -396,7 +416,7 @@ $appname v. $appversion
 
     Usage:
         $appscript -h | -v
-        $appscript [-f] [-b | -j | -s]
+        $appscript [-f] [-b | -j | -s | -t]
 
     Options:
         -b,--browserify  : Build browserify files.
@@ -404,6 +424,7 @@ $appname v. $appversion
         -h,--help        : Show this message and exit.
         -j,--js          : Build javascript files.
         -s,--sass        : Build sass files.
+        -t,--template    : Build django template files.
         -v,--version     : Show version and exit.
 
     When no arguments are passed all recently modified files are built.
@@ -415,11 +436,14 @@ $appname v. $appversion
 do_browserify=0
 do_js=0
 do_sass=0
+do_template=0
+do_all=0
 declare -a infiles
 for arg; do
     case "$arg" in
         "-b"|"--browserify" )
             do_browserify=1
+            do_all=0
             ;;
         "-D"|"--debug" )
             debug_mode=1
@@ -434,9 +458,15 @@ for arg; do
             ;;
         "-j"|"--js" )
             do_js=1
+            do_all=0
             ;;
         "-s"|"--sass" )
             do_sass=1
+            do_all=0
+            ;;
+        "-t"|"--template" )
+            do_template=1
+            do_all=0
             ;;
         "-v"|"--version" )
             echo -e "$appname v. $appversion\n"
@@ -457,18 +487,23 @@ if (( ${#infiles[@]} > 0 )); then
     exit
 fi
 
-if (( ! do_browserify )) && (( ! do_js )) && (( ! do_sass )); then
+if ((do_all)); then
     # Build all files (default behavior).
     build_js
     build_sass
+    build_templates
     exit
 fi
 
 # Selective builds.
-if (( do_js )) || (( do_browserify )); then
+if ((do_js || do_browserify)); then
     build_js
 fi
 
-if (( do_sass )); then
+if ((do_sass)); then
     build_sass
+fi
+
+if ((do_template)); then
+    build_templates
 fi

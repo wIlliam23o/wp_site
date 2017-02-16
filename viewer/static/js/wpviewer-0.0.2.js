@@ -258,8 +258,8 @@ var wpviewer = {
             dataType: 'json',
             status: {
                 404: function () { console.log('PAGE NOT FOUND!'); },
-                500: function () { console.log('A major error occurred.'); }
-            }
+                500: function () { console.log('A major error occurred.'); },
+            },
         })
             .fail(function (xhr, status, error) {
                 var msg = error.message || 'The error was unknown.';
@@ -279,5 +279,5 @@ var wpviewer = {
                 // done loading success or error
                 $('#floater').fadeOut();
             });
-    }
+    },
 };

@@ -1,0 +1,16 @@
+{# Template to provide a 'read more' button     #}
+{# Expects: {                                   #}
+{#              'href': <anchor href for link>, #}
+{#              'nobreak': True/False,          #}
+{#          }                                   #}
+{# A <br> tag is inserted before the box,       #}
+{# ...unless 'nobreak' is given.                #}
+
+{% if href %}
+    {% if not nobreak %}<br>{% endif %}
+    <a href='{{ href }}'>
+        <div class='readmore-box'>
+            more...
+        </div>
+    </a>
+{% endif %}

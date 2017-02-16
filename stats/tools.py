@@ -85,7 +85,9 @@ def get_object_info(obj, displayattr=None, displayformat=None):
             displayattr = (displayattr,)
         if not displayformat:
             # Default format is using spaces as a separator.
-            displayformat = ' '.join(('{{{}}}'.format(a) for a in displayattr))
+            displayformat = ' '.join((
+                '{{{}}}'.format(a) for a in displayattr
+            ))
 
         formatargs = {
             a.replace('.', '-'): get_attrs(obj, a, '') for a in displayattr

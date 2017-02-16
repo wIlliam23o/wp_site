@@ -12,8 +12,17 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 }
 
 body {
+    background-attachment: fixed;
+    background-color: black;
+    background-repeat: no-repeat;
+    color: $greydark;
+    font-family: $fontsnormal;
     font-size: 16px;
-    line-height: 1.2em;
+    font-weight: normal;
+    height: 100%;
+    line-height: $lineheightnormal;
+    margin-bottom: 1px;
+    min-width: 650px; // original: 960px (playing with responsive design)
 }
 
 // Mobile Reset for Doubled Font Headers
@@ -48,18 +57,6 @@ h1, h2, h3, h4, h5, h6, span, p {
 html {
     height: 100%;
     margin-bottom: 1px;
-}
-
-body {
-    background-attachment: fixed;
-    background-color: black;
-    background-repeat: no-repeat;
-    color: $greydark;
-    font-family: $fontsnormal;
-    font-weight: Normal;
-    height: 100%;
-    margin-bottom: 1px;
-    min-width: 650px; // original: 960px (playing with responsive design)
 }
 
 a {
@@ -213,6 +210,11 @@ a .header:hover, a .header.featured-name:hover {
 .indented,
 %indented { margin-left: 15px; }
 
+.inline {
+    display: inline;
+    margin: 0;
+}
+
 .subtext,
 %subtext {
     font-size: $fontsmall;
@@ -313,14 +315,6 @@ a .header:hover, a .header.featured-name:hover {
     @include border-radius(5px);
     margin: 15px 0;
     position: relative;
-}
-
-.contentbox {
-    @include border-radius(5px);
-    @include box-shadow-normal();
-    background-color: $whitedull;
-    margin-bottom: 10px;
-    padding: 10px;
 }
 
 .bottom {
@@ -502,9 +496,6 @@ a.jumpto-nav {
 
 
 // Navigation
-.topbar {
-    margin-top: 0;
-}
 
 .menubar {
     display: inline-block;
@@ -612,26 +603,22 @@ a.jumpto-nav {
 
 // Backgrounds
 .grad-bottom {
-    background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    @include linear-gradient(rgba(49, 49, 49, 0), rgba(49, 49, 49, 1));
     bottom: 0;
     height: 250px;
     left: 0;
     position: absolute;
     right: 0;
-    }
+}
 
 .pattern-gradient {
-    background: -webkit-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    background: -moz-linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
-    background: linear-gradient(top, rgba(49, 49, 49, 0) 0, rgba(49, 49, 49, 1) 100%);
+    @include linear-gradient(rgba(49, 49, 49, 0), rgba(49, 49, 49, 1));
     bottom: 0;
     height: 350px;
     left: 0;
     position: absolute;
     right: 0;
-    }
+}
 
 #bg-pattern {
     height: 350px;
@@ -639,7 +626,7 @@ a.jumpto-nav {
     position: absolute;
     top: 0;
     width: 100%;
-    }
+}
 
 // Background Pattern
 .main-pattern {
@@ -1006,6 +993,7 @@ samp {
     display: block;
     font-size: $fontmedium;
     font-weight: bold;
+    line-height: $lineheightmedium;
 }
 
 .error-box {
@@ -1114,6 +1102,7 @@ samp {
     // Entire debug info is layed out.
     @include border-radius-thick(5px);
     background-color: $whitedull;
+    font-size: $fontmono;
     overflow-x: scroll;
     padding: 5px;
     position: relative;
@@ -1173,7 +1162,7 @@ samp {
 }
 
 // Global Screenshots stuff
-.screenshots_box {
+.screenshots-box {
     margin-top: 10px;
 }
 
@@ -1210,13 +1199,45 @@ samp {
 
 
 // Global version style.
+%version,
 .version {
     color: $greydark;
+    display: block;
     font-family: $fontssmall;
     font-size: $fontsmall;
     font-weight: bold;
-    padding-left: 0%;
+    margin-left: 10px;
+    margin-top: 3px;
+    padding-left: 0;
+}
+
+.version-info-box {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.version-info-label {
+    color: $bluemain;
+    display: flex;
+    flex-basis: 15%;
+    font-size: .9em;
+    padding-right: 5px;
     text-align: right;
+
+    &:after {
+        color: $blackmain;
+        content: ':';
+    }
+}
+
+.version-info-value {
+    @extend %version;
+    display: flex;
+    flex-basis: 85%;
+    margin: 0;
 }
 
 // Video related styles (video titles, video descriptions)

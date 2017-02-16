@@ -1,3 +1,5 @@
+/* global wptools: false */
+
 var phonewords = {
     // Modules and file names are versioned to "break" the cache on updates.
     version: '0.0.2',
@@ -106,5 +108,5 @@ var phonewords = {
             // just add a .
             $floatersmall.text(current + '.');
         }
-    }
+    },
 };

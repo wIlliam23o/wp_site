@@ -1,37 +1,33 @@
-<!-- Template for screenshots box -->
-<!-- Expects: list of relative image paths called 'images' -->
-<!-- 		  single image path for noscript tag called noscript_image -->
+{# Generated using build_template.sh v. 0.0.1 #}
 {% if images %}
-	<div class='screenshots-box'>
-		<div class='wt-rotator'>
-	    	<div class='screen'>
-	       		{% if noscript_image %}
-	       			<noscript>
-	           			<!-- placeholder 1st image when javascript is off -->
-	            		<img src='{{ noscript_image }}'/>
-	        		</noscript>
-	        	{% endif %}
-	    	</div>
-	        <div class='c-panel'>
-	            <div class='thumbnails'>
-	                <ul>
-					<!-- Each Image -->
-					{% for image in images %}
-						<li>
-                            <a href='{{ image }}' title='screen shots'>
-                                <img class='screenshot' src='{{ image }}'/>
-                            </a>
-                            <a href='/dl{{ image }}' target='_blank'> </a>
-                        </li>
-					{% endfor %}
-					</ul>
-	            </div>
-	            <div class='buttons'>
-	                <div class='prev-btn'> </div>
-	                <div class='play-btn'> </div>
-	                <div class='next-btn'> </div>
-	            </div>
-	        </div>
-	    </div>
-	</div>
+<div class='screenshots-box'>
+<div class='wt-rotator'>
+<div class='screen'>
+{% if noscript_image %}
+<noscript>
+<img src='{{ noscript_image }}'/>
+</noscript>
+{% endif %}
+</div>
+<div class='c-panel'>
+<div class='thumbnails'>
+<ul>
+{% for image in images %}
+<li>
+<a href='{{ image }}' title='screen shots'>
+<img class='screenshot' src='{{ image }}'/>
+</a>
+<a href='/dl{{ image }}' target='_blank'> </a>
+</li>
+{% endfor %}
+</ul>
+</div>
+<div class='buttons'>
+<div class='prev-btn'> </div>
+<div class='play-btn'> </div>
+<div class='next-btn'> </div>
+</div>
+</div>
+</div>
+</div>
 {% endif %}

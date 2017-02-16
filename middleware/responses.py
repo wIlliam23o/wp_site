@@ -135,12 +135,7 @@ class WpCleanResponseMiddleware (object):
         """ Runs all of the modifier functions in proper order.
             Sets self.finaltext
         """
-        success = [
-            self.hide_email(),
-            self.remove_comments(),
-            self.remove_whitespace(),
-        ]
-        return all(success)
+        return self.hide_email()
 
     def process_response(self, request, response):
         """ Process the HttpResponse's content. """
@@ -164,18 +159,20 @@ class WpCleanResponseMiddleware (object):
     def remove_comments(self):
         """ splits source_string by newlines and
             removes any line starting with <!-- and ending with -->.
+            DEPRECATED: build_template.sh removes comments before running.
         """
         if not self.lines:
             return False
 
         self.lines = [l for l in self.lines if not self.is_comment(l)]
 
-        # Don't return the lines themselves, but whether or not they're truthy.
+        # Don't return the lines themselves, but whether we still have lines.
         return True if self.lines else False
 
     def remove_whitespace(self):
         """ Removes leading/trailing spaces from self.text.
             Avoids <pre> blocks.
+            DEPRECATED: build_template.sh removes comments before running.
         """
         if not self.lines:
             return False
