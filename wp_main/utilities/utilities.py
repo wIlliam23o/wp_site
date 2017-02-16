@@ -110,37 +110,20 @@ def debug_allowed(request):
         inspired by debug_toolbar's _show_toolbar() method.
     """
 
-    # full test mode, no debug allowed (as if it were the live site.)
+    # full test mode, no debug allowed (like a guest at the live site.)
     if getattr(settings, 'TEST', False):
         return False
 
-    # If this is local development, we allow it.
-    if settings.SERVER_LOCATION.lower() == 'local':
-        return bool(settings.DEBUG)
-
-    # If user is admin/authenticated we're okay.
-    if request.user.is_authenticated() and request.user.is_staff:
-        return bool(settings.DEBUG)
-    else:
-        if 'test' in settings.SITE_VERSION.lower():
-            return False
-
-    # Non-authenticated users:
-    # Get ip for this user
-    remote_addr = get_remote_ip(request)
-    if not remote_addr:
+    # If user is not admin/authenticated it's not allowed.
+    if not (request.user.is_authenticated() and request.user.is_staff):
         return False
 
-    # run address through our quick debug security check
-    # (settings.INTERNAL_IPS and settings.DEBUG)
-    ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
-    # log all invalid ips that try to access debug
-    if settings.DEBUG and (not ip_in_settings):
-        ipwarnmsg = '\n'.join((
-            'Debug not allowed for ip: {}'.format(str(remote_addr)),
-            '             ...DEBUG is: {}'.format(str(settings.DEBUG))))
-        log.warn(ipwarnmsg)
-    return (ip_in_settings and bool(settings.DEBUG))
+    # Debug is disabled permanently for the test site right now.
+    if 'test' in settings.SITE_VERSION.lower():
+        return False
+
+    # Authenticated user and admin.
+    return True
 
 
 def get_absolute_path(relative_file_path):
