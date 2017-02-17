@@ -423,7 +423,7 @@ def highlight_pre_elems(elem):
     for preelem in elem.cssselect('pre'):
         preclass_str = preelem.get('class', '')
         classes = set(preclass_str.split(' '))
-        if (not classes) or ('none' in classes):
+        if (not (preclass_str and classes)) or ('none' in classes):
             # No processing done, just set the class for the wrapping div.
             return elem
         elif classes.intersection(disallow_styles):
