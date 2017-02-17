@@ -1,6 +1,6 @@
 @import 'welbornprod';
-/* ------------------------ blogger.css ------------------------ */
-/* Blog Global Styles */
+// ------------------------ blogger.css ------------------------
+// Blog Global Styles
 .blog-header {
     margin-bottom: 10px;
 }
@@ -24,28 +24,28 @@
 }
 
 .blog-listing {
-    position: relative;
-    padding: 5px;
     @include border-radius(5px);
     @include box-shadow-normal();
-    background: white;
-
+    background: $whitemain;
     margin-bottom: 10px;
+    padding: 5px;
+    position: relative;
 }
 
 //a.blog-listing-title {
 //    font-size: $fontmedium;
 //}
 .blog-listing-title {
+    color: $bluemain;
+    font-family: $fontsnormal;
+    font-size: $fontmedium; // big header for projects/sections
     margin-bottom: 5px;
     text-shadow: $shadowtextsmall;
-    font-family: $fontsnormal;
-    font-size: $fontmedium; /* big header for projects/sections */
-    color: $bluemain;
     text-transform: lowercase;
 }
+
 .blog-listing-title:hover {
-        color: $bluehover;
+    color: $bluehover;
 }
 
 
@@ -54,30 +54,30 @@
 .blog-listing-body {
     @include border-radius-thin(5px);
     margin-top: 40px;
+    padding-bottom: 5px;
     padding-left: 20px;
     padding-right: 20px;
     padding-top: 5px;
-    padding-bottom: 5px;
 }
 
 
 
 
 
-/* Post Styles */
+// Post Styles
 .blog-post {
-    position: relative;
-    background: $whitedull;
     @include border-radius(5px);
     @include box-shadow-normal();
-    padding: 5px;
+    background: $whitedull;
     margin-bottom: 10px;
+    padding: 5px;
+    position: relative;
 }
 
 .blog-post-header-box {
-    margin-top: 0px;
-    position: relative;
     height: 55px;
+    margin-top: 0;
+    position: relative;
 }
 
 .blog-post-title-box {
@@ -85,57 +85,57 @@
 }
 
 .blog-post-title {
+    color: $bluemain;
     font-size: $fontmedium;
     font-weight: bold;
-    color: $bluemain;
 }
 
 .blog-post-date-box {
-    position: absolute;
+    @include border-radius-thin(5px);
     display: inline-block;
     margin-left: 5px;
-    @include border-radius-thin(5px);
     padding: 2px;
+    position: absolute;
     right: 15px;
 }
 
 .blog-post-date {
-    font-size:$fontsmall;
-    font-weight: bold;
     color: $greymain;
+    font-size: $fontsmall;
+    font-weight: bold;
 }
 
 .blog-post-tags {
-    /* for the 'tags:' text */
+    // for the 'tags:' text
     color: $greylight;
-    font-size:$fontsmall;
+    font-size: $fontsmall;
     font-weight: bold;
 }
 
 .blog-post-tags-box {
-    /* main container */
+    // main container
     display: block;
     margin-top: 10px;
-    right: 15px;
     position: absolute;
+    right: 15px;
 }
 
 .blog-post-tag-link-box {
-    /* single link container */
+    // single link container
     @include border-radius-thin(5px);
-    line-height: 1em;
     display: inline-block;
+    line-height: 1em;
     padding-bottom: 2px;
-    padding-top: 1px;
     padding-left: 2px;
     padding-right: 2px;
+    padding-top: 1px;
 
 }
 
 .blog-post-tag-link-text {
-    /* single tag link text */
+    // single tag link text
     color: $greylight;
-    font-size:$fontsmall;
+    font-size: $fontsmall;
 }
 
 .blog-post-body-box {
@@ -148,77 +148,83 @@
     padding-right: 20px;
 }
 
-/* Navigation */
+// Navigation
 .blog-nav-box {
-    display: inline-block;
     @include border-radius-thin(5px);
+    display: inline-block;
     padding: 2px;
 }
 
 .blog-nav-label {
-    text-transform: lowercase;
     color: $bluemain;
-    font-size:$fontsmall;
-    font-weight: bold;
     display: block;
+    font-size: $fontsmall;
+    font-weight: bold;
     padding-bottom: 2px;
     padding-left: 5px;
+    text-transform: lowercase;
 }
 
 .blog-nav-button {
     @include border-radius-thin-color(5px, $borderblue);
+    display: inline-block;
     padding-left: 2px;
     padding-right: 2px;
-    display: inline-block;
 }
 
 .blog-nav-button:hover {
     border-color: $borderhover;
 }
-.blog-nav-button-text, .blog-nav-button-text-disabled {
-    font-size:$fontsmall;
-    font-weight: bold;
+
+.blog-nav-button-text,
+.blog-nav-button-text-disabled {
     color: $borderblue;
+    font-size: $fontsmall;
+    font-weight: bold;
 }
+
 .blog-nav-button-text:hover {
     color: $borderhover;
 }
+
 .blog-nav-button-text-disabled:hover {
     color: $borderhover;
 }
 
-/* Related Projects Stuff */
-.blog-related-projects-box, .blog-related-projects-box-index {
-    /* index and post page share these */
-    display: block;
-    margin-top: 10px;
-    margin-bottom: 10px;
+// Related Projects Stuff
+.blog-related-projects-box,
+.blog-related-projects-box-index {
+    // index and post page share these
     border-top: 1px solid $bordermain;
+    display: block;
+    margin-bottom: 10px;
+    margin-top: 10px;
     padding-top: 5px;
 }
+
 .blog-related-projects-box {
-    /* for actual post only */
+    // for actual post only
     margin-left: 20px;
     margin-right: 20px;
 }
 
 .blog-related-projects-label {
-    font-size:$fontsmall;
+    font-size: $fontsmall;
 }
 
 .blog-related-projects-list {
-    position: relative;
     display: inline;
+    position: relative;
 }
 
 .blog-related-project {
-    display: inline;
     @include border-radius-thin(3px);
+    display: inline;
+    font-size: $fontsmall;
+    margin-right: 2px;
+    padding-bottom: 2px;
     padding-left: 2px;
     padding-right: 2px;
-    padding-bottom: 2px;
-    margin-right: 2px;
-    font-size:$fontsmall;
 }
 
 .blog-edit-button {
