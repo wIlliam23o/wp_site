@@ -28,6 +28,8 @@ from home.models import home_config
 log = logging.getLogger('wp.home')
 
 
+# Disabling cache for main page, because the mobile version keeps caching.
+@never_cache
 def index(request):
     """ Serve up main page (home, index, landing) """
     # Grab config on every request, to keep it fresh without restarting.
