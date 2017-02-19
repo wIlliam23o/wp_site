@@ -22,3 +22,4 @@ node_modules
 Gruntfile.js
 wppaste.conf
 wppaste.json
+filesizes.*
