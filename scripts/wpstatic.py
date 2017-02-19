@@ -40,7 +40,7 @@ debug = debugprinter.debug
 colr_auto_disable()
 
 NAME = 'WpStatic'
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(os.path.abspath(sys.argv[0]))[1]
 SCRIPTDIR = os.path.abspath(sys.path[0])
@@ -49,12 +49,14 @@ USAGESTR = """{versionstr}
     Usage:
         {script} -h | -v
         {script} [-i pat] [-D]
-        {script} (-a | -c | -d [-m]) [-i pat] [-D]
+        {script} (-a [-C] | -d [-m]) [-c] [-i pat] [-D]
 
     Options:
         -a,--analyze          : Analyze static files dirs, don't do anything.
                                 This is the default action with no arguments.
-        -c,--clean            : Analyze and clean the static files dir.
+        -C,--compiled         : Show compiled files that were accounted for.
+        -c,--clean            : Remove stray collected files and duplicate/old
+                                versioned files.
         -d,--dupeversions     : Find duplicate files, with different versions.
         -D,--debug            : Print some debugging info while running.
         -h,--help             : Show this help message.
@@ -66,16 +68,28 @@ USAGESTR = """{versionstr}
     * With no arguments the default action is --analyze.
 """.format(script=SCRIPT, versionstr=VERSIONSTR)
 
-# TODO: Account for transformations: file.scss -> file.min.css
-IGNORECOLLECTED = [
-    # 'admin',
+IGNORE_COLLECTED = set([
     'debug_toolbar',
     'django_extensions',
     'media',
-]
+])
 
-# TODO: Ignore _welbornprod (master sass files), _in-blah.js (browserify).
-IGNOREDPAT = None
+IGNORE_DEV = set([
+    # Ignore sass master files.
+    'sass/_[\w\-\.\d]+\.scss',
+    # Ignore browserify 'in' files.
+    'js/_in[\w\-\.\d]+\.js',
+])
+
+IGNOREPAT = None
+IGNOREPAT_DEV = None
+
+# Patterns for collected files that will never have a dev version.
+NEVERDEV = [
+    '/admin/.+\.[\w]{2,3}',
+    '/admin/.+/LICENSE',
+]
+IGNORE_COLLECTED.update(NEVERDEV)
 
 # Directories where development files live. They should be collected.
 # TODO: Configurable dev dirs (config file based).
@@ -91,37 +105,72 @@ TERMHEIGHT = 25
 
 def main(argd):
     """ Main entry point, expects doctopt arg dict as argd """
-    global DEBUG, IGNORECOLLECTED, IGNOREDPAT, TERMWIDTH, TERMHEIGHT
+    global DEBUG, IGNORE_COLLECTED, IGNOREPAT, IGNOREPAT_DEV
+    global TERMWIDTH, TERMHEIGHT
     DEBUG = argd['--debug']
     if DEBUG:
         debugprinter.enable()
     TERMWIDTH, TERMHEIGHT = get_terminal_size()
 
-    if argd['--clean']:
-        raise NotImplementedError('No --clean yet. It could be harmful.')
-
     ignorepat = try_re(argd['--ignore'])
     if ignorepat is not None:
-        IGNORECOLLECTED.append(argd['--ignore'])
+        IGNORE_COLLECTED.add(argd['--ignore'])
+        IGNORE_DEV.add(argd['--ignore'])
 
-    IGNOREDPAT = re.compile('/?(({}))'.format(
-        ')|('.join(IGNORECOLLECTED)
+    IGNOREPAT = re.compile('/?(({}))'.format(
+        ')|('.join(IGNORE_COLLECTED)
     ))
     print('Gathering collected files...')
     collected = get_collected()
 
+    IGNOREPAT_DEV = re.compile('/?(({}))'.format(
+        ')|('.join(IGNORE_DEV)
+    ))
     print('Gathering development files...')
     development = get_development()
 
     if argd['--dupeversions']:
+        # TODO: Clean duplicate/old versions.
         return do_duplicate_vers(
             collected,
             development,
-            min_files=argd['--min']
+            min_files=argd['--min'],
+            clean=argd['--clean'],
         )
 
     # Analyze the dirs (default action).
-    return do_analyze(collected, development)
+    return do_analyze(
+        collected,
+        development,
+        clean=argd['--clean'],
+        show_compiled=argd['--compiled'],
+    )
+
+
+def clean_files(fileinfos):
+    """ Remove files in an iterable of FileInfos.
+        Returns the number of files removed.
+    """
+    if not fileinfos:
+        return 0
+    filelen = len(fileinfos)
+    plural = 'file' if filelen == 1 else 'files'
+    msg = 'This will remove {} {}!\n\nContinue?'.format(filelen, plural)
+    if not confirm(msg):
+        raise UserCancelled()
+
+    total = 0
+    for fi in fileinfos:
+        try:
+            os.remove(fi.fullpath)
+        except EnvironmentError as ex:
+            print_err('Unable to remove: {}\n  {}'.format(
+                fi.fullpath,
+                ex
+            ))
+        else:
+            total += 1
+    return total
 
 
 def color_num(n):
@@ -129,23 +178,47 @@ def color_num(n):
     return C(n, fore='blue', style='bright')
 
 
-def do_analyze(collected, development):
+def confirm(s, default=False):
+    """ Confirm a yes/no question. """
+
+    defaultstr = 'Y/n' if default else 'y/N'
+    s = '{} ({}): '.format(s, defaultstr)
+    answer = input(s).strip().lower()
+    if not answer:
+        return default
+    return answer[0].startswith('y')
+
+
+def do_analyze(collected, development, clean=False, show_compiled=False):
     """ Analyze the difference between collected/development files. """
     colnodev = collected.difference(development)
     devnocol = development.difference(collected)
+    trimmed = trim_compiled_files(
+        collected,
+        colnodev,
+        development,
+        devnocol
+    )
     if not (colnodev or devnocol):
         print('\nThere are no stray files in collected/development.')
+        if trimmed:
+            print('Compiled files ignored: {}'.format(len(trimmed)))
+            if show_compiled:
+                print(
+                    '\n'.join(
+                        fi.to_str(color=True, indent='    ')
+                        for fi in sorted(trimmed, key=lambda f: f.relpath)
+                    )
+                )
         return 0
 
     errs = 0
     if colnodev:
         print('\nCollected files not in development:')
         print(
-            '    {}'.format(
-                '\n    '.join(
-                    str(fi)
-                    for fi in sorted(colnodev, key=lambda s: s.relpath)
-                )
+            '\n'.join(
+                fi.to_str(color=True, indent='    ')
+                for fi in sorted(colnodev, key=lambda f: f.relpath)
             )
         )
         colnodevlen = len(colnodev)
@@ -153,18 +226,22 @@ def do_analyze(collected, development):
         print('\nFound {} {} not in development.'.format(
             colnodevlen,
             fileplural))
-        errs += 1
+        if clean:
+            removedcnt = clean_files(colnodev)
+            print('Files removed: {} of {}'.format(removedcnt, colnodevlen))
+            # Error status is number of files that weren't cleaned.
+            errs += len(colnodev) - removedcnt
+        else:
+            errs += 1
     else:
         print('\nAll collected files are from development.')
 
     if devnocol:
         print('\nDevelopment files not in collected:')
         print(
-            '    {}'.format(
-                '\n    '.join(
-                    str(fi)
-                    for fi in sorted(devnocol, key=lambda s: s.relpath)
-                )
+            '\n    '.join(
+                fi.to_str(color=True, indent='    ')
+                for fi in sorted(devnocol, key=lambda s: s.relpath)
             )
         )
         devnocollen = len(devnocol)
@@ -182,8 +259,11 @@ def do_analyze(collected, development):
     return errs
 
 
-def do_duplicate_vers(collected, development, min_files=False):
+def do_duplicate_vers(collected, development, min_files=False, clean=False):
     """ Search for duplicate versioned files. """
+    if clean:
+        raise NotImplementedError('No --clean yet. It could be harmful.')
+
     dupes = print_duplicate_vers(
         find_duplicate_vers(collected),
         label='collected',
@@ -224,7 +304,7 @@ def get_collected():
             fullpath = os.path.join(root, f)
             relativeparts = fullpath.split('static')[1:]
             relpath = 'static'.join(relativeparts)
-            if IGNOREDPAT.match(relpath):
+            if IGNOREPAT.match(relpath):
                 continue
             collected.add(FileInfo(fullpath, relpath))
     return collected
@@ -248,7 +328,9 @@ def get_development(devdirs=None):
         for f in files:
             fullpath = os.path.join(root, f)
             relativepath = get_rel_path_at(fullpath, devdirs)
-            if IGNOREDPAT.match(relativepath):
+            if (
+                    IGNOREPAT.match(relativepath) or
+                    IGNOREPAT_DEV.match(relativepath)):
                 continue
             development.add(FileInfo(fullpath, relativepath))
     return development
@@ -302,6 +384,13 @@ def get_versioned_files(fileinfos):
     return versinfo
 
 
+def print_err(*args, **kwargs):
+    """ A wrapper for print() that uses stderr by default. """
+    if kwargs.get('file', None) is None:
+        kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+
+
 def print_duplicate_vers(verinfo, label=None, min_files=False):
     """ Prints any duplicate versioned files found with find_duplicate_vers.
         Returns the number of duplicated basenames found.
@@ -345,6 +434,26 @@ def str_contains(s, strlst):
     return any(x in s for x in strlst)
 
 
+def trim_compiled_files(collected, colnodev, development, devnocol):
+    """ Remove FileInfos from the difference sets if they have a compiled
+        version found in the other.
+        Returns a set of all removed FileInfos.
+    """
+    col_rel_paths = set((fi.relpath for fi in collected))
+    trimmed = set()
+    for devfi in list(devnocol):
+        if not devfi.relcompiledpath:
+            continue
+        # Remove from devnocol if the compiled version is in collected.
+        if devfi.relcompiledpath in col_rel_paths:
+            trimmed.add(devfi)
+            devnocol.remove(devfi)
+            if devfi in colnodev:
+                colnodev.remove(devfi)
+
+    return trimmed
+
+
 def try_re(s):
     """ Try compiling a regex pattern. Exit with a message on failure.
         If None is passed, no error is given and None is returned.
@@ -371,12 +480,13 @@ class FileInfo(object):
         'relpath',
         'shortbase',
         'version',
+        'relcompiledpath',
     )
 
     def __init__(self, fullpath, relpath):
         self.fullpath = fullpath
         self.fulldir, self.filename = os.path.split(self.fullpath)
-        self.relpath = relpath
+        self.relpath = relpath.strip()
         self.reldir = os.path.split(relpath)[0]
         self.basename, self.extension = os.path.splitext(self.filename)
         verpat = re.compile('\d+\.\d+\.\d+')
@@ -392,24 +502,104 @@ class FileInfo(object):
                 self.shortbase = self.basename
             else:
                 self.shortbase = basematch.groups()[0].rstrip('-')
+        self.relcompiledpath = self.get_compiled_path()
 
     def __eq__(self, other):
         return self.relpath == getattr(other, 'relpath', object())
 
     def __str__(self):
-        return '{rel:<45} - {full}'.format(
-            rel=self.relpath,
-            full=(
-                self.fullpath
-                .replace(settings.BASE_DIR, '..')
-                .replace(settings.STATIC_ROOT, '../static')
-            ),
-        )
+        return self.to_str(color=False)
 
     def __hash__(self):
         """ In a set, FileInfo's are equal if their relative path is equal.
         """
         return hash(self.relpath)
+
+    def get_compiled_path(self):
+        """ Get the relative file path for this file, after compilation.
+            If this file does not get compiled, then '' is returned.
+        """
+        compiled_exts = {
+            '.js': {'ext': '.min.js', 'origdir': 'js', 'cmpdir': 'js'},
+            '.scss': {'ext': '.min.css', 'origdir': 'sass', 'cmpdir': 'css'},
+        }
+        otherext = os.path.splitext(self.basename)[-1]
+        if otherext == '.min':
+            return None
+        compiled_info = compiled_exts.get(self.extension, None)
+        if compiled_info is None:
+            # Not a compiled file.
+            return ''
+        reldir = os.path.split(self.relpath)[0]
+        compiledname = '{}{}'.format(self.basename, compiled_info['ext'])
+        if compiled_info['origdir'] != compiled_info['cmpdir']:
+            # Directory changes too.
+            origindex = reldir.rfind(compiled_info['origdir'])
+            cmplen = len(compiled_info['cmpdir'])
+
+            reldir = ''.join((
+                reldir[:origindex],
+                compiled_info['cmpdir'],
+                reldir[origindex + cmplen + 1:]
+            ))
+        return os.path.join(reldir, compiledname)
+
+    def to_str(self, color=False, indent=None):
+        """ Return a stringified version of this FileInfo, with optional
+            color.
+        """
+        relpath = self.relpath.ljust(45)
+        if color:
+            relpath = C(relpath, 'cyan')
+        fullpath = (
+            self.fullpath
+            .replace(settings.BASE_DIR, '')
+            .replace(settings.STATIC_ROOT, '/static')
+        )
+        if color:
+            fullpath = C(fullpath, 'blue')
+
+        compiled = self.relcompiledpath or ''
+        if compiled:
+            if color:
+                compiled = C('  ').join(
+                    C('⮕ ', 'lightgreen'),
+                    C(compiled, 'green'),
+                )
+            else:
+                compiled = '⮕ {}'.format(compiled)
+
+        return '{indent}{rel} - ..{full}{compiled}'.format(
+            indent=str(indent) if indent else '',
+            rel=relpath,
+            full=fullpath,
+            compiled='' if not compiled else (
+                '\n{}{}{}'.format(
+                    str(indent) if indent else '',
+                    ' ' * 46,
+                    compiled,
+                )
+            )
+        )
+
+
+class InvalidArg(ValueError):
+    """ Raised when the user has used an invalid argument. """
+    def __init__(self, msg=None):
+        self.msg = msg or ''
+
+    def __str__(self):
+        if self.msg:
+            return 'Invalid argument, {}'.format(self.msg)
+        return 'Invalid argument!'
+
+
+class UserCancelled(KeyboardInterrupt):
+    def __init__(self, msg=None):
+        self.msg = msg or 'User Cancelled'
+
+    def __str__(self):
+        return str(self.msg)
 
 
 class VersionedFileInfo(object):
@@ -438,7 +628,7 @@ class VersionedFileInfo(object):
         filenamewidth = (TERMWIDTH + len(verindent)) - self.basename_rjust
         verstrlines = []
         for fi in self.versions:
-            pathfmt = C(fi.relpath.strip(), 'cyan')
+            pathfmt = C(fi.relpath, 'cyan')
             minfile = self.get_min_file(fi.relpath)
             if minfile:
                 pathfmt = C(' ').join(
@@ -488,5 +678,15 @@ class VersionedFileInfo(object):
 
 
 if __name__ == '__main__':
-    mainret = main(docopt(USAGESTR, version=VERSIONSTR, script=SCRIPT))
+    try:
+        mainret = main(docopt(USAGESTR, version=VERSIONSTR, script=SCRIPT))
+    except InvalidArg as ex:
+        print_err(ex)
+        mainret = 1
+    except (EOFError, KeyboardInterrupt):
+        print_err('\nUser cancelled.\n')
+        mainret = 2
+    except BrokenPipeError:
+        print_err('\nBroken pipe, input/output was interrupted.\n')
+        mainret = 3
     sys.exit(mainret)
