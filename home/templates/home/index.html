@@ -167,7 +167,7 @@
 				<div class='tweet-box'>
 					{% if latest_tweet.user.profile_image_url %}
 						<div class='tweet-profile-image'>
-							<img id='tweet-home-profile-img' src='{{ latest_tweet.user.profile_image_url }}'>
+							<img id='tweet-home-profile-img' src='{{ latest_tweet.user.profile_image_url_https }}'>
 						</div>
 					{% endif %}
 					{% if latest_tweet.user.screen_name %}
