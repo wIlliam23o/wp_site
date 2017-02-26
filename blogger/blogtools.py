@@ -61,7 +61,7 @@ def fix_post_list(blog_posts, **kwargs):
     max_posts = kwargs.get('max_posts', DEFAULT_MAXPOSTS)
 
     # trim posts length
-    if ((max_posts > 0) and (len(blog_posts) > max_posts)):
+    if 0 < max_posts < len(blog_posts):
         blog_posts = blog_posts[:max_posts]
     return blog_posts
 

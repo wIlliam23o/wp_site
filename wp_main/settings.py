@@ -238,13 +238,13 @@ class SuppressDeprecated(Filter):
     """ Ignores RemovedInDjango19Warning messages. """
     def filter(self, record):
         WARNINGS_TO_SUPPRESS = [
-            'RemovedInDjango19Warning'
+            'RemovedInDjango19Warning',
         ]
         # Return false to suppress message.
-        return not any([
+        return not any((
             warn in record.getMessage()
             for warn in WARNINGS_TO_SUPPRESS
-        ])
+        ))
 
 
 # See http://docs.djangoproject.com/en/dev/topics/logging for

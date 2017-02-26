@@ -1,11 +1,9 @@
 import logging
 
 from django.views.decorators.cache import cache_page
-# Project Info
+
 from projects.models import wp_project
 
-# Local tools
-from wp_main.utilities import utilities
 from wp_main.utilities import responses
 
 
@@ -25,7 +23,7 @@ def view_index(request):
     # get all projects if project is not disabled
     all_projects = wp_project.objects.filter(disabled=False).order_by('name')
 
-    if len(all_projects) == 0:
+    if not all_projects:
         alertmsg = 'Sorry, no projects yet.'
         response = responses.alert_message(request, alert_msg=alertmsg)
     else:
