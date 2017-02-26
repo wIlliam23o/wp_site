@@ -1,2 +1,8 @@
+# This is not owned by me. It will be removed in the future anyway.
 django_user_agents/*
+
+# Ignore all sub-projects/scripts. Some of them are old, and will never be updated.
 **/static/files/*
+
+# Ignore tests for now.
+**/test_*.py
