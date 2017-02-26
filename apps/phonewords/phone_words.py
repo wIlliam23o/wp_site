@@ -15,7 +15,7 @@ from multiprocessing import Pool
 from docopt import docopt
 
 NAME = 'PhoneWords'
-VERSION = '1.0.5'
+VERSION = '1.1.0'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(sys.argv[0])[1]
 
@@ -120,12 +120,14 @@ def main(argd):
         procarg = argd['--procs'] if argd['--procs'] else 2
         try:
             procs = int(procarg)
-        except:
+        except (TypeError, ValueError):
             print('\nInvalid number for --procs!: {}'.format(procarg))
             return 1
-        ret = test_getphonewords(strip_number(argd['<phonenumber>']),
-                                 wordfile=wordfile,
-                                 processes=procs)
+        ret = test_getphonewords(
+            strip_number(argd['<phonenumber>']),
+            wordfile=wordfile,
+            processes=procs,
+        )
     elif argd['--wordtest']:
         # Test word list for word.
         ret = test_wordlist(wordfile, argd['--wordtest'])
@@ -134,9 +136,11 @@ def main(argd):
         ret = do_word(argd['<word>'], parseable=argd['--parseable'])
     else:
         # Number lookup.
-        ret = do_number(strip_number(argd['<phonenumber>']),
-                        wordfile=wordfile,
-                        parseable=argd['--parseable'])
+        ret = do_number(
+            strip_number(argd['<phonenumber>']),
+            wordfile=wordfile,
+            parseable=argd['--parseable'],
+        )
     return ret
 
 
@@ -159,7 +163,7 @@ def check_number(s):
     # Check for letters
     try:
         intval = int(s)  # noqa
-    except:
+    except (TypeError, ValueError):
         # Invalid number.
         return False
     # Return true if the length matches.
@@ -177,6 +181,7 @@ def do_number(number, wordfile=None, parseable=False):
     if not parseable:
         print('Looking up combos for: {}'.format(numberfmt))
 
+    results, total = None, 0
     try:
         results, total = get_phonewords(number, wordfile=wordfile)
     except KeyboardInterrupt:
@@ -185,12 +190,6 @@ def do_number(number, wordfile=None, parseable=False):
     except Exception as ex:
         if not parseable:
             print('\nError during search:\n{}'.format(ex))
-        try:
-            if results:
-                pass
-        except:
-            results = None
-            total = 0
 
     if parseable:
         # Machine readable output.
@@ -470,8 +469,6 @@ def generate_map(filename=None, wordfile=None, start=2000000, statuscount=10):
         # Python 3.
         ranger = range
 
-    # Flag for when the user cancels (we may be able to pickle half-results)
-    cancelled = False
     # Do all possible phone numbers.
     if start < 0:
         start = 0
@@ -496,7 +493,6 @@ def generate_map(filename=None, wordfile=None, start=2000000, statuscount=10):
         except KeyboardInterrupt:
             print('\nUser cancelled.')
             print('Wasted time: {}'.format(statustime()))
-            cancelled = True
             break
         except Exception as ex:
             print('\nError during find_words!: {}'.format(ex))
@@ -744,10 +740,11 @@ def test_getphonewords(number, wordfile=None, processes=2):
 
 def test_knownwords():
     """ Just a test to see if known number/word matches are found. """
-    expected = {'3643663': 'dogfood',
-                '2284264': 'cathang',
-                '3665224': 'foolbag',
-                }
+    expected = {
+        '3643663': 'dogfood',
+        '2284264': 'cathang',
+        '3665224': 'foolbag',
+    }
     # Build result dict, will be changed during tests.
     results = {k: [] for k in expected.keys()}
     failures = 0
@@ -758,11 +755,13 @@ def test_knownwords():
         expectedword = expected[testnum]
         output = get_lettercombos(testnum)
         if expectedword in output:
-            results[testnum].append('Number Pass: '
-                                    '{} (found)'.format(expectedword))
+            results[testnum].append(
+                'Number Pass: {} (found)'.format(expectedword)
+            )
         else:
-            results[testnum].append('Number Failed for: '
-                                    '{} (not found)'.format(expectedword))
+            results[testnum].append(
+                'Number Failed for: {} (not found)'.format(expectedword)
+            )
             failures += 1
 
     # Do word test.
@@ -772,23 +771,28 @@ def test_knownwords():
         if strip_number(output) == testnum:
             results[testnum].append('Word Pass: {}'.format(output))
         else:
-            results[testnum].append('Word Failed for: '
-                                    '{} (got {})'.format(testnum, output))
+            results[testnum].append(
+                'Word Failed for: {} (got {})'.format(testnum, output)
+            )
             failures += 1
 
     # Print results...
     for resultnum, resultlst in results.items():
         spacing = (' ' * len(resultnum))
         print('{}:'.format(resultnum))
-        print('{}{}'.format(spacing,
-                            '\n{}'.format(spacing).join(resultlst)))
+        print('{}{}'.format(
+            spacing,
+            '\n{}'.format(spacing).join(resultlst),
+        ))
 
     totalstr = str(total)
     failuresstr = str(failures)
     successstr = str(total - failures)
-    print('Ran {} tests. {} passed, {} failed.'.format(totalstr,
-                                                       successstr,
-                                                       failuresstr))
+    print('Ran {} tests. {} passed, {} failed.'.format(
+        totalstr,
+        successstr,
+        failuresstr,
+    ))
     return 1 if failures else 0
 
 
@@ -809,7 +813,6 @@ def test_wordlist(filename, word):
                 foundwords.append(word)
     except Exception as ex:
         print('\nError checking word list:\n{}'.format(ex))
-        pass
     print('\nFound {} words in {}'.format(str(len(foundwords)), filename))
     return 0 if foundwords else 1
 
@@ -873,10 +876,14 @@ class ColorCodes(object):
         """
         if text is None:
             text = ''
-        return '{codes}{txt}'.format(codes=self.color_code(style=style,
-                                                           back=back,
-                                                           fore=fore),
-                                     txt=text)
+        return '{codes}{txt}'.format(
+            codes=self.color_code(
+                style=style,
+                back=back,
+                fore=fore
+            ),
+            txt=text,
+        )
 
     def colorword(self, text=None, fore=None, back=None, style=None):
         """ Same as colorize, but adds a style->reset_all after it. """
@@ -886,11 +893,14 @@ class ColorCodes(object):
             text=text,
             style=style,
             back=back,
-            fore=fore)
+            fore=fore,
+        )
         s = '{colrtxt}{reset}'.format(
             colrtxt=colorized,
-            reset=self.color_code(style='reset_all'))
+            reset=self.color_code(style='reset_all'),
+        )
         return s
+
 
 # Save a global instance of the ColorCodes, and the main function.
 colors = ColorCodes()
