@@ -14,7 +14,7 @@
 
 var wppaste = {
     // Modules and file names are versioned to "break" the cache on updates.
-    version: '0.1.0',
+    version: '0.1.1',
 
     // Paste settings to use when none are saved.
     default_paste_settings : {
@@ -148,7 +148,7 @@ var wppaste = {
                 'paste_theme': themename,
             }
         */
-        var cookiejson = $.cookie('pastesettings');
+        var cookiejson = Cookies.get('pastesettings');
         var pastesettings = cookiejson ? JSON.parse(cookiejson) : {};
         return wppaste.update_object(
             wppaste.default_paste_settings,
@@ -361,7 +361,7 @@ var wppaste = {
             pastesettings.paste_author = '';
         }
         var cookieinfo = JSON.stringify(pastesettings);
-        return $.cookie(
+        return Cookies.set(
             'pastesettings',
             cookieinfo,
             {expires: 365, path: '/'}

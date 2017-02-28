@@ -15,6 +15,7 @@
     Debug button/box toggle added.
         shows/hides the django debug info box (for use with test site)
 
+    Version 0.3.1 (Using js.cookie instead of jquery.cookie (deprecated).)
     Version 0.3.0 (Removing some lints.)
     Version: 0.2.0 (added safe native css selection, for future development)
              TODO: Use browserify to split some of this up, and rebundle it.
@@ -206,7 +207,7 @@ var Base64 = {
 
 var wptools = {
     // Modules and file names are versioned to "break" the cache on updates.
-    version: '0.3.0',
+    version: '0.3.1',
     // Default settings for code snippets, and when cookies are unavailable
     // for the Paste app.
     default_ace_langname: 'Python',
@@ -362,7 +363,11 @@ var wptools = {
             Django needs it's csrftoken cookie for all requests.
         */
         // This cookie is needed for Django.
-        var csrftoken = $.cookie('csrftoken');
+        var csrftoken = Cookies.get('csrftoken');
+        if (!csrftoken) {
+            console.error('CSRF cookie was not set!');
+            return;
+        }
         // Build a dict of options and return it.
         var settings = {
             crossDomain: false,
