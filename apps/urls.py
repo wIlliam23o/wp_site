@@ -1,10 +1,9 @@
 """ Urls for welbornprod sub-apps. """
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 from apps import views as appviews
 
 # Patterns for apps.
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # apps index
     url(
         r'^$',
@@ -21,4 +20,4 @@ urlpatterns = patterns(
     url(
         r'^[Tt]ime[Kk]eep(er)?/?',
         include('apps.timekeeper.urls'))
-)
+]

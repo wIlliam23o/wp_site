@@ -5,7 +5,7 @@
 # -Christopher Welborn 06-08-2015
 
 appname="WpBuild"
-appversion="0.3.0"
+appversion="0.4.0"
 apppath="$(readlink -f "${BASH_SOURCE[0]}")"
 appscript="${apppath##*/}"
 appdir="${apppath%/*}"
@@ -115,9 +115,6 @@ function build_file {
             ;;
         *.scss)
             build_sass_file "$1"
-            ;;
-        *.in.html)
-            build_template_file "$1"
             ;;
         *)
             echo_err "Unknown file type: $1"
@@ -254,7 +251,8 @@ function build_sass_file {
 function build_templates {
     # Build all template files using build_template.sh
     declare -a tmpargs=("--quiet")
-    ((forced_mode)) && tmpargs=("--force")
+    ((forced_mode)) && tmpargs+=("--force")
+    ((debug_mode)) && tmpargs+=("--dryrun" "--debug")
     tmpargs+=("--all")
     "$appdir/build_template.sh" "${tmpargs[@]}"
 }
@@ -263,7 +261,8 @@ function build_template_file {
     # Build a single template file using build_template.sh
     local tmpfile=$1
     declare -a tmpargs=("--quiet")
-    ((forced_mode)) && tmpargs=("--force")
+    ((forced_mode)) && tmpargs+=("--force")
+    ((debug_mode)) && tmpargs+=("--dryrun" "--debug")
     tmpargs+=("$tmpfile")
     "$appdir/build_template.sh" "${tmpargs[@]}"
 }
@@ -416,7 +415,7 @@ $appname v. $appversion
 
     Usage:
         $appscript -h | -v
-        $appscript [-f] [-b | -j | -s | -t]
+        $appscript [-f] [-b | -j | -s]
 
     Options:
         -b,--browserify  : Build browserify files.
@@ -424,7 +423,6 @@ $appname v. $appversion
         -h,--help        : Show this message and exit.
         -j,--js          : Build javascript files.
         -s,--sass        : Build sass files.
-        -t,--template    : Build django template files.
         -v,--version     : Show version and exit.
 
     When no arguments are passed all recently modified files are built.
@@ -436,8 +434,8 @@ $appname v. $appversion
 do_browserify=0
 do_js=0
 do_sass=0
-do_template=0
-do_all=0
+# Default behavior is to build all, unless otherwise specified.
+do_all=1
 declare -a infiles
 for arg; do
     case "$arg" in
@@ -464,10 +462,6 @@ for arg; do
             do_sass=1
             do_all=0
             ;;
-        "-t"|"--template" )
-            do_template=1
-            do_all=0
-            ;;
         "-v"|"--version" )
             echo -e "$appname v. $appversion\n"
             exit 0
@@ -477,33 +471,35 @@ for arg; do
             exit 1
             ;;
         *)
+            do_all=0
             infiles=("${infiles[@]}" "$arg")
     esac
 done
 
 # Build individual files.
 if (( ${#infiles[@]} > 0 )); then
+    debug "Building individual files: ${#infiles[@]}"
     build_files "${infiles[@]}"
     exit
 fi
 
 if ((do_all)); then
     # Build all files (default behavior).
+    debug "Building ALL files."
     build_js
     build_sass
-    build_templates
     exit
 fi
 
 # Selective builds.
 if ((do_js || do_browserify)); then
+    debug "Building browserify/js."
     build_js
 fi
 
 if ((do_sass)); then
+    debug "Building SASS."
     build_sass
 fi
 
-if ((do_template)); then
-    build_templates
-fi
+exit

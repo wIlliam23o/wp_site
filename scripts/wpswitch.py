@@ -150,13 +150,7 @@ class Switch(object):
 
     def __str__(self):
         """ string representation of switch """
-
         return str(self.name)
-
-    def __unicode__(self):
-        """ unicode representation of switch """
-
-        return self.__str__()
 
     def __repr__(self):
         """ representation of switch """

@@ -35,6 +35,8 @@ class _NoValue(object):
 
     def __str__(self):
         return 'NoValue'
+
+
 NoValue = _NoValue()
 
 
@@ -46,10 +48,16 @@ def append_path(*args):
         ex:
             mypath = append_path('/view' , project.source_dir)
     """
-    spath = '/'.join(args)
-    while '//' in spath:
-        spath = spath.replace('//', '/')
-    return spath
+    # First are only has the end / stripped.
+    # Strip all / from arg index 1 and up.
+    s = '/'.join(
+        p.rstrip('/') if i == 0 else p.strip('/')
+        for i, p in enumerate(args)
+    )
+    # This is for paths like: //test/this.
+    while '//' in s:
+        s = s.replace('//', '/')
+    return s
 
 
 def ban_add(request):
@@ -102,78 +110,79 @@ def debug_allowed(request):
         inspired by debug_toolbar's _show_toolbar() method.
     """
 
-    # full test mode, no debug allowed (as if it were the live site.)
+    # full test mode, no debug allowed (like a guest at the live site.)
     if getattr(settings, 'TEST', False):
         return False
 
-    # If this is local development, we allow it.
-    if settings.SERVER_LOCATION.lower() == 'local':
-        return bool(settings.DEBUG)
-
-    # If user is admin/authenticated we're okay.
-    if request.user.is_authenticated() and request.user.is_staff:
-        return bool(settings.DEBUG)
-    else:
-        if 'test' in settings.SITE_VERSION.lower():
-            return False
-
-    # Non-authenticated users:
-    # Get ip for this user
-    remote_addr = get_remote_ip(request)
-    if not remote_addr:
+    # If user is not admin/authenticated it's not allowed.
+    if not (request.user.is_authenticated() and request.user.is_staff):
         return False
 
-    # run address through our quick debug security check
-    # (settings.INTERNAL_IPS and settings.DEBUG)
-    ip_in_settings = (remote_addr in settings.INTERNAL_IPS)
-    # log all invalid ips that try to access debug
-    if settings.DEBUG and (not ip_in_settings):
-        ipwarnmsg = '\n'.join((
-            'Debug not allowed for ip: {}'.format(str(remote_addr)),
-            '             ...DEBUG is: {}'.format(str(settings.DEBUG))))
-        log.warn(ipwarnmsg)
-    return (ip_in_settings and bool(settings.DEBUG))
+    # Debug is disabled permanently for the test site right now.
+    if 'test' in settings.SITE_VERSION.lower():
+        return False
+
+    # Authenticated user and admin.
+    return True
 
 
 def get_absolute_path(relative_file_path):
-    """ return absolute path for file, if any
-        returns empty string on failure.
-        restricted to public STATIC_PARENT dir.
-        if no_dir is True, then only file paths are returned.
+    """ Return absolute path for file, if any.
+        Returns empty string on failure.
+        Restricted to public STATIC_PARENT dir.
     """
+    if relative_file_path.startswith(settings.STATIC_ROOT):
+        # Happens when an already-absolute-path is sent in.
+        log.debug('Already absolute: {!r}'.format(relative_file_path))
+        relative_file_path = relative_file_path.replace(
+            settings.STATIC_ROOT,
+            ''
+        )
+        log.debug('...starting from: {!r}'.format(relative_file_path))
 
-    if relative_file_path == "":
-        return ""
-
-    # Guard against ../ tricks.
-    if '..' in relative_file_path:
+    relative_path = relative_file_path.lstrip('/')
+    if not relative_path:
+        return ''
+    elif '..' in relative_path:
+        # Guard against ../ tricks.
+        log.error('Trying to traverse directories: {}'.format(
+            relative_file_path
+        ))
         return ''
 
-    sabsolutepath = ''
-    # Remove '/static' from the file path.
-    if relative_file_path.startswith(('static', '/static')):
-        staticparts = relative_file_path.split('/')
-        if len(staticparts) > 1:
-            staticstart = 2 if relative_file_path.startswith('/') else 1
-            staticpath = '/'.join(staticparts[staticstart:])
-            # use new relative path (without /static)
-            relative_file_path = staticpath
-        else:
-            # Don't allow plain '/static'
-            return ''
+    # Remove 'static', '/static', and '/static/' from the file path,
+    # ensuring there is no trailing /.
+    relative_path = (
+        relative_path.lstrip('/').lstrip('static').lstrip('/').rstrip('/')
+    )
+    if not relative_path:
+        # Don't allow plain '/static'.
+        log.error('Plain /static given, not allowed: {}'.format(
+            relative_file_path
+        ))
+        return ''
 
+    absolutepath = ''
     # Walk real static dir.
     for root, dirs, files in os.walk(settings.STATIC_ROOT):  # noqa
-        spossible = os.path.join(root, relative_file_path)
-        if os.path.exists(spossible):
-            sabsolutepath = spossible
+        fullpath = os.path.join(root, relative_path)
+        if os.path.exists(fullpath):
+            absolutepath = fullpath
             break
-
-    # Guard against files outside of the public /static dir.
-    if not sabsolutepath.startswith(settings.STATIC_ROOT):
+    else:
+        # No absolute path found.
         return ''
 
-    return sabsolutepath
+    # Guard against files outside of the public /static dir.
+    if not absolutepath.startswith(settings.STATIC_ROOT):
+        log.error(
+            'Trying to get absolute path for non-static file: {}'.format(
+                relative_file_path
+            )
+        )
+        return ''
+
+    return absolutepath
 
 
 def get_apps(
@@ -286,6 +295,8 @@ def get_browser_name(request):
 
     # get user agent
     user_agent = get_user_agent(request)
+    if not user_agent:
+        return None
     return user_agent.browser.family.lower()
 
 
@@ -293,6 +304,8 @@ def get_browser_style(request):
     """ return browser-specific css file (or None if not needed) """
 
     browser_name = get_browser_name(request)
+    if not browser_name:
+        return None
     # get browser css to use...
     if browser_name.startswith('ie'):
         return '/static/css/main-ie.min.css'
@@ -334,7 +347,7 @@ def get_filename(file_path):
     if not file_path:
         return file_path
     try:
-        sfilename = os.path.split(file_path)[1]
+        sfilename = os.path.split(file_path)[-1]
     except Exception:
         log.error('Error in os.path.split({})'.format(file_path))
         sfilename = file_path
@@ -374,6 +387,7 @@ def get_object_safe(objects, **kwargs):
         return None
     return obj
 
+
 # Alias for function.
 get_object = get_object_safe
 
@@ -407,6 +421,9 @@ def get_relative_path(spath):
 
     if not spath:
         return ''
+    if '..' in spath:
+        # No ups allowed.
+        return ''
 
     prepend = ''
     if settings.STATIC_ROOT in spath:
@@ -414,8 +431,8 @@ def get_relative_path(spath):
         prepend = '/static'
     elif settings.BASE_PARENT in spath:
         spath = spath.replace(settings.BASE_PARENT, '')
-    if spath and (not spath.startswith('/')):
-        spath = '/{}'.format(spath)
+    # Ensure a leading /.
+    spath = '/{}'.format(spath.lstrip('/'))
 
     if prepend:
         spath = '{}{}'.format(prepend, spath)
@@ -586,6 +603,55 @@ def get_time_since(date, limit=None):
     return '{:.0f} {}, {:.0f} {}'.format(days, daystr, hours, hourstr)
 
 
+def get_user_agent_dict(request):
+    """ Return a user_agents.parser.UserAgent in dict form,
+        whether get_user_agent() fails or not.
+        Returns a dict of {attr: value} on success.
+        Returns {} on error.
+    """
+    ua = get_user_agent(request)
+    if not ua:
+        return {}
+    # Attributes and default values.
+    ua_attrs = {
+        'browser': {'family': '', 'version': '', 'version_string': ''},
+        'device': {'family': '', 'brand': '', 'model': ''},
+        'is_bot': False,
+        'is_mobile': False,
+        'is_pc': False,
+        'is_tablet': False,
+        'is_touch_capable': False,
+        'os': {'family': '', 'version': '', 'version_string': ''},
+        'ua_string': '',
+    }
+
+    def parse_family_val(v):
+        """ Turn UserAgents tuple-based values into dicts. """
+        attrs = ('family', 'brand', 'model', 'version', 'version_string')
+        if not any(hasattr(v, a) for a in attrs):
+            return v
+        values = set()
+        keyvalstrs = []
+        notset = object()
+        for a in attrs:
+            val = getattr(v, a, notset)
+            if (val is notset) or (not val):
+                # Ignore missing attrs/values.
+                continue
+            if val in values:
+                # Don't add duplicate values (family: nexus, model: nexus)
+                continue
+            values.add(val)
+            keyvalstrs.append('{}: {}'.format(a.title(), val))
+
+        return ', '.join(keyvalstrs)
+
+    return {
+        k: parse_family_val(getattr(ua, k, ua_attrs[k]))
+        for k in ua_attrs
+    }
+
+
 def is_file_or_dir(spath):
     """ returns true if path is a file, or is a dir. """
 
@@ -601,8 +667,12 @@ def is_mobile(request):
         # happens on template errors,
         # which hopefully never make it to production.
         return False
+    ua = get_user_agent(request)
+    if not ua:
+        # Happens when request has no META, dua returns ''.
+        return False
 
-    return (not get_user_agent(request).is_pc)
+    return (not ua.is_pc)
 
 
 def is_textmode(request):
@@ -631,11 +701,13 @@ def logtraceback(log=None, message=None):
     """
     typ, val, tb = sys.exc_info()
     tbinfo = traceback.extract_tb(tb)
-    linefmt = ('Error in:\n'
-               '  {fname}, {funcname}(),\n'
-               '    line {num}: {txt}\n'
-               '    {typ}:\n'
-               '      {msg}')
+    linefmt = '\n'.join((
+        'Error in:',
+        '  {fname}, {funcname}(),',
+        '    line {num}: {txt}',
+        '    {typ}:',
+        '      {msg}',
+    ))
     if log is None:
         log = print
 
@@ -654,7 +726,10 @@ def logtraceback(log=None, message=None):
         if message is None:
             logmsg = linefmt.format(**fmtargs)
         else:
-            logmsg = '{}\n{}'.format(message, linefmt.format(**fmtargs))
+            logmsg = '{}\n{}'.format(
+                message,
+                linefmt.format(**fmtargs)
+            )
         log(logmsg)
         logged.append(logmsg)
     return logged

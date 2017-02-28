@@ -12,47 +12,51 @@ class file_tracker(models.Model):
     filename = models.CharField(
         max_length=1024,
         blank=False,
-        help_text="Filename for the file being tracked. (Absolute path)")
+        help_text='Filename for the file being tracked. (Absolute path)')
     shortname = models.CharField(
         max_length=512,
-        default="",
+        default='',
         blank=True,
-        help_text="Short filename for the file (without directory)")
+        help_text='Short filename for the file (without directory)')
     location = models.CharField(
         max_length=1024,
-        default="",
+        default='',
         blank=True,
         help_text=(
-            "Convenience attribute, the directory where the file is located."))
+            'Convenience attribute, the directory where the file is located.'
+        )
+    )
     notes = models.TextField(
-        default="",
+        default='',
         blank=True,
-        help_text="Any notes about the file.")
+        help_text='Any notes about the file.')
     # File is related to projects or blog posts?
     project = models.ManyToManyField(
         'projects.wp_project',
         blank=True,
-        help_text="One or more wp_projects related to the file.")
+        help_text='One or more wp_projects related to the file.')
     post = models.ManyToManyField(
         'blogger.wp_blog',
         blank=True,
-        help_text="One or more wp_blogs related to the file.")
+        help_text='One or more wp_blogs related to the file.')
 
     # General counts
     download_count = models.BigIntegerField(
         default=0,
-        help_text="How many times the file has been downloaded. (Integer)")
+        help_text='How many times the file has been downloaded. (Integer)')
     view_count = models.BigIntegerField(
         default=0,
-        help_text=(
-            "How many times the file has been viewed with 'viewer'. "
-            "(Integer)"))
+        help_text=' '.join((
+            'How many times the file has been viewed with \'viewer\'.',
+            '(Integer)'
+        ))
+    )
 
     def __str__(self):
         return self.get_shortname(dosave=False)
 
-    def __unicode__(self):
-        return self.get_shortname(dosave=False)
+    def __repr__(self):
+        return self.__str__()
 
     def get_shortname(self, updateinfo=False, dosave=False):
         """ retrieves shortname if it is set,
@@ -100,5 +104,5 @@ class file_tracker(models.Model):
     # Meta info for the admin site
     class Meta:
         ordering = ['shortname']
-        verbose_name = "File Tracker"
-        verbose_name_plural = "File Trackers"
+        verbose_name = 'File Tracker'
+        verbose_name_plural = 'File Trackers'

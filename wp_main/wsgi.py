@@ -22,12 +22,12 @@ for staticdir in staticdirs:
     if os.path.isdir(staticdir) and (staticdir not in sys.path):
         sys.path.append(staticdir)
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wp_main.settings")
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wp_main.settings')
 
 # This application object is used by any WSGI server configured to use this
 # file. This includes Django's development server, if the WSGI_APPLICATION
 # setting points here.
-from django.core.wsgi import get_wsgi_application
+from django.core.wsgi import get_wsgi_application  # noqa
 application = get_wsgi_application()
 
 # TODO: Apply WSGI middleware here.

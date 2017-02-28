@@ -9,8 +9,8 @@
    Gets faster times with stackless vs. pypy.
    ...if you can 'import stackless' then it should work.
 
-   Before this script blew up several experiments were done to find the fastest
-   method for walking a directory and "grepping" it's files.
+   Before this script blew up several experiments were done to find the
+   fastest method for walking a directory and "grepping" it's files.
    Out of normal os.walk, threading, multiprocessing, pypy, and stackless
    channels, the stackless channels were always faster when searching large
    directory trees. After the basic method was decided, many features were
@@ -47,7 +47,7 @@ from docopt import docopt
 
 # App Info
 NAME = 'SearchPat'
-VERSION = '3.6.2'
+VERSION = '3.7.2'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 # Save actual script filename, and use it as the name in help.
 SCRIPTFILE = os.path.split(sys.argv[0])[1]
@@ -55,11 +55,13 @@ SCRIPTNAME = os.path.splitext(SCRIPTFILE)[0]
 
 # Default file types to search if --all and --types are not used.
 DEFAULT_FILE_EXTS = {
-    # Extension: (name, grouping1, grouping2, etc.)
-    '.bash': ('bash', 'shell'),
+    # {Extension: (groupname, grouping1, grouping2, etc.)}
+    '.bash': ('bash', 'shell', 'sh'),
     '.c': ('c',),
+    '.coffee': ('coffee', 'coffeescript', 'coffee script'),
     '.cs': ('c#', 'csharp'),
     '.cpp': ('c++', 'cpp'),
+    '.cson': ('cson', 'config'),
     '.css': ('css', 'web'),
     '.h': ('c headers', 'c', 'headers', 'cheaders'),
     '.hpp': ('c++ headers', 'c++', 'cpp', 'headers', 'c++headers'),
@@ -67,7 +69,7 @@ DEFAULT_FILE_EXTS = {
     '.html': ('html', 'web'),
     '.hs': ('haskell',),
     '.js': ('javascript', 'js', 'web'),
-    '.json': ('json', 'web'),
+    '.json': ('json', 'web', 'config'),
     '.log': ('log', 'text'),
     '.md': ('markdown', 'text'),
     '.pl': ('perl', 'pl'),
@@ -75,10 +77,11 @@ DEFAULT_FILE_EXTS = {
     '.rs': ('rust',),
     '.rst': ('rest', 'text'),
     '.scss': ('sass', 'web', 'css'),
-    '.sh': ('shell', 'bash', 'ksh', 'zsh'),
+    '.sh': ('sh', 'shell', 'bash', 'ksh', 'zsh'),
     '.tex': ('tex', 'text'),
-    '.txt': ('text',),
-    '.xml': ('xml', 'web'),
+    '.toml': ('toml', 'config'),
+    '.txt': ('text', 'config'),
+    '.xml': ('xml', 'web', 'config'),
 }
 DEFAULT_FILETYPES = tuple(sorted(DEFAULT_FILE_EXTS.keys()))
 # File types grouped by name, with a list of file extensions.
@@ -92,6 +95,7 @@ for ext, names in DEFAULT_FILE_EXTS.items():
             FILETYPES[n].add(ext)
 
 
+# Workers --------------------------------------------------------------------
 def filler_run(startpath, filetypes, channel_=None, excludepat=None):
     """ task to start finding files,
         sends to searcher_run tasklet via channel.
@@ -120,31 +124,45 @@ def searcher_run(searchpat, kw_args, **kwargs):  # noqa
             matches     : MatchesCollection to add to.
             colors      : ColorCodes() class to use (or None for no color)
             channel_    : Channel for task communications.
+            linenums    : Whether to print line numbers.
+                          Default: True
+            linestrip   :  Whether to strip leading whitespace for matching
+                           lines.
+                           Default: True
             names_only  : Search file names only, not content.
             no_lines    : Print file names only, not matching lines.
             shell_code  : Bash code to run against each file name, when
                           no_lines is used. {} will be replaced with the file
-                          name. If no {} is present, it will be appended to the
-                          code. {f}, or {fname} may also be used to replace
-                          more than one occurrence.
+                          name. If no {} is present, it will be appended to
+                          the code. {f}, or {fname} may also be used to
+                          replace more than one occurrence.
             urlmode     : Print names as urls.
     """
     matches = kwargs.get('matches', None)
     colors = kwargs.get('colors', None)
     channel_ = kwargs.get('channel_', None)
+    linenums = kwargs.get('linenums', True)
+    linestrip = kwargs.get('linestrip', True)
     names_only = kwargs.get('names_only', False)
     no_lines = kwargs.get('no_lines', False)
     shell_code = kwargs.get('shell_code', None)
     urlmode = kwargs.get('urlmode', False)
     if shell_code:
         if '{}' in shell_code:
+            # Replace {} with file name in shell code.
             codefmt = shell_code.format
         elif '{f}' in shell_code:
-            codefmt = lambda fname: shell_code.format(f=fname)
+            def codefmt(fname):
+                """ Replace {f} with file name in shell code. """
+                return shell_code.format(f=fname)
         elif '{fname}' in shell_code:
-            codefmt = lambda fname: shell_code.format(fname=fname)
+            def codefmt(fname):
+                """ Replace {fname} with file name in shell code. """
+                return shell_code.format(fname=fname)
         else:
-            codefmt = lambda fname: ' '.join((shell_code, fname))
+            def codefmt(fname):
+                """ Append file name to shell code. """
+                return ' '.join((shell_code, fname))
     else:
         codefmt = None
 
@@ -152,14 +170,21 @@ def searcher_run(searchpat, kw_args, **kwargs):  # noqa
     if names_only:
         # Searching file names only, not content.
         get_matches = get_filename_matches
-        format_name = lambda s: '\n{}'.format(namefmt(s))
+
+        def format_name(s):
+            """ Format filename for name-only searching/listing. """
+            return '\n{}'.format(namefmt(s))
     else:
         # Searching content, possibly only listing names.
         get_matches = get_file_matches
         if no_lines:
-            format_name = lambda s: '\n{}'.format(namefmt(s))
+            def format_name(s):
+                """ Format filename for content-search, name-only listing. """
+                return '\n{}'.format(namefmt(s))
         else:
-            format_name = lambda s: '\n{}:'.format(namefmt(s))
+            def format_name(s):
+                """ Format filename for content search/listing. """
+                return '\n{}:'.format(namefmt(s))
 
     # Loop until channel_ receives '!FINISHED',
     # expects data to be a valid filename.
@@ -200,7 +225,10 @@ def searcher_run(searchpat, kw_args, **kwargs):  # noqa
                 # Lines are highlighted in get_file_matches()
                 # if colors was passed.
                 for matchline in filematch.iterlines():
-                    print(matchline)
+                    print(matchline.formatted(
+                        linenums=linenums,
+                        linestrip=linestrip,
+                    ))
 
 
 def targets_run(targets, filetypes=None, channel_=None, excludepat=None):  # noqa
@@ -209,7 +237,7 @@ def targets_run(targets, filetypes=None, channel_=None, excludepat=None):  # noq
 
         Arguments:
             startpath  : Starting dir to get file names from.
-            filetypes  : File types to search.
+            filetypes  : List of file types (extensions) to search.
             channel_   : Stackless channel for communication.
             excludepat : Compiled regex, file names that match are excluded.
     """
@@ -261,6 +289,7 @@ def targets_run(targets, filetypes=None, channel_=None, excludepat=None):  # noq
     channel_.send('!FINISHED')
 
 
+# Functions ------------------------------------------------------------------
 def addfile_maxlen(
         info,
         text=None, lineno=None, length=None,
@@ -303,7 +332,8 @@ def file_ext(fname):
     return extension if extension else filename
 
 
-def format_block(text, prepend=None, lstrip=False, blocksize=60, spaces=False):
+def format_block(
+        text, prepend=None, lstrip=False, blocksize=60, spaces=False):
     """ Format a long string into a block of newline seperated text. """
     lines = make_block(text, blocksize=blocksize, spaces=spaces)
     if prepend is None:
@@ -324,7 +354,7 @@ def format_nomin(s):
     return r'\.min\.(\w+)$'
 
 
-def get_context_after(lst, index, count, strip_=str.strip):
+def get_context_after(lst, index, count, _transfunc=str.rstrip):
     """ Grabs a slice from a list (for match context)
         Arguments:
             lst    : The list to slice.
@@ -333,13 +363,13 @@ def get_context_after(lst, index, count, strip_=str.strip):
         Returns a tuple of (index + 1, line)
     """
     return (
-        (index + n + 2, strip_(t))
+        (index + n + 2, _transfunc(t))
         for n, t in enumerate(
             lst[index + 1: index + count + 1])
         if t)
 
 
-def get_context_before(lst, index, count, strip_=str.strip):
+def get_context_before(lst, index, count, _transfunc=str.rstrip):
     """ Grabs a slice from a list, returns their indexes and lines.
         Arguments:
             lst    : The list to slice.
@@ -348,7 +378,7 @@ def get_context_before(lst, index, count, strip_=str.strip):
         Returns a tuple of (index + 1, line)
     """
     return (
-        (index - (count - n) + 1, strip_(t))
+        (index - (count - n) + 1, _transfunc(t))
         for n, t in enumerate(
             lst[index - count: index])
         if t)
@@ -370,6 +400,11 @@ def get_dir_matches(startpath, searchpat, **kwargs):
             debug         : Print more info (UnicodeDecodeError right now)
             colors        : ColorCodes() class to highlight with,
                             or None for no highlighting.
+            linenums      : Whether to show line numbers for matching lines.
+                            Default: True
+            linestrip     :  Whether to strip leading whitespace for matching
+                             lines.
+                             Default: True
             names_only    : Match against file names only, not content.
             wholepath     : Match against whole path instead of just the
                             filename. (When names_only is used.)
@@ -387,6 +422,8 @@ def get_dir_matches(startpath, searchpat, **kwargs):
     colors = kwargs.get('colors', None)
     names_only = kwargs.get('names_only', False)
     excludepat = kwargs.get('excludepat', None)
+    linenums = kwargs.get('linenums', True)
+    linestrip = kwargs.get('linestrip', True)
     no_lines = kwargs.get('no_lines', False)
     shell_code = kwargs.get('shell_code', None)
     urlmode = kwargs.get('urlmode', False)
@@ -409,6 +446,8 @@ def get_dir_matches(startpath, searchpat, **kwargs):
         matches=matches,
         colors=colors,
         channel_=channel,
+        linenums=linenums,
+        linestrip=linestrip,
         names_only=names_only,
         no_lines=no_lines,
         shell_code=shell_code,
@@ -438,7 +477,7 @@ def get_file_matches(filename, searchpat, **kwargs):  # noqa
                              (Default: False)
             reversenames  :  If True, only return file names that don't have
                              and matching lines.
-                             (Defailt: False)
+                             (Default: False)
             maxlength     :  Exclude lines longer than maxlength.
                              (Default: 0 (no max))
             print_status  :  If True, print file name before searching.
@@ -477,13 +516,21 @@ def get_file_matches(filename, searchpat, **kwargs):  # noqa
     # Normal match or reverse?
     match_func = is_none if reverse else is_not_none
     # Whether or not to grab context lines.
-    get_before = get_context_before if before > 0 else lambda x, y, z: None
-    get_after = get_context_after if after > 0 else lambda x, y, z: None
+    if before > 0:
+        get_before = get_context_before
+    else:
+        def get_before(lst, index, cnt, _transfunc=None):
+            return None
+    if after > 0:
+        get_after = get_context_after
+    else:
+        def get_after(lst, index, cnt, _transfunc=None):
+            return None
 
     # preload strip()
-    strip_ = str.strip
+    linetransfunc = str.rstrip
     # preload replace()
-    replace_ = str.replace
+    strreplace = str.replace
     # preload searchpat.search()
     search_func = searchpat.search
     # predetermine color use
@@ -526,21 +573,31 @@ def get_file_matches(filename, searchpat, **kwargs):  # noqa
         if not match_func(re_match):
             continue
 
-        line = strip_(line)
+        line = linetransfunc(line)
         # Save the raw line length for maxlength.
         rawlen = len(line)
         # Highlight match text if ColorCodes() class was passed.
         if not reverse:
             highlight_txt = re_match.group()
             if usecolors and highlight_txt:
-                line = replace_(
+                line = strreplace(
                     line,
                     highlight_txt,
                     colors.word(highlight_txt, **highlight_args))
 
         # Grab context before/after this match (if before/after was set).
-        beforelines = get_before(filelines, lineindex, before)
-        afterlines = get_after(filelines, lineindex, after)
+        beforelines = get_before(
+            filelines,
+            lineindex,
+            before,
+            _transfunc=linetransfunc
+        )
+        afterlines = get_after(
+            filelines,
+            lineindex,
+            after,
+            _transfunc=linetransfunc
+        )
 
         # Instead of using add_func/addfile_normal just do this:!
         # The function call takes longer than the if statement!
@@ -578,8 +635,8 @@ def get_filename_matches(filepath, searchpat, **kwargs):
             searchpat  : Compiled regex pattern to match with.
 
         Keyword arguments:
-            reverse    : File names that don't match the pattern are a 'match'.
-            wholepath  : Match against whole path instead of just the filename.
+            reverse    : Filenames that don't match the pattern are a 'match'.
+            wholepath  : Match against whole path instead of the filename.
                          Default: False
             excludepat : Compiled regex pattern, if a filename matches,
                          it is excluded.
@@ -607,7 +664,7 @@ def get_filename_matches(filepath, searchpat, **kwargs):
 
 def get_filetype_str(filetypes, colors=None):
     """ Get a human-friendly file type string for status.
-        like: '.c, .py' or 'None'
+        like: '.c, .py' or 'All Files'
         Arguments:
             filetypes  : List of file extensions.
             colors     : ColorCodes() class to use or None for no colors.
@@ -636,10 +693,15 @@ def get_multi_matches(targets, searchpat, **kwargs):
             print_status  : If True, print file name before searching.
                             (Default: False)
             filetypes     : List of file extensions to search
-                            (Default: None (all files))
+                            (Default: [] (all files))
             debug         : Print more info (UnicodeDecodeError right now)
             colors        : ColorCodes() class to highlight with,
                             or None for no highlighting.
+            linenums      : Whether to show line numbers for matching lines.
+                            Default: True
+            linestrip     :  Whether to strip leading whitespace for matching
+                             lines.
+                             Default: True
             names_only    : Match against file names only, not content.
             wholepath     : Match against whole path instead of just the
                             filename. (When names_only is used.)
@@ -652,9 +714,11 @@ def get_multi_matches(targets, searchpat, **kwargs):
             urlmode       : Print names as urls.
     """
 
-    filetypes = kwargs.get('filetypes', None)
+    filetypes = kwargs.get('filetypes', [])
     debug = kwargs.get('debug', False)
     colors = kwargs.get('colors', None)
+    linenums = kwargs.get('linenums', True)
+    linestrip = kwargs.get('linestrip', True)
     names_only = kwargs.get('names_only', False)
     excludepat = kwargs.get('excludepat', None)
     no_lines = kwargs.get('no_lines', False)
@@ -680,6 +744,8 @@ def get_multi_matches(targets, searchpat, **kwargs):
         matches=matches,
         colors=colors,
         channel_=channel,
+        linenums=linenums,
+        linestrip=linestrip,
         names_only=names_only,
         no_lines=no_lines,
         shell_code=shell_code,
@@ -734,8 +800,10 @@ def is_binary(filename):
     path = readlink(filename)
     try:
         mimetype = magic.from_file(path, mime=True)
-    except OSError:
-        # This may return false negatives. Assumes errors are binary files.
+    except (IOError, OSError):
+        # IOError happened once when a file was deleted during execution.
+        # OSError could be a permissions error.
+        # This may return false positives. Assumes errors are binary files.
         return True
     return not mimetype.startswith(b'text')
 
@@ -766,7 +834,7 @@ def iter_walkdir(startpath=None, filetypes=None, excludepat=None):  # noqa
         Arguments:
             startpath  : Dir to walk from.
             filetypes  : List of file extensions to include.
-                         (Default: None (all files))
+                         (Default: [] (all files))
             excludepat : Compiled regex pattern, if a file name matches,
                          it is excluded.
 
@@ -825,47 +893,62 @@ def make_block(text, blocksize=60, spaces=False):
     return lines
 
 
-def parse_filetypes(s):
+def noop(*args, **kwargs):
+    """ A no-op function that does nothing (for disabling other funcs.) """
+    return None
+
+
+def parse_filetypes(filetypes):
     """ Parse a comma separated string of types.
         This will return a list of file extensions.
         If a named file type is used from FILETYPES (python, web, etc.),
         then it's list of extensions is added to the list.
-        Returns a list on success, or None on failure.
+        Returns a list of extensions to search, or an empty list if all files
+        should be searched.
     """
     types = []
-    for typeext in s.split(','):
-        typeext = typeext.strip()
-        typeextlower = typeext.lower()
-        if typeextlower in FILETYPES:
-            # This is a named type (like python, web, etc.)
-            types.extend(FILETYPES[typeextlower])
-        else:
-            # Normal file extension.
-            types.append(typeext)
-    return types if types else None
+    for typeext in parse_filetypes_names(filetypes):
+        if typeext in ('all', '*'):
+            return []
+        # Use expanded types if available, otherwise use the given type.
+        types.extend(FILETYPES.get(typeext, [typeext]))
+
+    return sorted(set(types))
 
 
 def parse_filetypes_arg(argd):
-    """ Parses comma-separated list of targets
+    """ Parses comma-separated list of targets, returns a list of
+        file extensions to use.
         Arguments:
             argd  : The arg dict returned by docopt.
     """
-    noquotes = lambda s: s.replace('"', '').replace("'", '').replace(' ', '')
-
     if argd['--all']:
-        # None triggers a search of all files.
-        return None
+        # Empty list triggers a search of all files.
+        return []
 
     if argd['--types']:
-        filetypes = noquotes(argd['--types'])
-        # Doing '--types all' will trigger a search of all files.
-        if filetypes.lower() == 'all':
-            return None
         # User specified, names or file extesions.
-        return parse_filetypes(filetypes)
+        return parse_filetypes(argd['--types'])
 
     # None specified, Default file types.
     return DEFAULT_FILETYPES
+
+
+def parse_filetypes_names(filetypes):
+    """ Parse the user's filetypes arg string into a usable list of names
+        or extensions.
+        Returns a list of unexpanded filetypes.
+    """
+    filetypestr = strip_chars(filetypes, '\'" ')
+    filetypes = []
+    for s in filetypestr.split(','):
+        stripped = s.strip()
+        if not stripped:
+            continue
+        lowered = s.lower()
+        # Explicit extensions should not be .lower()'d.
+        filetypes.append(s if s.startswith('.') else lowered)
+    return sorted(set(filetypes))
 
 
 def print_cancelled(colors=None):
@@ -918,17 +1001,33 @@ def parse_int(i, msg=None, minimum=None, maximum=None):
     return val
 
 
-def parse_regex(s, msg=None, ignorecase=False):
-    """ Parse a string into a regex pattern. Errors are fatal.
+def parse_regex(
+        s, msg=None, ignorecase=False,
+        use_textpat=False, force_textpat=False):
+    """ Parse a string into a SRE_Pattern, possibly a TextPattern if
+        `use_textpat` is set, definitely a TextPattern if `force_textpat` is
+        set.
+        Errors are fatal.
         Arguments:
-            s           : String to compile.
-            msg         : Message to print on failure.
-                          Can be a format string with one '{}' occurrence.
-                          Default: 'Invalid regex pattern: {}'
-            ignorecase  : Use re.IGNORECASE to compile the pattern.
+            s             : String to compile.
+            msg           : Message to print on failure.
+                            Can be a format string with one '{}' occurrence.
+                            Default: 'Invalid regex pattern: {}'
+            ignorecase    : Use re.IGNORECASE to compile the pattern.
+            use_textpat   : Return a TextPattern() if no special regex
+                            patterns are used.
+            force_textpat : Always return a TextPattern().
     """
+    if force_textpat:
+        # Forced textpat.
+        return TextPattern(s, ignorecase=ignorecase)
     try:
-        pat = re.compile(s, flags=(re.IGNORECASE if ignorecase else 0))
+        if use_textpat:
+            # Optional textpat/regex.
+            pat = TextPattern.from_pattern(s, ignorecase=ignorecase)
+        else:
+            # Forced regex.
+            pat = re.compile(s, flags=re.IGNORECASE if ignorecase else 0)
     except re.error as ex:
         msg = msg or 'Invalid regex pattern: {}'
         if '{}' in msg:
@@ -939,22 +1038,26 @@ def parse_regex(s, msg=None, ignorecase=False):
 
 def print_header(lbl, val):
     """ Print a status message (about search terms/settings) """
-    print('{:>15} {}'.format(lbl, val))
+    print('{:>18} {}'.format(lbl, val))
 
 
 def print_matches(
         matches,
-        printlines=True, colors=None, names_only=False, urlmode=False):  # noqa
+        printlines=True, colors=None, linenums=True, linestrip=True,
+        names_only=False, urlmode=False):
     """ Print results, from list of single MatchInfo, or MatchCollection list.
         Arguments:
-            matches     : A MatchCollection() (dir search)
-                          or list of 1 MatchInfo() object (single-file search).
-
-        Keyword Arguments:
+            matches     : A MatchCollection() (dir search) or list of 1
+                          MatchInfo() object (single-file search)
             printlines  :  If True, print every line that matched.
                            (Default: True)
             colors      :  A ColorCodes() class to highlight with,
                            or None for no highlighting.
+            linenums    :  Whether to show line numbers for matching lines.
+                           Default: True
+            linestrip   :  Whether to strip leading whitespace for matching
+                           lines.
+                           Default: True
             names_only  :  Print file names only.
             urlmode     :  Print file names as urls.
     """
@@ -1022,7 +1125,7 @@ def print_matches(
                 filecnt=filecount,
                 filelbl=plural_file))
             for match in matches.iterlines():
-                print(match)
+                print(match.formatted(linenums=linenums, linestrip=linestrip))
         if hasattr(matches, 'searched'):
             searchedcount = matches.searched
         else:
@@ -1055,7 +1158,7 @@ def print_matches(
                 'file://' if urlmode else '',
                 singlefilename))
         for lineinf in matches[0].iterlines():
-            print(lineinf)
+            print(lineinf.formatted(linenums=linenums, linestrip=linestrip))
         searchedcount = 1
 
     # Print footer with match-count, file-count
@@ -1075,13 +1178,28 @@ def print_matches(
     return 0
 
 
+def print_typeexts(typesarg):
+    """ Explain one or more types and their extensions. """
+    names = parse_filetypes_names(typesarg)
+    print('{}:'.format(', '.join(names) or 'No type specified'))
+    exts = parse_filetypes(typesarg)
+    if not exts:
+        exts = ['All files will be searched.']
+    print('    {}'.format('\n    '.join(exts)))
+    return 0
+
+
 def print_typenames():
     """ Print all the known file types (named types), formatted. """
     print('File type names:')
     for typename in sorted(FILETYPES):
         exts = sorted(FILETYPES[typename])
         print('    {:>15}: {}'.format(typename, ', '.join(exts)))
-    print('\nYou can use these names with -t as shortcuts.\n')
+    print('\n'.join((
+        '\nYou can use these names with -t as shortcuts.',
+        'You can also use them with -T to show which extensions are used.',
+    )))
+    return 0
 
 
 def print_warning(*args, **kwargs):
@@ -1137,7 +1255,18 @@ def readlink(path, parentdir=None):
     return readlink(fullpath, parentdir=basedir)
 
 
-# MAIN ENTRY POINT FUNCTION
+def strip_chars(s, chars):
+    """ Strip each character in `chars` from `s`. """
+    if not s:
+        return s
+    out = s
+    for c in chars:
+        out = out.replace(c, '')
+    return out
+
+
+# MAIN ENTRY POINT FUNCTION --------------------------------------------------
+
 def main(argd):  # noqa
     """ main entry-point for searchpat, expects argument dict from docopt. """
     # Get ColorCodes() if applicable (automatic --nocolors if piping output)
@@ -1147,18 +1276,24 @@ def main(argd):  # noqa
         colors = ColorCodes()
 
     if argd['--typenames']:
+        if argd['FILETYPES']:
+            # Explain one or more file types (and their extensions).
+            return print_typeexts(argd['FILETYPES'])
         # Just list the common file types and exit.
         print_typenames()
         return 0
 
     # Get target file/dir/multiple files (defaults to cwd)
-    target = argd['<target>'] or [os.getcwd()]
+    target = argd['TARGET'] or [os.getcwd()]
 
     # Get search term, compile it as a regex pattern
     searchpat = parse_regex(
-        argd['<searchterm>'],
+        argd['PATTERN'],
         'Invalid search term: {}',
-        ignorecase=argd['--ignorecase'])
+        ignorecase=argd['--ignorecase'],
+        use_textpat=True,
+        force_textpat=argd['--noregex'],
+    )
 
     # Get exclude pattern, compile it as a regex pattern.
     # Add the --nomin pattern if needed.
@@ -1171,7 +1306,9 @@ def main(argd):  # noqa
     if excludestr:
         excludepat = parse_regex(
             excludestr,
-            'Invalid exclude pattern: {}')
+            'Invalid exclude pattern: {}',
+            use_textpat=True
+        )
 
     # Get maximum length, make sure it's a valid integer.
     maxlength = parse_int(
@@ -1214,11 +1351,11 @@ def main(argd):  # noqa
     # TODO: Refactor --onlynames for less of a hack.
     if argd['--onlynames']:
         global print_header, print_warning
-        print_header = lambda s, s2: None
-        print_warning = lambda s: None
+        print_header = print_warning = noop
 
     # Print header
-    print_header('Searching:', targetstr)
+    pattype = 'text' if isinstance(searchpat, TextPattern) else 'regex'
+    print_header('Searching ({}):'.format(pattype), targetstr)
     print_header('Pattern:', searchterm)
 
     if excludepat:
@@ -1274,7 +1411,8 @@ def main(argd):  # noqa
                     maxlength=maxlength,
                     before=contextbefore,
                     after=contextafter,
-                    nobinary=argd['--excludebinary'])
+                    nobinary=argd['--excludebinary'],
+                )
             ]
 
         # Matches are printed after searching this single file
@@ -1285,7 +1423,7 @@ def main(argd):  # noqa
         # Get filetypes to search.
         filetypes = parse_filetypes_arg(argd)
         # TODO:FORMAT THIS CODE BETTER, trimming to < 79 chars made it ugly!
-        filetypes = sorted(filetypes) if filetypes else None
+        filetypes = sorted(filetypes)
         filetypestr = get_filetype_str(filetypes, colors=colors)
         print_header('File Types:', filetypestr)
         # Reverse notify
@@ -1314,7 +1452,9 @@ def main(argd):  # noqa
             nobinary=argd['--excludebinary'],
             no_lines=argd['--onlynames'],
             shell_code=argd['--shellcode'],
-            urlmode=argd['--urlnames']
+            urlmode=argd['--urlnames'],
+            linenums=not argd['--nolinenums'],
+            linestrip=not argd['--nolinestrip'],
         )
 
         # Matches are printed as they are found, per file
@@ -1352,7 +1492,9 @@ def main(argd):  # noqa
             nobinary=argd['--excludebinary'],
             no_lines=argd['--onlynames'],
             shell_code=argd['--shellcode'],
-            urlmode=argd['--urlnames']
+            urlmode=argd['--urlnames'],
+            linenums=not argd['--nolinenums'],
+            linestrip=not argd['--nolinestrip'],
         )
         # Matches are printed as they are found, per file
         printmatchlines = False
@@ -1377,6 +1519,8 @@ def main(argd):  # noqa
             matches,
             printlines=printmatchlines,
             colors=colors,
+            linenums=not argd['--nolinenums'],
+            linestrip=not argd['--nolinestrip'],
             names_only=argd['--filenames'],
             urlmode=argd['--urlnames'])
 
@@ -1461,9 +1605,10 @@ class ColorCodes(object):
     def colorizepart(self, text, style=None, back=None, fore=None):
         """ Same as colorize, but adds a style->reset_all after it. """
         colorized = self.colorize(text, style=style, back=back, fore=fore)
-        s = '{colrtxt}{reset}'.format(colrtxt=colorized,
-                                      reset=self.color_code(style='reset_all'))
-        return s
+        return '{colrtxt}{reset}'.format(
+            colrtxt=colorized,
+            reset=self.color_code(style='reset_all')
+        )
 
     def word(self, *args, **kwargs):
         """ Shorthand for colorizepart. """
@@ -1519,32 +1664,57 @@ class MatchLine(object):
         self.lineno = lineno
 
     def __str__(self):
+        return self.formatted(linenums=True, linestrip=True)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def formatted(self, linenums=True, linestrip=True):
+        """ A string representation of this line, with or without linenums or
+            tab/space stripping.
+        """
         # trim tabs/spaces characters, replaces with '...'
         # (for str() and repr() only)
-        if self.text.startswith(' ') or self.text.startswith('\t'):
+        if linestrip and self.text.startswith((' ', '\t')):
             stext = '... ' + self.text.strip()
         else:
             stext = self.text
-        linestr = str(self.lineno).rjust(MatchLine.lineno_len)
         lines = []
+
         if self.before:
             # Context before
             lines.extend((
                 '',
-                '\n'.join((str(l) for l in self.before))))
+                '\n'.join((
+                    l.formatted(
+                        linenums=linenums,
+                        linestrip=linestrip
+                    )
+                    for l in self.before
+                ))
+            ))
 
-        lines.append('  {}: {}'.format(linestr, stext))
+        if linenums:
+            lineno = str(self.lineno).rjust(MatchLine.lineno_len)
+            lines.append('  {}: {}'.format(lineno, stext))
+        else:
+            # No line numbers.
+            lines.append('    {}'.format(stext))
+
         if self.after:
             # Context after
-            lines.append('\n'.join((str(l) for l in self.after)))
+            lines.append('\n'.join((
+                l.formatted(
+                    linenums=linenums,
+                    linestrip=linestrip
+                )
+                for l in self.after
+            )))
             if not self.before:
                 # Ensure a blank line because it gets messy.
                 lines.append('')
 
         return '\n'.join(lines)
-
-    def __repr__(self):
-        return self.__str__()
 
 
 class MatchInfo(object):
@@ -1613,7 +1783,10 @@ class MatchCollection(object):
         """ iterate over MatchInfo(), yielding filename first, then lines.
             yields strings.
         """
-        fmtfilename = '\nfile://{} :'.format if self.urlmode else '\n{}'.format
+        if self.urlmode:
+            fmtfilename = '\nfile://{} :'.format
+        else:
+            fmtfilename = '\n{}'.format
         if self.items:
             for matchinf in iter(self.items):
                 # start of filename
@@ -1733,9 +1906,100 @@ class TempInput(object):
         return False
 
 
+class TextPattern(object):
+    """ A simple text pattern to be searched in strings.
+        This provides a few methods that are compatible with a SRE_Pattern,
+        and returns a TextPatternMatch through the .search() method.
+        This shaves off some microseconds on large searches where the pattern
+        is simple text (no regex needed).
+    """
+    replaceables = (
+        r'\^',
+        r'\$',
+        r'\+',
+        r'\.',
+        r'\(',
+        r'\)',
+        r'\[',
+        r'\]',
+        r'\{',
+        r'\}',
+    )
+    metacharpat = re.compile(
+        '|'.join(
+            '({})'.format(s) for s in [
+                r'(?<!\\)\^',
+                r'(?<!\\)\$',
+                r'(?<!\\)\+',
+                r'(?<!\\)\.',
+                r'(?<!\\)\(',
+                r'(?<!\\)\)',
+                r'(?<!\\)\[',
+                r'(?<!\\)\]',
+                r'(?<!\\)\{',
+                r'(?<!\\)\}',
+                r'\\a',
+                r'\\A',
+                r'\\b',
+                r'\\B',
+                r'\\n',
+                r'\\r',
+                r'\\f',
+                r'\\t',
+                r'\\octal',
+                r'\\w',
+                r'\\W',
+                r'\\d',
+                r'\\D',
+                r'\\s',
+                r'\\S',
+            ]
+        )
+    )
+
+    def __init__(self, pattern, ignorecase=False):
+        self.pattern = pattern
+        self.pattern_lower = pattern.lower()
+        if ignorecase:
+            self.search = self.search_nocase
+        else:
+            self.search = self.search_case
+
+    @classmethod
+    def from_pattern(cls, s, ignorecase=False):
+        """ Return a TextPattern, unless regex metachars are used, then
+            it will return an SRE_Pattern.
+        """
+        stripped = cls.metacharpat.sub('', s)
+        if stripped == s:
+            for repl in cls.replaceables:
+                s = s.replace(repl, repl[1:])
+            return cls(s, ignorecase=ignorecase)
+        return re.compile(s, flags=re.IGNORECASE if ignorecase else 0)
+
+    def search_case(self, s):
+        """ Returns True on match, otherwise None. """
+        if self.pattern in s:
+            return TextPatternMatch(self.pattern)
+        return None
+
+    def search_nocase(self, s):
+        if self.pattern_lower in s.lower():
+            return TextPatternMatch(self.pattern)
+        return None
+
+
+class TextPatternMatch(object):
+    """ Emulates a regex match, implemented for TextPattern. """
+    def __init__(self, pattern):
+        self.pattern = pattern
+
+    def group(self):
+        """ Emulate a regex match's group() method. """
+        return self.pattern
 # Amount of space before usage descriptions start.
 USAGE_INDENT = 38
-# Amount of space before the file types should start (makes up for 'Default: ')
+# Amount of space before the filetypes should start (makes up for 'Default: ')
 USAGE_TYPES_INDENT = USAGE_INDENT + 9
 # Maximum width allowed for the usage string.
 USAGE_MAXWIDTH = 80
@@ -1745,74 +2009,86 @@ USAGE_FILETYPES = format_block(
     blocksize=USAGE_MAXWIDTH - USAGE_INDENT,
     prepend=' ' * USAGE_TYPES_INDENT,
     lstrip=True,
-    spaces=True)
+    spaces=True
+)
 
 # Usage/Help string for docopt (and whoever is reading this.)
 USAGESTR = """{filename} v. {version}
 
     Usage:
         {filename} -h | -v
-        {filename} <searchterm> [<target>...] [-A | -t <filetypes>] [options]
-        {filename} -T
+        {filename} PATTERN [TARGET...] [-A | -t filetypes] [options]
+        {filename} -T [FILETYPES]
 
     Options:
-        <searchterm>                : Regex to match in file or files.
-        <target>                    : Target file, or directory to search in.
-                                      If '-' is given as the only target,
-                                      stdin will be used.
-                                      Default: {cwd}
-        -A,--all                    : Search all file types.
-                                      (Same as '--types all')
-                                      Can be slow. It searches all files,
-                                      even binary files, which is not good.
-        -a num,--after num          : Lines of context to show after a match.
-        -b num,--before num         : Lines of context to show before a match.
-        -c num,--context num        : Like using 'after' and 'before', both
-                                      with the same number.
-        -D,--debug                  : Print more debug info.
-        -e pat,--exclude pat        : Exclude filenames with this pattern
-                                      in them.
-        -f,--filenames              : Match against file names only,
-                                      not content.
-        -h,--help                   : Show this message.
-        -i,--ignorecase             : Make the search query case insensitive.
-        -l n,--maxlength n          : Maximum length for each line,
-                                      lines longer than this are not included.
-                                      Default: 0 (no maximum length)
-        -m,--nomin                  : Automatically add '\.min\.(\w+)$' to
-                                      the --exclude pattern to ignore minified
-                                      files.
-        -n,--nocolors               : Don't use colors at all.
-        -o,--onlynames              : Don't print matching lines, just file
-                                      names.
-        -p,--print                  : Print ALL file names before searching.
-                                      (even non-matching, it's slow!)
-        -r,--reverse                : Only show lines that don't match.
-        -R,--reversenames           : Show names of files that don't contain
-                                      a single line match.
-        -s code,--shellcode code    : Run bash code on each file name,
-                                      where {{}} will be replaced with the
-                                      file name. {{f}} or {{fname}} may also
-                                      be used to replace more than one
-                                      occurrence.
-                                      Can only be used with -o.
-        -t <types>,--types <types>  : Only search files with these extensions.
-                                      (Comma-separated list)
-                                      Default: {filetypes}
-        -T,--typenames              : List the default file types and names.
-                                      These names can be used as shortcuts
-                                      when using -t.
-        -u,--urlnames               : Print file names as urls.
-        -v,--version                : Show version and exit.
-        -w,--wholepath              : When matching against file names only,
-                                      match against the whole file path.
-        -x,--excludebinary          : Search text files only. This is slower,
-                                      but may be useful when searching ALL
-                                      files in a directory.
+        PATTERN                   : Regex to match in file or files.
+        TARGET                    : Target file, or directory to search in.
+                                    If '-' is given as the only target,
+                                    stdin will be used.
+                                    Default: {cwd}
+        FILETYPES                 : File types to explain, each separated by
+                                    a comma.
+        -A,--all                  : Search all file types.
+                                    (Same as '--types all')
+                                    Can be slow. It searches all files,
+                                    even binary files, which is not good.
+        -a num,--after num        : Lines of context to show after a match.
+        -b num,--before num       : Lines of context to show before a match.
+        -c num,--context num      : Like using 'after' and 'before', both
+                                    with the same number.
+        -D,--debug                : Print more debug info.
+        -e pat,--exclude pat      : Exclude filenames with this pattern
+                                    in them.
+        -f,--filenames            : Match against file names only,
+                                    not content.
+        -h,--help                 : Show this message.
+        -i,--ignorecase           : Make the search query case insensitive.
+        -l n,--maxlength n        : Maximum length for each line,
+                                    lines longer than this are not included.
+                                    Default: 0 (no maximum length)
+        -L,--nolinenums           : Don't show line numbers for matching
+                                    lines.
+        -m,--nomin                : Automatically add '\.min\.(\w+)$' to
+                                    the --exclude pattern to ignore minified
+                                    files.
+        -n,--nocolors             : Don't use colors at all.
+        -o,--onlynames            : Don't print matching lines, just file
+                                    names.
+        -p,--print                : Print ALL file names before searching.
+                                    (even non-matching, it's slow!)
+        -r,--reverse              : Only show lines that don't match.
+        -R,--reversenames         : Show names of files that don't contain
+                                    a single line match.
+        -s code,--shellcode code  : Run bash code on each file name,
+                                    where {{}} will be replaced with the
+                                    file name. {{f}} or {{fname}} may also
+                                    be used to replace more than one
+                                    occurrence.
+                                    Can only be used with -o.
+        -S,--nolinestrip          : Don't strip leading whitespace for
+                                    matching lines.
+        -t types,--types types    : Only search files with these extensions.
+                                    (Comma-separated list)
+                                    Default: {filetypes}
+        -T,--typenames            : List the default file types and names.
+                                    These names can be used as shortcuts
+                                    when using -t.
+                                    You can also give one or more file types
+                                    to explain which extensions would be
+                                    searched with the type.
+        -u,--urlnames             : Print file names as urls.
+        -v,--version              : Show version and exit.
+        -w,--wholepath            : When matching against file names only,
+                                    match against the whole file path.
+        -x,--excludebinary        : Search text files only. This is slower,
+                                    but may be useful when searching ALL
+                                    files in a directory.
+        -X,--noregex              : Use simple text patterns, no regular
+                                    expressions.
 
     Notes:
         Shell-expansion, --types, and recursing sub-directories:
-            By default, if <target> is a directory, or contains a directory,
+            By default, if TARGET is a directory, or contains a directory,
             any sub-directories of the target will be searched. If no target
             is specified, the current directory is the target.
             You can override this behaviour by using expansion to search only
@@ -1831,7 +2107,7 @@ USAGESTR = """{filename} v. {version}
                 ...all .py files will be sent to {filename},
                    but only .txt will be searched.
 
-            If {filename} sees a directory in the <target>,
+            If {filename} sees a directory in the TARGET,
             it walks all sub-directories of it.
 
         Stackless:

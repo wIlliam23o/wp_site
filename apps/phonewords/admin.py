@@ -6,18 +6,23 @@ from home.admin import admin_site
 def enable_results(modeladmin, request, queryset):
     """ enables results (.disabled = False) """
     queryset.update(disabled=False)
-enable_results.short_description = "Enable selected Results"
+
+
+enable_results.short_description = 'Enable selected Results'
 
 
 def disable_results(modeladmin, request, queryset):
     """ disables results (.disabled = True) """
     queryset.update(disabled=True)
-disable_results.short_description = "Disable selected Results"
+
+
+disable_results.short_description = 'Disable selected Results'
 
 
 class pw_resultAdmin(admin.ModelAdmin):
     # enable actions above
     actions = [enable_results,
                disable_results]
+
 
 admin_site.register(pw_result, pw_resultAdmin)

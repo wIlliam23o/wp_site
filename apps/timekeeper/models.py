@@ -447,7 +447,7 @@ class TKSession(models.Model):
         if hasattr(date_max, 'date'):
             date_max = date_max.date()
         start_date = self.start_time.date()
-        return (start_date >= date_min) and (start_date <= date_max)
+        return date_min <= start_date <= date_max
 
     def pay(self, from_emp_pay=None):
         """ Return the total pay for this session in MoneyPatched(USD). """

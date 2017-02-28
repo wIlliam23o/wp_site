@@ -1,8 +1,7 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from blogger import views
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # projects index
     url(r'^$', views.index, name='blogger'),
     # no identifier specified
@@ -17,4 +16,4 @@ urlpatterns = patterns(
     url(r'^[Vv]iew/(?P<identifier>[^/]+)', views.view_post),
     # pagination view
     url(r'^[Pp]age/?', views.index_page)
-)
+]

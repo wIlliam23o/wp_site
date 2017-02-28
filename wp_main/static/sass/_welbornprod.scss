@@ -18,6 +18,7 @@ $border-featured-desc: rgba(202, 217, 224, .95);
 // Colors
 // blackmain and whitemain seem stupid, but if they are used everywhere instead
 // of #ffffff and #000000 then changing the 'white' everywhere would be really easy.
+// Also, scss-lint doesn't like plain hex values. It seems to prefer variables.
 $blackmain: #000;
 $whitemain: #fff;
 // dim the white a little so it doesn't hurt your eyes.
@@ -36,6 +37,8 @@ $redlight: rgb(206, 154, 154);
 $redmain: #b90000;
 $redhover: #f00;
 $greenmain: #01941e;
+$solarized-bg: #002b36;
+$solarized-fore: #93a1a1;
 
 // Shadows
 $shadowfloater: 6px 6px 7px rgba(0, 0, 0, .52);
@@ -67,6 +70,7 @@ $fontbigger: 1.2em;
 $fontmedium: 1.5em;
 $lineheightmedium: 1.6em;
 $fontbig: 2em;
+$lineheightbig: 2.1em;
 $fontbig2: 2.5em;
 $fontlarge: 3.5em;
 
@@ -172,6 +176,11 @@ $lineheightnormal: 1.1em;
     // IE6-9
     // Forget ie6-9, they don't need a gradient.
     // filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#{$top}', endColorstr='#{$bottom}', GradientType=0);
+}
+
+@mixin solarized() {
+    background-color: $solarized-bg;
+    color: $solarized-fore;
 }
 
 @mixin transform($trans) {

@@ -9,13 +9,8 @@
 
 import logging
 
-# Global settings
-from django.conf import settings
-from django.template import loader, Template
-from django.template.base import TemplateDoesNotExist
-
 # For trimming posts.
-import lxml.html
+from django.utils.text import Truncator
 
 # Local tools
 from wp_main.utilities import utilities
@@ -24,18 +19,27 @@ from wp_main.utilities import htmltools
 from blogger.models import wp_blog
 log = logging.getLogger('wp.blog.tools')
 
-# Fix Python3 (until I remove py2 completely)
-if settings.SYSVERSION[0] == '3':
-    unicode = str
 
 # Defaults (if nothing is passed to the listing functions)
 DEFAULT_ORDERBY = '-posted_datetime'
-# number of posts per page.
+# Number of posts per page.
 DEFAULT_MAXPOSTS = 25
-# number of lines before adding 'more..' button on previews.
-DEFAULT_MAXLINES = 17
-# number of characters before adding 'more..' button on previews.
-DEFAULT_MAXLENGTH = 2000
+# Number of words before adding 'read more..' button on previews.
+DEFAULT_MAXWORDS = 170
+
+
+def add_read_more(content, url, nobreak=False):
+    """ Add a 'read more...' button to some content, by rendering the
+        blogger/readmore.html template and appending it to the content.
+    """
+    return '\n'.join((
+        content,
+        '<span class=\'continued\'> ...(continued)</span>',
+        htmltools.render_clean(
+            'blogger/readmore.html',
+            context={'href': url, 'nobreak': nobreak},
+        ),
+    ))
 
 
 def fix_post_list(blog_posts, **kwargs):
@@ -55,12 +59,9 @@ def fix_post_list(blog_posts, **kwargs):
     if blog_posts is None:
         return []
     max_posts = kwargs.get('max_posts', DEFAULT_MAXPOSTS)
-    # max_text_length = kwargs.get('max_text_length', DEFAULT_MAXLENGTH)
-    # max_text_lines = kwargs.get('max_text_lines', DEFAULT_MAXLINES)
 
     # trim posts length
-    if ((max_posts > 0) and
-            (len(blog_posts) > max_posts)):
+    if 0 < max_posts < len(blog_posts):
         blog_posts = blog_posts[:max_posts]
     return blog_posts
 
@@ -86,84 +87,42 @@ def get_post_body(post):
         log.error('post is None!')
         return ''
 
-    template = None
-    try:
-        slugfile = '{}.html'.format(post.slug)
-        template = loader.get_template(slugfile)
-        # We are bypassing file lookup, and going straight to template.
-        absolute_path = None
-    except TemplateDoesNotExist:
-        absolute_path = utilities.get_absolute_path(post.html_url)
-        if not absolute_path:
-            # no valid html_url, using post body as a Template.
-            # 'template' overrides the file path in load_html_file.
-            template = Template(post.body)
+    # Try for automatic slug-based html file.
+    slugfile = '{}.html'.format(post.slug)
+    content = htmltools.load_html_template(slugfile)
+    if content:
+        return content
 
-    # load template content.
-    scontent = htmltools.load_html_file(
-        absolute_path,
-        template=template,
-        context={
-            'post': post
-        })
-    return scontent
+    # Try the posts's html_url as a template.
+    absolute_path = utilities.get_absolute_path(post.html_url)
+    if absolute_path:
+        # Load the html_url template content.
+        return htmltools.load_html_file(
+            absolute_path,
+            context={
+                'post': post
+            })
+
+    # No valid html_url, using post body as a Template.
+    return htmltools.render_html_str(post.body, context={'post': post})
 
 
-def get_post_body_short(post, max_text_length=None, max_text_lines=None):
-    """ retrieves body for post, timming if needed.
-        uses get_post_body to retrieve the initial body. """
+def get_post_body_short(post, max_words=DEFAULT_MAXWORDS):
+    """ Retrieves body for post using get_post_body, trimming if needed.
+        Returns the post's content, possibly with an added 'read more' button.
+    """
 
-    if max_text_length is None:
-        max_text_length = DEFAULT_MAXLENGTH
-    if max_text_lines is None:
-        max_text_lines = DEFAULT_MAXLINES
-    new_body = get_post_body(post)
-    trimmed = False
+    if max_words is None:
+        max_words = DEFAULT_MAXWORDS or 0
 
-    # trim by maximum text length
-    if ((max_text_length > 0) and
-            (len(new_body) > max_text_length)):
-        new_body = new_body[:max_text_length]
-        trimmed = True
+    content = get_post_body(post)
+    if not max_words:
+        return content
 
-    # trim by maximum lines
-    if max_text_lines > 0:
-        # Testing actual text content lines using lxml.
-        text_content = lxml.html.fromstring(new_body).text_content()
-        while '\n\n' in text_content:
-            text_content = text_content.replace('\n\n', '\n')
-        text_content = text_content.strip()
-        if text_content.count('\n') > max_text_lines:
-            # needs trimming.
-            lines_ = new_body.split('\n')[:max_text_lines + 1]
-            new_body = '\n'.join(lines_)
-            trimmed = True
-
-    # trim by <br>'s
-    if ((max_text_lines > 0) and (new_body.count('<br') > max_text_lines)):
-        # needs trimming
-        lines_ = new_body.split('<br')[:max_text_lines + 1]
-        new_body = '<br'.join(lines_)
-        trimmed = True
-
-    # Fix open tags
-    new_body = htmltools.fix_open_tags(new_body)
-
-    # post was trimmed? add "...continued" and readmore box.
-    if trimmed:
-        readmorecontext = {
-            'href': '/blog/view/{}'.format(post.slug),
-            'nobreak': False,
-        }
-        readmoretxt = htmltools.render_clean(
-            'blogger/readmore.html',
-            context=readmorecontext)
-        new_body = '\n'.join((
-            new_body,
-            '<span class=\'continued\'> ...(continued)</span>',
-            readmoretxt))
-
-    return new_body
+    trimmed = Truncator(content).words(max_words, html=True)
+    if len(trimmed) < len(content):
+        return add_read_more(trimmed, '/blog/view/{}'.format(post.slug))
+    return content
 
 
 def get_post_byany(identifier):

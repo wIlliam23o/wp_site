@@ -10,14 +10,15 @@ import logging
 import os.path
 import base64
 import re
-from sys import version as sysversion
 
 # Fixing html fragments (from shortening blog posts and other stuff)
 from tidylib import tidy_fragment
 
 # Django template loaders
-from django.template import RequestContext, Context, loader
-from django.template.base import TemplateDoesNotExist
+from django.template import loader
+from django.template.backends.django import DjangoTemplates
+from django.template.exceptions import TemplateDoesNotExist
+from django.template.loader import render_to_string
 from django.conf import settings
 
 # Basic utilities and highlighting
@@ -446,46 +447,6 @@ def fix_p_spaces(source_string):
     return '\n'.join(modified_lines)
 
 
-def get_context(context, request=None):
-    """ Return a Context() object from a dict.
-        If request is passed in, a RequestContext() is used.
-        On errors, log the error and return None.
-    """
-    # This is already a Context or RequestContext?
-    # It wouldn't hurt to return a Context(Context(context)),
-    # but there is no reason for all of this processing if that's the case.
-    if isinstance(context, (Context, RequestContext)):
-        return context
-
-    # Try creating a request context.
-    try:
-        if not context:
-            # Blank context object, with or without a request.
-            if request is not None:
-                return RequestContext(request, {})
-            return Context({'request': request})
-
-        if not request:
-            # Context with content, no Request.
-            if context.get('request', None) is None:
-                context['request'] = request
-            return Context(context)
-
-        # RequestContext with content.
-        return RequestContext(request, context)
-    except Exception as ex:
-        log.error('\n'.join((
-            'Error creating request context!',
-            '  Context: {c}',
-            '  Request: {r}',
-            '    Error: {e}'
-        )).format(
-            c=context,
-            r=request,
-            e=ex))
-        return None
-
-
 def get_html_file(wpobj):
     """ finds html file to use for the content, if any.
         returns empty string on failure.
@@ -535,23 +496,26 @@ def get_screenshots(images_dir, noscript_image=None):
 
     """
     # accceptable image formats (last 4 chars)
-    formats = ['.png', '.jpg', '.gif', '.bmp', 'jpeg']
+    formats = ['.png', '.jpg', '.gif', '.bmp', '.jpeg']
 
-    # Make sure we are using the right dir.
-    # get absolute path for images dir,
-    # if none exists then delete the target_replacement.
-    images_dir = utilities.get_absolute_path(images_dir)
-    if not images_dir:
+    if os.path.isdir(images_dir):
+        dirpath = images_dir
+    else:
+        # Make sure we are using the right dir.
+        # get absolute path for images dir.
+        dirpath = utilities.get_absolute_path(images_dir)
+    if not dirpath:
+        log.error('No images dir: {!r} -> {!r}'.format(images_dir, dirpath))
         return None
 
     # Get useable relative dir (user-passed may be wrong format)
-    relative_dir = utilities.get_relative_path(images_dir)
+    relative_dir = utilities.get_relative_path(dirpath)
 
     # find acceptable pics
     try:
-        all_files = os.listdir(images_dir)
+        all_files = os.listdir(dirpath)
     except Exception as ex:
-        log.debug('Can\'t list dir: {}\n{}'.format(images_dir, ex))
+        log.error('Can\'t list dir: {}\n{}'.format(dirpath, ex))
         return None
 
     # Help functions for building screenshots.
@@ -559,7 +523,7 @@ def get_screenshots(images_dir, noscript_image=None):
         return os.path.join(relative_dir, filename)
 
     def good_format(filename):
-        return filename[-4:] in formats
+        return os.path.splitext(filename)[-1] in formats
 
     # Build acceptable pics list
     good_pics = [relative_img(f) for f in all_files if good_format(f)]
@@ -632,29 +596,22 @@ def highlight(content):
     """ Uses the highlighter tools to syntax highlight everything. """
     return highlighter.highlight_inline(
         highlighter.highlight_codes(
-            content))
+            content
+        )
+    )
 
 
-def load_html_file(filename, request=None, context=None, template=None):
+def load_html_file(filename, request=None, context=None):
     """ Try rendering a file as a Template, if that fails return the raw
         file content.
         This can all be short-circuited by passing in a pre-loaded template
         with: template=loader.get_template(templatename)
         Arguments:
             filename  : File name for template/html file.
-            request   : Request() to build RequestContext()
-            context   : Context(), RequestContext() or dict for template.
-                        If request is passed with a dict, a RequestContext()
-                        is built.
-                        If a dict is passed a Context() is built.
-            template  : Overrides all template loading and file opening.
-                        (filename is useless if template is passed)
-                        The template is rendered with context and request.
+            request   : Request() to build template with.
+            context   : Context dict for template.
     """
 
-    if template:
-        # A template was already passed in.
-        return render_template(template, context=context, request=request)
     # Try rendering file as a template.
     content = load_html_template(filename, request=request, context=context)
     if content:
@@ -692,10 +649,22 @@ def load_html_template(sfile, request=None, context=None):
         Return the content on success, or None on failure.
     """
 
-    tmplate = get_template(sfile)
-    if tmplate is not None:
-        return render_template(tmplate, context=context, request=request)
-    return None
+    try:
+        log.debug(
+            'Trying to render template: {}, request: {}, context: {}'.format(
+                sfile,
+                request,
+                context,
+            )
+        )
+        content = render_to_string(
+            sfile,
+            context=context or {},
+            request=request
+        )
+    except TemplateDoesNotExist:
+        return None
+    return content
 
 
 def remove_blanklines(source_string):
@@ -786,10 +755,9 @@ def remove_whitespace(source):
 def render_clean(template_name, **kwargs):
     """ Runs render_html() through clean_html().
         Renders template by name and context dict,
-        RequestContext is used if 'request' kwarg is passed in.
         Keyword Arguments (same as render_html()):
-                   context : dict to be used by Context() or RequestContext()
-                   request : HttpRequest() object passed to RequestContext()
+                   context : Context dict for templates.
+                   request : HttpRequest() object.
                  link_list : link_list to be used with htmltools.auto_link()
                              Default: False
             auto_link_args : A dict containing kw arguments for auto_link()
@@ -808,11 +776,9 @@ def render_html(template_name, **kwargs):
         This differs from load_html_file(), where render_html() must use a
         template name, load_html_file() will fall back to raw file content.
         Keyword arguments are:
-                 context : Context or RequestContext dict to be used
-                           RequestContext is used if a request is passed in
-                           with 'request' kwarg.
+                 context : Context dict.
                            Default: {}
-                 request : HttpRequest object to pass on to RequestContext
+                 request : HttpRequest object to pass on to template.
                            Default: False (causes Context to be used)
                link_list : A link list in auto_link() format to be used
                            with auto_link() before returning content.
@@ -831,15 +797,18 @@ def render_html(template_name, **kwargs):
                            Default: {}
     """
     context = kwargs.get('context', kwargs.get('context_dict', {}))
-    request = kwargs.get('request', None)
+    if hasattr(context, 'flatten'):
+        # Context or RequestContext snuck in, probably from a template Node.
+        context = context.flatten()
+    request = kwargs.get('request', context.get('request', None))
     link_list = kwargs.get('link_list', None)
     auto_link_args = kwargs.get('auto_link_args', {})
 
-    tmplate = get_template(template_name)
-    if tmplate is None:
-        return None
-
-    content = render_template(tmplate, context=context, request=request)
+    content = render_to_string(
+        template_name,
+        context=context,
+        request=request
+    )
     if content:
         if link_list:
             content = auto_link(content, link_list, **auto_link_args)
@@ -848,35 +817,33 @@ def render_html(template_name, **kwargs):
     return None
 
 
-def render_template(tmplate, context=None, request=None):
-    """ Render a Template object with a context.
-        If a request is passed in, a RequestContext is used.
-        On errors, log the error and return None.
+def render_html_str(s, context=None, request=None):
+    """ Use DjangoTemplates() to render a template string.
+        Returns the rendered content str on success.
     """
-    contextobj = get_context(context, request=request)
-    if contextobj is None:
-        # There was an error grabbing a Context, bail out.
-        return None
-    # Have context, try rendering.
+    template = DjangoTemplates(settings.DJANGO_TEMPLATES_OPTS).from_string(s)
     try:
-        content = tmplate.render(contextobj)
+        content = template.render(context=context or {}, request=request)
     except Exception as ex:
-        errmsg = '\n'.join((
-            'Error rendering template: {name} ',
-            '  Context: {context}',
-            '  Request: {request}'
-            '    Error: {err}'
-        )).format(
-            name=tmplate.origin.name,
-            context=context,
-            request=request,
-            err=ex
+        # For trimming the template string, for logging.
+        max_content_len = 45
+        log.error(
+            '\n'.join((
+                'Cannot render template str: {s}{ellipses}',
+                '    Context: {context}',
+                '    Request: {request}',
+                '      Error: ({errtype}) {errmsg}',
+            )).format(
+                s=s[:max_content_len],
+                ellipses='...' if len(s) > max_content_len else '',
+                context=context,
+                request=request,
+                errtype=type(ex).__name__,
+                errmsg=ex,
+            )
         )
-        utilities.logtraceback(log.error, errmsg)
-        return None
-    else:
-        # Good content, return it.
-        return content
+        return ''
+    return content
 
 
 def strip_all(s, strip_chars):

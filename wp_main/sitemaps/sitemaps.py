@@ -30,6 +30,7 @@ from projects.models import wp_project
 
 log = logging.getLogger('wp.sitemaps')
 
+
 @never_cache
 def view_sitemap(request):
     """ Delivers sitemap for current domain using sitemap.xml template """
@@ -39,7 +40,9 @@ def view_sitemap(request):
         'sitemaps/sitemap.xml',
         context={
             'url_list': [sm_url for sm_url in build_urls(request)]
-        }
+        },
+        request=request,
+        comments=False,
     )
 
 
@@ -214,10 +217,9 @@ class SitemapUrl(object):  # noqa
 
     """ Provides info for individual sitemap urls. """
 
-    def __init__(self, location='', rel_location='',
-                 changefreq='', lastmod='',
-                 protocol='http', domain='',
-                 priority='0.5'):
+    def __init__(
+            self, location='', rel_location='', changefreq='', lastmod='',
+            protocol='http', domain='', priority='0.5'):
         # changes info
         self.changefreq = changefreq
         self.lastmod = lastmod

@@ -1,25 +1,43 @@
-{# Generated using build_template.sh v. 0.0.1 #}
 {% load wp_tags %}
+{# Produce an embedded Ace editor snippet. #}
+{# The contents will be grabbed from this element before being replaced by Ace. #}
 {% if elementid and fileext and text %}
-<div id='{{ elementid }}' class='ace-snippet' style='opacity: 0;'>
-{% if request|is_textmode %}
-            <pre>
-{{ text | b64decode }}
-            </pre>
-{% else %}
+    {% with textmode=request|is_textmode %}
+        <noscript>
+            {# Be nice to text browsers and people with no javascript. #}
+            <div id='{{ elementid }}-noscript' class='ace-snippet' style='height: auto;'>
+                {# Botching the end tag placement to remove a newline when these are rendered #}
+                <pre class='codewrap-template codewrap-noscript fallback-ace-solarized-dark'>
+{{ text|b64decode }}</pre>
+            </div>
+        </noscript>
+        {% if not textmode %}
+            <div id='{{ elementid }}' class='ace-snippet' style='display: none; opacity: 0;'>
 {{ text }}
-{% endif %}
-</div>
-<script type='text/javascript'>
-$(document).ready(function () {
-wptools.setup_ace_snippet('{{ elementid }}', '{{ fileext }}');
-});
-</script>
+            </div>
+            <script type='text/javascript'>
+                /* global wptools: false */
+                $(document).ready(function () {
+                    // {# Hide noscript if js works. #}
+                    var noscriptelem = document.getElementById('{{ elementid }}-noscript');
+                    if (noscriptelem != null) {
+                        noscriptelem.style.display = 'none';
+                    }
+                    // {# Show ace if js works. #}
+                    var acetemplate = document.getElementById('{{ elementid }}');
+                    if (acetemplate != null) {
+                        acetemplate.style.display = 'block';
+                    }
+                    wptools.setup_ace_snippet('{{ elementid }}', '{{ fileext }}');
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
 {% else %}
-{% filter log_debug %}
-Missing arguments in acesnippet.html.
-elementid: {{ elementid }}
-fileext: {{ fileext }}
-text length: {{ text|length }}
-{% endfilter %}
+    {% filter log_debug %}
+    Missing arguments in acesnippet.html.
+      elementid: {{ elementid }}
+        fileext: {{ fileext }}
+    text length: {{ text|length }}
+    {% endfilter %}
 {% endif %}

@@ -19,6 +19,7 @@ from wp_main.utilities.utilities import (
 
 # For creating/accessing wp_paste() objects.
 from apps.paste.models import wp_paste
+from apps.paste import pastetools
 from apps.models import wp_app
 
 
@@ -142,7 +143,8 @@ def json_paste_listing(groupby=None):
         respdata['message'] = 'No pastes to retrieve.'
     else:
         respdata['message'] = (
-            '{} pastes retrieved.'.format(respdata['count']))
+            '{} pastes retrieved.'.format(respdata['count'])
+        )
     return responses.json_response(respdata)
 
 
@@ -150,16 +152,12 @@ def list_view(request, title=None, filterkw=None, orderby=None):
     """ A view that lists posts based on filter() kwargs,
         order_by() kwargs.
     """
-    if filterkw is None:
-        filterkw = {}
-    if title is None:
-        title = 'Pastes'
+    filterkw = filterkw or {}
+    title = title or 'Pastes'
     # Default behaviour is to not show disabled/private pastes.
-    if 'disabled' not in filterkw:
-        filterkw['disabled'] = False
+    filterkw['disabled'] = filterkw.get('disabled', False)
     # Private pastes are only viewable directly, not in listings.
-    if 'private' not in filterkw:
-        filterkw['private'] = False
+    filterkw['private'] = filterkw.get('private', False)
 
     try:
         p = wp_paste.objects.filter(**filterkw)
@@ -216,22 +214,23 @@ def paste_data(paste, doreplies=True, doparent=True):
         'id': paste.paste_id,
         'views': paste.view_count,
         'language': paste.language,
+        'private': paste.private,
     }
+    # Handle paste replies, by id.
+    resp['replies'] = []
     if doreplies:
-        replies = paste.children.filter(disabled=False)
-        replies = replies.order_by('-publish_date')
-        resp['replies'] = [p.paste_id for p in replies]
-    else:
-        replies = []
-    resp['replycount'] = len(replies)
-
+        resp['replies'] = [
+            p.paste_id
+            for p in pastetools.get_paste_children(paste).defer('content')
+        ]
+    resp['replycount'] = len(resp['replies'])
+    # Get parent info, by id.
+    resp['replyto'] = ''
     if doparent:
-        if paste.parent:
-            resp['replyto'] = paste.parent.paste_id
-        else:
-            resp['replyto'] = ''
-    else:
-        resp['replyto'] = ''
+        parent = pastetools.get_paste_parent(paste)
+        if parent:
+            resp['replyto'] = parent.paste_id
+
     return resp
 
 
@@ -305,7 +304,11 @@ def process_submit(submitdata, apisubmit=False):
             'message': 'Paste was a success.',
             'id': newpaste.paste_id,
             'url': newpaste.get_url(),
-            'parent': getattr(newpaste.parent, 'paste_id', None),
+            'parent': getattr(
+                pastetools.get_paste_parent(newpaste),
+                'paste_id',
+                None
+            ),
         }
     except Exception as ex:
         log.error('Error saving new paste:\n{}'.format(ex))
@@ -395,7 +398,8 @@ def view_api(request):
     return responses.clean_response(
         'paste/api.html',
         context=None,
-        request=request)
+        request=request
+    )
 
 
 @csrf_protect
@@ -427,7 +431,8 @@ def view_index(request):
     return responses.clean_response(
         'paste/index.html',
         context=context,
-        request=request)
+        request=request
+    )
 
 
 @never_cache
@@ -488,13 +493,16 @@ def view_paste(request):
             'latest': view_latest,
             'all': view_latest
         }
-        if pasteidarg in id_alias.keys():
-            return id_alias[pasteidarg](request)
+        id_view = id_alias.get(pasteidarg, None)
+        if id_view is not None:
+            return id_view(request)
 
         # Lookup existing paste by id.
-        pasteobj = get_object(wp_paste.objects,
-                              paste_id=pasteidarg,
-                              disabled=False)
+        pasteobj = get_object(
+            wp_paste.objects,
+            paste_id=pasteidarg,
+            disabled=False
+        )
 
         if pasteobj is None:
             # Return a 404, that paste cannot be found.
@@ -505,7 +513,7 @@ def view_paste(request):
             return responses.error404(request, errmsg)
         else:
             # Grab parent as the replyto object.
-            replytoobj = pasteobj.parent
+            replytoobj = pastetools.get_paste_parent(pasteobj)
             # Update some info about the paste.
             pasteobj.view_count += 1
             # Save changes.
@@ -513,8 +521,10 @@ def view_paste(request):
 
     if replytoidarg is not None:
         # Lookup parent paste by id.
-        replytoobj = get_object(wp_paste.objects,
-                                paste_id=replytoidarg)
+        replytoobj = get_object(
+            wp_paste.objects,
+            paste_id=replytoidarg
+        )
         if replytoobj is None:
             # Return a 404, user is trying to reply to a dead paste.
             errmsg = 'Paste not found: {}'.format(replytoidarg)
@@ -525,10 +535,11 @@ def view_paste(request):
 
     # If this paste has a parent, get it and use it as the replyto.
     if pasteobj is not None:
-        if pasteobj.parent is not None:
-            replytoobj = pasteobj.parent
-        # Get all replies for this paste.
-        replies = pasteobj.children.order_by('-publish_date')
+        parent = pastetools.get_paste_parent(pasteobj)
+        if parent is not None:
+            replytoobj = parent
+
+        replies = pastetools.get_paste_children(pasteobj)
         if replies:
             # Grab latest reply to this paste.
             replylast = replies[0]
@@ -560,7 +571,8 @@ def view_paste_raw(request):
     try:
         pasteobj = wp_paste.objects.get(
             paste_id=pasteidarg,
-            disabled=False)
+            disabled=False
+        )
     except wp_paste.DoesNotExist:
         return responses.error404(request, 'Paste not found.')
     except Exception as ex:
@@ -596,15 +608,17 @@ def view_replies(request):
     if pasteidarg is None:
         return responses.error404(request, 'No paste id given.')
 
-    pasteobj = get_object(wp_paste.objects,
-                          paste_id=pasteidarg,
-                          disabled=False)
+    pasteobj = get_object(
+        wp_paste.objects,
+        paste_id=pasteidarg,
+        disabled=False
+    )
     if pasteobj is None:
         # No paste found.
         errmsg = 'Paste not found: {}'.format(pasteidarg)
         return responses.error404(request, errmsg)
 
-    replies = pasteobj.children.order_by('-publish_date')
+    replies = pastetools.get_paste_children(pasteobj)
     context = {
         'paste': pasteobj,
         'replies': replies,

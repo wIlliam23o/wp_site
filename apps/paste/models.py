@@ -26,7 +26,8 @@ class wp_paste(models.Model):  # noqa
         blank=True,
         default='',
         max_length=255,
-        help_text='Author for the paste.')
+        help_text='Author for the paste.'
+    )
 
     # author's ip address. (for tracking public submits.)
     author_ip = models.CharField(
@@ -34,13 +35,15 @@ class wp_paste(models.Model):  # noqa
         blank=True,
         default='',
         max_length=15,
-        help_text='Author\'s IP for the paste.')
+        help_text='Author\'s IP for the paste.'
+    )
 
     # paste content (can't be blank.)
     content = models.TextField(
         'content',
         blank=False,
-        help_text='Content for the paste.')
+        help_text='Content for the paste.'
+    )
 
     # paste title..
     title = models.CharField(
@@ -48,7 +51,8 @@ class wp_paste(models.Model):  # noqa
         blank=True,
         default='',
         max_length=255,
-        help_text='Title for the paste.')
+        help_text='Title for the paste.'
+    )
 
     # language for the paste.
     language = models.CharField(
@@ -56,51 +60,59 @@ class wp_paste(models.Model):  # noqa
         blank=True,
         default='',
         max_length=255,
-        help_text='Language for highlighting.')
+        help_text='Language for highlighting.'
+    )
 
     # Human-readable paste id.
     paste_id = models.CharField(
         'paste id',
         max_length=255,
         blank=True,
-        help_text='Paste ID for building urls.')
+        help_text='Paste ID for building urls.'
+    )
 
     # publish date (for sort-order mainly)
     publish_date = models.DateTimeField(
         'publish date',
         blank=False,
         default=datetime.now,
-        help_text='Date the paste was published. (Set automatically)')
+        help_text='Date the paste was published. (Set automatically)'
+    )
 
     # api submitted? (True if the paste was submitted through the public api)
     apisubmit = models.BooleanField(
         'api submitted',
         default=False,
-        help_text='Whether or not this was submitted with the public api.')
+        help_text='Whether or not this was submitted with the public api.'
+    )
 
     # disables paste (instead of deleting it, it simply won't be viewed)
     disabled = models.BooleanField(
         'disabled',
         default=False,
-        help_text='Whether or not this paste is disabled (not viewable).')
+        help_text='Whether or not this paste is disabled (not viewable).'
+    )
 
     # hold on to the paste forever?
     onhold = models.BooleanField(
         'on hold',
         default=False,
-        help_text='Whether or not this paste is on hold (never expires).')
+        help_text='Whether or not this paste is on hold (never expires).'
+    )
 
     # private paste? (won't show in public listings.)
     private = models.BooleanField(
         'private',
         default=False,
-        help_text='Whether or not this paste is private (not listable).')
+        help_text='Whether or not this paste is private (not listable).'
+    )
 
     # count of views/downloads
     view_count = models.PositiveIntegerField(
         'view count',
         default=0,
-        help_text='How many times this paste has been viewed.')
+        help_text='How many times this paste has been viewed.'
+    )
 
     # parent/replyto paste object.
     parent = models.ForeignKey(
@@ -108,7 +120,8 @@ class wp_paste(models.Model):  # noqa
         verbose_name='parent of this paste',
         blank=True,
         null=True,
-        related_name='children')
+        related_name='children'
+    )
 
     date_hierarchy = 'publish_date'
 

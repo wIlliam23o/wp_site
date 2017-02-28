@@ -50,37 +50,40 @@ def format_name_html(name):
     if name.startswith('@'):
         name = name[1:]
 
-    template = '<a href=\'http://twitter.com/{n}\' target=\'_blank\'>@{n}</a>'
+    template = (
+        '<a href=\'https://twitter.com/{n}\' target=\'_blank\'>@{n}</a>'
+    )
     return template.format(n=name)
 
 
 def format_photo_html(
-        src, href=None, height=None, width=None, maxheight=None, maxwidth=None):
-        """ Create an img tag (html string) from an image href and optional sizes.
-            If href is passed, it is wrapped in a link (<a>).
-            The whole thing is wrapped in a div.
-        """
-        divclsname = 'tweet-photo-box'
-        imgclsname = 'tweet-photo'
-        divtemplate = '<div class=\'{cls}\'>{child}</a>'
-        linktemplate = '<a href=\'{href}\' target=\'_blank\'>{child}</a>'
-        imgtemplate = '<img class=\'{cls}\' src=\'{src}\'{style}>'
+        src, href=None, height=None, width=None,
+        maxheight=None, maxwidth=None):
+    """ Create an img tag (html string) from an image href and optional sizes.
+        If href is passed, it is wrapped in a link (<a>).
+        The whole thing is wrapped in a div.
+    """
+    divclsname = 'tweet-photo-box'
+    imgclsname = 'tweet-photo'
+    divtemplate = '<div class=\'{cls}\'>{child}</a>'
+    linktemplate = '<a href=\'{href}\' target=\'_blank\'>{child}</a>'
+    imgtemplate = '<img class=\'{cls}\' src=\'{src}\'{style}>'
 
-        stylecss = parse_size(
-            height=height,
-            width=width,
-            maxheight=maxheight,
-            maxwidth=maxwidth)
-        style = ' style=\'{}\''.format(stylecss) if stylecss else ''
+    stylecss = parse_size(
+        height=height,
+        width=width,
+        maxheight=maxheight,
+        maxwidth=maxwidth)
+    style = ' style=\'{}\''.format(stylecss) if stylecss else ''
 
-        imgtag = imgtemplate.format(cls=imgclsname, src=src, style=style)
-        if href is None:
-            # Just an image tag.
-            return divtemplate.format(cls=divclsname, child=imgtag)
+    imgtag = imgtemplate.format(cls=imgclsname, src=src, style=style)
+    if href is None:
+        # Just an image tag.
+        return divtemplate.format(cls=divclsname, child=imgtag)
 
-        # Wrap it in a link to the original image.
-        linktag = linktemplate.format(href=href, child=imgtag)
-        return divtemplate.format(cls=divclsname, child=linktag)
+    # Wrap it in a link to the original image.
+    linktag = linktemplate.format(href=href, child=imgtag)
+    return divtemplate.format(cls=divclsname, child=linktag)
 
 
 def parse_size(height=None, width=None, maxheight=None, maxwidth=None):

@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from apps.paste import views
 # Patterns for pastebin app.
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # paste main
     url(r'^$', views.view_index),
     # public api submit
@@ -20,4 +19,4 @@ urlpatterns = patterns(
     url(r'^top/?$', views.view_top),
     # plain
     url(r'^raw/?$', views.view_paste_raw),
-)
+]

@@ -41,8 +41,8 @@ def get_screenshots(miscobj):
     imagedir = misctools.get_screenshots_dir(miscobj)
     if imagedir:
         return mark_safe(htmltools.get_screenshots(imagedir))
-    else:
-        return None
+
+    return None
 
 
 @register.filter
@@ -83,8 +83,7 @@ def has_screenshots(miscobj):
         Otherwise, False.
     """
 
-    imagedir = misctools.get_screenshots_dir(miscobj)
-    return imagedir
+    return bool(misctools.get_screenshots_dir(miscobj))
 
 
 @register.filter

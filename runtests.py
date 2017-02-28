@@ -56,7 +56,6 @@ def main(argd):
     if failures:
         print('\nFailures: {}'.format(failures))
     return failures
-    return 0
 
 
 def int_arg(s, default=None, minval=None, maxval=None):

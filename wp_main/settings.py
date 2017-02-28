@@ -10,9 +10,9 @@ import settings_local
 
 SYSVERSION = sys.version
 # Version for welbornprod.com
-WPVERSION = '2.4.1'
+WPVERSION = '3.0.1'
 
-TEMPLATE_DEBUG, DEBUG = settings_local.TEMPLATE_DEBUG, settings_local.DEBUG
+DEBUG = settings_local.DEBUG
 
 # Django messages framework, message-levels
 # from django.contrib.messages import constants as message_constants
@@ -78,7 +78,6 @@ USER_AGENTS_CACHE = 'default'
 
 # main app (location of settings.py)
 MAIN_DIR = os.path.join(BASE_DIR, 'wp_main')
-TEMPLATES_BASE = os.path.join(MAIN_DIR, 'templates')
 
 # IP's debug_toolbar should be shown to.
 INTERNAL_IPS = tuple(SECRETS.settings.get('internal_ips', []))
@@ -127,34 +126,45 @@ STATICFILES_FINDERS = (
     #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
+templates_base = os.path.join(MAIN_DIR, 'templates')
+# Used for DjangoTemplates().from_string, and TEMPLATES.
+DJANGO_TEMPLATES_OPTS = {
+    # Needed for using DjangoTemplates().from_string.
+    'NAME': 'DjangoTemplates',
+    'APP_DIRS': True,
+    'DIRS': (
+        templates_base,
+        os.path.join(templates_base, 'admin/templates'),
+        os.path.join(templates_base, 'admindoc/templates'),
+        # Include project pages as possible templates.
+        os.path.join(BASE_DIR, 'projects/static/html'),
+        # Include blog post html as possible templates.
+        os.path.join(BASE_DIR, 'blogger/static/html'),
+    ),
+    'OPTIONS': {
+        'context_processors': [
+            'django.contrib.auth.context_processors.auth',
+            'django.template.context_processors.csrf',
+            'django.template.context_processors.debug',
+            'django.template.context_processors.request',
+            'django.template.context_processors.i18n',
+            'django.template.context_processors.media',
+            'django.template.context_processors.static',
+            'django.template.context_processors.tz',
+            'django.contrib.messages.context_processors.messages',
+        ],
+        'debug': settings_local.TEMPLATE_DEBUG,
 
+    },
+}
+DEFAULT_TEMPLATE_SETTINGS = {
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+}
+DEFAULT_TEMPLATE_SETTINGS.update(DJANGO_TEMPLATES_OPTS)
+
+# Actual config that django uses.
 TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'APP_DIRS': True,
-        'DIRS': (
-            TEMPLATES_BASE,
-            os.path.join(TEMPLATES_BASE, 'admin/templates'),
-            os.path.join(TEMPLATES_BASE, 'admindoc/templates'),
-            # Include project pages as possible templates.
-            os.path.join(BASE_DIR, 'projects/static/html'),
-            # Include blog post html as possible templates.
-            os.path.join(BASE_DIR, 'blogger/static/html'),
-        ),
-        'OPTIONS': {
-            'context_processors': [
-                'django.contrib.auth.context_processors.auth',
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.template.context_processors.i18n',
-                'django.template.context_processors.media',
-                'django.template.context_processors.static',
-                'django.template.context_processors.tz',
-                'django.contrib.messages.context_processors.messages',
-            ],
-
-        },
-    }
+    DEFAULT_TEMPLATE_SETTINGS,
 ]
 
 MIDDLEWARE_CLASSES = (
@@ -204,6 +214,7 @@ INSTALLED_APPS = (
 
     # for making get_user_agent(request) available.
     'django_user_agents',
+
     # local apps
     'wp_main',  # contains global template tags (wp_tags)
     'apps',  # handles urls for all sub-apps.
@@ -227,13 +238,13 @@ class SuppressDeprecated(Filter):
     """ Ignores RemovedInDjango19Warning messages. """
     def filter(self, record):
         WARNINGS_TO_SUPPRESS = [
-            'RemovedInDjango19Warning'
+            'RemovedInDjango19Warning',
         ]
         # Return false to suppress message.
-        return not any([
+        return not any((
             warn in record.getMessage()
             for warn in WARNINGS_TO_SUPPRESS
-        ])
+        ))
 
 
 # See http://docs.djangoproject.com/en/dev/topics/logging for
@@ -297,7 +308,9 @@ if SERVER_LOCATION == 'remote':
     }
 
 DEBUG_TOOLBAR_CONFIG = {
-    'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'}
+    'DISABLE_PANELS': {'debug_toolbar.panels.redirects.RedirectsPanel'},
+    # Hide the toolbar on load.
+    'SHOW_COLLAPSED': True,
 }
 # Don't automatically adjust project settings based on DEBUG!
 DEBUG_TOOLBAR_PATCH_SETTINGS = False

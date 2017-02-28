@@ -38,8 +38,6 @@
     box-shadow: $shadowboxmed;
     color: $greymain;
     overflow: hidden;
-    width: 100%;
-
 }
 
 .breadcrumbs {
@@ -59,33 +57,53 @@
 }
 
 // Custom items (from wp_tags filters or other)
-.item-disabled {
-    // Disabled items are grey!
-    // scss-lint:disable ImportantRule
-    color: $greylight !important;
+.wp-admin {
+    &.item-disabled {
+        // Disabled items are grey!
+        // scss-lint:disable ImportantRule
+        color: $greylight !important;
+
+        &.item-expired {
+            // expired, already disabled items are red/grey.
+            // scss-lint:disable ImportantRule
+            color: $redlight !important;
+        }
+    }
 
     &.item-expired {
-        // expired, already disabled items are red/grey.
+        // expired pastes/items are red
         // scss-lint:disable ImportantRule
-        color: $redlight !important;
+        color: $redmain !important;
+
+        &.item-onhold {
+            border-color: $redlight !important;
+        }
+    }
+
+    &.item-onhold {
+        // Onhold items are outlined!
+        border-color: $greylight;
+        border-radius: 2px;
+        border-style: solid;
+        border-width: 1px;
+        padding-right: 2px;
+        text-decoration: none;
+
+        &:hover {
+            border-style: none;
+        }
+
+        &.item-private {
+            padding-right: 4px;
+        }
+    }
+
+    &.item-private {
+        // Private items are italic.
+        font-style: italic;
     }
 }
 
-.item-expired {
-    // expired pastes/items are red
-    // scss-lint:disable ImportantRule
-    color: $redmain !important;
-}
-
-.item-onhold {
-    // Onhold items are outlined!
-    text-decoration: overline underline;
-}
-
-.item-private {
-    // Private items are italic.
-    font-style: italic;
-}
 
 .vLargeTextField,
 .vXMLLargeTextField {

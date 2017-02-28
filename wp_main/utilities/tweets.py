@@ -106,6 +106,7 @@ def get_tweets(screen_name, count=1):
         return {}
     return t
 
+
 if __name__ == '__main__':
     print('\n\nThis module is designed to be used as a library.\n')
     if available:

@@ -1,0 +1,68 @@
+@import 'welbornprod';
+
+.debugplus-section {
+    @include border-radius-thin-color(5px, $bordermain);
+    font-family: $fontsmono;
+    font-size: $fontmono;
+    margin-top: 10px;
+    padding: 5px;
+}
+
+.debugplus-item {
+    border-bottom-color: $bordermain;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    display: flex;
+    flex-direction: column;
+    padding: 2px;
+
+    &.no-div {
+        border-bottom-style: none;
+    }
+}
+
+.debugplus-pair {
+    display: flex;
+    flex-direction: row;
+}
+
+.debugplus-key {
+    color: $greymain;
+    flex-basis: 20%;
+}
+
+.debugplus-value {
+    color: $greenmain;
+    margin-left: 10px;
+}
+
+.debugplus-toggleable {
+    display: block;
+    padding-bottom: 10px;
+    padding-top: 20px;
+    position: relative;
+}
+
+.debugplus-toggle {
+    @include border-radius-thin-color(5px, $bordermain);
+    background-color: $borderhover;
+    background-image: url('/static/images/up-arrow.gif');
+    background-position: center;
+    background-repeat: no-repeat;
+    color: $bluemain;
+    cursor: pointer;
+    height: 10px;
+    padding: 5px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transform: rotate(180deg);
+    transition: 0.35s ease-out;
+    width: 10px;
+
+    &:hover {
+        background-color: $bordermain;
+        border-color: $borderhover;
+        color: $bluehover;
+    }
+}

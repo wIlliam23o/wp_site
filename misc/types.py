@@ -53,8 +53,9 @@ class MiscType(object):
         elif hasattr(other, 'lower'):
             return self.name == other
         else:
-            raise ValueError('Can\'t compare '
-                             '{} to MiscType!'.format(str(type(other))))
+            raise ValueError(
+                'Can\'t compare {} to MiscType!'.format(type(other).__name__)
+            )
 
     def __str__(self):
         """ String representation for this type (viewable on site) """
@@ -85,11 +86,11 @@ all_types = (
     MiscType(
         'HexChat', 'HexChat Script', viewable=True,
         warning=(
-            'To use these xchat scripts you can either '
+            'To use these hexchat scripts you can either '
             'drop them in the HexChat config directory '
             '(usually ~/.config/hexchat/addons), '
             'or load the script manually by going to:\n'
-            '<kbd>Window -> Plugins &amp; Scripts -> Load...</kbd>')),
+            '<kbd>HexChat -> Load Plugin or Script...</kbd>')),
     MiscType(
         'XChat', 'XChat Script', viewable=True,
         warning=(
@@ -169,6 +170,7 @@ class MiscTypes:
         (see global level function calls below)
     """
     pass
+
 
 add_misctype_list(all_types)
 generate_fieldchoices()

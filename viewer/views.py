@@ -137,7 +137,7 @@ def get_source_files(project):
 
 def get_using_paths(dir_path, absolute_path=None, proj=None):
     """ When given a dir as a path,
-       find out which file is preferred to use first.
+        find out which file is preferred to use first.
     """
 
     if absolute_path is None:
@@ -150,30 +150,39 @@ def get_using_paths(dir_path, absolute_path=None, proj=None):
         files = os.listdir(absolute_path)
     except Exception as ex:
         files = []
-        log.debug("unable to listdir: " + absolute_path + '\n' + str(ex))
+        log.debug('unable to listdir: {}\n  {}'.format(
+            absolute_path,
+            ex,
+        ))
 
     # no files in this directory, or bad dir.
-    if len(files) == 0:
+    if not files:
         return (None, None)
 
-    # dir has files, get most important to show.
+    default_file = utilities.get_relative_path(
+        utilities.append_path(dir_path, files[0])
+    )
+    # Dir has files, get most important to show.
     if proj is None:
-        # no project, try first file.
-        static_path = utilities.append_path(dir_path, files[0])
-        absolute_path = utilities.get_absolute_path(static_path)
+        # No project, try first file.
+        return (
+            default_file,
+            utilities.get_absolute_path(default_file),
+        )
 
-    else:
-        # has project, see if source_file is good. if so, use it.
-        if proj.source_file:
-            static_path = proj.source_file
-            absolute_path = utilities.get_absolute_path(static_path)
-            # log.debug("dir passed: using source_file: " + absolute_path)
-        else:
-            # just use first file found.
-            static_path = utilities.append_path(dir_path, files[0])
-            absolute_path = utilities.get_absolute_path(static_path)
+    # Has project, see if source_file is good. if so, use it.
+    if proj.source_file:
+        absolute_path = utilities.get_absolute_path(proj.source_file)
+        return (
+            utilities.get_relative_path(absolute_path),
+            absolute_path,
+        )
 
-    return (static_path, absolute_path)
+    # Just use first file found for project.
+    return (
+        default_file,
+        utilities.get_absolute_path(default_file),
+    )
 
 
 def get_file_info(file_path):
@@ -194,8 +203,8 @@ def get_file_info(file_path):
         if project:
             static_path, absolute_path = get_using_paths(
                 static_path,
-                absolute_path,
-                project)
+                proj=project
+            )
             if static_path is None or absolute_path is None:
                 # Raise error which will display a 404.
                 raise Http404('Sorry, there was an error viewing that file.')
@@ -226,9 +235,11 @@ def get_file_info(file_path):
         filetracker = dltools.get_file_tracker(absolute_path)
         if filetracker is not None:
             if project is not None:
-                dltools.update_tracker_projects(filetracker,
-                                                project,
-                                                dosave=False)
+                dltools.update_tracker_projects(
+                    filetracker,
+                    project,
+                    dosave=False
+                )
             filetracker.view_count += 1
             filetracker.save()
 
@@ -247,4 +258,13 @@ def get_file_info(file_path):
         'absolute_path': absolute_path,
         'file_content': file_content,
     }
+    if project:
+        fileinfo['name'] = project.name
+        fileinfo['related_url'] = '/projects/{}'.format(project.alias)
+    elif miscobj:
+        fileinfo['name'] = miscobj.name
+        fileinfo['related_url'] = '/misc/{}'.format(miscobj.alias)
+    else:
+        fileinfo['name'] = None
+        fileinfo['related_url'] = None
     return fileinfo

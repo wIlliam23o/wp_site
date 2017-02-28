@@ -4,20 +4,28 @@
 .highlighted-inline {
     // Code paragraphs that are highlighted using pygments.
     @include border-radius-thin(5px);
+    display: inline-block;
     font-family: $fontsmono;
-    margin-top: 0;
-    padding-left: 5px;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    padding: 5px;
 }
 
+@media grid {
+    // Just make the code bold for terminals that allow css.
+    .highlighted-inline {
+        font-weight: bold;
+    }
+}
 // scss-lint:disable QualifyingElement
-pre div.highlighted-inline {
+div.highlighted-inline {
     font-size: $fontnormal;
 }
 
 .highlighted-embedded {
     // Embedded highlighted code, no linebreaks.
     @include border-radius-thin(5px);
-    display: inline-block;
+    display: inline;
     font-family: $fontsmono;
     font-size: $fontinline;
     margin-left: 2px;
@@ -25,6 +33,13 @@ pre div.highlighted-inline {
     margin-top: 0;
     padding-left: 3px;
     padding-right: 3px;
+}
+
+@media grid {
+    // Just make the code bold for terminals that allow css.
+    .highlighted-embedded {
+        font-weight: bold;
+    }
 }
 
 @media (max-width: 800px) {

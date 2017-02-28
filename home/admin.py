@@ -12,5 +12,6 @@ class WpAdminSite(admin.AdminSite):
     site_header = 'Welborn Productions Admin'
     site_title = 'Welborn Productions Administration'
 
+
 admin_site = WpAdminSite()
 admin_site.register(home_config, SingletonModelAdmin)

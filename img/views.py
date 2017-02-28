@@ -6,6 +6,10 @@
 
 import logging
 
+from django.views.decorators.csrf import (
+    ensure_csrf_cookie
+)
+
 from wp_main.utilities import responses, utilities
 from img.models import wp_image
 
@@ -37,6 +41,7 @@ def handle_files(request):
     return 'approved', 'Your image was uploaded.'
 
 
+@ensure_csrf_cookie
 def view_index(request):
     """ List all uploaded images, or an album's images (GET /img?album=<name>).
         Present the upload button to staff.
@@ -98,7 +103,8 @@ def view_index(request):
     return responses.clean_response(
         template_name='img/index.html',
         context=context,
-        request=request)
+        request=request
+    )
 
 
 def view_image_id(request, imageid):

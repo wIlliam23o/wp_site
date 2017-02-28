@@ -38,8 +38,10 @@ from apps.paste.models import wp_paste
 
 # for admin change_list filtering.
 import re
+# Example of a 'result' item being passed to colorize_admin_css():
+# <th class="field-__str__"><a href="/adminmisc/wp_misc/7/change/">XTools v. 0.3.6</a></th>  # noqa
 #                               adminpage type  id     str()
-disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/">(.+)</a>'
+disabled_patstr = r'<a href.+"/(admin\w+)/(.+)/(\d+)/[\w]+/">(.+)</a>'
 disabled_pat = re.compile(disabled_patstr)
 
 log = logging.getLogger('wp.wp_main.tags')
@@ -71,6 +73,7 @@ def colorize_admin_css(item):
         # This is not an object link.
         return item
     else:
+        log.debug('Found object link: {}'.format(item))
         # grab object.
         if len(obj_match.groups()) == 4:
             # beginning of a tag (<a href) (Not used right now)
@@ -81,15 +84,19 @@ def colorize_admin_css(item):
             try:
                 objid = int(idstr)
             except Exception as ex:
-                log.error('Failed to parsed disable-item id: '
-                          '{}\n{}'.format(idstr, ex))
+                log.error(
+                    'Failed to parsed disable-item id: {}\n{}'.format(
+                        idstr,
+                        ex
+                    )
+                )
                 return item
 
             # name/title of object (My Blog Post)
             name = obj_match.groups()[3]
         else:
             # failed to match our pattern exactly.
-            log.debug("Incorrect number of items in match: " + str(item))
+            log.debug('Incorrect number of items in match: {}'.format(item))
             return item
 
     # convert to object
@@ -107,21 +114,29 @@ def colorize_admin_css(item):
         if objname == otype:
             obj = utilities.get_object_safe(objects, id=objid)
             break
-    log.debug('Found: {}'.format(obj))
+    log.debug('Found object from result item: {}'.format(obj))
     # no object found for this type.
     if obj is None:
-        log.debug(''.join((
-            'Colorize-Admin: Can\'t find: '
-            '{} [{}]')).format(name, otype))
+        log.error(
+            'Colorize-Admin: Can\'t find: {} [{}]'.format(name, otype)
+        )
         return item
 
     # List of classes to add to this link.
-    newclasses = []
+    # The starting class is to add specificity to the css.
+    newclasses = ['wp-admin']
 
     # Add classes based on object attributes.
     if is_disabled(obj):
         # Item is disabled (could be post, project, misc, paste, etc.)
         newclasses.append('item-disabled')
+
+    # Paste-specific colors.
+    # TODO: Like searchables and updateables, make colorize_admin an app-based
+    #       check. Have a admin_colors.py that defines a colorizable result.
+    if is_expired_onhold(obj) or is_expired(obj):
+        # Item is an expired paste.
+        newclasses.append('item-expired')
 
     if is_onhold(obj):
         # Item is onhold.
@@ -131,13 +146,10 @@ def colorize_admin_css(item):
         # Item is a private paste.
         newclasses.append('item-private')
 
-    if is_expired(obj):
-        # Item is an expired paste.
-        newclasses.append('item-expired')
-
     if newclasses:
         # Return item with new classes added.
         newtxt = '<a class="{}" href'.format(' '.join(newclasses))
+        # Only replace the link part, because it may be wrapped with something
         return mark_safe(item.replace('<a href', newtxt))
     else:
         return item
@@ -184,47 +196,47 @@ def ends(str_, val_to_check):
 
 
 @register.filter
-def exceeds_max(value, max_):
+def exceeds_max(value, maximum):
     """ checks if a value exceeds the maximum allowed """
 
     if isinstance(value, (float, int)):
-        val_ = value
+        intval = value
     else:
         try:
-            val_ = int(value)
+            intval = int(value)
         except (TypeError, ValueError):
-            val_ = value
+            intval = value
 
-    if isinstance(max_, (float, int)):
-        return (val_ > max_)
+    if isinstance(maximum, (float, int)):
+        return (intval > maximum)
     else:
-        if max_.isalnum():
+        if maximum.isalnum():
             try:
-                imax = int(max_)
-                return (val_ > imax)
+                imax = int(maximum)
+                return (intval > imax)
             except (TypeError, ValueError):
                 pass
     return False
 
 
 @register.filter
-def exceeds_min(value, min_):
+def exceeds_min(value, minimum):
     """ checks if a value exceeds the minimum allowed """
 
     if isinstance(value, (float, int)):
-        val_ = value
+        intval = value
     else:
         try:
-            val_ = int(value)
+            intval = int(value)
         except (TypeError, ValueError):
-            val_ = value
-    if isinstance(min_, (float, int)):
-        return (val_ < min_)
+            intval = value
+    if isinstance(minimum, (float, int)):
+        return (intval < minimum)
     else:
-        if min_.isalnum():
+        if minimum.isalnum():
             try:
-                imin = int(min_)
-                return (val_ < imin)
+                imin = int(minimum)
+                return (intval < imin)
             except (TypeError, ValueError):
                 pass
 
@@ -302,8 +314,24 @@ def get_time_since(date):
 
 @register.filter
 def get_user_agent(request):
-    """ Get the user agent string from a request. """
+    """ Get a user_agents.parser.UserAgent from a request. """
     return utilities.get_user_agent(request)
+
+
+@register.filter
+def get_user_agent_dict(request):
+    """ Get a user_agents.parser.UserAgent in dict form from a request. """
+    return utilities.get_user_agent_dict(request)
+
+
+@register.filter(name='hash')
+def hash_object(obj):
+    """ Try hash()ing an object, fallback to hash(str(obj)). """
+    try:
+        val = hash(obj)
+    except TypeError:
+        return hash(str(obj))
+    return val
 
 
 @register.filter
@@ -404,6 +432,12 @@ def is_authenticated(req_or_user):
 
 
 @register.filter
+def is_dict(d):
+    """ Use isinstance() to determine whether an object is a dict. """
+    return isinstance(d, dict)
+
+
+@register.filter
 def is_disabled(model_obj):
     """ if object has .disabled attribute, returns it,
         if not, returns False.
@@ -417,13 +451,46 @@ def is_expired(paste_obj):
         if not, returns False.
     """
 
-    if hasattr(paste_obj, 'is_expired'):
-        try:
-            expired = paste_obj.is_expired()
-        except TypeError:
-            expired = False
-    else:
-        expired = False
+    try:
+        expired = paste_obj.is_expired()
+    except AttributeError:
+        return False
+    except TypeError:
+        log.error(
+            'Tried calling is_expired() on: {!r} (type: {})'.format(
+                paste_obj,
+                type(paste_obj).__name__,
+            )
+        )
+        return False
+
+    return expired
+
+
+@register.filter
+def is_expired_onhold(paste_obj):
+    """ if object has .is_expired() function, returns the result.
+        if not, returns False.
+        This passes a keyword argument, never_onhold=False. To ensure
+        that even expired pastes that are on hold return their actual
+        expiration state.
+    """
+
+    try:
+        expired = paste_obj.is_expired(never_onhold=False)
+    except AttributeError:
+        return False
+    except TypeError:
+        log.error(
+            ' '.join((
+                'Tried calling is_expired(never_onhold=False) on:',
+                '{!r} (type: {})',
+            )).format(
+                paste_obj,
+                type(paste_obj).__name__,
+            )
+        )
+        return False
     return expired
 
 
@@ -604,16 +671,14 @@ def sortdict(d):
         Or in a template:
             {% for skey, sval in mydict|sortdict %}
     """
-
-    for skey in sorted(d.keys()):
-        yield (skey, d[skey])
+    yield from ((k, d[k]) for k in sorted(d))
 
 
 @register.filter
 def sortitems(o):
     """ wrapper for sorted() """
 
-    return sorted(o)
+    return tuple(sorted(o))
 
 
 @register.filter

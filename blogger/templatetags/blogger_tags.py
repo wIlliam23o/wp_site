@@ -6,7 +6,7 @@
 
 from django import template
 from blogger import blogtools
-#from wp_main.utilities import htmltools
+# from wp_main.utilities import htmltools
 from django.utils.safestring import mark_safe
 register = template.Library()
 

@@ -28,6 +28,8 @@ from home.models import home_config
 log = logging.getLogger('wp.home')
 
 
+# Disabling cache for main page, because the mobile version keeps caching.
+@never_cache
 def index(request):
     """ Serve up main page (home, index, landing) """
     # Grab config on every request, to keep it fresh without restarting.
@@ -40,9 +42,10 @@ def index(request):
     else:
         latest_tweet = None
 
+    featuredblog = hometools.get_featured_blog(homeconfig)
     # render main page
     context = {
-        'featured_blog_post': hometools.get_featured_blog(homeconfig),
+        'featured_blog_post': featuredblog,
         'featured_project': hometools.get_featured_project(homeconfig),
         'featured_app': hometools.get_featured_app(homeconfig),
         'welcome_message': homeconfig.welcome_message,
@@ -127,7 +130,8 @@ def view_error(request, error_number):
         'home/{}.html'.format(error_number),
         context=context,
         request=request,
-        status=error_number)
+        status=error_number
+    )
 
 
 @never_cache
@@ -147,7 +151,7 @@ def view_ip_simple(request):
 
 
 def view_login(request):
-    """ processes login attempts ## NOT BEING USED RIGHT NOW ##"""
+    """ processes login attempts ## NOT BEING USED RIGHT NOW ## """
 
     # My first attempt at a login page, not very good.
     # I am using Django's auth.views with modified css right now.
@@ -156,41 +160,37 @@ def view_login(request):
     username = request.POST.get('user', request.GET.get('user', None))
     pw = request.POST.get('pw', request.GET.get('pw', None))
 
-    # log.debug("username: " + str(username) + ", pw: " + str(pw))
-
-    response = responses.redirect_response("/badlogin.html")
     if (username is not None) and (pw is not None):
-
         user = auth.authenticate(user=username, password=pw)
+        if (user is not None) and user.is_active():
+            auth.login(request, user)
+            referer_view = responses.get_referer_view(
+                request,
+                default=None
+            )
 
-        # log.debug("USER=" + str(user))
+            # Change response based on whether prev. view was given.
+            if referer_view is None:
+                # Success
+                return responses.redirect_response('/')
 
-        if user is not None:
-            if user.is_active():
-                auth.login(request, user)
-                referer_view = responses.get_referer_view(request,
-                                                          default=None)
+            # Previous view
+            return responses.redirect_response(referer_view)
 
-                # log.debug("referer_view: " + str(referer_view))
-
-                # Change response based on whether prev. view was given.
-                if referer_view is None:
-                    # Success
-                    response = responses.redirect_response('/')
-                else:
-                    # Previous view
-                    response = responses.redirect_response(referer_view)
-
-    return response
+    return responses.redirect_response('/badlogin.html')
 
 
 def view_no_javascript(request):
     """ Return a page for bots trying to visit base64 or other links that
         are supposed to be decoded with javascript.
     """
-    return responses.basic_response(
-        'Sorry, you must have javascript enabled to follow that link.'
-    )
+    return responses.basic_response('\n'.join((
+        'Sorry, you must have javascript enabled to follow that link.',
+        'It was supposed to open your email client so you can email me.',
+        'I use a basic encoding on mailto: links because of bots.',
+        'If you know a better way, please email me :).',
+        'The address is cj at this domain.'
+    )))
 
 
 def view_raiseerror(request):
@@ -213,11 +213,7 @@ def view_scriptkids(request):
     """
 
     # get ip if possible.
-    # ip_address = request.META.get("HTTP_X_FORWARDED_FOR", None)
-    # if ip_address is None:
-    #    ip_address = request.META.get("REMOTE_ADDR", None)
     ip_address = utilities.get_remote_ip(request)
-    use_ip = (ip_address is not None)
     try:
         path = request.path
     except AttributeError:
@@ -229,7 +225,7 @@ def view_scriptkids(request):
     if scriptkid_img is not None:
         scriptkid_img = utilities.get_relative_path(scriptkid_img)
     use_img = (scriptkid_img is not None)
-
+    use_ip = (ip_address is not None)
     context = {
         'use_img': use_img,
         'scriptkid_img': scriptkid_img,
@@ -237,11 +233,15 @@ def view_scriptkids(request):
         'ip_address': ip_address,
     }
     # Try banning the ip.
-    if use_ip:
+    ban_ip = use_ip and (ip_address != '127.0.0.1')
+    if ban_ip:
         if utilities.ban_add(request):
             log.error('Banned script kid: {}'.format(ip_address))
         else:
             log.error('Could not ban script kid: {}'.format(ip_address))
+    else:
+        log.debug('Not banning scriptkid: {}'.format(ip_address))
+
     # return formatted template.
     return responses.clean_response(
         'home/scriptkids.html',

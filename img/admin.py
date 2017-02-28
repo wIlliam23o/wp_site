@@ -9,6 +9,8 @@ def disable_sel(modeladmin, request, queryset):
     pstr = plural(dcnt, 'image')
     msg = 'Disabled {} {}.'.format(dcnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
+
+
 disable_sel.short_description = 'Disable selected images'
 
 
@@ -18,6 +20,8 @@ def enable_sel(modeladmin, request, queryset):
     pstr = plural(encnt, 'image')
     msg = 'Enabled {} {}.'.format(encnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
+
+
 enable_sel.short_description = 'Enable selected images'
 
 
@@ -38,6 +42,8 @@ def privatize_sel(modeladmin, request, queryset):
     msg = '{} of {} {} marked as private.'.format(privcnt, selcnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
     return privcnt
+
+
 privatize_sel.short_description = 'Privatize selected images'
 
 
@@ -49,6 +55,8 @@ def unprivatize_sel(modeladmin, request, queryset):
     msg = '{} of {} {} marked as not private.'.format(privcnt, selcnt, pstr)
     modeladmin.message_user(request, msg, level=messages.SUCCESS)
     return privcnt
+
+
 unprivatize_sel.short_description = 'Unprivatize selected images'
 
 
