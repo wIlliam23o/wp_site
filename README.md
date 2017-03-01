@@ -102,17 +102,17 @@ _____________________________________________________________________________
 
   <small>...this isn't 100% Python 2 compatible anymore.</small>
 
-**Django 1.8.3+** - (`django`)
+**Django 1.10.4+** - (`django`)
 
   <small>...awesome web framework that made this possible</small>
 
 **Django Debug Toolbar** - (`django-debug-toolbar`)
 
-  <small>...for very useful debugging info in the browser.</small>
+  <small>...for very useful django debugging info in the browser.</small>
 
 **Django Extensions** - (`django-extensions`)
 
-  <small>...several extra tools to use with Django.
+  <small>...several extra tools to use with Django's `manage` tool.
 
 **Django Solo** - (`django-solo`)
 
@@ -122,11 +122,11 @@ _____________________________________________________________________________
 
   <small>...using it for browser/mobile detection right now. </small>
 
-  <small>...currently looking for alternative methods.</small>
+  <small>...I'm using media queries but there are a few things that the user agent is still good for.</small>
 
 **Pygments** - (`pygments`)
 
-  <small>...used for source code highlighting</small>
+  <small>...used for source code highlighting.</small>
 
 **Twython** - (`twython`)
 
