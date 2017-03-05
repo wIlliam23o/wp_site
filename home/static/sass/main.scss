@@ -851,7 +851,7 @@ a .header:hover, a .header.featured-name:hover {
     position: fixed;
     text-align: center;
     width: 45%;
-    z-index: 30;
+    z-index: 5;
 }
 
 #floater-msg {
@@ -1242,7 +1242,7 @@ a.jumpto-nav {
     // Main box containing alert/notice/attention/approved.
     display: none;
     opacity: .85;
-    z-index: 21;
+    z-index: 6;
 }
 
 #alert-title dd ul {
@@ -1719,4 +1719,37 @@ samp {
     font-family: $fontsmono;
     margin-top: 5px;
     padding: 5px;
+}
+
+// Admin logout button.
+#admin-logout {
+    @include border-radius-thin(5px);
+    background-color: $whitedull;
+    color: $redmain;
+    display: block;
+    padding: 5px;
+    position: fixed;
+    right: 5px;
+    top: 5px;
+    z-index: 7;
+
+    a {
+        color: $redmain;
+        text-decoration: none;
+        text-shadow: $shadowtextsmall;
+        transition: .5s;
+
+        &:hover {
+            color: $redhover;
+        }
+
+        &:visited {
+            color: $redmain;
+
+        }
+
+        &:visited:hover {
+            color: $redhover;
+        }
+    }
 }

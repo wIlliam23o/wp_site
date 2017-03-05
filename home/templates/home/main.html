@@ -148,6 +148,15 @@
 			{% endif %}
 		{% endwith %}
 	{% endif %}
+
+	{# Admin logout button #}
+	{% if request|is_staff %}
+		<div id='admin-logout'>
+			<a href='/adminlogout'>
+				logout
+			</a>
+		</div>
+	{% endif %}
 	{# Whole Page Container (Background and everything inside) #}
 	<div id='bg-surround'>
 	    <div id='bg-pattern' class='main-pattern'>
