@@ -17,7 +17,12 @@ from colr import (
     docopt,
 )
 from fmtblock import FormatBlock
-from printdebug import DebugColrPrinter
+from printdebug import (
+    get_lineinfo,
+    DebugColrPrinter
+)
+from printdebug.tools import default_colr_format as lineinfo_format
+
 try:
     import django_init
     if not django_init.init_django():
@@ -261,9 +266,6 @@ def do_analyze(collected, development, clean=False, show_compiled=False):
 
 def do_duplicate_vers(collected, development, min_files=False, clean=False):
     """ Search for duplicate versioned files. """
-    if clean:
-        raise NotImplementedError('No --clean yet. It could be harmful.')
-
     dupes = print_duplicate_vers(
         find_duplicate_vers(collected),
         label='collected',
@@ -276,6 +278,12 @@ def do_duplicate_vers(collected, development, min_files=False, clean=False):
     )
 
     print('\nTotal duplicate versioned files: {}'.format(color_num(dupes)))
+
+    if clean:
+        raise NonImplementedFeature(
+            'No --clean yet. It could be harmful.',
+            get_lineinfo(),
+        )
     return dupes
 
 
@@ -603,6 +611,34 @@ class InvalidArg(ValueError):
         return 'Invalid argument!'
 
 
+class NonImplementedFeature(NotImplementedError):
+    def __init__(self, msg, lineinfo):
+        self.msg = msg or None
+        self.lineinfo = lineinfo
+
+    def __str__(self):
+        return '\n    '.join((
+            str(self.lineinfo),
+            self.msg or 'Feature not implemented yet.'
+        ))
+
+    def as_colr(self):
+        msg = C('Feature not implemented yet.', 'red', style='bright')
+        if self.msg:
+            msg = C('\n    ').join(
+                msg,
+                C(self.msg, 'red'),
+            )
+        return C('\n    ').join(
+            lineinfo_format.format(
+                filename=self.lineinfo.filename,
+                name=self.lineinfo.name,
+                lineno=self.lineinfo.lineno,
+            ),
+            msg,
+        )
+
+
 class UserCancelled(KeyboardInterrupt):
     def __init__(self, msg=None):
         self.msg = msg or 'User Cancelled'
@@ -701,4 +737,7 @@ if __name__ == '__main__':
     except BrokenPipeError:
         print_err('\nBroken pipe, input/output was interrupted.\n')
         mainret = 3
+    except NonImplementedFeature as ex:
+        print_err('\n{}'.format(ex.as_colr()))
+        mainret = 4
     sys.exit(mainret)
