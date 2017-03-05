@@ -40,7 +40,7 @@ debug = debugprinter.debug
 colr_auto_disable()
 
 NAME = 'WpStatic'
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(os.path.abspath(sys.argv[0]))[1]
 SCRIPTDIR = os.path.abspath(sys.path[0])
@@ -625,7 +625,7 @@ class VersionedFileInfo(object):
     def __init__(self, basename, versions):
         self.basename = basename
         self._versions = versions
-        self.versions = self._remove_min_files(versions)
+        self.versions = self._remove_min_files(versions, sort=True)
         # If only one .version is left, then it's not really a duplicate.
         # It only has a min file, with the same version.
         self.only_min = (len(self.versions) == 1)
@@ -663,13 +663,16 @@ class VersionedFileInfo(object):
         )
 
     @staticmethod
-    def _remove_min_files(fis):
+    def _remove_min_files(fis, sort=True):
         """ Remove any FileInfos from a list that are minified files. """
-        return [
+        nomins = (
             fi
             for fi in fis
             if '.min.' not in fi.relpath
-        ]
+        )
+        if sort:
+            return sorted(nomins, key=lambda fi: fi.relpath)
+        return list(nomins)
 
     def get_min_file(self, relpath):
         """ Return any .min file that is related to this relpath.
