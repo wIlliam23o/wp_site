@@ -40,7 +40,7 @@ debug = debugprinter.debug
 colr_auto_disable()
 
 NAME = 'WpStatic'
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 VERSIONSTR = '{} v. {}'.format(NAME, VERSION)
 SCRIPT = os.path.split(os.path.abspath(sys.argv[0]))[1]
 SCRIPTDIR = os.path.abspath(sys.path[0])
@@ -551,10 +551,14 @@ class FileInfo(object):
         relpath = self.relpath.ljust(45)
         if color:
             relpath = C(relpath, 'cyan')
+        if 'static_server' in settings.STATIC_ROOT:
+            repl = '/static_server'
+        else:
+            repl = '/static'
         fullpath = (
             self.fullpath
             .replace(settings.BASE_DIR, '')
-            .replace(settings.STATIC_ROOT, '/static')
+            .replace(settings.STATIC_ROOT, repl)
         )
         if color:
             fullpath = C(fullpath, 'blue')
