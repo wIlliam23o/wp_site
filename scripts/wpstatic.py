@@ -300,10 +300,15 @@ def get_collected():
         for dirname in dirs:
             if dirname.startswith('.'):
                 dirs.remove(dirname)
+        if 'static_server' in settings.STATIC_ROOT:
+            splitter = 'static_server'
+        else:
+            splitter = 'static'
+
         for f in files:
             fullpath = os.path.join(root, f)
-            relativeparts = fullpath.split('static')[1:]
-            relpath = 'static'.join(relativeparts)
+            relativeparts = fullpath.split(splitter)[1:]
+            relpath = splitter.join(relativeparts)
             if IGNOREPAT.match(relpath):
                 continue
             collected.add(FileInfo(fullpath, relpath))
