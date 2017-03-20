@@ -10,10 +10,7 @@ from django.views.decorators.cache import never_cache
 
 # various welbornprod tools
 from wp_main.utilities import (
-    utilities,
     responses,
-    htmltools,
-    tweets
 )
 from apps.timekeeper import tools
 
