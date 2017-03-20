@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
-      project: welborn productions - sitemaps - main
-     @summary: provides main sitemap for sitemaps framework
+"""
+    Welborn Productions - SiteMaps
+    Builds a sitemap.xml from wp apps/objects, and provides a Django view
+    for serving it.
 
-      @author: Christopher Welborn <cj@welbornproductions.net>
-@organization: welborn productions <welbornproductions.net>
+    -Christopher Welborn <cj@welbornprod.com> 4-3-2013
+"""
 
-   start date: Apr 3, 2013
-'''
+# TODO: This should be like searcher or updater, where apps define a
+#       sitemap.py and define what they want included in the sitemap.
 
 import logging
 
@@ -122,6 +123,7 @@ def build_main_urls(protocol, domain):
         '/apps': 'monthly',
         '/projects': 'weekly',
         '/blog': 'daily',
+        '/img': 'weekly',
         '/misc': 'weekly',
         '/paste': 'daily',
     }
