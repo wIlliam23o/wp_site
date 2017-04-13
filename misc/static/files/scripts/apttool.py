@@ -6,7 +6,7 @@
     06-2013
 """
 
-from collections import namedtuple, UserDict, UserList
+from collections import namedtuple, UserList
 from contextlib import suppress
 from datetime import datetime
 from enum import Enum
@@ -14,63 +14,83 @@ import os.path
 import re
 import stat
 import struct
-import subprocess
 import sys
 from time import time
 # for IterCache()
 import weakref
 
-try:
-    import apt                        # apt tools
-    import apt_pkg                    # for IterCache()
-    from apt_pkg import gettext as _  # for IterCache()
-    import apt.progress.text          # apt tools
-except ImportError as eximp:
+
+def import_err(name, exc, module=None):
+    """ Print an error message about missing third-party libs and exit. """
+    module = module or name.lower()
+    # Get actual module name from exception if possible, for when dependencies
+    # are not installed.
+    namepat = re.compile('cannot import name \'(?P<name>[^\']+)\'')
+    namematch = namepat.search(str(exc))
+    excname = None
+    if namematch is not None:
+        excname = namematch.groupdict().get('name', None)
+    modname = exc.name or excname
+    propername = name if name.lower() == str(modname).lower() else modname
     print(
         '\n'.join((
-            '\nMissing important module or modules!\n{}',
-            '\nThese must be installed:',
-            '      apt: ..uses apt.progress.text and others',
-            '  apt_pkg: ..uses apt_pkg.gettext and others.',
-            '\nTry doing: pip install <modulename>\n'
-        )).format(eximp),
-        file=sys.stderr
-    )
-    sys.exit(1)
-
-
-try:
-    from docopt import docopt        # cmdline arg parser
-except ImportError as exdoc:
-    print(
-        '\nDocopt must be installed, try: pip install docopt.\n\n{}'.format(
-            exdoc
+            'Missing important third-party library: {name}',
+            'This can be installed with `pip`: pip install {module}',
+            '\nError message: {exc}'
+        )).format(
+            name=propername,
+            module=modname if modname and modname != module else module,
+            exc=exc,
         ),
         file=sys.stderr
     )
+    if modname and (modname != module):
+        print(
+            '\n'.join((
+                '\n{name} depends on {module} to run correctly.',
+            )).format(
+                name=name,
+                module=modname,
+            ),
+            file=sys.stderr,
+        )
     sys.exit(1)
+
+
+try:
+    import apt                        # apt tools
+    import apt.progress.text          # apt tools
+except ImportError as ex:
+    import_err('apt', ex)
+try:
+    import apt_pkg                    # for IterCache()
+    from apt_pkg import gettext as _  # for IterCache()
+except ImportError as ex:
+    import_err('apt_pkg', ex)
 
 try:
     from colr import (
         auto_disable as colr_auto_disable,
         Colr,
         disable as colr_disable,
-        strip_codes
+        docopt,
+        strip_codes,
+        AnimatedProgress,
+        Frames,
     )
     # Aliased for easier typing and shorter lines.
     C = Colr
 except ImportError as excolr:
-    print(
-        '\nColr must be installed, try: pip install colr\n\n{}'.format(
-            excolr
-        ),
-        file=sys.stderr
-    )
-    sys.exit(1)
+    import_err('Colr', excolr)
+
+try:
+    from fmtblock import FormatBlock
+except ImportError as exfmtblk:
+    import_err('FormatBlock', exfmtblk, module='formatblock')
 
 # ------------------------------- End Imports -------------------------------
 
-__version__ = '0.7.2'
+__version__ = '0.8.2'
 
 NAME = 'AptTool'
 
@@ -432,10 +452,10 @@ def cmd_history(filtertext=None, count=None):
 
 def cmd_install(pkgname, doupdate=False):
     """ Install a package. """
-    print_status('\nLooking for \'{}\'...'.format(pkgname))
+    print_status('\nLooking for \'{}\' to install...'.format(pkgname))
     if doupdate:
-        updateret = update()
-        if updateret:
+        updateret = cmd_update()
+        if not updateret:
             print_err('\nCan\'t update cache!')
 
     if pkgname in cache_main.keys():
@@ -567,7 +587,7 @@ def cmd_locate(pkgnames, only_existing=False, short=False):
 def cmd_remove(pkgname, purge=False):
     """ Remove or Purge a package by name """
 
-    print_status('\nLooking for \'{}\'...'.format(pkgname))
+    print_status('\nLooking for \'{}\' to remove...'.format(pkgname))
     if purge:
         opaction = 'purge'
         opstatus = 'Purging'
@@ -702,8 +722,13 @@ def cmd_search(query, **kwargs):
     print_status('Initializing Cache...')
     cache = IterCache(do_open=False)
     cache._pre_iter_open()
+    ignorecase = kwargs.get('case_insensitive', False)
     print_status(
-        'Searching ~{} packages for {}'.format(cache.rough_size, query)
+        'Searching ~{} packages for {}{}'.format(
+            cache.rough_size,
+            query,
+            ' (case-insensitive)' if ignorecase else '',
+        )
     )
 
     # Update arguments for use with search_itercache().
@@ -822,7 +847,7 @@ def cmd_version(pkgname, allversions=False, div=False, short=False):
     if (not short) and div:
         print_status(C('{}'.format('-' * TERM_WIDTH)))
     status = noop if short else print_status
-    status('\nLooking for \'{}\'...'.format(pkgname))
+    status('\nLooking for \'{}\' versions...'.format(pkgname))
     try:
         package = cache_main[pkgname]
     except KeyError:
@@ -979,32 +1004,10 @@ def flatten_args(args, allow_dupes=False):
         add_items = flat.update
 
     add_items(
-        s.strip() for s in
-        arg for arg in arg.split(',')
+        s.strip() for s in arg  # noqa
+        for arg in args.split(',')
     )
     return tuple(flat)
-
-
-def format_block(
-        text,
-        maxwidth=60, chars=False, newlines=False,
-        prepend=None, strip_first=False, lstrip=False):
-    """ Format a long string into a block of newline seperated text.
-        Arguments:
-            See iter_format_block().
-    """
-    # Basic usage of iter_format_block(), for convenience.
-    return '\n'.join(
-        iter_format_block(
-            text,
-            prepend=prepend,
-            strip_first=strip_first,
-            maxwidth=maxwidth,
-            chars=chars,
-            newlines=newlines,
-            lstrip=lstrip
-        )
-    )
 
 
 def get_latest_ver(pkg):
@@ -1146,61 +1149,6 @@ def is_pkg_match(re_pat, pkg, **kwargs):
     return False
 
 
-def iter_block(text, maxwidth=60, chars=False, newlines=False, lstrip=False):
-    """ Iterator that turns a long string into lines no greater than
-        'maxwidth' in length.
-        It can wrap on spaces or characters. It only does basic blocks.
-        For prepending see `iter_format_block()`.
-
-        Arguments:
-            text       : String to format.
-            maxwidth  : Maximum width for each line.
-                         Default: 60
-            chars      : Wrap on characters if true, otherwise on spaces.
-                         Default: False
-            newlines   : Preserve newlines when True.
-                         Default: False
-            lstrip     : Whether to remove leading spaces from each line.
-                         Default: False
-    """
-    if lstrip:
-        # Remove leading spaces from each line.
-        fmtline = str.lstrip
-    else:
-        # Yield the line as-is.
-        fmtline = str
-    if chars and (not newlines):
-        # Simple block by chars, newlines are treated as a space.
-        text = ' '.join(text.splitlines())
-        for l in (
-                fmtline(text[i:i + maxwidth])
-                for i in range(0, len(text), maxwidth)):
-            yield l
-    elif newlines:
-        # Preserve newlines
-        for line in text.splitlines():
-            for l in iter_block(
-                    line,
-                    maxwidth=maxwidth,
-                    chars=chars,
-                    lstrip=lstrip):
-                yield l
-    else:
-        # Wrap on spaces (ignores newlines)..
-        curline = ''
-        for word in text.split():
-            possibleline = ' '.join((curline, word)) if curline else word
-
-            if len(possibleline) > maxwidth:
-                # This word would exceed the limit, start a new line with it.
-                yield fmtline(curline)
-                curline = word
-            else:
-                curline = possibleline
-        if curline:
-            yield fmtline(curline)
-
-
 def iter_file(filename, skip_comments=True, split_spaces=False):
     """ Iterate over lines in a file, skipping blank lines.
         If 'skip_comments' is truthy then lines starting with #
@@ -1234,61 +1182,6 @@ def iter_file(filename, skip_comments=True, split_spaces=False):
                         yield l
                 else:
                     yield line.rstrip()
-
-
-def iter_format_block(
-        text,
-        maxwidth=60, chars=False, newlines=False,
-        prepend=None, strip_first=False, lstrip=False):
-    """ Iterate over lines in a formatted block of text.
-        This iterator allows you to prepend to each line.
-        For basic blocks see iter_block().
-
-
-        Arguments:
-            text         : String to format.
-
-            maxwidth    : Maximum width for each line. The prepend string is
-                           not included in this calculation.
-                           Default: 60
-
-            chars        : Whether to wrap on characters instead of spaces.
-                           Default: False
-
-            newlines     : Whether to preserve newlines in the original str.
-                           Default: False
-
-            prepend      : String to prepend before each line.
-
-            strip_first  : Whether to omit the prepend string for the first
-                           line.
-                           Default: False
-
-                           Example (when using prepend='$'):
-                            Without strip_first -> '$this', '$that', '$other'
-                               With strip_first -> 'this', '$that', '$other'
-
-            lstrip       : Whether to remove leading spaces from each line.
-                           This doesn't include any spaces in `prepend`.
-                           Default: False
-    """
-    iterlines = iter_block(
-        text,
-        maxwidth=maxwidth,
-        chars=chars,
-        newlines=newlines,
-        lstrip=lstrip)
-    if prepend is None:
-        for l in iterlines:
-            yield l
-    else:
-        # Prepend text to each line.
-        for i, l in enumerate(iterlines):
-            if i == 0 and strip_first:
-                # Don't prepend the first line if strip_first is used.
-                yield l
-            else:
-                yield '{}{}'.format(prepend, l)
 
 
 def iter_history():
@@ -1447,39 +1340,30 @@ def pkg_format(
 
     descmax = TERM_WIDTH - padlen
     padding = ' ' * padlen
-    if len(pkgdesc_full) <= descmax:
-        # already short description
-        pkgdesc = pkgdesc_full
-        if not no_ver:
-            # Add a second line for the version.
-            pkgdesc = '\n'.join((
-                pkgdesc_full,
-                '    {}'.format(verfmt)
+    pkgdesc = FormatBlock(pkgdesc_full).format(
+        width=descmax,
+        strip_first=True,
+        prepend=padding,
+    )
+    if not no_ver:
+        pkglines = pkgdesc.splitlines()
+        pkgver = '    {}'.format(verfmt)
+        if len(pkglines) > 1:
+            # Replace part of the second line with the version.
+            pkglines[1] = ''.join((
+                pkgver,
+                pkglines[1][verlen + 4:]
             ))
-    else:
-        pkgdesc = format_block(
-            pkgdesc_full,
-            maxwidth=descmax,
-            strip_first=True,
-            prepend=padding
-        )
-        if not no_ver:
-            pkglines = pkgdesc.splitlines()
-            pkgver = '    {}'.format(verfmt)
-            if len(pkglines) > 1:
-                # Replace part of the second line with the version.
-                pkglines[1] = ''.join((
-                    pkgver,
-                    pkglines[1][verlen + 4:]
-                ))
-            else:
-                # Add a second line for the version.
-                pkglines.append(pkgver)
+        else:
+            # Add a second line for the version.
+            pkglines.append(pkgver)
 
-            pkgdesc = '\n'.join(pkglines)
+        pkgdesc = '\n'.join(pkglines)
 
-    if len(pkgdesc) > 188:
-        pkgdesc = '{}...'.format(pkgdesc[:185].rstrip())
+    maxdesclines = 2
+    maxdesclen = (descmax * maxdesclines) - 3
+    if len(pkgdesc) > maxdesclen:
+        pkgdesc = '{}...'.format(pkgdesc[:maxdesclen].rstrip())
 
     # Return the final line, indent if needed.
     return ''.join((
@@ -1674,8 +1558,13 @@ def run_preload_cmd(argd):
     """
     status = noop if argd['--short'] else print_status
     # Initialize
-    status('Loading APT Cache...')
-    cache_load()
+    spinner = AnimatedProgress(
+        'Loading APT Cache...',
+        fmt=' {frame} {elapsed:<2.0f}s {text}',
+        frames=Frames.dots_orbit.as_gradient(name='blue', style='bright'),
+    )
+    with spinner:
+        cache_load()
     if not cache_main:
         print_err('Failed to load apt cache!')
         return 1
@@ -1720,7 +1609,8 @@ def search_itercache(regex, **kwargs):
     case_insensitive = kwargs.get('case_insensitive', False)
     installstate = (
         kwargs.get('installstate', InstallStateFilter.every) or
-        InstallStateFilter.every)
+        InstallStateFilter.every
+    )
 
     # initialize Cache object without opening,
     # or use existing cache passed in with cache keyword.
@@ -2156,15 +2046,27 @@ class HistoryLine(object):
             if statustype == 'status':
                 action = parts[3]
                 pkgnameraw = parts[4]
-                pkgname, pkgarch = pkgnameraw.split(':')
+                try:
+                    pkgname, pkgarch = pkgnameraw.split(':')
+                except ValueError:
+                    pkgname = pkgnameraw
+                    pkgarch = None
                 pkgver = parts[5]
             elif statustype in {'configure', 'trigproc'}:
                 pkgnameraw = parts[3]
-                pkgname, pkgarch = pkgnameraw.split(':')
+                try:
+                    pkgname, pkgarch = pkgnameraw.split(':')
+                except ValueError:
+                    pkgname = pkgnameraw
+                    pkgarch = None
                 pkgver = parts[4]
             elif statustype in {'install', 'upgrade'}:
                 pkgnameraw = parts[3]
-                pkgname, pkgarch = pkgnameraw.split(':')
+                try:
+                    pkgname, pkgarch = pkgnameraw.split(':')
+                except ValueError:
+                    pkgname = pkgnameraw
+                    pkgarch = None
                 pkgfromver = parts[4] if (parts[4] != '<none>') else None
                 pkgver = parts[5]
             else:
@@ -2226,11 +2128,18 @@ class PackageVersions(UserList):
                 'Expecting a Package with a `versions` attribute.'
             )
 
-        self.data = [v.version for v in pkg.versions]
-        if pkg.installed:
-            self.installed = pkg.installed.version
-        else:
-            self.installed = None
+        # self.data = [v.version for v in pkg.versions]
+        self.data = []
+        for ver in pkg.versions:
+            self.data.append(ver)
+            ver.has_backport = False
+            for origin in ver.origins:
+                if origin.archive.endswith('backports'):
+                    ver.has_backport = True
+                    break
+
+        self.installed = pkg.installed or None
+
         if not self.data:
             raise ValueError('Empty `versions` attribute for Package.')
         self.latest = self.data[0]
@@ -2248,30 +2157,32 @@ class PackageVersions(UserList):
     def formatted_all(self, header=True):
         """ Return a formatted string for all versions. """
         length = len(self)
-        plural = 'version' if length == 1 else 'versions'
-        versions = (self.format_ver(v) for v in self)
         if header:
             headerstr = '\nFound {} {} for: {}'.format(
-                C(str(length), fore='blue'),
-                plural,
+                C(length, fore='blue'),
+                'version' if length == 1 else 'versions',
                 self.format_name())
         else:
             headerstr = self.format_name()
 
         return '\n'.join((
             headerstr,
-            '    {}'.format('\n    '.join(versions))
+            '    {}'.format(
+                '\n    '.join(
+                    self.format_ver(v) for v in self
+                )
+            )
         ))
 
     def format_desc(self):
         """ Return a formatted description for the package version. """
         return '\nDescription:\n{}\n'.format(
             C(
-                format_block(
-                    get_pkg_description(self.package),
-                    maxwidth=76,
+                FormatBlock(get_pkg_description(self.package)).format(
+                    width=76,
                     newlines=True,
-                    prepend='    '),
+                    prepend='    '
+                ),
                 fore='green'
             )
         )
@@ -2280,21 +2191,27 @@ class PackageVersions(UserList):
         """ Colorize the name for this package. """
         return pkg_format_name(self.package.name)
 
-    def format_ver(self, s):
+    def format_ver(self, ver):
         """ Colorize a single version number according to it's install state.
         """
+        s = ver.version
         verstr = None
-        if s == self.latest:
+        if ver == self.latest:
             verstr = C(' ').join(
                 C(s, fore='blue'),
                 C('latest', fore='blue').join('(', ')')
             )
-        if s == self.installed:
+        if ver == self.installed:
             if not verstr:
                 verstr = C(s, fore='green', style='bright')
             verstr = C(' ').join(
                 verstr,
                 C('installed', fore='green').join('(', ')')
+            )
+        if ver.has_backport:
+            verstr = C(' ').join(
+                verstr,
+                C('backports', fore='cyan').join('(', ')')
             )
         if verstr:
             return str(verstr)
@@ -2305,24 +2222,33 @@ class PackageVersions(UserList):
         """ Format the latest/installed version number.
             This contains slightly more information than format_ver().
         """
+        backportcheckver = self.latest
         if self.latest == self.installed:
-            return str(C(' ').join(
-                C(self.installed, fore='green'),
+            fmt = C(' ').join(
+                C(self.installed.version, fore='green'),
                 C('latest version is installed', fore='green').join('(', ')')
-            ))
-        if self.installed:
+            )
+        elif self.installed:
             # Installed, but warn about not being the latest version.
-            return str(C(' ').join(
-                C(self.installed, fore='green'),
+            fmt = C(' ').join(
+                C(self.installed.version, fore='green'),
                 (C('installed', fore='green')
                     .reset(', latest version is: ')
                     .yellow(self.latest))
-            ))
+            )
+            backportcheckver = self.installed
+        else:
+            fmt = C(' ').join(
+                C(self.latest.version, fore='red'),
+                C('latest version available', fore='red').join('(', ')')
+            )
 
-        return str(C(' ').join(
-            C(self.latest, fore='red'),
-            C('latest version available', fore='red').join('(', ')')
-        ))
+        if backportcheckver.has_backport:
+            fmt = C(' ').join(
+                fmt,
+                C('backports', fore='cyan').join('(', ')')
+            )
+        return str(fmt)
 
 
 # Fatal Errors that will end this script when raised.
@@ -2346,6 +2272,8 @@ class NothingSingleton(object):
     """ A value to use as None, where None may actually have a meaning. """
     def __str__(self):
         return '<Nothing>'
+
+
 Nothing = NothingSingleton()
 
 
@@ -2361,11 +2289,13 @@ if __name__ == '__main__':
     # Disable colors for non-ttys.
     colr_auto_disable()
     # Get actual terminal size.
-    # TERM_WIDTH, TERM_HEIGHT = get_terminal_size()
-
+    TERM_WIDTH, TERM_HEIGHT = get_terminal_size()
+    TERM_WIDTH -= 10
     main_argd = docopt(
         USAGESTR,
-        version='{} v. {}'.format(NAME, __version__))
+        version='{} v. {}'.format(NAME, __version__),
+        script=SCRIPT,
+    )
     # grab start time for timing.
     start_time = time()
     try:
@@ -2376,7 +2306,12 @@ if __name__ == '__main__':
     except (BadSearchQuery, CacheNotLoaded) as ex:
         print_err('\n{}'.format(ex))
         ret = 1
-
+    finally:
+        try:
+            cache_main.close()
+        except AttributeError:
+            # Cache was never loaded.
+            pass
     # Report how long it took
     duration = time() - start_time
     if duration > 0.01:
