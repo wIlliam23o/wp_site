@@ -737,10 +737,11 @@ def logtraceback(log=None, message=None):
 
 def parse_bool(s):
     """ Parse a string as a boolean.
-        Values for True: '1', 'T[rue]', 't[rue]', 'Y[es]', 'y[es]'
+        Values for True: '1', 'on', T[rue]', 't[rue]', 'Y[es]', 'y[es]'
         Values for False: ..everything else.
     """
-    return s and str(s).lower().startswith(('1', 't', 'y'))
+    s = str(s).strip().lower()
+    return s and s.startswith(('1', 't', 'on', 'y'))
 
 
 def remove_list_dupes(lst, max_allowed=1):

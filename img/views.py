@@ -24,17 +24,27 @@ def handle_files(request):
     """
     for f in request.FILES.values():
         log.debug('Uploading file: {}'.format(f.name))
+        imgargs = {
+            'image': f,
+            'title': request.POST.get('title', ''),
+            'description': request.POST.get('description', ''),
+            'album': request.POST.get('album', ''),
+            'private': request.POST.get('private', False),
+        }
+        log.debug('Saving image:\n{!r}'.format(imgargs))
+        imgargs['private'] = utilities.parse_bool(imgargs['private'])
+        log.debug('Parsed private setting: {!r}'.format(imgargs['private']))
         try:
-            newimage = wp_image(
-                image=f,
-                title=request.POST.get('title', ''),
-                description=request.POST.get('description', ''),
-                album=request.POST.get('album', ''),
-                private=request.POST.get('private', False)
-            )
+            newimage = wp_image(**imgargs)
+        except Exception as ex:
+            log.error('Error creating an image: {}\n{}'.format(f.name, ex))
+            log.error('Arguments were: {!r}'.format(imgargs))
+            return 'error', 'There was an error while uploading your image.'
+        try:
             newimage.save()
         except Exception as ex:
             log.error('Error uploading an image: {}\n{}'.format(f.name, ex))
+            log.error('Arguments were: {!r}'.format(imgargs))
             return 'error', 'There was an error while uploading your image.'
 
     # Success.

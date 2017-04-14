@@ -136,8 +136,22 @@ class wp_image(models.Model):  # noqa
         """ Generate image_id before saving. """
         if (not self.filename) and self.image:
             self.filename = self.image.name
-            log.debug('Saved with filename: {}'.format(self.filename))
-        super(wp_image, self).save(*args, **kwargs)
+            log.debug('Saving with filename: {}'.format(self.filename))
+        try:
+            super(wp_image, self).save(*args, **kwargs)
+        except Exception as ex:
+            log.error('Failed to super().save() image: {}\n{}'.format(
+                self.filename,
+                ex,
+            ))
+            log.debug('super(wp_image).save({}, {})'.format(
+                ', '.join(repr(a) for a in args),
+                ', '.join(
+                    '{}={}'.format(k, repr(v))
+                    for k, v in kwargs.items()
+                ),
+            ))
+            raise
         # Generate a image_id for this image if it doesnt have one already.
         if not self.image_id:
             self.generate_id()
